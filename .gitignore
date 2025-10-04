@@ -1,0 +1,92 @@
+# データファイル
+data/phrase_csv/**/*.csv
+data/phrase_csv/piano_shards/
+data/tracks/
+data/loops/
+
+# オーディオファイル
+*.wav
+
+# 仮想環境
+.venv*/
+.venv/
+.venv311/
+lib/
+bin/
+pyvenv.cfg
+venv/
+
+# キャッシュ
+__pycache__/
+*.pyc
+
+# モデルファイル
+checkpoints/
+*.ckpt
+*.h5
+*.dylib
+
+# システムファイル
+.DS_Store
+# Python
+__pycache__/
+*.pyc
+
+# venv
+.venv/
+.venv*/
+venv/
+
+# 実験アーティファクト・データ
+data/
+outputs/
+tmp/
+lightning_logs/
+reports/
+checkpoints/
+*.ckpt
+*.onnx
+.DS_Store
+
+# 認証情報
+*.json
+!package.json
+marutakesyobou-*.json
+*.service-account.json
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+
+# venv
+.venv/
+.venv*/
+venv/
+
+# 実験アーティファクト・データ
+data/
+outputs/
+tmp/
+lightning_logs/
+reports/
+checkpoints/
+*.ckpt
+*.onnx
+.DS_Store
+
+
+# 大容量ファイル（Git LFS対象外）
+*.pickle
+*.mid
+*.wav
+*.mp3
+*.flac
+
+# GitHub 50MB制限対応で除外する大きなファイル
+tree.md
+manifests/lamd_*.jsonl
+wheelhouse/
+share/
+.hypothesis/

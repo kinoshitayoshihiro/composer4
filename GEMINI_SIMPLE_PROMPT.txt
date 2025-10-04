@@ -1,0 +1,45 @@
+# 🤖 Gemini用完全プロンプト (コピー&ペースト用)
+
+私はPythonで音楽生成AI（DUVモデル）を開発しており、Google Colabでトレーニングを実行したいです。
+
+**現在の状況:**
+- プロジェクト: `composer2-3` (PyTorchベースの音楽AI)
+- Google Driveパス: `/content/drive/Othercomputers/マイ MacBook Air/composer2-3`
+- 5つの楽器データ: guitar, bass, piano, strings, drums
+- トレーニングファイル: `data/phrase_csv/*_train_raw.csv` (各250MB程度)
+- メインスクリプト: `scripts/train_phrase.py`
+
+**トレーニング設定:**
+```
+アーキテクチャ: Transformer
+- d_model: 512, nhead: 8, layers: 4
+- duv-mode: reg (regression only)
+- batch-size: 128 (Colab GPU最適化)
+- epochs: 15, lr: 1e-4
+- device: cuda
+```
+
+**期待する結果:**
+- 5つのチェックポイント: `checkpoints/*_duv_raw.best.ckpt` (各99MB)
+- 正常ログ: `train_batches/epoch > 10,000`, `vel_mae`/`dur_mae`が減少
+
+**具体的な課題:**
+1. パスにスペース・日本語が含まれる: `マイ MacBook Air`
+2. 依存関係インストール: `requirements.txt`
+3. 5楽器の連続トレーニング (約7-8時間)
+4. トレーニング進捗監視
+5. チェックポイントダウンロード
+
+**質問:**
+Google Colabでこのプロジェクトを実行するための完全なコードを段階的に教えてください。コピー&ペーストですぐに使えるコードセルを提供してください。特にパス問題の解決法とトレーニングの自動化を重視しています。
+
+例えば以下のような構成で：
+```python
+# セル1: Google Drive マウント
+# セル2: プロジェクトディレクトリへの移動とファイル確認
+# セル3: 依存関係インストール
+# セル4: GPU確認
+# セル5: トレーニング実行 (5楽器連続)
+```
+
+よろしくお願いします。
