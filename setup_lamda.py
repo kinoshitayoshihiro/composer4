@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from lamda_analyzer import LAMDaAnalyzer, ProgressionRecommender
 from adaptive_learning import AdaptiveProgressionSelector
+from lamda_dataset_inspector import LAMDaDatasetInspector
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -101,6 +102,19 @@ def setup_lamda_system(data_dir: Path, force_reanalysis: bool = False) -> bool:
     except Exception as e:
         logger.error(f"System verification failed: {e}")
         return False
+
+    # 4. 追加データセットの概要
+    try:
+        inspector = LAMDaDatasetInspector(data_dir.parent)
+        summaries = inspector.summarize_all()
+        if summaries:
+            logger.info("\nSupplementary dataset overview:")
+            for name, stats in summaries.items():
+                logger.info("  %s:", name)
+                for key, value in stats.items():
+                    logger.info("    %s: %s", key, value)
+    except Exception as e:
+        logger.warning(f"Supplementary dataset inspection skipped: {e}")
 
     logger.info("\n" + "=" * 60)
     logger.info("Setup completed successfully!")

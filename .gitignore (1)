@@ -1,0 +1,73 @@
+# データファイル
+data/phrase_csv/**/*.csv
+data/phrase_csv/piano_shards/
+data/tracks/
+data/loops/
+
+# オーディオファイル
+*.wav
+
+# 仮想環境
+.venv*/
+venv/
+
+# キャッシュ
+__pycache__/
+*.pyc
+
+# モデルファイル
+checkpoints/
+*.ckpt
+*.h5
+*.dylib
+
+# システムファイル
+.DS_Store
+# Python
+__pycache__/
+*.pyc
+
+# venv
+.venv/
+.venv*/
+venv/
+
+# 実験アーティファクト・データ
+data/
+outputs/
+tmp/
+lightning_logs/
+reports/
+checkpoints/
+*.ckpt
+*.onnx
+.DS_Store
+
+# 認証情報
+*.json
+!package.json
+marutakesyobou-*.json
+*.service-account.json
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+
+# venv
+.venv/
+.venv*/
+venv/
+
+# 実験アーティファクト・データ
+data/
+outputs/
+tmp/
+lightning_logs/
+reports/
+checkpoints/
+*.ckpt
+*.onnx
+.DS_Store
+
