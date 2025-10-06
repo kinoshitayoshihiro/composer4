@@ -26,8 +26,10 @@ import music21
 try:
     from tqdm import tqdm
 except ImportError:
+
     def tqdm(iterable, **kwargs):
         return iterable
+
 
 try:
     import numpy as np
@@ -97,7 +99,15 @@ class LAMDaUnifiedAnalyzer:
     def load_kilo_chords(self) -> list:
         """KILO_CHORDS_DATA をロード（キャッシュ付き）"""
         if self._kilo_data is None:
+            # 通常ファイル名を試行
             kilo_file = self.kilo_dir / "LAMDa_KILO_CHORDS_DATA.pickle"
+            if not kilo_file.exists():
+                # テストサンプルのファイル名を試行
+                kilo_files = list(self.kilo_dir.glob("*.pickle"))
+                if kilo_files:
+                    kilo_file = kilo_files[0]
+                else:
+                    raise FileNotFoundError(f"No pickle file found in {self.kilo_dir}")
             with open(kilo_file, "rb") as f:
                 self._kilo_data = pickle.load(f)
         return self._kilo_data
@@ -105,7 +115,15 @@ class LAMDaUnifiedAnalyzer:
     def load_signatures(self) -> list:
         """SIGNATURES_DATA をロード（キャッシュ付き）"""
         if self._signatures_data is None:
+            # 通常ファイル名を試行
             sig_file = self.signatures_dir / "LAMDa_SIGNATURES_DATA.pickle"
+            if not sig_file.exists():
+                # テストサンプルのファイル名を試行
+                sig_files = list(self.signatures_dir.glob("*.pickle"))
+                if sig_files:
+                    sig_file = sig_files[0]
+                else:
+                    raise FileNotFoundError(f"No pickle file found in {self.signatures_dir}")
             with open(sig_file, "rb") as f:
                 self._signatures_data = pickle.load(f)
         return self._signatures_data
@@ -113,7 +131,15 @@ class LAMDaUnifiedAnalyzer:
     def load_totals_matrix(self) -> list:
         """TOTALS_MATRIX をロード（キャッシュ付き）"""
         if self._totals_matrix is None:
+            # 通常ファイル名を試行
             totals_file = self.totals_dir / "LAMDa_TOTALS.pickle"
+            if not totals_file.exists():
+                # テストサンプルのファイル名を試行
+                totals_files = list(self.totals_dir.glob("*.pickle"))
+                if totals_files:
+                    totals_file = totals_files[0]
+                else:
+                    raise FileNotFoundError(f"No pickle file found in {self.totals_dir}")
             with open(totals_file, "rb") as f:
                 self._totals_matrix = pickle.load(f)
         return self._totals_matrix
