@@ -30,7 +30,28 @@ echo "Detected project directory: $PROJECT_DIR"
 cd "$PROJECT_DIR"
 
 # Colab-optimized settings
-BATCH_SIZE=128
+# GPU detection and automatic batch size adjustment
+if command -v nvidia-smi &> /dev/null; then
+    GPU_MEM=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits | head -1)
+    if [ "$GPU_MEM" -ge 70000 ]; then
+        # A100 (80GB) or V100 (32GB+)
+        BATCH_SIZE=128
+        echo "Detected high-memory GPU (${GPU_MEM}MB) - using batch size 128"
+    elif [ "$GPU_MEM" -ge 20000 ]; then
+        # L4 (24GB) or similar
+        BATCH_SIZE=64
+        echo "Detected L4/mid-range GPU (${GPU_MEM}MB) - using batch size 64"
+    else
+        # T4 (16GB) or smaller
+        BATCH_SIZE=32
+        echo "Detected T4/entry-level GPU (${GPU_MEM}MB) - using batch size 32"
+    fi
+else
+    # Fallback if nvidia-smi not available
+    BATCH_SIZE=64
+    echo "GPU detection failed - using default batch size 64"
+fi
+
 NUM_WORKERS=2
 DEVICE=cuda
 EPOCHS=15
