@@ -620,7 +620,9 @@ traceback.print_exc()
 | [Architecture Guide](docs/LAMDA_UNIFIED_ARCHITECTURE.md) | 詳細設計 | 開発者 |
 | [Execution Checklist](docs/LAMDA_EXECUTION_CHECKLIST.md) | 実行手順 | 実行担当者 |
 | [Vertex AI Guide](docs/vertex_ai_lamda_unified_guide.py) | Notebook実行 | Vertex AIユーザー |
+| [Local Setup](docs/LAMDA_LOCAL_SETUP.md) | ローカル環境 | 開発者 |
 | [Main README](../README.md) | プロジェクト全体 | 全ユーザー |
+| **[🚀 Future System](docs/FUTURE_SELF_IMPROVING_SYSTEM.md)** | 自己増殖計画 | 未来志向 |
 
 ---
 
