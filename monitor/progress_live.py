@@ -27,10 +27,12 @@ def monitor(log_path: str, title="Training", update_sec=60, total_epochs_hint=15
     if not log.exists():
         raise FileNotFoundError(f"log not found: {log}")
 
-    pat_epoch = re.compile(r"Epoch\s*\[(\d+)\s*/\s*(\d+)\]")
+    # tqdm形式: "epoch 1/15:" または "Epoch [1/15]" 両方に対応
+    pat_epoch = re.compile(r"[Ee]poch\s*[\[]?(\d+)\s*/\s*(\d+)[\]]?")
     pat_loss = re.compile(r"(?:^|[^a-zA-Z_])(loss|train[_-]?loss)\s*[:=]\s*([0-9]*\.?[0-9]+)")
     pat_vloss = re.compile(r"(?:^|[^a-zA-Z_])(val[_-]?loss)\s*[:=]\s*([0-9]*\.?[0-9]+)")
-    pat_batch = re.compile(r"(?:batch|step)\s*[:=]?\s*(\d+)\s*/\s*(\d+)", re.IGNORECASE)
+    # tqdmのプログレスバー形式も認識: "8051/50016"
+    pat_batch = re.compile(r"(?:batch|step|)\s*[\|]?\s*(\d+)/(\d+)\s*\[", re.IGNORECASE)
 
     hist_loss, hist_vloss = [], []
     cur_epoch, tot_epoch = 0, total_epochs_hint
