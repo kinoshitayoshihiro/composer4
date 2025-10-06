@@ -34,6 +34,7 @@ It automatically generates chords, melodies and instrumental parts for each chap
 - [Sax Generator](docs/sax_generator.md)
 - [Realtime WebSocket Streaming](docs/realtime_ws.md)
 - [Plugin & GUI](docs/plugin_gui.md)
+- **[🎼 Complete Music Architecture](docs/COMPLETE_MUSIC_ARCHITECTURE.md)** - 物語→感情→コード理論→12ステム統合システム
 - **[LAMDa Integration](docs/LAMDA_README.md)** - Los Angeles MIDI Dataset統合
 - **[🚀 Future: Self-Improving System](docs/FUTURE_SELF_IMPROVING_SYSTEM.md)** - Suno AI自己増殖サイクル
 
