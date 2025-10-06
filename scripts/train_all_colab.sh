@@ -4,7 +4,29 @@
 
 set -e
 
-PROJECT_DIR="/content/drive/Othercomputers/マイ MacBook Air/composer2-3"
+# Detect project directory (supports both Othercomputers and MyDrive locations)
+CANDIDATE_DIRS=(
+    "/content/drive/MyDrive/otocotoba"
+    "/content/drive/Othercomputers/マイ MacBook Air/composer2-3"
+)
+
+for DIR in "${CANDIDATE_DIRS[@]}"; do
+    if [ -d "$DIR" ] && [ -f "$DIR/scripts/train_phrase.py" ]; then
+        PROJECT_DIR="$DIR"
+        break
+    fi
+done
+
+if [ -z "$PROJECT_DIR" ]; then
+    echo "ERROR: composer2-3 project directory not found in expected locations or missing scripts/train_phrase.py."
+    echo "Checked paths:"
+    printf '  - %s\n' "${CANDIDATE_DIRS[@]}"
+    echo "Please mount Google Drive and ensure the repository is located in one of the above paths."
+    exit 1
+fi
+
+echo "Detected project directory: $PROJECT_DIR"
+
 cd "$PROJECT_DIR"
 
 # Colab-optimized settings

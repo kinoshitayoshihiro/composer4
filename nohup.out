@@ -1,0 +1,24 @@
+=== Training All Base DUV Models (Raw Data - FIXED) ===
+Mode: REGRESSION ONLY (no classification)
+Epochs: 15, Batch Size: 64 (x4 grad accum = effective 256)
+Workers: 0, Device: mps
+Logs will be written to logs/*_duv_raw.log
+
+>>> [1/5] Training Guitar Base Model...
+    Log: logs/guitar_duv_raw.log (use 'tail -f logs/guitar_duv_raw.log' to monitor)
+=== Training All Base DUV Models (Raw Data - FIXED) ===
+Mode: REGRESSION ONLY (no classification)
+Epochs: 15, Batch Size: 64 (x4 grad accum = effective 256)
+Workers: 0, Device: mps
+Logs will be written to logs/*_duv_raw.log
+
+>>> [1/5] Training Guitar Base Model...
+    Log: logs/guitar_duv_raw.log (use 'tail -f logs/guitar_duv_raw.log' to monitor)
+=== Training All Base DUV Models (Raw Data - FIXED) ===
+Mode: REGRESSION ONLY (no classification)
+Epochs: 15, Batch Size: 64 (x4 grad accum = effective 256)
+Workers: 0, Device: mps
+Logs will be written to logs/*_duv_raw.log
+
+>>> [1/5] Training Guitar Base Model...
+    Log: logs/guitar_duv_raw.log (use 'tail -f logs/guitar_duv_raw.log' to monitor)
