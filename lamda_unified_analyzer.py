@@ -18,11 +18,21 @@ Los Angeles MIDI Dataset の全データソースを統合的に活用するア�
 import sqlite3
 import pickle
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict
 from collections import Counter
-import numpy as np
-from tqdm import tqdm
 import music21
+
+# Optional dependencies
+try:
+    from tqdm import tqdm
+except ImportError:
+    def tqdm(iterable, **kwargs):
+        return iterable
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 
 class LAMDaEvent:

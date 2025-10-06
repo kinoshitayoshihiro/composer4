@@ -1,0 +1,9 @@
+# LAMDa Unified Analyzer - Requirements
+# =====================================
+
+# Core dependencies
+music21>=9.1.0     # Music analysis and chord recognition
+
+# Optional but recommended
+# tqdm>=4.65.0      # Progress bars (optional)
+# numpy>=1.24.0     # Numerical operations (optional)
