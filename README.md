@@ -1792,5 +1792,88 @@ python -m ujam.sparkle_convert song.mid --out out.mid \
   --style-inject '{"period":8,"note":30,"duration_beats":1}' --seed 42
 ```
 
+## LAMDa Integration (Los Angeles MIDI Dataset)
+
+### 🎵 統合アーキテクチャ
+
+このプロジェクトは [Los Angeles MIDI Dataset](https://github.com/asigalov61/Los-Angeles-MIDI-Dataset) を**統合的に活用**しています。
+LAMDaは単なるMIDIコレクションではなく、**連邦制データアーキテクチャ**として設計されています:
+
+```
+CHORDS_DATA (15GB)        → 詳細MIDIイベント (原典データ)
+KILO_CHORDS_DATA (602MB)  → 整数シーケンス (高速検索)
+SIGNATURES_DATA (290MB)   → 楽曲特徴量 (類似度マッチング)
+TOTALS_MATRIX (33MB)      → 統計マトリックス (正規化)
+META_DATA (4.2GB)         → メタデータ (コンテキスト検索)
+CODE/                     → 統合ライブラリ (TMIDIX.py)
+```
+
+詳細は **[LAMDa Unified Architecture](docs/LAMDA_UNIFIED_ARCHITECTURE.md)** を参照してください。
+
+### 📊 統合データベース構築
+
+**Vertex AI Colab Enterprise** で全データソースを統合したデータベースを構築:
+
+```bash
+# 方法1: Pythonスクリプト実行
+python scripts/build_lamda_unified_db.py
+
+# 方法2: Notebook ガイド (推奨)
+# docs/vertex_ai_lamda_unified_guide.py の Cell 1-7 を実行
+```
+
+**推定実行時間**: 90-120分  
+**推定コスト**: ¥30-50  
+**出力**: `gs://otobon/lamda/lamda_unified.db` (統合データベース)
+
+### 🔍 データベーススキーマ
+
+```sql
+-- CHORDS_DATAから抽出されたコード進行
+progressions (hash_id, progression, total_events, chord_events, source_file)
+
+-- KILO_CHORDS_DATAの整数シーケンス (高速検索用)
+kilo_sequences (hash_id, sequence, sequence_length)
+
+-- SIGNATURES_DATAの楽曲特徴量 (類似度計算用)
+signatures (hash_id, pitch_distribution, top_pitches)
+```
+
+全テーブルが `hash_id` で紐付けられた**連邦制データベース**です。
+
+### 💡 活用例
+
+```python
+from lamda_unified_analyzer import LAMDaUnifiedAnalyzer
+
+# アナライザー初期化
+analyzer = LAMDaUnifiedAnalyzer(Path('data/Los-Angeles-MIDI'))
+
+# 全データソースを統合してDB構築
+analyzer.build_unified_database(Path('lamda_unified.db'))
+
+# データロード
+kilo_chords = analyzer.load_kilo_chords()        # 高速検索用シーケンス
+signatures = analyzer.load_signatures()          # 楽曲特徴量
+totals_matrix = analyzer.load_totals_matrix()    # 統計情報
+```
+
+### 🎯 統合活用パターン
+
+1. **コード進行推薦**: KILO_CHORDS で高速検索 → SIGNATURES で類似度計算
+2. **キーベース検索**: SIGNATURES から調性推定 → TOTALS で正規化
+3. **スタイル転送**: META_DATA でスタイル抽出 → CHORDS_DATA で詳細分析
+
+詳細なパターンは [Architecture Guide](docs/LAMDA_UNIFIED_ARCHITECTURE.md) を参照。
+
+### 📁 関連ファイル
+
+- `lamda_unified_analyzer.py` - 統合アナライザー (全データソース対応)
+- `scripts/build_lamda_unified_db.py` - Vertex AI用構築スクリプト
+- `docs/vertex_ai_lamda_unified_guide.py` - Notebookガイド (Cell 1-7)
+- `docs/LAMDA_UNIFIED_ARCHITECTURE.md` - 詳細設計ドキュメント
+
+---
+
 ## License
 This project is licensed under the [MIT License](LICENSE).
