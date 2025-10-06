@@ -204,10 +204,10 @@ class EmotionChordMapper:
                             simple = f"{root}m"
                         else:
                             simple = f"{root}"
-                        
+
                         if "seventh" in chord_name.lower():
                             simple += "7"
-                        
+
                         chords.append(simple if simple else chord_name)
 
                     # 品質スコア計算
@@ -275,6 +275,50 @@ class EmotionChordMapper:
             chord_bonus = 0.0
 
         return base_score - event_penalty + chord_bonus
+
+    def chords_to_notes(self, chords: List[str]) -> List[List[int]]:
+        """コード名リストをMIDIノート番号リストに変換"""
+        chord_notes = []
+        root_pitch = 60  # C4
+
+        for chord_name in chords:
+            notes = self._chord_to_midi_notes(chord_name, root_pitch)
+            chord_notes.append(notes)
+
+        return chord_notes
+
+    def _chord_to_midi_notes(self, chord_name: str, base_pitch: int = 60) -> List[int]:
+        """単一コード名をMIDIノート番号リストに変換"""
+        # ルート音抽出
+        root = chord_name[0]
+        root_offset = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}.get(root, 0)
+
+        # シャープ/フラット処理
+        if len(chord_name) > 1 and chord_name[1] == "#":
+            root_offset += 1
+        elif len(chord_name) > 1 and chord_name[1] == "-":
+            root_offset -= 1
+
+        root_pitch = base_pitch + root_offset
+        notes = [root_pitch]
+
+        # コードタイプ判定
+        chord_lower = chord_name.lower()
+        if "maj" in chord_lower and "m" not in chord_lower[:2]:
+            # Major
+            notes.extend([root_pitch + 4, root_pitch + 7])
+        elif "m" in chord_lower:
+            # Minor
+            notes.extend([root_pitch + 3, root_pitch + 7])
+        else:
+            # Default: Major
+            notes.extend([root_pitch + 4, root_pitch + 7])
+
+        # 7th
+        if "7" in chord_name:
+            notes.append(root_pitch + 10)
+
+        return notes
 
     def close(self):
         """リソース解放"""
@@ -351,7 +395,76 @@ def main():
         print(f"   Emotional Match: {prog.emotional_match:.2f}")
         print()
 
+    # MIDI出力（ベストな進行を使用）
+    if progressions:
+        best_progression = progressions[0]
+        output_path = Path("output") / "emotion_chords_demo.mid"
+        output_path.parent.mkdir(exist_ok=True)
+
+        print(f"\n🎹 Generating MIDI file...")
+        try:
+            from midiutil import MIDIFile
+
+            # MIDI初期化
+            midi = MIDIFile(1)  # 1トラック
+            track = 0
+            channel = 0
+            tempo = 120 if emotion.arousal > 0.5 else 80
+            midi.addTempo(track, 0, tempo)
+
+            # コード名→ノート変換（簡易版）
+            chord_notes = mapper.chords_to_notes(best_progression.chords)
+
+            # MIDIイベント追加
+            time = 0
+            for notes in chord_notes:
+                for note in notes:
+                    velocity = int(60 + 40 * emotion.intensity)
+                    midi.addNote(track, channel, note, time, 2, velocity)
+                time += 2  # 2拍ごと
+
+            # ファイル書き込み
+            with open(output_path, "wb") as f:
+                midi.writeFile(f)
+
+            print(f"✅ MIDI saved: {output_path}")
+            print(f"   Tempo: {tempo} BPM")
+            print(f"   Chords: {len(best_progression.chords)}")
+
+        except ImportError:
+            print("⚠️  midiutil not installed. Install with: pip install midiutil")
+        except Exception as e:
+            print(f"❌ MIDI generation failed: {e}")
+
     mapper.close()
+
+
+# ============================================================================
+# MIDI生成ヘルパー
+# ============================================================================
+
+
+def chord_name_to_notes(chord_name: str, root_pitch: int = 60) -> List[int]:
+    """
+    コード名からMIDIノート番号リストに変換
+
+    例: "Cmaj" → [60, 64, 67] (C, E, G)
+    """
+    # 簡易実装
+    notes = [root_pitch]  # ルート音
+
+    if "maj" in chord_name.lower() or chord_name.isupper():
+        # Major: root, major 3rd, perfect 5th
+        notes.extend([root_pitch + 4, root_pitch + 7])
+    elif "m" in chord_name.lower():
+        # Minor: root, minor 3rd, perfect 5th
+        notes.extend([root_pitch + 3, root_pitch + 7])
+
+    if "7" in chord_name:
+        # 7th: add minor 7th
+        notes.append(root_pitch + 10)
+
+    return notes
 
 
 if __name__ == "__main__":
