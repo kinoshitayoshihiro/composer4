@@ -88,5 +88,11 @@ checkpoints/
 tree.md
 manifests/lamd_*.jsonl
 wheelhouse/
+wheelhouse_prev/
+wheelhouse_backup_*/
 share/
 .hypothesis/
+
+# 追加の大容量生成物
+output/
+data/*.db

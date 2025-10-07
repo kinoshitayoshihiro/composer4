@@ -100,10 +100,13 @@ class SunoProjectImporter:
 
     # 標準的な楽器名
     STANDARD_INSTRUMENTS = [
+        "vocals",  # メインボーカル
+        "backing_vocals",  # バッキングボーカル
         "guitar",
         "bass",
         "drums",
         "piano",
+        "keyboard",
         "synth",
         "strings",
         "brass",
@@ -144,8 +147,11 @@ class SunoProjectImporter:
             time_signature=metadata.get("time_signature", "4/4"),
         )
 
-        # 完成曲WAV
+        # 完成曲WAV (complete.wav または full.wav)
         complete_path = project_dir / "complete.wav"
+        if not complete_path.exists():
+            complete_path = project_dir / "full.wav"
+
         if complete_path.exists():
             project.complete_wav = complete_path
             print(f"  ✅ Complete WAV: {complete_path.name}")
@@ -190,9 +196,65 @@ class SunoProjectImporter:
             return {}
 
     def _load_stem(self, project_dir: Path, stem_name: str) -> Optional[StemData]:
-        """ステムデータ読み込み"""
+        """ステムデータ読み込み（フラット構造 or ディレクトリ構造対応）"""
+        # パターン1: フラット構造 (vocals.wav, guitar.wav)
         wav_path = project_dir / f"{stem_name}.wav"
         midi_path = project_dir / f"{stem_name}.mid"
+
+        # パターン2: ディレクトリ構造 (stemswav_001/Vocals.wav)
+        # または (stemswav_001/★★曲名★★ (Vocals).wav)
+        if not wav_path.exists():
+            for stems_dir in project_dir.glob("stems*wav*"):
+                # 単純な名前でチェック (Vocals.wav)
+                candidate = stems_dir / f"{stem_name.capitalize()}.wav"
+                if candidate.exists():
+                    wav_path = candidate
+                    break
+
+                # スペースを含む名前 (Backing Vocals.wav)
+                friendly = stem_name.replace("_", " ").title()
+                candidate = stems_dir / f"{friendly}.wav"
+                if candidate.exists():
+                    wav_path = candidate
+                    break
+
+                # 曲名プレフィックス付き (★★曲名★★ (Vocals).wav)
+                for wav_file in stems_dir.glob("*wav"):
+                    filename = wav_file.name
+                    # (Vocals).wav または (Backing Vocals).wav
+                    if f"({stem_name.capitalize()})" in filename:
+                        wav_path = wav_file
+                        break
+                    if f"({friendly})" in filename:
+                        wav_path = wav_file
+                        break
+                if wav_path.exists():
+                    break
+
+        if not midi_path.exists():
+            for stems_dir in project_dir.glob("stem*midi*"):
+                candidate = stems_dir / f"{stem_name.capitalize()}.mid"
+                if candidate.exists():
+                    midi_path = candidate
+                    break
+
+                friendly = stem_name.replace("_", " ").title()
+                candidate = stems_dir / f"{friendly}.mid"
+                if candidate.exists():
+                    midi_path = candidate
+                    break
+
+                # 曲名プレフィックス付き
+                for mid_file in stems_dir.glob("*.mid"):
+                    filename = mid_file.name
+                    if f"({stem_name.capitalize()})" in filename:
+                        midi_path = mid_file
+                        break
+                    if f"({friendly})" in filename:
+                        midi_path = mid_file
+                        break
+                if midi_path.exists():
+                    break
 
         if wav_path.exists() or midi_path.exists():
             return StemData(

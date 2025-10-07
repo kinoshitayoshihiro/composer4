@@ -1,0 +1,51 @@
+dataset:
+  name: "Drum Loops"
+  type: "drumloops"
+
+paths:
+  input_dir: "data/loops"
+  output_dir: "output/drumloops_cleaned"
+  metadata_dir: "output/drumloops_metadata"
+  tmidix_path: "data/Los-Angeles-MIDI/CODE"
+
+dedupe:
+  min_notes: 16
+  max_file_size: 1000000
+  save_interval: 5000
+  start_file_number: 0
+  require_polyphony: true
+  allowed_extensions:
+    - ".mid"
+    - ".midi"
+
+random:
+  seed: 42
+
+metrics:
+  ghost_velocity_threshold: 45
+  accent_velocity_threshold: 100
+  microtiming_tolerance_ratio: 0.2
+  swing_min_pairs: 2
+  min_base_step: 1
+  max_breakpoints: 3
+  round_digits: 4
+
+metadata:
+  shard:
+    max_loops: 20000
+    prefix: "drumloops_metadata_v2_shard"
+
+features:
+  pattern_kind_thresholds:
+    loop_max_beats: 64
+    phrase_max_beats: 256
+  enable_statistics:
+    bpm: true
+    genre: true
+    velocity: true
+
+notes:
+  description: >-
+    Default configuration for cleaning drum loops with the LAMDa pipeline.
+    Adjust min_notes or pattern thresholds when targeting other percussion
+    libraries.
