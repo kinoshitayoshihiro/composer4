@@ -42,6 +42,10 @@
 - Unified to **numba>=0.60.0** across requirements
 - `scripts/train_duv_improved.py` gains optional AMP defaults, cosine warmup,
   EMA, and length-aware bucketing with expanded CLI flags
+- Stage2 extractor aligns 5軸スコア名称 (Groove Harmony/Drum Cohesion) と
+  正規化値を `axes_raw` として出力し、再処理キュー診断を強化
+- `loop_summary` と `stage2_summary` に `git_commit` / `data_digest` /
+  `score_axes` メタデータを追加し、契約ベースの品質検証を自動化
 
 ## [0.6.1] - 2025-07-25
 ### Fixed

@@ -96,6 +96,7 @@ Stage1 (dedupe) ──▶ Stage2 extractor ──▶ canonical_events.parquet / 
 | `tempo.grid_confidence` | FLOAT | 拍グリッドの信頼度 (0–1)。
 | `score.total` | FLOAT | 0–100。
 | `score.breakdown` | JSON | 各軸のスコア (Timing/Velocity/...)
+| `score.axes_raw` | JSON | 各軸の正規化スコア (0–1) を保持し、後段の可視化や再スコア計算に利用。
 | `score.threshold_passed` | BOOL | `score.total >= threshold`。
 | `retry.preset_id` | STRING | 適用済みプリセット ID (再処理済みの場合)。
 | `retry.seed` | INT | 自動再処理で使用した乱数 seed。
@@ -116,6 +117,13 @@ JSONL 1 行構造:
     "groove_harmony": 14.0,
     "drum_cohesion": 15.5,
     "structure": 13.5
+  },
+  "axes_raw": {
+    "timing": 0.82,
+    "velocity": 0.97,
+    "groove_harmony": 0.70,
+    "drum_cohesion": 0.78,
+    "structure": 0.67
   },
   "threshold": 70,
   "retry_preset_id": "timing_relax_quantize",
@@ -161,6 +169,7 @@ JSONL 1 行構造:
 {
   "pipeline_version": "2025.10.0",
   "git_commit": "<hash>",
+  "data_digest": "stage2:2025.10.0:<sha1>",
   "inputs": {
     "total_files": 1929,
     "normalized_tempi": 0.94,
@@ -172,6 +181,14 @@ JSONL 1 行構造:
     "non_poly": 126,
     "duplicate_rhythm": 34
   },
+  "score_axes": {
+    "timing": {"mean": 0.82, "min": 0.61, "max": 0.95},
+    "velocity": {"mean": 0.91, "min": 0.64, "max": 0.99},
+    "groove_harmony": {"mean": 0.73, "min": 0.48, "max": 0.92},
+    "drum_cohesion": {"mean": 0.77, "min": 0.42, "max": 0.93},
+    "structure": {"mean": 0.69, "min": 0.40, "max": 0.88},
+    "articulation": {"mean": 0.56, "min": 0.12, "max": 0.81}
+  },
   "score_distribution": {
     "population": "passed_loops",
     "min": 51.2,
@@ -182,6 +199,11 @@ JSONL 1 行構造:
   "created_at": "2025-10-07T11:40:00Z"
 }
 ```
+
+`score_axes` は合格ループの軸別正規化スコア分布を 0–1 で要約し、
+ドリフト検知や閾値再設計時の指標として活用する。`data_digest` は
+処理対象ループ ID とパイプラインバージョンから生成した SHA1 ハッシュであり、
+ループ単位の CSV/JSONL にも同一値が付与される。
 
 ## 5. メトリクス拡張 (実装対象)
 

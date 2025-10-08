@@ -10,6 +10,7 @@ import math
 import statistics
 import sys
 import hashlib
+import subprocess
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -44,9 +45,17 @@ DEFAULT_ARTICULATION_THRESHOLDS_PATH = Path("configs/thresholds/articulation.yam
 DEFAULT_AXIS_WEIGHTS: Dict[str, float] = {
     "timing": 1.0,
     "velocity": 1.0,
-    "groove": 1.0,
-    "cohesion": 1.0,
+    "groove_harmony": 1.0,
+    "drum_cohesion": 1.0,
     "structure": 1.0,
+    "articulation": 1.0,
+}
+
+AXIS_NAME_ALIASES: Dict[str, str] = {
+    "groove": "groove_harmony",
+    "harmony": "groove_harmony",
+    "cohesion": "drum_cohesion",
+    "drums": "drum_cohesion",
 }
 
 DEFAULT_TICKS_PER_BEAT = 480
@@ -285,8 +294,10 @@ def _build_settings(
 
     axis_cfg = cast(Dict[str, Any], config.get("score", {}).get("axes", {}))
     axis_weights = DEFAULT_AXIS_WEIGHTS.copy()
-    for key, value in axis_cfg.items():
-        axis_weights[str(key)] = float(value)
+    for raw_key, value in axis_cfg.items():
+        key = str(raw_key)
+        axis_key = AXIS_NAME_ALIASES.get(key, key)
+        axis_weights[axis_key] = float(value)
 
     retry_map: Dict[str, Dict[str, Any]] = {}
     raw_retry = cast(List[Any], config.get("retry_presets", []))
@@ -972,6 +983,7 @@ class ArticulationLabeler:
             "min_support": min_support_int,
             "source": source,
             "prefer_labeled": bool(spec.get("prefer_labeled")),
+            "label": label,
         }
         if auto_summary:
             result["auto_summary"] = auto_summary
@@ -1018,51 +1030,56 @@ class ArticulationLabeler:
 
 
 def _score_axes(metrics: Any) -> Dict[str, float]:
-    axes: Dict[str, float] = {}
-    axes["timing"] = _average(
-        [
-            _clamp_opt(metrics.swing_confidence, 0.0, 1.0),
-            _invert_scale(metrics.microtiming_std, 30.0),
-            _invert_scale(metrics.microtiming_rms, 30.0),
-            _bandpass(metrics.syncopation_rate, 0.25, 0.25),
-        ]
-    )
-    axes["velocity"] = _average(
-        [
-            _bandpass(metrics.ghost_rate, 0.2, 0.2),
-            _bandpass(metrics.accent_rate, 0.2, 0.2),
-            _bandpass(metrics.velocity_range, 60.0, 40.0),
-            _bandpass(metrics.unique_velocity_steps, 6.0, 4.0),
-            _bandpass(metrics.velocity_std, 10.0, 6.0),
-        ]
-    )
-    fingerprint = cast(Dict[str, float], metrics.rhythm_fingerprint or {})
-    groove_strength = fingerprint.get("eighth", 0.0) + fingerprint.get(
-        "sixteenth",
-        0.0,
-    )
-    axes["groove"] = _average(
-        [
-            _bandpass(metrics.swing_ratio, 1.0, 0.6),
-            _bandpass(metrics.syncopation_rate, 0.25, 0.2),
-            _clamp_opt(groove_strength, 0.0, 1.0),
-        ]
-    )
-    axes["cohesion"] = _average(
-        [
-            _invert_scale(metrics.drum_collision_rate, 0.4),
-            _clamp_opt(metrics.role_separation, 0.0, 1.0),
-            _bandpass(metrics.hat_transition_rate, 0.4, 0.4),
-        ]
-    )
-    axes["structure"] = _average(
-        [
-            _bandpass(metrics.repeat_rate, 0.5, 0.3),
-            _bandpass(metrics.variation_factor, 0.4, 0.3),
-            _invert_scale(metrics.breakpoint_count, 8.0),
-            _bandpass(metrics.note_density_per_bar, 12.0, 8.0),
-        ]
-    )
+    def metric(name: str) -> Optional[float]:
+        return getattr(metrics, name, None)
+
+    fingerprint_raw = getattr(metrics, "rhythm_fingerprint", {}) or {}
+    fingerprint = cast(Dict[str, float], fingerprint_raw)
+    groove_strength = fingerprint.get("eighth", 0.0) + fingerprint.get("sixteenth", 0.0)
+    swing_bias = fingerprint.get("triplet", 0.0)
+
+    axes: Dict[str, float] = {
+        "timing": _average(
+            [
+                _clamp_opt(metric("swing_confidence"), 0.0, 1.0),
+                _invert_scale(metric("microtiming_std"), 30.0),
+                _invert_scale(metric("microtiming_rms"), 30.0),
+                _bandpass(metric("syncopation_rate"), 0.25, 0.25),
+            ]
+        ),
+        "velocity": _average(
+            [
+                _bandpass(metric("ghost_rate"), 0.2, 0.2),
+                _bandpass(metric("accent_rate"), 0.2, 0.2),
+                _bandpass(metric("velocity_range"), 60.0, 40.0),
+                _bandpass(metric("unique_velocity_steps"), 6.0, 4.0),
+                _bandpass(metric("velocity_std"), 10.0, 6.0),
+            ]
+        ),
+        "groove_harmony": _average(
+            [
+                _bandpass(metric("swing_ratio"), 1.0, 0.6),
+                _bandpass(metric("syncopation_rate"), 0.25, 0.2),
+                _clamp_opt(groove_strength, 0.0, 1.0),
+                _invert_scale(abs(groove_strength - swing_bias), 1.5),
+            ]
+        ),
+        "drum_cohesion": _average(
+            [
+                _invert_scale(metric("drum_collision_rate"), 0.4),
+                _clamp_opt(metric("role_separation"), 0.0, 1.0),
+                _bandpass(metric("hat_transition_rate"), 0.4, 0.4),
+            ]
+        ),
+        "structure": _average(
+            [
+                _bandpass(metric("repeat_rate"), 0.5, 0.3),
+                _bandpass(metric("variation_factor"), 0.4, 0.3),
+                _invert_scale(metric("breakpoint_count"), 8.0),
+                _bandpass(metric("note_density_per_bar"), 12.0, 8.0),
+            ]
+        ),
+    }
     return axes
 
 
@@ -1070,13 +1087,61 @@ def _combine_score(
     axes: Dict[str, float],
     weights: Dict[str, float],
 ) -> Tuple[float, Dict[str, float]]:
-    total_weight = sum(weights.values()) or len(weights)
+    total_weight = sum(weights.values()) or float(len(axes))
     breakdown: Dict[str, float] = {}
-    for axis, value in axes.items():
-        weight = weights.get(axis, 0.0)
+    total = 0.0
+    for axis, raw_value in axes.items():
+        weight = float(weights.get(axis, 0.0))
         share = weight / total_weight if total_weight else 0.0
-        breakdown[axis] = float(value) * 100.0 * share
-    return sum(breakdown.values()), breakdown
+        clipped = _clip(float(raw_value), 0.0, 1.0)
+        contribution = clipped * 100.0 * share
+        breakdown[axis] = contribution
+        total += contribution
+    return total, breakdown
+
+
+def _resolve_git_commit() -> Optional[str]:
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return commit.decode("utf-8").strip() or None
+
+
+def _compute_data_digest(
+    loop_ids: Sequence[str],
+    pipeline_version: str,
+) -> Optional[str]:
+    if not loop_ids:
+        return None
+    hasher = hashlib.sha1()
+    for loop_id in sorted(set(loop_ids)):
+        hasher.update(loop_id.encode("utf-8"))
+    hasher.update(pipeline_version.encode("utf-8"))
+    digest = hasher.hexdigest()
+    return f"stage2:{pipeline_version}:{digest}"
+
+
+def _summarise_axes(samples: Sequence[Dict[str, float]]) -> Dict[str, Dict[str, float]]:
+    if not samples:
+        return {}
+    buckets: Dict[str, List[float]] = defaultdict(list)
+    for sample in samples:
+        for key, value in sample.items():
+            buckets[key].append(float(value))
+    summary: Dict[str, Dict[str, float]] = {}
+    for key, values in buckets.items():
+        if not values:
+            continue
+        summary[key] = {
+            "mean": sum(values) / len(values),
+            "min": min(values),
+            "max": max(values),
+        }
+    return summary
 
 
 def _tempo_summary(tempos: Sequence[int]) -> Dict[str, float]:
@@ -1165,6 +1230,9 @@ class Stage2Extractor:
         events_rows: List[Dict[str, Any]] = []
         loop_rows: List[Dict[str, Any]] = []
         score_rows: List[Dict[str, Any]] = []
+        loop_ids: List[str] = []
+        axis_pass_samples: List[Dict[str, float]] = []
+        git_commit = _resolve_git_commit()
         passed_scores: List[float] = []
         retry_count = 0
         tempo_with_events = 0
@@ -1285,14 +1353,15 @@ class Stage2Extractor:
             )
             events_rows.extend(event_rows)
 
-            axes = _score_axes(loop_metrics)
-            axes["articulation"] = articulation_result.axis_value
+            axes_raw = _score_axes(loop_metrics)
+            axes_raw["articulation"] = articulation_result.axis_value
             score_total, score_breakdown = _combine_score(
-                axes,
+                axes_raw,
                 self.settings.axis_weights,
             )
             if score_total >= self.settings.threshold:
                 passed_scores.append(score_total)
+                axis_pass_samples.append(axes_raw)
 
             retry_preset_id: Optional[str] = None
             retry_seed: Optional[int] = None
@@ -1317,6 +1386,7 @@ class Stage2Extractor:
                     "microtiming_rms": loop_metrics.microtiming_rms,
                     "swing_confidence": loop_metrics.swing_confidence,
                     "articulation_score": articulation_result.score,
+                    "axis": axes_raw.get(reason_key),
                 }
                 retry_payload: Dict[str, Any] = {
                     "loop_id": loop_id,
@@ -1345,6 +1415,7 @@ class Stage2Extractor:
                     "loop_id": loop_id,
                     "score": score_total,
                     "axes": score_breakdown,
+                    "axes_raw": axes_raw,
                     "threshold": self.settings.threshold,
                     "retry_preset_id": retry_preset_id,
                     "seed": retry_seed,
@@ -1388,8 +1459,13 @@ class Stage2Extractor:
                 "score.total": score_total,
                 "score.threshold": self.settings.threshold,
                 "score.passed": score_total >= self.settings.threshold,
+                "score.threshold_passed": (score_total >= self.settings.threshold),
                 "score.breakdown": json.dumps(
                     score_breakdown,
+                    ensure_ascii=False,
+                ),
+                "score.axes_raw": json.dumps(
+                    axes_raw,
                     ensure_ascii=False,
                 ),
                 "tempo.summary": tempo_summary_json,
@@ -1414,15 +1490,26 @@ class Stage2Extractor:
                     articulation_result.thresholds,
                     ensure_ascii=False,
                 ),
+                "git_commit": git_commit,
             }
             loop_row.update(_flatten_metrics(metrics_dict))
             loop_rows.append(loop_row)
+            loop_ids.append(loop_id)
 
             processed += 1
 
         articulation_summary = articulation_labeler.summary()
 
         # Write artefacts
+        data_digest = _compute_data_digest(
+            loop_ids,
+            self.settings.pipeline_version,
+        )
+
+        if data_digest:
+            for item in loop_rows:
+                item["data_digest"] = data_digest
+
         if events_rows:
             events_df = pd.DataFrame(events_rows)
             events_df.to_parquet(
@@ -1455,6 +1542,9 @@ class Stage2Extractor:
             passed_scores=passed_scores,
             retry_entries=retry_count,
             articulation_summary=articulation_summary,
+            git_commit=git_commit,
+            data_digest=data_digest,
+            axis_summary=_summarise_axes(axis_pass_samples),
         )
 
         if self.settings.paths.summary_out:
@@ -1481,13 +1571,18 @@ def _build_summary(
     passed_scores: Sequence[float],
     retry_entries: int,
     articulation_summary: Optional[Dict[str, Any]] = None,
+    git_commit: Optional[str] = None,
+    data_digest: Optional[str] = None,
+    axis_summary: Optional[Dict[str, Dict[str, float]]] = None,
 ) -> Dict[str, Any]:
     distribution: Dict[str, Any] = {}
     if passed_scores:
+        median_value = float(statistics.median(passed_scores))
         distribution = {
             "population": "passed_loops",
             "min": float(min(passed_scores)),
-            "median": float(statistics.median(passed_scores)),
+            "median": median_value,
+            "p50": median_value,
             "p90": _percentile(list(passed_scores), 0.9),
             "max": float(max(passed_scores)),
         }
@@ -1507,6 +1602,12 @@ def _build_summary(
     }
     if articulation_summary:
         summary["articulation"] = articulation_summary
+    if git_commit:
+        summary["git_commit"] = git_commit
+    if data_digest:
+        summary["data_digest"] = data_digest
+    if axis_summary:
+        summary["score_axes"] = axis_summary
     return summary
 
 
