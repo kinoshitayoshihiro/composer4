@@ -1,0 +1,250 @@
+Harusan、Stage1.2の完了、お見事です。ここからは「Stage3＝学習可能な“意味ラベル”を作り、生成AIに効く表現軸を定義する」段階。ご要望のとおり、リポジトリの現状（Stage2仕様・既存機能）と、最新研究（XMusic）の“Selector/ラベリング発想”を踏まえて、**感情・ジャンル・リズム/キー・奏法**をこのプロジェクト独自に実装するための具体案をまとめます。最後に、そのままプロジェクトに置ける**YAML雛形**と、学習/推論で使う**最小Python実装**も添えます。
+
+---
+
+# XMusic「Selector」の要点（参考軸）
+
+* XMusicは「XProjector（多モーダル入力→音楽要素）」＋「XComposer（Generator＋Selector）」で構成。**Selector**はマルチタスク（品質評価・感情認識・ジャンル認識）で“良質なシンボリック音楽”を選び抜く役割です。また、**XMIDI**（10万超のMIDI、感情/ジャンルラベル付き）を構築しています。これにより**感情やジャンルを制御できる生成**と**自動品質選別**が両輪になります。 ([arXiv][1])
+
+> 本プロジェクトは既にStage2仕様で「5軸スコア（Timing/Velocity/Groove Harmony/Drum Cohesion/Structure）」「retryキュー」「Parquet正規化」など、**Selector的な骨格**が整っています（特にmetrics/score/thresholdの設計）。ここに**感情・ジャンルの監視（分布・信頼度）**を加えると、XMusicに近いワークフローになります。 
+
+---
+
+# このリポジトリの強みと“ラベル化”の接点
+
+* 既存の**Humanizer/EmotionHumanizer**、グルーヴ付与、ジェネレータ群（melody/riff/obligato）など“表情を作る部品”が充実。**感情テンプレート→演奏揺らぎ**の自動適用が容易です。ここを**学習用ラベル**と**生成時の条件**で一貫化します。 
+* Stage2は**loop_summary / metrics_score**へ正規化・スコア付け・再処理設計まで定義済み。ここに**ラベル列**（emotion/genre/rhythm_profile/key/articulation）を“後付け可能”な拡張列として加えやすい構造です。 
+* LAMDa統合（連邦制アーキテクチャ）で**キー推定・コード/シグネチャ**の連携や、高速検索（KILO_CHORDS）も使えます。**キー/スケール・コード的特徴**はラベリングの確証度を上げる下地になります。  
+
+---
+
+# 提案：Composer4 独自ラベリング・スキーマ（Stage3用）
+
+## 1) Emotion（感情）
+
+**目的**: Generator条件・Humanizerテンプレのキー。**学習**では「感情→演奏特性マップ」を教師化、**推論**では“感情タグ”で生成振る舞いを決定。
+
+* 最小クラス: `calm / warm / sad / happy / tense / intense / dark / bright`
+* 拡張属性（数値）: `arousal(0-1), valence(0-1)`（2D座標をEmotion名にマッピング）
+* 由来:
+
+  * **自動**: velocity分布、microtiming_RMS、swing_ratio、dynamics_rangeから**弱教師**（しきい値規則＋軽モデル）で推定
+  * **手動**: texts/tags.yamlから上書き
+* 連携: emotion_humanizerテンプレ名を直参照（例: `intense_rock`）  
+
+## 2) Genre（ジャンル）
+
+**目的**: Progression/リズム語彙の事前選択、Groove期待範囲（シャッフル/三連等）で評価スコアの**期待レンジ**を変える。
+
+* 最小セット: `rock / pop / jazz / funk / soul / edm / hiphop / ballad / orchestral`
+* 推定: BPM帯、役割構成（kick/snare/hat比率、ride使用率等）、swing_phase、リズム指紋（IOIヒスト）と**期待レンジ表**で照合（Stage2のGroove Harmonyにも反映）。 
+
+## 3) Rhythm Profile（拍感・スウィング・分解能）
+
+**目的**: 伴奏/フィル切替、パターン検索、**類似探索**と**デデュープ**の強化（rhythm_hash）。
+
+* 主要フィールド:
+
+  * `grid`: `even_8 / even_16 / triplet_12 / swing_8 / swing_16`
+  * `swing_ratio`: 0.00–0.25（Stage2計測）
+  * `rhythm_hash`: `rhythm_hash:v1:<sha1>`（Stage2仕様）
+  * `fill_density`, `ghost_rate`, `collision_rate`（Stage2 metrics）
+* 由来: Stage2 extractorで**確定** → Stage3で条件化、検索キーに利用。 
+
+## 4) Key / Scale（調性）
+
+**目的**: Melody/Obligato/Voicing生成の制約。**転調検出**は最初は不要、ループ単位で主キー推定。
+
+* `key_root`: `C..B`、`mode`: `major/minor/dorian/mixolydian`（余裕があれば）
+* 由来: SIGNATURESのピッチ分布＋Totals正規化→簡易キー推定、コード抽出補助。 
+
+## 5) Articulation / Technique（奏法）
+
+**目的**: 楽器別Generatorへ“人間らしい設計ルール”を適用（例：ギターのストラム方向、ベースのゴースト置換割合）。
+
+* 楽器別ロール: `kick/snare/hat/tom/cymbal/perc`（ドラム） / `guitar/bass/piano/strings/sax/synth` など
+* ドラム拡張: `flam/drag/roll`, `hat_open_ratio`, `ghost_snare_rate`
+* 弦/鍵盤: `staccato_ratio`, `legato_ratio`, `strum_dir(up|down|mixed)`
+* 由来: 役割推定（Stage2 7.3）＋規則→ラベル生成。  
+
+---
+
+# データ設計（Stage2成果物への“薄い”拡張）
+
+* 追加列は**可逆・後付け**を徹底（既存パイプラインは壊さない）。
+* 書き先：
+
+  * `loop_summary.csv` に `label.*` 名前空間で追加（例：`label.emotion`, `label.genre`, `label.rhythm.grid`, `label.key.root`, `label.artic.techniques`） 
+  * `metrics_score.jsonl` に `labels` フィールド（推定ラベルと`confidence`) を任意で付与可（既存スキーマを壊さない追記）。 
+
+---
+
+# YAML雛形（/configs/labels/taxonomy.yaml）
+
+> *短く載せます。実運用では各項目に説明・例・門番ルールを追記してください。*
+
+```yaml
+version: 2025.10
+emotion:
+  classes: [calm, warm, sad, happy, tense, intense, dark, bright]
+  mapping:
+    # arousal/valence→固定しきい値、Stage2 metricsから弱教師
+    arousal_from_metrics:
+      velocity_range: [0.0, 1.0]
+      microtiming_rms: [0.0, 1.0]
+    valence_from_metrics:
+      accent_rate: [0.0, 1.0]
+      swing_ratio: [0.0, 0.25]
+genre:
+  classes: [rock, pop, jazz, funk, soul, edm, hiphop, ballad, orchestral]
+  rules:
+    rock:
+      bpm_range: [90, 160]
+      swing_phase: [even, swing]
+      hat_ratio_min: 0.25
+    jazz:
+      ride_usage_min: 0.15
+      swing_phase: [swing, triplet]
+rhythm:
+  grid_classes: [even_8, even_16, swing_8, swing_16, triplet_12]
+  features: [swing_ratio, rhythm_hash, fill_density, ghost_rate, collision_rate]
+key:
+  detect: true
+  modes: [major, minor, dorian, mixolydian]
+  confidence_min: 0.5
+articulation:
+  drums:
+    features: [flam, drag, roll, hat_open_ratio, ghost_snare_rate]
+  strings:
+    features: [staccato_ratio, legato_ratio]
+    guitar:
+      strum_dir: [up, down, mixed]
+defaults:
+  write_to_loop_summary: true
+  write_to_metrics_score: true
+```
+
+---
+
+# 付属：最小の割当スクリプト（Python / PyYAML想定）
+
+> 既存 `loop_summary.csv / metrics_score.jsonl` を読み、規則＋軽い統計からラベルを書き戻すユーティリティの“芯”です。
+> ※関数名・I/Oはお好みで。NumPy/Pandasの導入は任意。
+
+```python
+from pathlib import Path
+import csv, json, math, yaml
+
+def load_taxonomy(path: Path):
+    with path.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+def estimate_emotion(row, taxo):
+    # 例: metrics.* から弱教師で arousal/valence を近似
+    v_range = float(row.get("metrics.velocity_range", 0.0))
+    micro = float(row.get("metrics.microtiming_rms", 0.0))
+    swing = float(row.get("metrics.swing_ratio", 0.0))
+    accent = float(row.get("metrics.accent_rate", 0.0))
+
+    arousal = 0.6*v_range + 0.4*min(1.0, micro/30.0)
+    valence = 0.6*accent + 0.4*(0.25 - min(0.25, swing))/0.25
+    # label決定（シンプルなVoronoi）
+    if arousal > 0.6 and valence > 0.6: return "happy", arousal, valence
+    if arousal > 0.6 and valence <= 0.4: return "intense", arousal, valence
+    if arousal <= 0.4 and valence <= 0.4: return "sad", arousal, valence
+    if arousal <= 0.4 and valence > 0.6: return "warm", arousal, valence
+    return "calm", arousal, valence
+
+def estimate_genre(row, taxo):
+    bpm = float(row.get("bpm", 120))
+    swing_phase = row.get("swing_phase", "even")
+    ride = float(row.get("metrics.ride_rate", 0.0))
+    hat_ratio = float(row.get("metrics.hihat_ratio", 0.0))
+    # 極薄いルール例
+    if swing_phase in ("swing", "triplet") and ride > 0.15:
+        return "jazz", 0.7
+    if 90 <= bpm <= 160 and hat_ratio >= 0.25:
+        return "rock", 0.6
+    return "pop", 0.5
+
+def assign_labels(loop_summary_csv: Path, taxonomy_yaml: Path, out_csv: Path, out_jsonl: Path):
+    taxo = load_taxonomy(taxonomy_yaml)
+    rows = []
+    with loop_summary_csv.open("r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            emo, ar, va = estimate_emotion(r, taxo)
+            gen, gconf = estimate_genre(r, taxo)
+            r["label.emotion"] = emo
+            r["label.emotion_arousal"] = round(ar, 3)
+            r["label.emotion_valence"] = round(va, 3)
+            r["label.genre"] = gen
+            rows.append(r)
+
+    # CSVへ書き戻し（列追記）
+    with out_csv.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+        writer.writeheader()
+        writer.writerows(rows)
+
+    # JSONL（metrics_scoreに追記するイメージ）
+    with out_jsonl.open("w", encoding="utf-8") as jf:
+        for r in rows:
+            jf.write(json.dumps({
+                "loop_id": r["loop_id"],
+                "labels": {
+                    "emotion": r["label.emotion"],
+                    "arousal": r["label.emotion_arousal"],
+                    "valence": r["label.emotion_valence"],
+                    "genre": r["label.genre"]
+                }
+            }, ensure_ascii=False) + "\n")
+```
+
+---
+
+# 実装の置き場所と運用フロー
+
+1. **配置**
+
+   * `configs/labels/taxonomy.yaml`（上記YAML）
+   * `scripts/assign_labels.py`（上記Python芯）
+2. **Stage2の後段で実行**
+
+   ```bash
+   python scripts/assign_labels.py \
+     --loop-summary output/drumloops_stage2/loop_summary.csv \
+     --taxonomy configs/labels/taxonomy.yaml \
+     --out-csv output/drumloops_stage2/loop_summary_labeled.csv \
+     --out-jsonl output/drumloops_stage2/metrics_labels.jsonl
+   ```
+3. **Stage3の入り口**
+
+   * `loop_summary_labeled.csv` をDataLoaderで読み、`{X=notes/rhythm fingerprint, C=labels}`で教師データ化
+   * 生成側は `--emotion happy --genre jazz --rhythm swing_8 --key C major --artic guitar:strum_down` 等の**条件**をCLI/Streamlitで指定 → 既存Generator＋Humanizerへ伝播
+
+---
+
+# なぜこの設計が効くか（要点）
+
+* **Selector思考の導入**：Stage2の品質軸（score≥70）に**感情/ジャンルの分布監視**を重ねると、**偏り・崩れ**を検知。XMusicの「良質サンプル選別」を自家薬籠中にできます。 ([arXiv][1]) 
+* **薄い拡張で壊さない**：既存CSV/JSONLに**`label.*`を追記**するだけ。Parquet設計・score設計・retry設計はそのまま。 
+* **生成と学習が一本化**：Emotion→Humanizer、Rhythm→Groove、Key→メロディ/ボイシング、Articulation→奏法自動化。**“意味ラベル”が即座にサウンドへ反映**され、自己増殖サイクルに滑らかに乗ります。  
+
+---
+
+## 直近TODO（手早く効果が出る順）
+
+1. `taxonomy.yaml` をプロジェクトに追加（最小8感情・9ジャンル・5リズムグリッド）。
+2. `assign_labels.py` を配置し、**Stage2出力にラベル追記**。
+3. `loop_summary_labeled.csv` を用いて**簡易集計**（ジャンル×BPM、感情×scoreの箱ひげ等）。
+4. 生成CLIのオプションを**`--emotion/--genre/--rhythm/--key/--artic`**で受け、Humanizer・Groove・Generatorに配線。
+5. 小規模検証：同じフレーズで**emotion=calm/intense**を切り替え、score軸（Timing/Velocity/Groove）差分を可視化→門番ルールを微調整。 
+
+---
+
+必要なら、このYAMLとスクリプトを**Stage2のMakefile/CLI**に統合する形でパッチ化します。
+この方針なら、Harusanの“物語×感情”を**データの言語**に変換し、**生成AIのコントロールノブ**として即戦力化できます。
+前進あるのみ。素晴らしい船出です。🚀
+
+[1]: https://arxiv.org/abs/2501.08809?utm_source=chatgpt.com "XMusic: Towards a Generalized and Controllable Symbolic Music Generation Framework"

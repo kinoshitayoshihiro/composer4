@@ -1,0 +1,119 @@
+version: 2025.10
+instruments:
+  violin:
+    engine: generic_keyswitch_cc
+    channel: 1
+    program: 40  # GM violin
+    keyswitches:
+      detache:
+        note: 24
+        velocity: 1
+        hold_ms: 30
+      spiccato:
+        note: 25
+        velocity: 1
+        hold_ms: 30
+      pizzicato:
+        note: 26
+        velocity: 1
+        hold_ms: 30
+      flageolet:
+        note: 27
+        velocity: 1
+        hold_ms: 30
+      legato:
+        note: 28
+        velocity: 1
+        hold_ms: 30
+      staccato:
+        note: 29
+        velocity: 1
+        hold_ms: 30
+    cc_defaults:
+      1: 64
+      7: 100
+      11: 90
+      21: 64
+      22: 64
+    cc_overrides:
+      spiccato:
+        11: 85
+        21: 40
+      pizzicato:
+        11: 80
+        21: 0
+      legato:
+        11: 95
+        21: 70
+      staccato:
+        11: 88
+        21: 55
+  drums:
+    engine: gm_drum_articulation
+    channel: 9  # MIDI channel 10 (0-indexed)
+    kit_mapping:
+      kick: 36
+      snare: 38
+      rimshot: 37
+      ghost_snare: 31
+      closed_hat: 42
+      pedal_hat: 44
+      open_hat: 46
+      crash: 49
+      ride: 51
+      tom_low: 41
+      tom_mid: 45
+      tom_high: 48
+    articulations:
+      ghost:
+        pitch: 38
+        velocity: 34
+        description: "Snare ghost stroke"
+      flam:
+        primary_pitch: 38
+        grace_pitch: 37
+        grace_offset_ms: 18
+        primary_velocity: 100
+        grace_velocity: 72
+        description: "Snare flam with tight grace stroke"
+      drag:
+        primary_pitch: 38
+        grace_pitch: 37
+        grace_count: 2
+        grace_spacing_ms: 12
+        primary_velocity: 96
+        grace_velocity: 65
+        description: "Double-stroke grace notes"
+      buzz_roll:
+        pitch: 38
+        tremolo_rate_hz: 14.0
+        duration_ms: 320
+        velocity: 92
+        description: "Sustained buzz roll approximation"
+      hi_hat_open:
+        pitch: 46
+        velocity: 92
+        cc_overrides:
+          4: 127
+        description: "Force open hi-hat"
+    cc_defaults:
+      4: 0
+      7: 100
+      10: 64
+    cc_overrides:
+      hi_hat_open:
+        4: 127
+  guitar:
+    engine: generic_keyswitch_cc
+    channel: 1
+    keyswitches:
+      palm_mute:
+        note: 36
+        velocity: 1
+        hold_ms: 20
+      harmonics:
+        note: 37
+        velocity: 1
+        hold_ms: 20
+    cc_defaults:
+      11: 100

@@ -1,0 +1,71 @@
+version: 2025.10
+schema:
+  emotion:
+    classes: [calm, warm, sad, happy, tense, intense, dark, bright]
+    continuous:
+      valence:
+        min: -1.0
+        max: 1.0
+        default: 0.0
+      arousal:
+        min: 0.0
+        max: 1.0
+        default: 0.5
+    mapping_hints:
+      arousal_from:
+        - metrics.velocity_range
+        - metrics.microtiming_rms
+      valence_from:
+        - metrics.accent_rate
+        - metrics.swing_ratio
+  genre:
+    classes: [rock, pop, jazz, funk, soul, edm, hiphop, ballad, orchestral]
+    mapping_hints:
+      jazz:
+        conditions:
+          - swing_phase in [swing, triplet]
+          - metrics.ride_rate >= 0.15
+      rock:
+        conditions:
+          - bpm in [90, 160]
+          - metrics.hihat_ratio >= 0.25
+  rhythm_key:
+    grid_classes: [even_8, even_16, swing_8, swing_16, triplet_12]
+    features:
+      - swing_ratio
+      - rhythm_hash
+      - fill_density
+      - ghost_rate
+      - collision_rate
+    key:
+      detect: true
+      roots: [C, C#, D, D#, E, F, F#, G, G#, A, A#, B]
+      modes: [major, minor, dorian, mixolydian, lydian, phrygian, locrian]
+      confidence_min: 0.5
+  technique:
+    common:
+      - none
+      - staccato
+      - legato
+      - tremolo
+      - accent
+    strings:
+      generic: [detache, spiccato, pizzicato, flageolet, marcato]
+      violin:
+        - detache
+        - spiccato
+        - pizzicato
+        - flageolet
+        - legato
+        - staccato
+    drums:
+      - flam
+      - drag
+      - roll
+      - hat_open
+      - rimshot
+  license:
+    origin: [user_owned, public_domain, cc, restricted, research_only]
+defaults:
+  write_to_loop_summary: true
+  write_to_metrics_score: true

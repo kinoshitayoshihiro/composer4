@@ -202,6 +202,58 @@ similar_key_songs = search_by_key(key, kilo_data)
 
 ## 🧪 ローカルテスト
 
+## 🌐 外部データセット連携とラベリング強化
+
+Stage2/Stage3 を拡張し、感情・ジャンル・奏法ラベルを高精度化するために、以下の外部研究を取り込みます。
+
+### XMIDI / XMusic Selector
+
+- **概要**: 108,023曲のMIDIと Emotion/Genre ラベルを備えた XMIDI データセットを公開。XMusic では Selector によるマルチタスク学習で品質・感情・ジャンルを同時監視。
+- **ライセンス方針**: 研究用途で論文引用が前提。既存曲のアレンジ含有が想定されるため、MIDIそのものの再配布は非推奨。
+- **音本での適用**:
+   - `data/XMIDI_Dataset/` にダウンロード済み。内部参照のみとし、再配布は行わない。
+   - Stage2 の `loop_summary.csv` に Emotion/Genre を補完する教師データとして利用し、分類器を事前学習して自前データへ推論。
+   - Stage3 では学習済み分類器を Selector に組み込み、ラベルの信頼度を品質スコアと併せて追跡。
+
+#### XMIDI データ構造メモ
+
+- **ファイル命名**: `XMIDI_<emotion>_<genre>_<id>.midi` 形式（例: `XMIDI_warm_rock_4Q71QINE.midi`）。Emotion 12分類 × Genre 21分類をカバー。
+- **収録数**: ファイル総数 108,023。上位カテゴリは `exciting` (20,948件), `warm` (15,090件), `happy` (13,291件) など。
+- **代表的な組み合わせ**: `exciting_pop` 7,542件、`angry_rock` 5,088件、`lazy_jazz` 3,399件 といったジャンル別クラスタが確認できる。
+- **前処理ヒント**:
+   - ファイルサイズは概ね 5–60KB と軽量で、`pretty_midi`/`miditoolkit` で一括読み込みが可能。
+   - Emotion/Genre はファイル名から復元できるため、Stage2 で `label.emotion`, `label.genre` を直に埋められる。
+   - 分類器の事前学習時は Emotion ごとの件数差が大きいため `class_weight="balanced"` や `RandomUnderSampler` の導入を推奨。
+
+### VioPTT & MOSA-VPT
+
+- **概要**: 合成バイオリン音源（DAWDreamer + Synchron Solo Violin I）により 76 時間の奏法ラベル付きデータを生成。VioPTT は音高・オンセット・奏法を同時推定。
+- **公開状況**: 論文は公開済み、データとコードは採択後に一般公開予定。現時点では合成手順から自前再現が可能。
+- **音本での適用**:
+   - `configs/labels/technique_map.yaml` に奏法→キースイッチ／CC マップを定義。
+   - `scripts/daw/violin_articulation_automation.py` で SUNO 由来の stem MIDI に奏法オートメーションを注入し、MOSA-VPT 互換の合成データを生成。
+   - Stage2 抽出でアタック勾配や休符率など奏法推定に寄与する特徴量を追加し、Stage3 の奏法条件付き Generator に接続。
+   - **運用メモ**: DAWDreamer は Python から音源をホストするオフライン・レンダラ。Studio One へ直接差し込むのではなく、DAWDreamer でバッチ書き出し→Studio One で仕上げる分業が現実的。
+   - **優先度**: 弦よりも奏法検出が容易な**ドラム**で MVP を確立してから、本流のバイオリン自動化へ進むと PDCA が速い。
+
+### MetaScore
+
+- **概要**: MuseScore コミュニティ 96.3 万曲にメタデータ＋LLM キャプションを付与。Text-to-Music モデル MST を提案。
+- **配布ポリシー**: Public Domain 約 27.4 万曲と CC 約 5.2 万曲のみ公開。その他は研究申請ベース。
+- **音本での適用**:
+   - データ本体は導入せず、LLM を用いたキャプション生成手順およびタグ補完ロジックを参照し、Harugoro Shichimi の歌詞から物語的ラベルを生成。
+   - Stage3 の条件ベクトルに「テキスト説明」を追加し、Emotion/Genre/Technique と併せて物語制御を実現。
+
+### 推奨ワークフロー
+
+1. `configs/labels/labels_schema.yaml` で Emotion/Genre/Rhythm/Key/Technique/License の共通スキーマを管理。
+2. Stage2 パイプライン後にラベル付与スクリプトを実行し、`loop_summary.csv` へ `label.*` 列を追記（後続で CLI 化予定）。
+3. `scripts/daw/violin_articulation_automation.py` を用いて奏法ごとの合成データを生成し、MOSA-VPT 互換の弱教師データを構築。
+4. Stage3 では Selector に Emotion/Genre/Technique 推定器を組み込んで学習し、MetaScore 流のキャプション推定を条件入力として併用。
+
+> **ストレージ注意**: Public Domain／CC ライセンス以外のデータは学習後に削除し、特徴量・ラベルのみを保管してください。
+
+
 ### なぜローカルテストが重要か?
 
 - ✅ **高速反復**: 2-5分で検証完了

@@ -10,7 +10,7 @@ import math
 import statistics
 import sys
 import hashlib
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -39,6 +39,7 @@ DEFAULT_METADATA_INDEX = Path("output/drumloops_metadata/drumloops_metadata_v2.p
 DEFAULT_METADATA_DIR = Path("output/drumloops_metadata")
 DEFAULT_INPUT_DIR = Path("output/drumloops_cleaned")
 DEFAULT_TMIDIX_PATH = Path("data/Los-Angeles-MIDI/CODE")
+DEFAULT_ARTICULATION_THRESHOLDS_PATH = Path("configs/thresholds/articulation.yaml")
 
 DEFAULT_AXIS_WEIGHTS: Dict[str, float] = {
     "timing": 1.0,
@@ -47,6 +48,113 @@ DEFAULT_AXIS_WEIGHTS: Dict[str, float] = {
     "cohesion": 1.0,
     "structure": 1.0,
 }
+
+DEFAULT_TICKS_PER_BEAT = 480
+FLAM_WINDOW_RATIO = 0.05
+DETACHE_DURATION_RANGE = (0.9, 2.2)
+DETACHE_GAP_RATIO = 0.15
+PIZZICATO_DURATION_RATIO = 0.65
+VIOLIN_PITCH_RANGE = (55, 103)
+
+
+@dataclass
+class ArticulationThresholds:
+    mode: str
+    fixed: Dict[str, Any]
+    auto: Dict[str, Any]
+    weights: Dict[str, float]
+    path: Path
+
+    @classmethod
+    def load(cls, path: Path) -> "ArticulationThresholds":
+        if not path.exists():
+            hint = str(path)
+            raise FileNotFoundError(f"Articulation threshold config not found: {hint}")
+        raw_text = path.read_text(encoding="utf-8")
+        raw_obj: Any = yaml.safe_load(raw_text) or {}
+        if not isinstance(raw_obj, dict):
+            raise ValueError("Articulation threshold config must be a mapping")
+        raw = cast(Dict[str, Any], raw_obj)
+        mode = str(raw.get("mode", "fixed")).lower()
+        fixed_cfg = cast(Dict[str, Any], raw.get("fixed", {}))
+        auto_cfg = cast(Dict[str, Any], raw.get("auto", {}))
+        weights_root = cast(Dict[str, Any], raw.get("weights", {}))
+        weights_cfg = cast(
+            Dict[str, Any],
+            weights_root.get("articulation", {}),
+        )
+        weights: Dict[str, float] = {
+            str(key): float(value) for key, value in weights_cfg.items() if value is not None
+        }
+        return cls(
+            mode=mode,
+            fixed=fixed_cfg,
+            auto=auto_cfg,
+            weights=weights,
+            path=path,
+        )
+
+    @property
+    def total_weight(self) -> float:
+        return sum(self.weights.values())
+
+    def tempo_bins(self) -> List[float]:
+        tempo_cfg = cast(Dict[str, Any], self.auto.get("bins", {}))
+        bins_obj = tempo_cfg.get("tempo", [])
+        if not isinstance(bins_obj, list):
+            return []
+        result: List[float] = []
+        for bound in cast(List[Any], bins_obj):
+            try:
+                result.append(float(bound))
+            except (TypeError, ValueError):
+                continue
+        return result
+
+    def auto_min_support(self, category: str) -> Optional[int]:
+        values = cast(Dict[str, Any], self.auto.get("min_support", {}))
+        if category not in values:
+            return None
+        try:
+            return int(values[category])
+        except (TypeError, ValueError):
+            return None
+
+    def hysteresis_drop_ratio(self) -> float:
+        quantiles_cfg = cast(Dict[str, Any], self.auto.get("quantiles", {}))
+        value = quantiles_cfg.get("hysteresis_drop_iqr", 0.1)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.1
+
+
+@dataclass
+class ArticulationObservation:
+    loop_id: str
+    metrics: Dict[str, Optional[float]]
+    support: Dict[str, Any]
+    tempo_bpm: Optional[float]
+    metrics_full: Dict[str, Any]
+
+
+@dataclass
+class ArticulationResult:
+    score: float
+    labels: List[str]
+    presence: Dict[str, float]
+    thresholds: Dict[str, Any]
+    axis_value: float
+
+    @classmethod
+    def empty(cls) -> "ArticulationResult":
+        return cls(
+            score=0.0,
+            labels=[],
+            presence={},
+            thresholds={},
+            axis_value=0.0,
+        )
 
 
 @dataclass
@@ -70,6 +178,7 @@ class Stage2Settings:
     paths: Stage2Paths
     limit: Optional[int]
     print_summary: bool
+    articulation_thresholds: Optional[ArticulationThresholds]
 
 
 def _parse_args() -> argparse.Namespace:
@@ -84,6 +193,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--summary-out", type=Path)
     parser.add_argument("--print-summary", action="store_true")
     parser.add_argument("--sample-events", type=int)
+    parser.add_argument("--articulation-thresholds", type=Path)
     return parser.parse_args()
 
 
@@ -194,6 +304,29 @@ def _build_settings(
     metric_kwargs = cast(Dict[str, Any], config.get("metrics", {}))
     metrics_cfg = MetricConfig(**metric_kwargs)
 
+    articulation_cfg = cast(Dict[str, Any], config.get("articulation", {}))
+    thresholds_path_cfg = articulation_cfg.get("thresholds_path")
+    thresholds_path: Optional[Path]
+    if thresholds_path_cfg is not None:
+        thresholds_path = Path(thresholds_path_cfg)
+    else:
+        thresholds_path = DEFAULT_ARTICULATION_THRESHOLDS_PATH
+    if args.articulation_thresholds is not None:
+        thresholds_path = args.articulation_thresholds
+
+    articulation_thresholds: Optional[ArticulationThresholds] = None
+    if thresholds_path and thresholds_path.exists():
+        articulation_thresholds = ArticulationThresholds.load(thresholds_path)
+        axis_override = axis_cfg.get("articulation")
+        if axis_override is not None:
+            axis_weights["articulation"] = float(axis_override)
+        else:
+            total_weight = articulation_thresholds.total_weight
+            if total_weight > 0:
+                axis_weights["articulation"] = total_weight
+    elif "articulation" not in axis_weights:
+        axis_weights["articulation"] = 0.0
+
     paths = _resolve_paths(config, args)
 
     return Stage2Settings(
@@ -205,6 +338,7 @@ def _build_settings(
         paths=paths,
         limit=args.limit,
         print_summary=args.print_summary,
+        articulation_thresholds=articulation_thresholds,
     )
 
 
@@ -428,6 +562,461 @@ def _average(values: Iterable[Optional[float]]) -> float:
     return _clip(sum(items) / len(items), 0.0, 1.0)
 
 
+def _compute_articulation_metrics(
+    notes: Sequence[Sequence[Any]],
+    *,
+    ghost_threshold: int,
+    ticks_per_beat: int,
+    base_step: Optional[float],
+    loop_duration_ticks: int,
+    tempos: Sequence[int],
+) -> Tuple[Dict[str, Optional[float]], Dict[str, Any]]:
+    if not notes:
+        metrics: Dict[str, Optional[float]] = {
+            "articulation.snare_ghost_rate": None,
+            "articulation.snare_flam_rate": None,
+            "articulation.detache_ratio": None,
+            "articulation.pizzicato_ratio": None,
+        }
+        support: Dict[str, Any] = {
+            "snare_count": 0,
+            "violin_count": 0,
+            "snare_notes_per_sec": None,
+            "loop_duration_seconds": None,
+            "tempo_bpm": None,
+            "string_track": False,
+            "drum_track": False,
+            "pizzicato_labeled": False,
+        }
+        return metrics, support
+
+    effective_tpb = ticks_per_beat if ticks_per_beat > 0 else DEFAULT_TICKS_PER_BEAT
+    flam_window = max(3, int(FLAM_WINDOW_RATIO * effective_tpb))
+    snare_pitches = set(DRUM_CATEGORIES.get("snare", set()))
+
+    snare_events: List[Tuple[int, int]] = []
+    violin_events: List[Tuple[int, int, int]] = []
+
+    for raw in notes:
+        if len(raw) < 6:
+            continue
+        start = int(raw[1])
+        duration = int(raw[2])
+        channel = int(raw[3])
+        pitch = int(raw[4])
+        velocity = int(raw[5])
+
+        if channel == 9 or pitch in snare_pitches:
+            snare_events.append((start, velocity))
+
+        violin_lower, violin_upper = VIOLIN_PITCH_RANGE
+        if channel != 9 and violin_lower <= pitch <= violin_upper:
+            violin_events.append((start, duration, velocity))
+
+    snare_ghost_rate: Optional[float] = None
+    snare_flam_rate: Optional[float] = None
+
+    if snare_events:
+        total_snare = len(snare_events)
+        ghost_hits = sum(1 for _, velocity in snare_events if velocity <= ghost_threshold)
+        snare_ghost_rate = ghost_hits / total_snare if total_snare else None
+
+        ordered = sorted(snare_events, key=lambda item: item[0])
+        flam_pairs = 0
+        for first, second in zip(ordered, ordered[1:]):
+            delta = second[0] - first[0]
+            if 0 < delta <= flam_window and second[1] >= first[1]:
+                flam_pairs += 1
+        snare_flam_rate = flam_pairs / total_snare if total_snare else None
+
+    detache_ratio: Optional[float] = None
+    pizzicato_ratio: Optional[float] = None
+
+    if violin_events:
+        total_violin = len(violin_events)
+        violin_ordered = sorted(violin_events, key=lambda item: item[0])
+        reference_step = base_step if base_step and base_step > 0 else effective_tpb / 2.0
+        gap_threshold = reference_step * DETACHE_GAP_RATIO
+        detache_min = reference_step * DETACHE_DURATION_RANGE[0]
+        detache_max = reference_step * DETACHE_DURATION_RANGE[1]
+        pizzicato_max = reference_step * PIZZICATO_DURATION_RATIO
+
+        detache_count = 0
+        pizz_count = 0
+
+        for idx, (start, duration, velocity) in enumerate(violin_ordered):
+            if duration <= 0:
+                continue
+            if duration <= pizzicato_max:
+                pizz_count += 1
+
+            if detache_min <= duration <= detache_max:
+                if idx == 0:
+                    detache_count += 1
+                else:
+                    prev_start, prev_duration, _ = violin_ordered[idx - 1]
+                    gap = start - (prev_start + prev_duration)
+                    if gap >= gap_threshold:
+                        detache_count += 1
+        if total_violin:
+            detache_ratio = detache_count / total_violin
+            pizzicato_ratio = pizz_count / total_violin
+
+    tempo_us = tempos[0] if tempos else None
+    tempo_bpm = None
+    if tempo_us and tempo_us > 0:
+        tempo_bpm = 60_000_000 / tempo_us
+    loop_duration_seconds = None
+    if ticks_per_beat > 0 and tempo_us and tempo_us > 0:
+        beats = loop_duration_ticks / ticks_per_beat
+        loop_duration_seconds = beats * (tempo_us / 1_000_000)
+
+    snare_count = len(snare_events)
+    violin_count = len(violin_events)
+    snare_notes_per_sec = None
+    if loop_duration_seconds and loop_duration_seconds > 0:
+        snare_notes_per_sec = snare_count / loop_duration_seconds
+
+    metrics = {
+        "articulation.snare_ghost_rate": snare_ghost_rate,
+        "articulation.snare_flam_rate": snare_flam_rate,
+        "articulation.detache_ratio": detache_ratio,
+        "articulation.pizzicato_ratio": pizzicato_ratio,
+    }
+    support = {
+        "snare_count": snare_count,
+        "violin_count": violin_count,
+        "snare_notes_per_sec": snare_notes_per_sec,
+        "loop_duration_seconds": loop_duration_seconds,
+        "tempo_bpm": tempo_bpm,
+        "string_track": violin_count > 0,
+        "drum_track": snare_count > 0,
+        "pizzicato_labeled": False,
+    }
+    return metrics, support
+
+
+ARTICULATION_RULES: Dict[str, Dict[str, Any]] = {
+    "ghost": {
+        "metric": "articulation.snare_ghost_rate",
+        "config_key": "ghost_rate",
+        "category": "drums",
+        "support_key": "snare_count",
+        "default_min_support": 8,
+    },
+    "flam": {
+        "metric": "articulation.snare_flam_rate",
+        "config_key": "flam_rate",
+        "category": "drums",
+        "support_key": "snare_count",
+        "default_min_support": 24,
+    },
+    "detache": {
+        "metric": "articulation.detache_ratio",
+        "config_key": "detache_ratio",
+        "category": "strings",
+        "support_key": "violin_count",
+        "default_min_support": 16,
+    },
+    "pizzicato": {
+        "metric": "articulation.pizzicato_ratio",
+        "config_key": "pizzicato_ratio",
+        "category": "strings",
+        "support_key": "violin_count",
+        "default_min_support": 16,
+    },
+}
+
+
+def _tempo_bin_label(
+    value: Optional[float],
+    boundaries: Sequence[float],
+) -> str:
+    if value is None:
+        return "unknown"
+    if not boundaries or len(boundaries) < 2:
+        return "all"
+    ordered = sorted(boundaries)
+    for lower, upper in zip(ordered[:-1], ordered[1:]):
+        if value < upper or math.isclose(value, upper):
+            return f"{int(lower)}-{int(upper)}"
+    last_lower = ordered[-2]
+    last_upper = ordered[-1]
+    return f"{int(last_lower)}-{int(last_upper)}"
+
+
+class ArticulationLabeler:
+    HIGH_IQR_FACTOR = 0.25
+
+    def __init__(self, thresholds: Optional[ArticulationThresholds]) -> None:
+        self.thresholds = thresholds
+        self._auto_stats: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        self._observation_count = 0
+
+    def evaluate(
+        self,
+        observation: ArticulationObservation,
+    ) -> ArticulationResult:
+        self._observation_count += 1
+        if not self.thresholds or not self.thresholds.weights:
+            return ArticulationResult.empty()
+
+        if self.thresholds.mode == "auto":
+            self._register_auto_stat(observation)
+
+        presence: Dict[str, float] = {}
+        labels: List[str] = []
+        details: Dict[str, Any] = {}
+        score_sum = 0.0
+        weight_total = sum(self.thresholds.weights.values()) or 1.0
+
+        for label, rule in ARTICULATION_RULES.items():
+            if label not in self.thresholds.weights:
+                continue
+            result = self._evaluate_label(label, rule, observation)
+            presence[label] = result["presence"]
+            details[label] = result["details"]
+            if result["presence"] >= 0.5:
+                labels.append(label)
+            score_sum += self.thresholds.weights[label] * result["presence"]
+
+        axis_value = _clip(score_sum / weight_total, 0.0, 1.0)
+        return ArticulationResult(
+            score=score_sum,
+            labels=labels,
+            presence=presence,
+            thresholds=details,
+            axis_value=axis_value,
+        )
+
+    def summary(self) -> Dict[str, Any]:
+        if not self.thresholds or not self.thresholds.weights:
+            return {
+                "mode": "disabled",
+                "count": self._observation_count,
+            }
+        summary: Dict[str, Any] = {
+            "mode": self.thresholds.mode,
+            "count": self._observation_count,
+            "weights": dict(self.thresholds.weights),
+        }
+        if self.thresholds.mode == "auto":
+            auto_summary: Dict[str, Any] = {}
+            for metric_name, bin_map in self._auto_stats.items():
+                metric_summary: Dict[str, Any] = {}
+                for bin_key, values in bin_map.items():
+                    if len(values) < 2:
+                        continue
+                    ordered = sorted(values)
+                    metric_summary[bin_key] = {
+                        "q1": _percentile(ordered, 0.25),
+                        "q2": _percentile(ordered, 0.5),
+                        "q3": _percentile(ordered, 0.75),
+                        "count": len(values),
+                    }
+                if metric_summary:
+                    auto_summary[metric_name] = metric_summary
+            if auto_summary:
+                summary["auto"] = auto_summary
+            summary["tempo_bins"] = self.thresholds.tempo_bins()
+        return summary
+
+    def _register_auto_stat(
+        self,
+        observation: ArticulationObservation,
+    ) -> None:
+        if not self.thresholds or self.thresholds.mode != "auto":
+            return
+        bins = self.thresholds.tempo_bins()
+        bin_key = _tempo_bin_label(observation.tempo_bpm, bins)
+        for label, rule in ARTICULATION_RULES.items():
+            if label not in self.thresholds.weights:
+                continue
+            metric_value = observation.metrics.get(rule["metric"])
+            if metric_value is None:
+                continue
+            support_count = int(observation.support.get(rule["support_key"], 0) or 0)
+            required = self._auto_support_requirement(rule)
+            spec = self._category_spec(rule["category"], rule["config_key"])
+            spec_min = spec.get("min_support")
+            if spec_min is not None:
+                try:
+                    required = max(required, int(spec_min))
+                except (TypeError, ValueError):
+                    pass
+            if support_count < required:
+                continue
+            metric_name = rule["config_key"]
+            stats_for_metric = self._auto_stats.setdefault(
+                metric_name,
+                defaultdict(list),
+            )
+            stats_for_metric[bin_key].append(float(metric_value))
+
+    def _category_spec(self, category: str, config_key: str) -> Dict[str, Any]:
+        if not self.thresholds:
+            return {}
+        category_cfg = cast(
+            Dict[str, Any],
+            self.thresholds.fixed.get(category, {}),
+        )
+        entry = category_cfg.get(config_key, {})
+        if isinstance(entry, dict):
+            return cast(Dict[str, Any], entry)
+        return {}
+
+    def _auto_support_requirement(self, rule: Dict[str, Any]) -> int:
+        default = int(rule.get("default_min_support", 0) or 0)
+        if not self.thresholds:
+            return default
+        category = rule["category"]
+        auto_value = self.thresholds.auto_min_support(category)
+        if auto_value is None:
+            return default
+        return max(default, int(auto_value))
+
+    def _evaluate_label(
+        self,
+        label: str,
+        rule: Dict[str, Any],
+        observation: ArticulationObservation,
+    ) -> Dict[str, Any]:
+        metric_value = observation.metrics.get(rule["metric"])
+        support_count = int(observation.support.get(rule["support_key"], 0) or 0)
+        threshold_info = self._resolve_threshold(label, rule, observation)
+        high = threshold_info.get("high")
+        min_support = int(threshold_info.get("min_support", 0))
+        presence = 0.0
+        reason = "missing_metric" if metric_value is None else None
+
+        if metric_value is None or high is None:
+            presence = 0.0
+            if high is None:
+                reason = reason or "missing_threshold"
+        elif support_count < min_support:
+            presence = 0.0
+            reason = "insufficient_support"
+        else:
+            presence = 1.0 if metric_value >= high else 0.0
+            reason = "threshold_met" if presence else "threshold_not_met"
+
+        if label in {"detache", "pizzicato"} and not observation.support.get("string_track"):
+            presence = 0.0
+            reason = "not_string_track"
+
+        if label == "pizzicato" and threshold_info.get("prefer_labeled"):
+            if not observation.support.get("pizzicato_labeled"):
+                if metric_value is None or metric_value < (high or 0.0):
+                    presence = 0.0
+                    reason = "missing_explicit_label"
+
+        details: Dict[str, Any] = {
+            "metric": metric_value,
+            "threshold": high,
+            "min_support": min_support,
+            "support": support_count,
+            "source": threshold_info.get("source"),
+            "reason": reason,
+        }
+        if "auto_summary" in threshold_info:
+            details["auto"] = threshold_info["auto_summary"]
+        return {"presence": presence, "details": details}
+
+    def _resolve_threshold(
+        self,
+        label: str,
+        rule: Dict[str, Any],
+        observation: ArticulationObservation,
+    ) -> Dict[str, Any]:
+        if not self.thresholds:
+            return {"high": None, "min_support": 0, "source": "disabled"}
+
+        category = rule["category"]
+        config_key = rule["config_key"]
+        spec = self._category_spec(category, config_key)
+        high_value: Optional[float] = None
+        source = "fixed"
+
+        if "high" in spec:
+            try:
+                high_value = float(spec["high"])
+            except (TypeError, ValueError):
+                high_value = None
+
+        auto_summary = None
+        if self.thresholds.mode == "auto":
+            auto_value, auto_info = self._auto_threshold_for_metric(
+                config_key,
+                observation,
+            )
+            if auto_value is not None:
+                high_value = auto_value
+                auto_summary = auto_info or {}
+                source = f"auto:{auto_summary.get('bin', 'all')}"
+
+        min_support = spec.get(
+            "min_support",
+            rule.get("default_min_support", 0),
+        )
+        try:
+            min_support_int = int(min_support)
+        except (TypeError, ValueError):
+            min_support_int = int(rule.get("default_min_support", 0) or 0)
+
+        auto_support = self.thresholds.auto_min_support(category)
+        if auto_support is not None:
+            min_support_int = max(min_support_int, int(auto_support))
+
+        result: Dict[str, Any] = {
+            "high": high_value,
+            "min_support": min_support_int,
+            "source": source,
+            "prefer_labeled": bool(spec.get("prefer_labeled")),
+        }
+        if auto_summary:
+            result["auto_summary"] = auto_summary
+        return result
+
+    def _auto_threshold_for_metric(
+        self,
+        metric_name: str,
+        observation: ArticulationObservation,
+    ) -> Tuple[Optional[float], Optional[Dict[str, Any]]]:
+        if not self.thresholds or self.thresholds.mode != "auto":
+            return None, None
+        bin_map = self._auto_stats.get(metric_name)
+        if not bin_map:
+            return None, None
+        bins = self.thresholds.tempo_bins()
+        bin_key = _tempo_bin_label(observation.tempo_bpm, bins)
+        values = list(bin_map.get(bin_key, []))
+        if len(values) < 4:
+            flattened: List[float] = []
+            for entries in bin_map.values():
+                flattened.extend(entries)
+            values = flattened
+            bin_key = "all"
+        if len(values) < 4:
+            return None, None
+        ordered = sorted(values)
+        q1 = _percentile(ordered, 0.25)
+        q2 = _percentile(ordered, 0.5)
+        q3 = _percentile(ordered, 0.75)
+        iqr = q3 - q1
+        high = q3 + self.HIGH_IQR_FACTOR * iqr
+        drop_ratio = self.thresholds.hysteresis_drop_ratio()
+        drop = q2 - drop_ratio * iqr
+        return high, {
+            "bin": bin_key,
+            "q1": q1,
+            "q2": q2,
+            "q3": q3,
+            "iqr": iqr,
+            "drop": drop,
+            "count": len(values),
+        }
+
+
 def _score_axes(metrics: Any) -> Dict[str, float]:
     axes: Dict[str, float] = {}
     axes["timing"] = _average(
@@ -584,6 +1173,7 @@ class Stage2Extractor:
         total_seen = 0
         processed = 0
         ghost_threshold = self.settings.metrics.ghost_velocity_threshold
+        articulation_labeler = ArticulationLabeler(self.settings.articulation_thresholds)
 
         limit = self.settings.limit
         iterator: Iterator[Dict[str, Any]] = iter(records)
@@ -641,6 +1231,32 @@ class Stage2Extractor:
             )
             round_digits = self.settings.metrics.round_digits
             metrics_dict = loop_metrics.to_dict(digits=round_digits)
+            (
+                articulation_metrics,
+                articulation_support,
+            ) = _compute_articulation_metrics(
+                notes,
+                ghost_threshold=ghost_threshold,
+                ticks_per_beat=ticks_per_beat,
+                base_step=loop_metrics.base_step,
+                loop_duration_ticks=loop_metrics.duration_ticks,
+                tempos=tempos,
+            )
+            metrics_dict.update(articulation_metrics)
+            observation = ArticulationObservation(
+                loop_id=loop_id,
+                metrics=articulation_metrics,
+                support=articulation_support,
+                tempo_bpm=articulation_support.get("tempo_bpm"),
+                metrics_full=metrics_dict,
+            )
+            articulation_result = articulation_labeler.evaluate(observation)
+            metrics_dict["articulation.score_weighted"] = round(
+                articulation_result.score, round_digits
+            )
+            metrics_dict["articulation.score_normalized"] = round(
+                articulation_result.axis_value, round_digits
+            )
             tempo_summary = _tempo_summary(tempos)
             tempo_lock = _tempo_lock_method(tempos)
             grid_confidence = _grid_confidence(loop_metrics)
@@ -669,8 +1285,11 @@ class Stage2Extractor:
             )
             events_rows.extend(event_rows)
 
+            axes = _score_axes(loop_metrics)
+            axes["articulation"] = articulation_result.axis_value
             score_total, score_breakdown = _combine_score(
-                _score_axes(loop_metrics), self.settings.axis_weights
+                axes,
+                self.settings.axis_weights,
             )
             if score_total >= self.settings.threshold:
                 passed_scores.append(score_total)
@@ -697,6 +1316,7 @@ class Stage2Extractor:
                     "microtiming_std": loop_metrics.microtiming_std,
                     "microtiming_rms": loop_metrics.microtiming_rms,
                     "swing_confidence": loop_metrics.swing_confidence,
+                    "articulation_score": articulation_result.score,
                 }
                 retry_payload: Dict[str, Any] = {
                     "loop_id": loop_id,
@@ -730,6 +1350,10 @@ class Stage2Extractor:
                     "seed": retry_seed,
                     "metrics_used": sorted(metrics_dict.keys()),
                     "created_at": timestamp_now,
+                    "articulation_score": articulation_result.score,
+                    "articulation_labels": articulation_result.labels,
+                    "articulation_presence": articulation_result.presence,
+                    "articulation_axis": articulation_result.axis_value,
                 }
             )
 
@@ -776,11 +1400,27 @@ class Stage2Extractor:
                 "retry.seed": retry_seed,
                 "exclusion_reason": exclusion_reason,
                 "pipeline_version": self.settings.pipeline_version,
+                "articulation.score": articulation_result.score,
+                "articulation.axis_value": articulation_result.axis_value,
+                "articulation.labels": json.dumps(
+                    articulation_result.labels,
+                    ensure_ascii=False,
+                ),
+                "articulation.presence": json.dumps(
+                    articulation_result.presence,
+                    ensure_ascii=False,
+                ),
+                "articulation.thresholds": json.dumps(
+                    articulation_result.thresholds,
+                    ensure_ascii=False,
+                ),
             }
             loop_row.update(_flatten_metrics(metrics_dict))
             loop_rows.append(loop_row)
 
             processed += 1
+
+        articulation_summary = articulation_labeler.summary()
 
         # Write artefacts
         if events_rows:
@@ -814,6 +1454,7 @@ class Stage2Extractor:
             tempo_missing=tempo_missing,
             passed_scores=passed_scores,
             retry_entries=retry_count,
+            articulation_summary=articulation_summary,
         )
 
         if self.settings.paths.summary_out:
@@ -839,6 +1480,7 @@ def _build_summary(
     tempo_missing: int,
     passed_scores: Sequence[float],
     retry_entries: int,
+    articulation_summary: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     distribution: Dict[str, Any] = {}
     if passed_scores:
@@ -849,7 +1491,7 @@ def _build_summary(
             "p90": _percentile(list(passed_scores), 0.9),
             "max": float(max(passed_scores)),
         }
-    return {
+    summary: Dict[str, Any] = {
         "pipeline_version": settings.pipeline_version,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "inputs": {
@@ -863,6 +1505,9 @@ def _build_summary(
         "retry_queue": retry_entries,
         "threshold": settings.threshold,
     }
+    if articulation_summary:
+        summary["articulation"] = articulation_summary
+    return summary
 
 
 def _print_summary(summary: Dict[str, Any]) -> None:

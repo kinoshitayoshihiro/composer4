@@ -22,3 +22,4 @@ lightning-utilities
 tensorboard
 tensorboardX
 torchmetrics
+jsonschema>=4.21

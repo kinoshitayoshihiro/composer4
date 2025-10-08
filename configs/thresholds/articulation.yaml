@@ -1,0 +1,69 @@
+version: 2025.10
+mode: auto  # "fixed" または "auto" を指定
+fixed:
+  drums:
+    ghost_rate:
+      high: 0.22
+      min_support: 8
+      velocity_threshold: 34  # V_ghost 推奨初期値 (28–36 の中央値)
+    flam_rate:
+      high: 0.035
+      min_support: 24
+      window_ms: 22  # 推奨初期値 (12–35ms の中央値)
+    drag_triplet_like:
+      high: 0.015
+      min_support: 24
+      window_ms: 45
+    roll_nps:
+      high: 9.5
+      min_len_ms: 240
+      min_support: 24
+    hat_open:
+      cc4_mean: 40
+      open_ratio: 0.18
+      min_support: 32
+  strings:
+    detache_ratio:
+      high: 0.55
+      min_support: 16
+      gap_ms: 15
+      gate_ratio: 0.75
+    pizzicato_ratio:
+      high: 0.12
+      min_support: 16
+      prefer_labeled: true
+      fallback_duration_ratio: 0.65
+auto:
+  bins:
+    tempo: [0, 90, 110, 130, 999]
+  quantiles:
+    primary: [0.25, 0.5, 0.75]
+    hysteresis_drop_iqr: 0.1
+  min_support:
+    drums: 24
+    strings: 16
+  features:
+    ghost_rate:
+      evidence: ["metrics.articulation.snare_ghost_rate", "metrics.backbeat_strength"]
+    flam_rate:
+      evidence: ["metrics.articulation.snare_flam_rate"]
+    detache_ratio:
+      evidence: ["metrics.articulation.detache_ratio"]
+    pizzicato_ratio:
+      evidence: ["metrics.articulation.pizzicato_ratio", "events.keyswitch_pizzicato"]
+weights:
+  articulation:
+    ghost: 0.15
+    flam: 0.10
+    detache: 0.15
+    pizzicato: 0.10
+notes: |
+  - fixed モードでは上記定数をそのまま閾値として使用する。
+  - auto モードでは tempo bin ごとに Q1/Q2/Q3 を再計算し、
+    * 高確: metric >= Q3 + 0.25*IQR
+    * 中立: Q3 <= metric < Q3 + 0.25*IQR（他特徴と併決）
+    * 否決: metric < Q2
+    ヒステリシス: ラベル付与後に外す際は metric < Q2 - 0.1*IQR を条件にする。
+  - min_support を満たさない場合はラベルを生成しない。
+  - pizzicato_ratio は keyswitch/CC での明示ラベルを最優先し、
+    無い場合のみ短い減衰・高立ち上がりの代替特徴を用いる。

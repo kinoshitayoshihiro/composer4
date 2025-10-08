@@ -1,0 +1,137 @@
+Harusan、ドラム起点は賢明です。弦よりも**奏法の実装負荷が低く、可搬性が高い**ので、まずは「ドラム版・奏法ラベリング→条件生成」を硬く“回す”のが最短距離です。以下、要点を絞ってお伝えします。
+
+---
+
+## 1) DAWDreamerは「オフライン・ホスト」です（Studio One とは役割が違う）
+
+* **DAWDreamer**はPythonからVST3/AUをホストして**バッチでレンダリング**するためのツールです。
+
+  * コード（codex）からの自動化は可能＝「スクリプトで音源を立ち上げ→MIDI/CCを流してWAVに書き出す」用途に合います。
+* **Studio One**はDAW本体で、**外部から汎用APIで自動化する前提の製品ではありません**。Studio One内でDAWDreamerを“プラグインのように”挿すことは想定外です。
+
+  * 実務は「DAWDreamerで**オフライン書き出し**→Studio Oneに**オーディオ/MIDIを取り込む**」フローになります。
+* ただし**ドラムに限れば**：ほとんどの表現は**MIDIだけで完結**します（奏法＝ノート/ベロシティ/CCの組み合わせ）。**無理にDAWDreamerを使わず**、既存のMIDI生成＋お好みのドラム音源（Superior Drummer / Addictive Drums / EZdrummer 等）に通す方が速く、安定します。
+
+> まとめ：
+>
+> * **codex × DAWDreamer**＝OK（バッチレンダや自動評価に最適）。
+> * **Studio One 直統合**＝基本は不可。オフラインで作ったものを取り込む運用が現実的。
+> * **ドラムはMIDI完結**が得策。まずはDAW非依存で“鳴らして測る”を完成させましょう。
+
+---
+
+## 2) MetaScoreの「自然言語制御」は導入できます（LLMで“短い物語”を付与）
+
+* MetaScoreの本丸は**「楽曲にセマンティック（意味）をテキストで結びつける」**こと。
+* データそのものを持ち込む必要はありません。**LLMで短い日本語キャプション**（例：30字）を生成し、`label.caption`としてStage3条件に渡せば**自然言語での生成制御**が可能になります。
+* これは**LAMDAにLLMを“ラベリング補助”として組み込む**イメージです（生成器そのものをLLM化する必要はありません）。
+
+> 実装の最小形：
+>
+> 1. Stage2の数値特徴（BPM, swing_ratio, ghost_rate…）と**歌詞の要約**をプロンプトにして、**短文キャプション**を生成。
+> 2. `loop_summary.csv` に `label.caption` 列を追加。
+> 3. Stage3の条件トークンに `emotion / genre / technique / caption` を併用。
+> 4. 生成器はTransformer/LoRAで**テキスト条件埋め込み（cross-attention or prefix）**に対応。
+
+---
+
+## 3) ドラム“奏法”の先に決める：スキーマと運用ルール（MVP）
+
+ドラムは**ノート×ベロシティ×CC**で「奏法」相当の表情を作れます。まずは**以下の最小語彙**から始め、学習と評価を回しながら拡張しましょう。
+
+### 3.1 Technique（ドラム最小語彙・提案）
+
+* `ghost`（低Vel短音・バックビート周辺）
+* `accent`（高Vel・拍頭/フィル頂点）
+* `flam`（同一スネアの超短IOI二連）
+* `drag`（低Velの2連→主打音）
+* `roll`（16/32トリル）
+* `rimshot`（専用ノート or 高Vel閾値）
+* `hat_open[x]`（ハット開度、**CC4**で0–127段階／または Open/半Open/Closed）
+* `choke`（シンバルの短オフ／アフタータッチ対応の音源もあり）
+
+> **tips**
+>
+> * ほぼ全音源で**ハイハット開度はCC4**（Foot Controller）で制御されることが多いです。
+> * flam/dragは**先行ノートのIOI閾値**（例：≤20–35ms）で機械検出しやすい。
+> * ghostは**ベロシティ閾値**（例：Vel ≤ 28〜36）＋**位置（バックビート前後）**で高精度に取れます。
+
+### 3.2 Stage2（自動抽出：最低限の数式）
+
+* `metrics.ghost_rate = count(Vel ≤ T_ghost)/total`
+* `metrics.backbeat_strength = mean(Vel at 2&4) - mean(Vel others)`
+* `metrics.flam_count = count(IOI_same_drum ≤ T_flam)`
+* `metrics.drag_count = count(two low-Vel hits then main hit within window)`
+* `metrics.roll_density = notes_per_second@snare (≥ thre)`
+* `metrics.hat_cc4_mean` / `hat_cc4_std`（※サポート音源のみ）
+* これらから**推定technique**をルールで埋め、`label.technique`（複数可）へ反映。
+
+### 3.3 technique_map（ドラム音源の共通化・最小雛形）
+
+* **GMキット**：始めはGMノート名で定義（可搬性◎）。
+* **専用音源**：Superior Drummer等は**開ハット／シャンク/ティップ／チョーク**などキー配置が異なるため、`technique_map.yaml`に「音源プロファイル」を追加（`vendor: toontrack` 等）して**キーとCCを正規化**。
+
+---
+
+## 4) 具体タスク（すぐ回す順番）
+
+### タスクA：ドラム向け technique_map を追加
+
+* `configs/labels/technique_map.yaml` に `drums:` セクションを追加
+
+  * `cc`：`4: openness`（ハイハット）
+  * `keys`：`rimshot`, `china_choke` など音源依存キーのマッピング
+  * `thresholds`：`ghost_vel<=32`, `flam_ioi_ms<=30`, `drag_window_ms<=120` …
+
+### タスクB：Stage2 抽出器にドラム検出ルールを実装
+
+* `lamda_stage2_extractor.py` に上記メトリクスを追加し、`label.technique`（複数ラベル）を書き戻し。
+* **品質ゲート**：同一小節内で`ghost`比率が高いのに`accent`が極端に低い等、**不整合を警告**。
+
+### タスクC：条件生成を最小で有効化
+
+* Stage3のデータローダで `emotion/genre/key/grid/technique/caption` を**ワンホット＋連続**でエンコード。
+* 生成時に
+
+  ```
+  --emotion tense --genre rock --grid even_16 --technique ghost,accent --caption "雨粒が跳ねる路地裏の、孤独だが力強いグルーヴ"
+  ```
+
+  のように複合指定→**フィル/オカズの自動選択**と**微妙なVelパターン**に反映。
+
+### タスクD：MetaScore流の「短文キャプション」を差し込む
+
+* まずは**固定プロンプト**で十分（LLMに投げる前提）。
+* `tools/generate_captions.py`（MVP）で
+
+  * 入力：`loop_summary.csv`のBPM/ghost/backbeat/swingなど
+  * 出力：`label.caption`（30字程度）
+* 後から**歌詞セクション別キャプション**（Verse/Chorus/Bridge）に拡張。
+
+---
+
+## 5) よくある疑問への回答（結論だけ）
+
+* **Q: DAWDreamerをStudio Oneのように使える？**
+  → **いいえ。**DAWDreamerは**Pythonからのオフライン・ホスト**です。Studio Oneに差して使うのではなく、**外で作って中に入れる**運用が基本。
+* **Q: まずドラムで奏法を統合するのは？**
+  → **大正解。**ドラムは**MIDI完結**で技法（ghost/flam/roll/hihat openness等）を安定抽出でき、**学習・評価・生成のPDCAが速い**です。
+* **Q: MetaScoreの自然言語制御は？**
+  → **導入可能。**LLMで**短文キャプション**を付与し、`label.caption`として**条件生成**に使えば、**物語cipher**と直結する“言葉→音”の制御が手に入ります。
+* **Q: LLMをLAMDAにどう入れる？**
+  → **ラベリング補助**として入れます（学習データへ言語的な意味づけを与える）。生成器そのものをLLM化する必要はありません。
+
+---
+
+## 6) 仕上げのチェックリスト（MVP完了の合図）
+
+* [ ] `technique_map.yaml` に `drums` 追記（CC4/keys/閾値を音源別に定義）
+* [ ] `lamda_stage2_extractor.py` に **ghost/flam/drag/roll/hat_open**の検出と `label.technique` 書き戻し
+* [ ] `tools/generate_captions.py` で30字キャプションを `label.caption` に付与
+* [ ] Stage3 で **technique + caption** を条件に学習・生成（まずはフィル/フィル前後8拍を対象に）
+* [ ] 自動評価に **technique_match@top1**（推定と条件の一致率）を追加
+
+---
+
+必要でしたら、**ドラム向けの `technique_map.yaml` 追記例**と、`lamda_stage2_extractor.py` に入れる**最小コード片（ghost/flam/dragの検出ルーチン）**をそのまま貼れる形でお渡しします。
+“まずドラムで回す”。この選択が、音本の自然言語制御（MetaScore流）と**圧倒的に相性が良い**です。ここから一気に加速させましょう。

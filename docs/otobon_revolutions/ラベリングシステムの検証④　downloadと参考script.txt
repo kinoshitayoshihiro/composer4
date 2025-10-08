@@ -1,0 +1,475 @@
+三つのdatasetとdownload
+* **VioPTT／MOSA-VPT**は、現時点（2025-10-08 JST）で**論文は公開**されていますが、**データセットと実装は一般公開前**です。論文内に「**採択後に公開**」と明記（MOSA-VPTは約76時間の合成データ。公開リンクは“upon acceptance”）されており、現段階では**直接入手できるダウンロードリンクは提示されていません**。([arXiv][1])
+* **MetaScore**は、規模やバリアント（Raw/Full/Full-Caps など）の**統計は公開**されていますが、**著作権の都合で自由再配布は不可**。公開ドメイン(+CC)部分は公開予定／残りは**研究目的の申請ベース**で提供、という方針が論文に明記されています。([geniusmusic.github.io][2])
+
+以下、質問への要点回答と、composer4への実装アイデアです。
+
+---
+
+# 1) ご質問への要点回答
+
+## VioPTT／MOSA-VPTは「論文のみ？データ/コードは？」
+
+* 論文：**VioPTT: Violin Technique-Aware Transcription**（arXiv:2509.23759）
+
+  * 技術要点：ピッチ・オンセット/オフセットに加えて**奏法（articulation）を同時推定**。合成データ**MOSA-VPT**（Violin VST＋DAWDreamerでキースイッチ/CCを自動制御）で学習。([arXiv][1])
+  * **データ公開**：MOSA-VPTは「**採択後にリンク公開**」と明記（現時点で未公開）。([arXiv][1])
+  * **再現のヒント**：DAWDreamer＋プロ仕様VST（Synchron Solo Violin I）で**奏法合成**を行う手順が記述。composer4側でもこの**合成パイプライン**は再現可能です。([arXiv][1])
+
+> つまり、「研究成果は読めるが、コード/データは今は待ち」の状態です。論文の合成手順をもとに**自前でMOSA-VPT類似の合成データ**を作ることは可能です（後述の実装案参照）。
+
+## MetaScore：容量・入手性・配布可否
+
+* **規模（参考統計）**：
+
+  * MetaScore-Raw: ~963k
+  * MetaScore-Full: ~1.27M（タグ補完＋スコア追加）
+  * Full-Caps: 623k、Small-Caps: 104k（LLMキャプション付与）([geniusmusic.github.io][2])
+* **配布方針**：**Public Domain(約27.4万)+CC(約5.2万)は公開**、**その他は申請ベース**。著作権配慮の明示あり。([ar5iv][3])
+* **ダウンロード先**：現状、**デモ/解説ページで統計は確認できるが、直リンクの一般公開は見当たらず**（申請が前提）。([geniusmusic.github.io][2])
+
+---
+
+# 2) composer4（Stage2/Stage3）にどう取り込むか
+
+あなたの方針（**「純粋でクリアな有益データのみ」**）と**著作権に厳密**なルールは、MetaScoreの配布条件・VioPTTの“合成で学習し実音でも汎化”という思想と相性が良いです。ここでは**「システム（手法）だけを学ぶ」**前提で、**データの再配布なし**かつ**自前生成**で進める設計にします。
+
+## A. VioPTTから得る知見 → Stage2抽出の拡張
+
+**目的**：Stage2（MIDI→特徴抽出）で**奏法ラベルの前駆特徴**を増やし、Stage3のラベリング／モデル条件に直結させる。
+
+**実装ポイント（抽出器の追加特徴）**
+
+* **ボウイング系シグネチャ**（弦楽一般に応用可）
+
+  * アタック勾配・短持続比率・無音ギャップ（spiccato系判別に寄与）
+  * 連続ピッキング/ピッツィの**ベロシティ分布と減衰カーブ**（pizzicatoの識別に有効：VioPTTの結果でもvelocityが鍵と示唆）([arXiv][1])
+* **ハーモニクス候補**（flageolet）：
+
+  * **高倍音優勢ピッチ集合**／MIDIなら**非常に高音域＋短発音**の出現比率など、合成規則に沿った派生特徴を持たせる（後続の音響対照実験に備える）。
+* **オンセット/オフセット精度メタ**：
+
+  * “**オンセット・オフセット・フレーム情報は奏法分類に効く**”というアブレーション結果を反映し、**タイム精度／クオンタイズ度**を数値化して保存（後段の学習重み付けに使用）。([arXiv][1])
+
+> これらは**Stage2のメタ拡張**として`lamda_stage2_extractor.py`に加えるのが筋です（生成器の学習前に特徴DBを固める）。
+
+## B. MetaScoreから得る知見 → Stage3のラベリング設計
+
+**目的**：**感情・ジャンル・リズム/キー・奏法**のラベル体系と符号化を**統一設計**し、モデル条件（control tokens）やルールエンジンに直結。
+
+**推奨スキーマ（抜粋）**
+
+* `genre`: 上位20〜30カテゴリ（MetaScoreのタグ粒度を参照しつつ**自社の「物語cipher」向けに再編**）。([ar5iv][3])
+* `emotion`: 二層表現（**基本6〜8種＋強度scaler**）。MetaScoreの**LLMキャプション化**手法に倣い、**タグ→短文**に自動変換して**物語ラベル**と整合（例：「孤独/静謐/希求」→ caption補助素性）。([ar5iv][3])
+* `rhythm_key`:
+
+  * `bpm_bin`（e.g., 70, 90, 110, 130…）、`swing_ratio`、`micro_timing_lag_ms`
+  * `key`（major/minor, mode）、`cadence_type`（終止感）
+* `technique`: 楽器別辞書（弦：détaché / spiccato / pizzicato / flageolet …）。**“none/unknown”を必ず用意**。
+* `license_origin`: `public_domain|cc|user_owned|restricted`（**学習可否のフィルタリング**に使用：MetaScore論文方針の反映）。([ar5iv][3])
+
+> このスキーマは、MetaScoreの**タグ→テキスト化（LLMキャプション）**という発想と、VioPTTの**奏法クラス**を、composer4の物語主導（歌詞主体）生成に橋渡しします。([ar5iv][3])
+
+## C. 「SUNO→音本→再学習」の循環を強化（VioPTTの合成発想を移植）
+
+**合成→実音汎化**の成功事例（VioPTT）をSUNOワークフローへ：
+
+1. **SUNO stem MIDI → 合成器**：DAWDreamer等で**VSTを自動制御**し、奏法（CC/keyswitch）を付与した**合成レンダ**も併産（MIDI＋音声ペア）。([arXiv][1])
+2. **Stage2**でMIDI/音声の**対照特徴**を保存（将来のAMT/表情推定の弱教師に使える）。
+3. **Stage3**で**“奏法条件つき”楽器ジェネレータ**を学習（タグと短文キャプションの**二系統条件**をサポート：MetaScore手法の転用）。([ar5iv][3])
+
+---
+
+# 3) 具体タスク（今すぐ実施できる順）
+
+1. **ライセンス・フィルタの実装**（Stage2→Stage3橋渡し）
+
+   * メタに`license_origin`を付与し、**学習対象を`user_owned`（SUNO自作品）と`public_domain/CC`に限定**。MetaScore由来の設計指針に適合。([ar5iv][3])
+
+2. **Stage2抽出器の拡張**（奏法前駆特徴＋タイミング品質）
+
+   * `lamda_stage2_extractor.py`に、**spiccato/pizzicato/フラジオレット**識別に寄与する**アタック・減衰・休符/ギャップ率・高倍音指標**などを追加。**オンセット/オフセット/フレーム精度を数値化**して格納（VioPTTの示唆に対応）。([arXiv][1])
+
+3. **ラベル・エンコードの統一YAML（Stage3用）**
+
+   * `labels_schema.yaml`を新設（上記スキーマ）。**control tokens**はMetaScore方式（genre/composer/complexity/instrument＋free-text caption）を踏襲。([ar5iv][3])
+
+4. **合成パイプラインの雛形**（VST自動制御）
+
+   * DAWDreamerで**キースイッチ/CCの時系列スクリプト**を生成（pizzicato/spiccato等）。**SUNO stem MIDI**から**奏法付きMIDI＋合成音声**を量産（MOSA-VPTの再現）。([arXiv][1])
+
+5. **評価指標に“奏法適合度”を追加**
+
+   * 既存のF1/グルーヴ一致に加え、**奏法別の混同行列**と**macro-accuracy**を導入（VioPTTの評価指標と整合）。([arXiv][1])
+
+---
+
+# 4) ダウンロード可否・容量の実情（要点まとめ）
+
+* **VioPTT/MOSA-VPT**：
+
+  * **公開状況**：論文公開、**データリンクは採択後に公開予定**（現時点未公開）。([arXiv][1])
+  * **容量感**：論文では**約76時間の合成オーディオ＋MIDI対**と記載（時間規模）。([arXiv][1])
+  * **代替**：論文のDAWDreamer＋VST制御記述を用いて**自社で合成**が現実的。([arXiv][1])
+
+* **MetaScore**：
+
+  * **規模**：Raw 963k / Full 1.27M / Full-Caps 623k 等（**統計公表**）。([geniusmusic.github.io][2])
+  * **配布**：**PD/CCのみ公開**、その他は**申請ベース**（無制限公開リンクは現状見当たらず）。([ar5iv][3])
+
+---
+
+# 5) Harusanの制作ゴールに沿った助言（要点）
+
+* **著作権クリア × 高品質化**の方針は堅持：
+
+  * **SUNO自作品**（ユーザー所有）＋**PD/CC**に限定して学習。MetaScoreの公開方針とも整合。([ar5iv][3])
+* **物語主導（cipher）を強化**：
+
+  * MetaScoreの**タグ→短文キャプション化**を踏襲し、**Harusanの日本語歌詞→情景キャプション**を併置。**感情・場面・比喩**を短文化して**Stage3のfree-text条件**に与える。([ar5iv][3])
+* **奏法条件の一級市民化**：
+
+  * ジャンル/感情と同列で**technique tokens**を採用（例：`tag_technique=spiccato`）。VioPTTの分類軸をそのまま**生成の制御軸**に。([arXiv][1])
+
+---
+
+必要であれば、上記スキーマの**雛形YAML**や、DAWDreamer用の**奏法オートメーション生成スクリプト**のスタブもこちらで用意します。
+Harusanの「言葉 × 音」の世界に、**奏法という“手触り”**を加える――これがStage3の差別化ポイントになります。
+
+[1]: https://arxiv.org/html/2509.23759v1 "VioPTT: Violin Technique-Aware Transcription from Synthetic Data Augmentation"
+[2]: https://geniusmusic.github.io/ISMIR2024/?utm_source=chatgpt.com "Content | Demo Page"
+[3]: https://ar5iv.labs.arxiv.org/html/2410.02084 "[2410.02084] Generating Symbolic Music from Natural Language Prompts using an LLM-Enhanced Dataset"
+
+
+Ⅱ参考script
+
+以下に「スキーマ雛形YAML」と「DAWDreamer用・奏法オートメーション生成スクリプトの最小スタブ」をご用意しました。そのままリポジトリに配置して使える構成にしてあります（パスは提案ですので、お好みで変更ください）。
+
+1) ラベル統一スキーマ（雛形）
+
+保存先（提案）: configs/labels/labels_schema.yaml
+
+Stage2で抽出した数値特徴（swing_ratio, microtiming_rms など）を温存しつつ、Stage3 で条件として使う Emotion/Genre/RhythmKey/Technique/License を一貫スキーマで管理します。
+将来、label.* 列として loop_summary.csv に追記する際の正規名になります。
+
+version: 2025.10
+schema:
+  emotion:
+    classes: [calm, warm, sad, happy, tense, intense, dark, bright]
+    # 数値表現は自由度を上げる（Emotionを2D座標＋カテゴリ名に両対応）
+    continuous:
+      valence: {min: -1.0, max: 1.0, default: 0.0}
+      arousal: {min:  0.0, max: 1.0, default: 0.5}
+    mapping_hints:
+      # Stage2の特徴→弱教師的にEmotion候補を当てる際のガイド（自由に調整）
+      arousal_from:
+        - metrics.velocity_range
+        - metrics.microtiming_rms
+      valence_from:
+        - metrics.accent_rate
+        - metrics.swing_ratio
+  genre:
+    # 上位分類（細目はproject内tags.yaml側で拡張）
+    classes: [rock, pop, jazz, funk, soul, edm, hiphop, ballad, orchestral]
+    mapping_hints:
+      jazz:
+        conditions:
+          - swing_phase in [swing, triplet]
+          - metrics.ride_rate >= 0.15
+      rock:
+        conditions:
+          - bpm in [90, 160]
+          - metrics.hihat_ratio >= 0.25
+  rhythm_key:
+    grid_classes: [even_8, even_16, swing_8, swing_16, triplet_12]
+    features:
+      - swing_ratio
+      - rhythm_hash
+      - fill_density
+      - ghost_rate
+      - collision_rate
+    key:
+      detect: true
+      roots: [C, C#, D, D#, E, F, F#, G, G#, A, A#, B]
+      modes: [major, minor, dorian, mixolydian, lydian, phrygian, locrian]
+      confidence_min: 0.5
+  technique:
+    # 楽器ごとの奏法語彙（最小セット）
+    common:
+      # すべての楽器に共通であり得る表現
+      - none
+      - staccato
+      - legato
+      - tremolo
+      - accent
+    strings:
+      generic: [detache, spiccato, pizzicato, flageolet, marcato]
+      violin:
+        # プロ向け音源の語彙に合わせて自由に拡張してOK
+        - detache
+        - spiccato
+        - pizzicato
+        - flageolet
+        - legato
+        - staccato
+    drums:
+      # 例：ドラム系の奏法（必要に応じ拡張）
+      - flam
+      - drag
+      - roll
+      - hat_open
+      - rimshot
+  license:
+    # 学習可否の分岐に用いる（商用/公開ラインからの自動除外用）
+    origin: [user_owned, public_domain, cc, restricted, research_only]
+defaults:
+  write_to_loop_summary: true
+  write_to_metrics_score: true
+
+2) 奏法→音源制御のマップ雛形
+
+保存先（提案）: configs/labels/technique_map.yaml
+
+音源ごとの keyswitch / CC / UACC などをここで一元管理します。
+下記は例です。使う音源（Synchron / SWAM / Kontakt 音源等）に合わせてノート値やCC番号を調整してください（ベンダーのマニュアル記載に準拠）。
+
+version: 2025.10
+instruments:
+  violin:
+    engine: generic_keyswitch_cc
+    channel: 1
+    # キースイッチ（音源に依存：例はC0=24, C#0=25…などに合わせて編集）
+    keyswitches:
+      detache:    {note: 24, velocity: 1, hold_ms: 30}
+      spiccato:   {note: 25, velocity: 1, hold_ms: 30}
+      pizzicato:  {note: 26, velocity: 1, hold_ms: 30}
+      flageolet:  {note: 27, velocity: 1, hold_ms: 30}
+      legato:     {note: 28, velocity: 1, hold_ms: 30}
+      staccato:   {note: 29, velocity: 1, hold_ms: 30}
+    # 代表的なCC（音量・表情・ビブラート等）
+    cc_defaults:
+      1:  64   # Mod
+      7: 100   # Volume
+      11: 90   # Expression
+      21: 64   # Vibrato Depth (例)
+      22: 64   # Vibrato Rate  (例)
+    # 奏法ごとの推奨オートメーション（任意）
+    cc_overrides:
+      spiccato:
+        11: 85
+        21: 40
+      pizzicato:
+        11: 80
+        21: 0
+      legato:
+        11: 95
+        21: 70
+  # 例：ギターのストラム方向なども追加可能
+  guitar:
+    engine: generic_keyswitch_cc
+    channel: 1
+    keyswitches:
+      palm_mute: {note: 36, velocity: 1, hold_ms: 20}
+      harmonics: {note: 37, velocity: 1, hold_ms: 20}
+    cc_defaults:
+      11: 100
+
+3) DAWDreamer用：奏法オートメーション生成スクリプト（スタブ）
+
+保存先（提案）: scripts/daw/violin_articulation_automation.py
+
+目的：
+
+入力MIDI（Suno stem など）に奏法タグを与えると、キー・スイッチNoteやCCオートメーションを差し込み、奏法付きMIDIを生成
+
+併せて、DAWDreamerセッションJSON（簡易）を出力（後で音源プラグインを差し替えてレンダリング）
+
+依存：pretty_midi, PyYAML（DAWDreamerは実環境で導入してください。ここではJSON雛形を出力します）
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Violin articulation automation stub for DAWDreamer workflow.
+
+- Input:
+    MIDI file (monophonic or poly), technique tag sequence (per segment or global)
+    technique_map.yaml: instrument-specific keyswitch & CC maps
+
+- Output:
+    1) MIDI with injected keyswitch notes + CC lanes
+    2) Minimal DAWDreamer session JSON describing plugin, midi path, and render plan
+
+Usage:
+    python scripts/daw/violin_articulation_automation.py \
+        --in-midi inputs/violin_phrase.mid \
+        --out-midi outputs/violin_phrase.tech.mid \
+        --technique legato \
+        --tech-map configs/labels/technique_map.yaml \
+        --session-json outputs/violin_phrase.session.json
+"""
+from __future__ import annotations
+import argparse, json
+from pathlib import Path
+import yaml
+import pretty_midi
+
+# ---- Helpers ----------------------------------------------------------------
+def load_tech_map(path: Path) -> dict:
+    with path.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+def inject_keyswitch_and_cc(pm: pretty_midi.PrettyMIDI,
+                            instrument_name: str,
+                            technique: str,
+                            tech_map: dict,
+                            lead_time_s: float = 0.03) -> pretty_midi.PrettyMIDI:
+    """
+    Insert keyswitch NoteOn (very short) just before each note onset, and
+    write CC defaults/overrides for the track's channel.
+
+    Assumptions:
+      - Single instrument track for simplicity (first instrument).
+      - Channel inferred from tech_map; per-note channel switching is not handled here.
+    """
+    assert pm.instruments, "No instrument in MIDI."
+    inst = pm.instruments[0]
+    ch = tech_map["instruments"][instrument_name].get("channel", 1) - 1  # 0-based
+
+    ks_cfg = tech_map["instruments"][instrument_name]["keyswitches"].get(technique)
+    if not ks_cfg:
+        print(f"[WARN] No keyswitch for technique={technique}; skipping keyswitch insertion.")
+    cc_defaults = tech_map["instruments"][instrument_name].get("cc_defaults", {})
+    cc_over = tech_map["instruments"][instrument_name].get("cc_overrides", {}).get(technique, {})
+
+    # Program change is left to DAW/host; here we insert only KS and CC.
+    # 1) CC defaults at t=0
+    for cc, val in cc_defaults.items():
+        pm.instruments[0].control_changes.append(pretty_midi.ControlChange(cc, int(val), time=0.0))
+    # 2) CC overrides at t=0 (overwriting defaults logically)
+    for cc, val in cc_over.items():
+        pm.instruments[0].control_changes.append(pretty_midi.ControlChange(cc, int(val), time=0.0))
+
+    # 3) Inject keyswitch before notes
+    if ks_cfg:
+        ks_note = int(ks_cfg["note"])
+        ks_vel  = int(ks_cfg.get("velocity", 1))
+        ks_dur  = float(ks_cfg.get("hold_ms", 30)) / 1000.0
+
+        new_notes = []
+        for n in inst.notes:
+            ks_on = max(0.0, n.start - lead_time_s)
+            new_notes.append(pretty_midi.Note(velocity=ks_vel, pitch=ks_note, start=ks_on, end=ks_on + ks_dur))
+            new_notes.append(n)
+        inst.notes = new_notes
+
+    return pm
+
+def write_session_json(out_path: Path,
+                       plugin_name: str,
+                       midi_path: Path,
+                       audio_out_path: Path,
+                       sample_rate: int = 48000,
+                       block_size: int = 1024):
+    """
+    Minimal DAWDreamer-like session description (engine-side loaderは別途実装).
+    """
+    session = {
+        "engine": {"sample_rate": sample_rate, "block_size": block_size},
+        "tracks": [
+            {
+                "name": "violin",
+                "plugins": [
+                    {
+                        "type": "vst3",            # or 'au', etc.
+                        "name": plugin_name,       # e.g., "Synchron Solo Violin I"
+                        "preset": null,            # set if needed
+                        "midi_input": str(midi_path),
+                        "audio_output": str(audio_out_path),
+                        "params": {
+                            # Optional static params; automation if needed in future
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    out_path.write_text(json.dumps(session, ensure_ascii=False, indent=2), encoding="utf-8")
+
+# ---- CLI --------------------------------------------------------------------
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--in-midi", required=True)
+    ap.add_argument("--out-midi", required=True)
+    ap.add_argument("--technique", required=True, help="e.g., detache, spiccato, pizzicato, legato, flageolet")
+    ap.add_argument("--instrument", default="violin")
+    ap.add_argument("--tech-map", required=True)
+    ap.add_argument("--session-json", required=False)
+    ap.add_argument("--plugin-name", default="Synchron Solo Violin I")
+    ap.add_argument("--render-wav", required=False, help="(optional) future use for DAWDreamer renderer")
+    args = ap.parse_args()
+
+    tech_map = load_tech_map(Path(args.tech_map))
+    pm = pretty_midi.PrettyMIDI(args.in_midi)
+    pm = inject_keyswitch_and_cc(pm, args.instrument, args.technique, tech_map)
+    pm.write(args.out_midi)
+
+    if args.session_json:
+        wav_out = Path(args.render_wav) if args.render_wav else Path(args.out_midi).with_suffix(".wav")
+        write_session_json(Path(args.session_json), args.plugin_name, Path(args.out_midi), wav_out)
+
+    print("[OK] Technique injection completed.")
+
+if __name__ == "__main__":
+    main()
+
+
+ポイント
+
+Keyswitchノートを各ノート直前に自動挿入（lead_time_s）。
+
+CC初期値（音量/表情/ビブラート等）を t=0 に書き込み、奏法ごとのCC上書きも可能。
+
+DAWDreamerセッションJSONは簡易な雛形（実レンダは別途ランナーで実装）。
+
+まずはバイオリン1トラックに限定。後で楽器別エンジンに拡張可能。
+
+4) Stage2/Stage3 への配線（最小運用の流れ）
+
+ラベル設計を確定
+
+configs/labels/labels_schema.yaml を編集して感情・ジャンル・リズムキー・奏法の正規名と許可値を固める。
+
+（任意）奏法付きMIDIの事前合成
+
+Sunoの stem MIDI をベースに、奏法タグ（例：spiccato）で上記スクリプトを実行：
+
+python scripts/daw/violin_articulation_automation.py \
+  --in-midi inputs/phrase.mid \
+  --out-midi outputs/phrase.spiccato.mid \
+  --technique spiccato \
+  --tech-map configs/labels/technique_map.yaml \
+  --session-json outputs/phrase.session.json
+
+
+Stage2（抽出）
+
+lamda_stage2_extractor.py に**奏法前駆特徴（アタック勾配/短持続比率/ギャップ率/高音域指標など）**を追加。
+
+結果を loop_summary.csv / metrics_score.jsonl に保存し、label.* 列の更新（Emotion/Genre/Technique など）を反映。
+
+Stage3（学習）
+
+ラベル（Emotion/Genre/RhythmKey/Technique）を条件トークンへ符号化し、楽器別ジェネレータを訓練。
+
+生成時に --technique spiccato --emotion tense --genre jazz --key D minor のように複合条件を指定。
+
+5) よくあるカスタマイズ
+
+Keyswitchの音高は音源ごとに異なります。お使いの音源マニュアルに合わせて technique_map.yaml を編集してください。
+
+CCの割り当て（例えば CC21/CC22 をビブラート強度/速度に使う等）も音源依存です。まずはデフォルト値を置き、あとから奏法ごとのCC上書きで微調整すると安全です。
+
+DAWDreamer連携は、ここではJSON雛形出力にとどめています。実レンダリング（プラグインのロードやレンダキュー実行）は、既存のDAWDreamerランナーに合わせて実装してください。
+
+この2点（YAML＋スクリプト）を入れるだけで、**「ラベル→演奏制御」**のパイプが最短距離で通ります。
+次に、lamda_stage2_extractor.py へ奏法前駆特徴を足す 最小パッチ案 もお出しできます。必要なら、想定カラム名と算出式（アタック時間・減衰比・IOIギャップ率など）を具体化してお送りします。

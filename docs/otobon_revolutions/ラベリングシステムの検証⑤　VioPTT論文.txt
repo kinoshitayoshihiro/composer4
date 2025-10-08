@@ -1,0 +1,138 @@
+VioPTT論文
+
+1. 論文概要と得られる知見
+
+目的と背景
+
+多くの自動音楽転写モデルは音高とタイミング情報の抽出に集中しており、演奏技法などの表現的ニュアンスを無視している
+arxiv.org
+。
+
+VioPTTはバイオリン演奏の**音高・オンセット・オフセットに加えて奏法（detaché, flageolet, spiccato, pizzicato）**を同時に推定する世界初のモデルを提案し、演奏技法まで含めた豊かな記述を実現
+arxiv.org
+。
+
+モデル構造
+
+ログメルスペクトログラムを入力とするエンドツーエンドCNN+GRU+FCモデルで、オンセット／オフセット／音量推定にはバイナリ交差エントロピーやMSE、奏法分類には多クラス交差エントロピーを用いる
+arxiv.org
+。
+
+軽量構成のため転移学習や拡張が容易で、他楽器への適用も視野に入る。
+
+データセット
+
+MOSA-VPT：約76時間の合成データセット。Synchron Solo Violin Iというプロ音源をDAWDreamerで制御し、キー・スイッチやCCを自動操作して奏法ラベル付き音声を大量生成
+arxiv.org
+。
+
+実音源は19時間のMOSA（Music mOtion with Semantic Annotation）に基づき、合成データと併用することで実録音に対する高い汎化性能を示した
+arxiv.org
+。
+
+データ拡張
+
+高品質な技法ラベルを得るため、ピッチシフトやタイミング揺らぎなどの音声拡張とともに合成手法を活用
+arxiv.org
+。
+
+MIDI情報に基づき、演奏ニュアンスの異なるバリエーションを生成できることから、ベース・ギターなど他楽器へも応用可能。
+
+2. composer4への導入アイディア
+2.1 Stage2（特徴抽出）の拡張
+
+奏法関連の生データ統計を追加
+
+アタック勾配・減衰比、音符間ギャップ率、高倍音を含むピッチ配置など、VioPTTの奏法推定に有効とされる特徴をMIDIイベントから計算し、loop_summary.csvに追記する。
+
+これにより、Detaché/Spiccatoなどの奏法を暗黙的に推定するモデルやルールを構築できる。
+
+奏法合成用メタ情報の付与
+
+音源制御マッピング（キー・スイッチ、CC）のYAMLを管理し、Stage2が各楽器トラックに対してどの奏法候補が有効かを判定。
+
+既に提案した technique_map.yaml を用いて、楽器別チャンネルやプログラム番号から奏法範囲を割り出す。
+
+研究用データと商用データの分離
+
+MOSAや将来公開されるMOSA-VPTを内部学習用に導入する際は license_origin フィールドを research_only に設定し、製品ラインから自動的に除外。会社方針（元データを製品に含めない）と整合させる。
+
+2.2 Stage3（ラベル設計とモデル）の拡張
+
+技法ラベルのスキーマ追加
+
+label.technique に弦楽器用 (detache, spiccato, pizzicato, flageolet, legato, staccato…) やドラム用 (flam, roll, rimshot…) を登録し、Emotion/Genre/Key/Rhythmと同列で扱う。
+
+VioPTTの4技法をベースにしつつ、Composerの他楽器にも対応できるよう拡張する。
+
+技法分類モデルの導入
+
+MOSA/MOSA-VPTを参考に、自前の合成データ（プロ音源＋DAWDreamer）で奏法付き音声–MIDIペアを生成し、奏法分類器を訓練。
+
+音声を入力にせずMIDI特徴のみで推定する場合も、Stage2で計算した奏法前駆特徴を学習。
+
+VioPTT方式（CNN＋GRU）の簡易版を導入し、推定された奏法ラベルをStage3の条件ベクトルとして使用。
+
+技法条件を使った楽器ジェネレーター
+
+LoRA微調整または条件付きTransformerの入力に technique トークンを追加し、例えば --technique spiccato --emotion tense --genre jazz --key D minor のように指定できるようにする。
+
+ジェネレーターに対しては、条件に応じたダイナミクス／ベロシティパターン／人間的ゆらぎをHumanizerやGrooveモジュールで付与する。
+
+2.3 合成データ生成パイプライン
+
+DAWDreamerによる奏法別レンダリング
+
+SunoやStage1で抽出したMIDIを入力として、Synchron Solo Violin IなどのVSTをDAWDreamerでホストし、keyswitchやCCを自動操作して複数の奏法でレンダリングする（論文で実証済み
+arxiv.org
+）。
+
+提案済みのスクリプト violin_articulation_automation.py を拡張し、ギター、ベース、ピアノ用のキー・スイッチマッピングにも対応する。
+
+ループバック学習（Self-Improving）
+
+生成モデルが出力したMIDIを再び合成レンダリング→Stage2抽出→Stage3再学習へと循環させることで、技法条件の適合度を高める。
+
+このプロセスにより、「人間の生演奏に限りなく近づける」「プラグインの性能を最大限引き出す」目標を達成する。
+
+3. 実装ステップ（ロードマップ）
+
+YAMLとスクリプトの配置
+
+configs/labels/labels_schema.yaml に技法ラベルを含めた統一スキーマを定義（既に雛形を用意）。
+
+configs/labels/technique_map.yaml に楽器別キー・スイッチ/CC設定を記述し、音源制御を一元管理。
+
+奏法オートメーションスクリプト scripts/daw/violin_articulation_automation.py をリポジトリに追加し、他楽器対応へ拡張する。
+
+Stage2の拡張
+
+lamda_stage2_extractor.py に奏法前駆特徴の計算を実装（アタック勾配、減衰率、音符間ギャップ等）。
+
+loop_summary.csv に label.technique を追加し、初期は unknown としておき後続分類器で埋める。
+
+データ生成・分類モデルの準備
+
+DAWDreamerを用いて4技法（detache/spiccato/pizzicato/flageolet）別にSunostemをレンダリング。
+
+簡易CNN+GRUモデルをPyTorchで実装し、特徴量から技法ラベルを学習（MOSA-VPT未公開の場合は自前合成で代替）。
+
+Stage3トレーニング
+
+ラベル付けされたデータセットを用いて条件付きジェネレーターを訓練（Emotion+Genre+Key+Technique）。
+
+humanizer・grooveモジュールに技法条件によるパラメータ調整ロジックを追加する。
+
+評価と反復
+
+Stage2で定義したスコア (Timing, Velocity, Groove Harmony, Drum Cohesion, Structure) に加え、奏法適合度（分類器精度）を新しい評価軸とする。
+
+スコア70点以上と技法適合率を満たす生成物をデータベースに追加し、再学習に回す。
+
+まとめ
+
+VioPTT論文は、演奏技法まで含めた表現豊かなシンボリック音楽モデルを提案し、そのための合成データ生成と軽量モデル構築法を示しています
+arxiv.org
+arxiv.org
+。
+この思想をcomposer4に取り込むことで、Harugoro Shichimi氏の日本語歌詞作品に対応した「物語×感情×ジャンル×技法」の統合的なラベル体系が実現し、より人間的なニュアンスと豊かな演奏表現を持つ音楽生成が可能になります。
