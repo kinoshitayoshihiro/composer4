@@ -1,0 +1,168 @@
+version: 2025.10
+metadata:
+  description: |
+    Canonical taxonomy for loop summary labels. The structure mirrors
+    the weak-supervision vocabulary so that Stage 2 metrics can be
+    mapped onto Stage 3 model conditions in a deterministic way.
+  last_updated: 2025-10-08
+  owners:
+    - data@composer4.io
+
+emotion:
+  axes:
+    valence:
+      low: [dark, sad]
+      mid: [calm, warm]
+      high: [happy, bright]
+    arousal:
+      low: [calm]
+      mid: [warm, sad]
+      high: [tense, intense]
+  classes:
+    - id: calm
+      default: true
+      synonyms: [relaxed, mellow]
+      score_hints:
+        swing_ratio_max: 0.15
+        velocity_mean_max: 55
+    - id: warm
+      synonyms: [gentle, smooth]
+      score_hints:
+        swing_ratio_range: [0.1, 0.25]
+        velocity_mean_range: [55, 70]
+    - id: sad
+      synonyms: [melancholic]
+      score_hints:
+        swing_ratio_max: 0.2
+        ghost_rate_max: 0.25
+    - id: happy
+      synonyms: [uplifting, upbeat]
+      score_hints:
+        swing_ratio_range: [0.2, 0.35]
+        ghost_rate_range: [0.25, 0.45]
+    - id: tense
+      synonyms: [gritty, edgy]
+      score_hints:
+        swing_ratio_min: 0.3
+        ghost_rate_min: 0.35
+    - id: intense
+      synonyms: [energetic, driving]
+      score_hints:
+        swing_ratio_min: 0.25
+        velocity_mean_min: 85
+    - id: dark
+      synonyms: [brooding]
+      score_hints:
+        hat_open_ratio_max: 0.1
+        velocity_median_max: 60
+    - id: bright
+      synonyms: [sparkling]
+      score_hints:
+        hat_open_ratio_min: 0.12
+        velocity_median_min: 70
+
+genre:
+  families:
+    - id: rock
+      includes: [rock, rock-indie, rock-prog, rock-halftime, rock-groove8]
+      swing_bias: straight
+    - id: pop
+      includes: [pop, pop-soft, pop-groove7]
+      swing_bias: straight
+    - id: funk
+      includes: [funk, funk-fast, funk-groove1, funk-groove2, funk-groove5, funk-groove10, funk-rock, funk-purdieshuffle]
+      swing_bias: shuffle
+    - id: soul
+      includes: [soul, soul-motown, soul-groove3, soul-groove4, soul-groove9]
+      swing_bias: shuffle
+    - id: jazz
+      includes: [jazz, jazz-swing, jazz-mediumfast, jazz-funk, jazz-fusion, jazz-linear]
+      swing_bias: swing
+    - id: latin
+      includes: [latin, latin-brazilian, latin-bounce, latin-brazilian-samba, latin-brazilian-bossa, latin-brazilian-frevo, latin-brazilian-ijexa, latin-venezuelan-joropo]
+      swing_bias: straight
+    - id: hiphop
+      includes: [hiphop, hiphop-groove6]
+      swing_bias: straight
+    - id: reggae
+      includes: [reggae, reggae-slow]
+      swing_bias: straight
+    - id: dance
+      includes: [dance-disco, dance-breakbeat]
+      swing_bias: straight
+    - id: afrobeat
+      includes: [afrobeat, afrocuban, afrocuban-bembe, afrocuban-calypso]
+      swing_bias: polymeter
+  confidence_thresholds:
+    straight: 0.65
+    shuffle: 0.55
+    swing: 0.5
+
+rhythm:
+  grid_classes:
+    straight: [even_8, even_16]
+    swing: [swing_8, swing_16]
+    triplet: [triplet_12]
+    polymeter: [gridless]
+  swing_ratio_thresholds:
+    swing: 0.30
+    shuffle: 0.18
+  syncopation_hints:
+    low: 0.2
+    medium: 0.45
+    high: 0.65
+
+key:
+  detect: true
+  defaults:
+    root: none
+    mode: none
+  roots: [C, C#, D, D#, E, F, F#, G, G#, A, A#, B]
+  modes: [major, minor, dorian, mixolydian, lydian, phrygian, locrian]
+  confidence_min: 0.5
+
+technique:
+  families:
+    common:
+      - id: none
+        description: "No explicit articulation override"
+      - id: staccato
+        description: "Shortened note decay"
+      - id: legato
+        description: "Connected phrasing"
+      - id: tremolo
+        description: "Rapid reiteration of a single pitch"
+      - id: accent
+        description: "Velocity accent on targeted beats"
+    drums:
+      metrics:
+        ghost: metrics.articulation.snare_ghost_rate
+        flam: metrics.articulation.snare_flam_rate
+      classes:
+        - id: ghost
+          aliases: [ghost_notes]
+          min_support: 8
+        - id: flam
+          aliases: [flam_hit]
+          min_support: 8
+    strings:
+      metrics:
+        detache: metrics.articulation.detache_ratio
+        pizzicato: metrics.articulation.pizzicato_ratio
+      instruments:
+        violin:
+          classes: [detache, spiccato, pizzicato, flageolet, legato, staccato]
+          default: detache
+
+license:
+  origin:
+    user_owned:
+      usage: production
+    public_domain:
+      usage: unrestricted
+    cc:
+      usage: attribution-required
+    restricted:
+      usage: internal-only
+    research_only:
+      usage: research-and-development

@@ -1,0 +1,39 @@
+pipeline:
+  version: "stage2.v2025.10"
+  threshold: 70.0
+
+score:
+  axes:
+    timing: 1.0
+    velocity: 1.0
+    groove: 1.0
+    cohesion: 1.0
+    structure: 1.0
+    articulation: 1.0
+
+paths:
+  input_dir: "."
+  metadata_dir: "output/drumloops_metadata"
+  metadata_index: "output/drumloops_metadata/drumloops_metadata_v2.pickle"
+  output_dir: "output/drumloops_stage2"
+  events_parquet: "canonical_events.parquet"
+  events_csv_sample: "canonical_events_sample.csv"
+  loop_summary_csv: "loop_summary.csv"
+  metrics_jsonl: "metrics_score.jsonl"
+  retry_dir: "retries"
+  summary_out: "stage2_summary.json"
+  sample_event_rows: 5000
+
+metrics:
+  ghost_velocity_threshold: 45
+  accent_velocity_threshold: 100
+  microtiming_tolerance_ratio: 0.2
+  swing_min_pairs: 2
+  min_base_step: 1
+  max_breakpoints: 3
+  round_digits: 4
+
+retry_presets: []
+
+articulation:
+  thresholds_path: "configs/thresholds/articulation.yaml"
