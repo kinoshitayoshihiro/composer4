@@ -6,10 +6,11 @@ score:
   axes:
     timing: 1.0
     velocity: 1.0
-  groove_harmony: 1.0
-  drum_cohesion: 1.0
+    groove_harmony: 1.0
+    drum_cohesion: 1.0
     structure: 1.0
     articulation: 1.0
+  aliases_path: "../aliases/axes.yaml"
 
 paths:
   input_dir: "."

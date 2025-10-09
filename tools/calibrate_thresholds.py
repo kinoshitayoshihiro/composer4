@@ -1,188 +1,287 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
 import json
-from collections import defaultdict
-from datetime import datetime, timezone
+import math
+import statistics as stats
+import sys
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, cast
 
-import yaml
+try:
+    import yaml  # type: ignore
+    from yaml import YAMLError  # type: ignore
+except ImportError:
+    yaml = None  # type: ignore
 
-DEFAULT_OUTPUT_PATH = Path("configs/thresholds/articulation.auto.yaml")
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Calibrate articulation thresholds from loop summaries."
-    )
-    parser.add_argument("input", type=Path, help="Input JSONL file with loop summaries")
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=DEFAULT_OUTPUT_PATH,
-        help="Destination YAML file (default: %(default)s)",
-    )
-    parser.add_argument(
-        "--metrics",
-        nargs="*",
-        default=[
-            "articulation.snare_ghost_rate",
-            "articulation.snare_flam_rate",
-            "articulation.detache_ratio",
-            "articulation.pizzicato_ratio",
-        ],
-        help="Metric names to calibrate",
-    )
-    parser.add_argument(
-        "--bins",
-        nargs="*",
-        type=float,
-        default=[0, 90, 110, 130, 999],
-        help="Tempo bin edges",
-    )
-    parser.add_argument(
-        "--iqr-factor",
-        type=float,
-        default=0.25,
-        help="Multiplier applied to IQR for high threshold",
-    )
-    parser.add_argument(
-        "--drop-ratio",
-        type=float,
-        default=0.1,
-        help="Multiple of IQR subtracted from median for hysteresis drop threshold",
-    )
-    parser.add_argument(
-        "--min-support",
-        type=int,
-        default=8,
-        help="Minimum observation count required per bin",
-    )
-    return parser.parse_args()
+    class YAMLError(Exception):
+        """Fallback error when PyYAML isn't installed."""
 
 
-def load_records(path: Path) -> List[Dict[str, Any]]:
-    records: List[Dict[str, Any]] = []
-    with path.open("r", encoding="utf-8") as handle:
-        for line in handle:
-            line = line.strip()
-            if not line:
+def load_jsonl(path: Path) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    with path.open("r", encoding="utf-8") as stream:
+        for line in stream:
+            text = line.strip()
+            if not text:
                 continue
-            payload = json.loads(line)
-            if isinstance(payload, dict):
-                records.append(cast(Dict[str, Any], payload))
-    return records
+            rows.append(json.loads(text))
+    return rows
 
 
-def tempo_bin_label(value: float, bins: List[float]) -> str:
-    ordered = sorted(bins)
-    for start, end in zip(ordered[:-1], ordered[1:]):
-        if value < end:
-            return f"{int(start)}-{int(end)}"
-    return f"{int(ordered[-2])}-{int(ordered[-1])}"
+def load_summary_bins(
+    summary_path: Optional[Path],
+    cli_bins: Optional[List[float]],
+) -> List[float]:
+    if cli_bins:
+        return cli_bins
+    if summary_path and summary_path.exists():
+        data = json.loads(summary_path.read_text(encoding="utf-8"))
+        try:
+            tempo_bins = data["articulation"]["auto"]["bins"]["tempo"]
+            return [float(value) for value in tempo_bins]
+        except (KeyError, TypeError, ValueError):
+            pass
+    return [0.0, 90.0, 110.0, 130.0, 999.0]
 
 
-def percentile(values: List[float], ratio: float) -> float:
+def bin_index(value: float, bins: List[float]) -> int:
+    for index in range(len(bins) - 1):
+        if bins[index] <= value < bins[index + 1]:
+            return index
+    return max(0, len(bins) - 2)
+
+
+def iqr(values: List[float]) -> Tuple[float, float, float, float]:
     if not values:
-        return 0.0
-    ordered = sorted(values)
-    if len(ordered) == 1:
-        return ordered[0]
-    position = ratio * (len(ordered) - 1)
-    lower = int(position)
-    upper = min(len(ordered) - 1, lower + 1)
-    weight = position - lower
-    return ordered[lower] * (1 - weight) + ordered[upper] * weight
+        return (math.nan, math.nan, math.nan, math.nan)
+    quartiles = stats.quantiles(values, n=4, method="inclusive")
+    q1 = quartiles[0]
+    q3 = quartiles[2]
+    q2 = stats.median(values)
+    spread = q3 - q1
+    return (q1, q2, q3, spread)
 
 
-def collect_metric(
-    values: Iterable[Dict[str, Any]], metrics: List[str], bins: List[float]
-) -> Dict[str, Dict[str, List[float]]]:
-    bucketed: Dict[str, Dict[str, List[float]]] = {}
-    for metric in metrics:
-        bucketed[metric] = defaultdict(list)
-
-    for record in values:
-        tempo = record.get("tempo_bpm") or record.get("tempo")
-        tempo_value = _coerce_float(tempo)
-        if tempo_value is None:
-            continue
-        label = tempo_bin_label(tempo_value, bins)
-        metrics_dict = cast(Dict[str, Any], record.get("metrics", {}))
-        for metric in metrics:
-            metric_value = metrics_dict.get(metric) or metrics_dict.get(metric.split(".")[-1])
-            value = _coerce_float(metric_value)
-            if value is None:
-                continue
-            bucketed[metric][label].append(value)
-    return bucketed
+def clamp01(value: float) -> float:
+    return max(0.0, min(1.0, value))
 
 
-def calibrate(
-    bucketed: Dict[str, Dict[str, List[float]]],
-    iqr_factor: float,
-    drop_ratio: float,
-    min_support: int,
-) -> Dict[str, Any]:
-    calibrated: Dict[str, Any] = {}
-    for metric, buckets in bucketed.items():
-        metric_summary: Dict[str, Any] = {}
-        for bin_label, values in buckets.items():
-            if len(values) < min_support:
-                continue
-            q1 = percentile(values, 0.25)
-            q2 = percentile(values, 0.5)
-            q3 = percentile(values, 0.75)
-            iqr = q3 - q1
-            metric_summary[bin_label] = {
-                "count": len(values),
-                "q1": q1,
-                "q2": q2,
-                "q3": q3,
-                "iqr": iqr,
-                "high": q3 + iqr_factor * iqr,
-                "drop": q2 - drop_ratio * iqr,
-            }
-        if metric_summary:
-            calibrated[metric] = metric_summary
-    return calibrated
-
-
-def save_yaml(path: Path, data: Dict[str, Any], bins: List[float]) -> None:
-    payload: Dict[str, Any] = {
-        "mode": "auto",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "bins": {"tempo": bins},
-        "metrics": data,
-    }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    dump = yaml.safe_dump(payload, sort_keys=True, allow_unicode=True)
-    path.write_text(dump, encoding="utf-8")
-
-
-def _coerce_float(value: Any) -> float | None:
-    if value in (None, ""):
-        return None
+def load_previous_thresholds(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    raw = path.read_text(encoding="utf-8")
+    if yaml is not None:
+        try:
+            loaded = yaml.safe_load(raw)
+            if isinstance(loaded, dict):
+                return cast(Dict[str, Any], loaded)
+        except YAMLError:
+            pass
     try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
+        loaded_json = json.loads(raw)
+        if isinstance(loaded_json, dict):
+            return cast(Dict[str, Any], loaded_json)
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return {}
+
+
+def dump_thresholds(data: Dict[str, Any], path: Path, dry_run: bool) -> None:
+    if dry_run:
+        sys.stdout.write("---- DRY RUN THRESHOLDS ----\n")
+        if yaml is not None:
+            sys.stdout.write(yaml.safe_dump(data, allow_unicode=True, sort_keys=False))
+        else:
+            sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2))
+        sys.stdout.write("\n----------------------------\n")
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if yaml is not None:
+        text = yaml.safe_dump(data, allow_unicode=True, sort_keys=False)
+    else:
+        text = json.dumps(data, ensure_ascii=False, indent=2)
+    path.write_text(text, encoding="utf-8")
 
 
 def main() -> None:
-    args = parse_args()
-    records = load_records(args.input)
-    bucketed = collect_metric(records, args.metrics, args.bins)
-    calibrated = calibrate(
-        bucketed,
-        args.iqr_factor,
-        args.drop_ratio,
-        args.min_support,
+    parser = argparse.ArgumentParser(
+        description="IQR-based auto calibration for articulation thresholds."
     )
-    save_yaml(args.output, calibrated, args.bins)
+    parser.add_argument(
+        "--in",
+        dest="in_path",
+        required=True,
+        help="metrics_score.jsonl path",
+    )
+    parser.add_argument(
+        "--summary",
+        dest="summary_path",
+        default=None,
+        help="stage2_summary.json path",
+    )
+    parser.add_argument(
+        "--tempo-bins",
+        dest="tempo_bins",
+        default=None,
+        help="comma separated tempo bins",
+    )
+    parser.add_argument(
+        "--alpha",
+        type=float,
+        default=1.0,
+        help="high = q3 + alpha * IQR",
+    )
+    parser.add_argument(
+        "--beta",
+        type=float,
+        default=0.0,
+        help="low  = q1 - beta * IQR",
+    )
+    parser.add_argument(
+        "--min-support",
+        dest="min_support",
+        type=int,
+        default=30,
+        help="minimum samples per bin",
+    )
+    parser.add_argument(
+        "--hysteresis",
+        type=float,
+        default=0.01,
+        help="skip update if |new-old| < hysteresis",
+    )
+    parser.add_argument(
+        "--out",
+        dest="out_path",
+        required=True,
+        help="output thresholds path",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print thresholds without writing",
+    )
+    args = parser.parse_args()
+
+    input_path = Path(args.in_path)
+    summary_path = Path(args.summary_path) if args.summary_path else None
+    cli_bins = None
+    if args.tempo_bins:
+        cli_bins = [float(item) for item in args.tempo_bins.split(",") if item.strip()]
+    bins = load_summary_bins(summary_path, cli_bins)
+
+    rows = load_jsonl(input_path)
+    per_bin_axis: Dict[int, Dict[str, List[float]]] = {}
+    axes_seen: Set[str] = set()
+    for row in rows:
+        tempo = float(row.get("tempo", 120.0))
+        bucket = bin_index(tempo, bins)
+        axes_raw = cast(Dict[str, Any], row.get("axes_raw") or {})
+        if not axes_raw:
+            continue
+        bin_map = per_bin_axis.setdefault(bucket, {})
+        for raw_name, value in axes_raw.items():
+            axis_name = str(raw_name)
+            try:
+                float_value = float(value)
+            except (TypeError, ValueError):
+                continue
+            axes_seen.add(axis_name)
+            bin_map.setdefault(axis_name, []).append(float_value)
+
+    previous_thresholds = load_previous_thresholds(Path(args.out_path))
+    prev_per_axis_raw = previous_thresholds.get("per_axis")
+    prev_per_axis = (
+        cast(Dict[str, Any], prev_per_axis_raw) if isinstance(prev_per_axis_raw, dict) else {}
+    )
+
+    output: Dict[str, Any] = {
+        "mode": "auto",
+        "bins": {"tempo": bins},
+        "per_axis": {},
+    }
+
+    updated = 0
+    for axis_name in sorted(axes_seen):
+        axis_info: Dict[str, Any] = {"bins": []}
+        for bucket_index in range(len(bins) - 1):
+            samples = per_bin_axis.get(bucket_index, {}).get(axis_name, [])
+            sample_count = len(samples)
+            if sample_count >= args.min_support:
+                q1, q2, q3, spread = iqr(samples)
+                if math.isnan(q1):
+                    low_value: Optional[float] = None
+                    high_value: Optional[float] = None
+                else:
+                    low_value = clamp01(q1 - args.beta * spread)
+                    high_value = clamp01(q3 + args.alpha * spread)
+                    if low_value > high_value:
+                        low_value, high_value = high_value, low_value
+            else:
+                prev_axis = prev_per_axis.get(axis_name)
+                prev_axis_dict = (
+                    cast(Dict[str, Any], prev_axis) if isinstance(prev_axis, dict) else {}
+                )
+                prev_bins_raw = prev_axis_dict.get("bins")
+                prev_bins = (
+                    cast(List[Dict[str, Any]], prev_bins_raw)
+                    if isinstance(prev_bins_raw, list)
+                    else []
+                )
+                if bucket_index < len(prev_bins):
+                    prev_entry_dict = prev_bins[bucket_index]
+                else:
+                    prev_entry_dict = {}
+                low_value = cast(Optional[float], prev_entry_dict.get("low"))
+                high_value = cast(Optional[float], prev_entry_dict.get("high"))
+                q1 = q2 = q3 = spread = math.nan
+
+            prev_low: Optional[float] = None
+            prev_high: Optional[float] = None
+            try:
+                prev_low = cast(
+                    Optional[float],
+                    prev_per_axis[axis_name]["bins"][bucket_index]["low"],
+                )
+                prev_high = cast(
+                    Optional[float],
+                    prev_per_axis[axis_name]["bins"][bucket_index]["high"],
+                )
+            except (KeyError, IndexError, TypeError):
+                pass
+
+            def hysteresis_apply(
+                new_value: Optional[float],
+                old_value: Optional[float],
+            ) -> Optional[float]:
+                if new_value is None or old_value is None:
+                    return new_value
+                if abs(new_value - old_value) < args.hysteresis:
+                    return old_value
+                return new_value
+
+            low_value = hysteresis_apply(low_value, prev_low)
+            high_value = hysteresis_apply(high_value, prev_high)
+            if low_value != prev_low or high_value != prev_high:
+                updated += 1
+
+            axis_info["bins"].append(
+                {
+                    "bin": [bins[bucket_index], bins[bucket_index + 1]],
+                    "count": sample_count,
+                    "q1q2q3I": None if math.isnan(q1) else [q1, q2, q3, spread],
+                    "low": low_value,
+                    "high": high_value,
+                }
+            )
+        output["per_axis"][axis_name] = axis_info
+
+    dump_thresholds(output, Path(args.out_path), args.dry_run)
     print(
-        f"Wrote auto thresholds for {len(calibrated)} metrics to {args.output}",
+        f"[calibrate] axes={len(axes_seen)} bins={len(bins) - 1} "
+        f"updates={updated} -> {args.out_path}"
     )
 
 

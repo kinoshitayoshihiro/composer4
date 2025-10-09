@@ -1,0 +1,23 @@
+version: 1
+aliases:
+  groove_harmony:
+    - groove
+    - harmony
+    - grooveHarmony
+    - gh
+  drum_cohesion:
+    - cohesion
+    - drums
+    - drumCohesion
+  articulation:
+    - art
+    - artic
+  timing:
+    - microtiming
+    - time
+  velocity:
+    - dynamics
+    - vel
+  structure:
+    - form
+    - arrangement

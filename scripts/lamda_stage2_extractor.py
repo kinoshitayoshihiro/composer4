@@ -34,13 +34,23 @@ from tqdm import tqdm
 from lamda_tools import MetricConfig, compute_loop_metrics
 from lamda_tools.metadata_io import iter_loop_records, load_metadata_index
 from lamda_tools.metrics import DRUM_CATEGORIES
+from stage2_thresholds import (
+    Band,
+    ThresholdsProvider,
+    build_thresholds_provider,
+)
 
 DEFAULT_CONFIG_PATH = Path("configs/lamda/drums_stage2.yaml")
-DEFAULT_METADATA_INDEX = Path("output/drumloops_metadata/drumloops_metadata_v2.pickle")
+DEFAULT_METADATA_INDEX = Path(
+    "output/drumloops_metadata/drumloops_metadata_v2.pickle",
+)
 DEFAULT_METADATA_DIR = Path("output/drumloops_metadata")
 DEFAULT_INPUT_DIR = Path("output/drumloops_cleaned")
 DEFAULT_TMIDIX_PATH = Path("data/Los-Angeles-MIDI/CODE")
-DEFAULT_ARTICULATION_THRESHOLDS_PATH = Path("configs/thresholds/articulation.yaml")
+DEFAULT_ARTICULATION_THRESHOLDS_PATH = Path(
+    "configs/thresholds/articulation.yaml",
+)
+DEFAULT_AXIS_ALIAS_PATH = Path("configs/aliases/axes.yaml")
 
 DEFAULT_AXIS_WEIGHTS: Dict[str, float] = {
     "timing": 1.0,
@@ -51,11 +61,13 @@ DEFAULT_AXIS_WEIGHTS: Dict[str, float] = {
     "articulation": 1.0,
 }
 
-AXIS_NAME_ALIASES: Dict[str, str] = {
+BUILTIN_AXIS_ALIASES: Dict[str, str] = {
     "groove": "groove_harmony",
     "harmony": "groove_harmony",
     "cohesion": "drum_cohesion",
     "drums": "drum_cohesion",
+    "art": "articulation",
+    "artic": "articulation",
 }
 
 DEFAULT_TICKS_PER_BEAT = 480
@@ -73,12 +85,15 @@ class ArticulationThresholds:
     auto: Dict[str, Any]
     weights: Dict[str, float]
     path: Path
+    provider: Optional[ThresholdsProvider] = None
 
     @classmethod
     def load(cls, path: Path) -> "ArticulationThresholds":
         if not path.exists():
             hint = str(path)
-            raise FileNotFoundError(f"Articulation threshold config not found: {hint}")
+            raise FileNotFoundError(
+                f"Articulation threshold config not found: {hint}",
+            )
         raw_text = path.read_text(encoding="utf-8")
         raw_obj: Any = yaml.safe_load(raw_text) or {}
         if not isinstance(raw_obj, dict):
@@ -95,12 +110,21 @@ class ArticulationThresholds:
         weights: Dict[str, float] = {
             str(key): float(value) for key, value in weights_cfg.items() if value is not None
         }
+        provider: Optional[ThresholdsProvider] = None
+        if "per_axis" in raw and "bins" in raw:
+            try:
+                provider = build_thresholds_provider(raw)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Invalid articulation thresholds file {path}: {exc}",
+                ) from exc
         return cls(
             mode=mode,
             fixed=fixed_cfg,
             auto=auto_cfg,
             weights=weights,
             path=path,
+            provider=provider,
         )
 
     @property
@@ -108,6 +132,8 @@ class ArticulationThresholds:
         return sum(self.weights.values())
 
     def tempo_bins(self) -> List[float]:
+        if self.provider is not None:
+            return self.provider.bins.edges
         tempo_cfg = cast(Dict[str, Any], self.auto.get("bins", {}))
         bins_obj = tempo_cfg.get("tempo", [])
         if not isinstance(bins_obj, list):
@@ -191,7 +217,9 @@ class Stage2Settings:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate Stage 2 artefacts for LAMDa loops.")
+    parser = argparse.ArgumentParser(
+        description="Generate Stage 2 artefacts for LAMDa loops.",
+    )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
     parser.add_argument("--metadata-index", type=Path)
     parser.add_argument("--metadata-dir", type=Path)
@@ -215,6 +243,44 @@ def _load_config(path: Path) -> Dict[str, Any]:
     if not isinstance(raw, dict):
         raise ValueError("Stage 2 config must be a mapping")
     return cast(Dict[str, Any], raw)
+
+
+def _load_axis_aliases(path: Optional[Path]) -> Dict[str, str]:
+    if path is None or not path.exists():
+        return {}
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise ValueError("Axis alias config must be a mapping")
+    payload = cast(Dict[str, Any], raw)
+    aliases_root = payload.get("aliases", {})
+    if not isinstance(aliases_root, dict):
+        raise ValueError("aliases section must be a mapping")
+
+    lookup: Dict[str, str] = {}
+    for canonical_raw, aliases in cast(Dict[Any, Any], aliases_root).items():
+        canonical = str(canonical_raw)
+        lookup.setdefault(canonical, canonical)
+        if isinstance(aliases, (list, tuple)):
+            alias_entries = cast(Sequence[Any], aliases)
+            for entry in alias_entries:
+                alias_key = str(entry)
+                lookup.setdefault(alias_key, canonical)
+    return lookup
+
+
+def _apply_axis_aliases(
+    config: Dict[str, Any],
+    aliases: Dict[str, str],
+) -> Dict[str, Any]:
+    if not aliases:
+        return config
+    result: Dict[str, Any] = {}
+    for key, value in config.items():
+        canonical = aliases.get(str(key), str(key))
+        result[canonical] = value
+    return result
 
 
 def _resolve_paths(
@@ -257,7 +323,7 @@ def _resolve_paths(
         sample_rows = max(0, args.sample_events)
 
     missing_paths_msg = (
-        "Config must define events_parquet, loop_summary_csv, " "metrics_jsonl, and retry_dir paths"
+        "Config must define events_parquet, loop_summary_csv, metrics_jsonl, " "and retry_dir paths"
     )
     if (
         events_parquet is None
@@ -292,11 +358,22 @@ def _build_settings(
     if args.threshold is not None:
         threshold = args.threshold
 
-    axis_cfg = cast(Dict[str, Any], config.get("score", {}).get("axes", {}))
+    score_cfg = cast(Dict[str, Any], config.get("score", {}))
+    axis_cfg_raw = cast(Dict[str, Any], score_cfg.get("axes", {}))
+    alias_path_cfg = score_cfg.get("aliases_path")
+    alias_path: Optional[Path]
+    if alias_path_cfg is None:
+        alias_path = DEFAULT_AXIS_ALIAS_PATH
+    else:
+        alias_path = Path(alias_path_cfg)
+        if not alias_path.is_absolute():
+            alias_path = (args.config.parent / alias_path).resolve()
+    alias_lookup = BUILTIN_AXIS_ALIASES.copy()
+    alias_lookup.update(_load_axis_aliases(alias_path))
+    axis_cfg = _apply_axis_aliases(axis_cfg_raw, alias_lookup)
     axis_weights = DEFAULT_AXIS_WEIGHTS.copy()
     for raw_key, value in axis_cfg.items():
-        key = str(raw_key)
-        axis_key = AXIS_NAME_ALIASES.get(key, key)
+        axis_key = str(raw_key)
         axis_weights[axis_key] = float(value)
 
     retry_map: Dict[str, Dict[str, Any]] = {}
@@ -573,6 +650,64 @@ def _average(values: Iterable[Optional[float]]) -> float:
     return _clip(sum(items) / len(items), 0.0, 1.0)
 
 
+GROOVE_REFERENCE_KEYS = ("eighth", "sixteenth", "triplet", "quarter")
+GROOVE_REFERENCE_VECTOR = {
+    "eighth": 0.38,
+    "sixteenth": 0.32,
+    "triplet": 0.18,
+    "quarter": 0.12,
+}
+_GROOVE_REFERENCE_MAGNITUDE = math.sqrt(
+    sum(value**2 for value in GROOVE_REFERENCE_VECTOR.values()),
+)
+
+
+def _swing_alignment_score(value: Optional[float]) -> Optional[float]:
+    if value is None:
+        return None
+    straight = _bandpass(value, 1.0, 0.25)
+    swung = _bandpass(value, 1.5, 0.35)
+    if straight is None and swung is None:
+        return None
+    return max(straight or 0.0, swung or 0.0)
+
+
+def swing_alignment_score(value: Optional[float]) -> Optional[float]:
+    return _swing_alignment_score(value)
+
+
+def _fingerprint_similarity(
+    fingerprint: Optional[Dict[str, float]],
+) -> Optional[float]:
+    if not fingerprint:
+        return None
+    vector: List[float] = []
+    for key in GROOVE_REFERENCE_KEYS:
+        value = float(fingerprint.get(key, 0.0) or 0.0)
+        vector.append(max(0.0, value))
+    magnitude = math.sqrt(sum(component**2 for component in vector))
+    if magnitude == 0 or _GROOVE_REFERENCE_MAGNITUDE == 0:
+        return None
+    normalised: List[float] = [component / magnitude for component in vector]
+    reference: List[float] = [
+        GROOVE_REFERENCE_VECTOR[key] / _GROOVE_REFERENCE_MAGNITUDE for key in GROOVE_REFERENCE_KEYS
+    ]
+    similarity = sum(a * b for a, b in zip(normalised, reference))
+    return _clip(similarity, 0.0, 1.0)
+
+
+def _syncopation_alignment(value: Optional[float]) -> Optional[float]:
+    if value is None:
+        return None
+    return _bandpass(value, 0.35, 0.35)
+
+
+def fingerprint_similarity(
+    fingerprint: Optional[Dict[str, float]],
+) -> Optional[float]:
+    return _fingerprint_similarity(fingerprint)
+
+
 def _compute_articulation_metrics(
     notes: Sequence[Sequence[Any]],
     *,
@@ -761,7 +896,9 @@ class ArticulationLabeler:
 
     def __init__(self, thresholds: Optional[ArticulationThresholds]) -> None:
         self.thresholds = thresholds
-        self._auto_stats: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        self._auto_stats: Dict[str, Dict[str, List[float]]] = defaultdict(
+            lambda: defaultdict(list),
+        )
         self._observation_count = 0
 
     def evaluate(
@@ -911,7 +1048,9 @@ class ArticulationLabeler:
             presence = 1.0 if metric_value >= high else 0.0
             reason = "threshold_met" if presence else "threshold_not_met"
 
-        if label in {"detache", "pizzicato"} and not observation.support.get("string_track"):
+        if label in {"detache", "pizzicato"} and not observation.support.get(
+            "string_track",
+        ):
             presence = 0.0
             reason = "not_string_track"
 
@@ -947,6 +1086,19 @@ class ArticulationLabeler:
         spec = self._category_spec(category, config_key)
         high_value: Optional[float] = None
         source = "fixed"
+        provider_band: Optional[Band] = None
+        provider_bin_label: Optional[str] = None
+        tempo_raw = observation.tempo_bpm
+        tempo_value = float(tempo_raw) if tempo_raw is not None else 120.0
+        provider = self.thresholds.provider
+        if provider is not None:
+            provider_band = provider.band_for(label, tempo_value)
+            if provider_band.low is not None or provider_band.high is not None:
+                lo, hi = provider.bins.bin_pair(tempo_value)
+                provider_bin_label = f"{int(lo)}-{int(hi)}"
+                if provider_band.high is not None:
+                    high_value = provider_band.high
+                    source = f"provider:{provider_bin_label}"
 
         if "high" in spec:
             try:
@@ -985,6 +1137,11 @@ class ArticulationLabeler:
             "prefer_labeled": bool(spec.get("prefer_labeled")),
             "label": label,
         }
+        if provider_band is not None:
+            result["band_low"] = provider_band.low
+            result["band_high"] = provider_band.high
+            result["band_count"] = provider_band.count
+            result["band_bin"] = provider_bin_label
         if auto_summary:
             result["auto_summary"] = auto_summary
         return result
@@ -1035,52 +1192,72 @@ def _score_axes(metrics: Any) -> Dict[str, float]:
 
     fingerprint_raw = getattr(metrics, "rhythm_fingerprint", {}) or {}
     fingerprint = cast(Dict[str, float], fingerprint_raw)
-    groove_strength = fingerprint.get("eighth", 0.0) + fingerprint.get("sixteenth", 0.0)
-    swing_bias = fingerprint.get("triplet", 0.0)
+    groove_eighth = float(fingerprint.get("eighth", 0.0))
+    groove_sixteenth = float(fingerprint.get("sixteenth", 0.0))
+    groove_triplet = float(fingerprint.get("triplet", 0.0))
+    groove_strength = groove_eighth + groove_sixteenth
+
+    # 期待する拍のバランス (裏拍・シンコペーション) を 0–1 で粗く算出
+    offbeat_total = groove_sixteenth + groove_triplet
+    total_fp = (
+        groove_eighth + groove_sixteenth + groove_triplet + float(fingerprint.get("quarter", 0.0))
+    )
+    if total_fp > 0:
+        offbeat_ratio = _clip(offbeat_total / total_fp, 0.0, 1.0)
+    else:
+        offbeat_ratio = 0.0
+
+    swing_alignment = _swing_alignment_score(metric("swing_ratio"))
+    fingerprint_match = _fingerprint_similarity(fingerprint)
+    syncopation_match = _syncopation_alignment(metric("syncopation_rate"))
+    groove_balance = _bandpass(offbeat_ratio, 0.4, 0.4)
 
     axes: Dict[str, float] = {
         "timing": _average(
             [
                 _clamp_opt(metric("swing_confidence"), 0.0, 1.0),
-                _invert_scale(metric("microtiming_std"), 30.0),
-                _invert_scale(metric("microtiming_rms"), 30.0),
-                _bandpass(metric("syncopation_rate"), 0.25, 0.25),
+                _invert_scale(metric("microtiming_std"), 24.0),
+                _bandpass(metric("fill_density"), 0.30, 0.22),
+                _invert_scale(metric("microtiming_rms"), 24.0),
             ]
         ),
         "velocity": _average(
             [
                 _bandpass(metric("ghost_rate"), 0.2, 0.2),
                 _bandpass(metric("accent_rate"), 0.2, 0.2),
-                _bandpass(metric("velocity_range"), 60.0, 40.0),
+                _bandpass(metric("velocity_range"), 70.0, 45.0),
                 _bandpass(metric("unique_velocity_steps"), 6.0, 4.0),
-                _bandpass(metric("velocity_std"), 10.0, 6.0),
             ]
         ),
         "groove_harmony": _average(
             [
-                _bandpass(metric("swing_ratio"), 1.0, 0.6),
-                _bandpass(metric("syncopation_rate"), 0.25, 0.2),
+                swing_alignment,
+                fingerprint_match,
+                syncopation_match,
+                groove_balance,
                 _clamp_opt(groove_strength, 0.0, 1.0),
-                _invert_scale(abs(groove_strength - swing_bias), 1.5),
             ]
         ),
         "drum_cohesion": _average(
             [
-                _invert_scale(metric("drum_collision_rate"), 0.4),
+                _invert_scale(metric("drum_collision_rate"), 0.35),
                 _clamp_opt(metric("role_separation"), 0.0, 1.0),
-                _bandpass(metric("hat_transition_rate"), 0.4, 0.4),
+                _bandpass(metric("hat_transition_rate"), 0.5, 0.35),
             ]
         ),
         "structure": _average(
             [
-                _bandpass(metric("repeat_rate"), 0.5, 0.3),
-                _bandpass(metric("variation_factor"), 0.4, 0.3),
+                _bandpass(metric("repeat_rate"), 0.55, 0.35),
+                _bandpass(metric("variation_factor"), 0.40, 0.30),
                 _invert_scale(metric("breakpoint_count"), 8.0),
-                _bandpass(metric("note_density_per_bar"), 12.0, 8.0),
             ]
         ),
     }
     return axes
+
+
+def score_axes(metrics: Any) -> Dict[str, float]:
+    return _score_axes(metrics)
 
 
 def _combine_score(
@@ -1116,7 +1293,7 @@ def _compute_data_digest(
     pipeline_version: str,
 ) -> Optional[str]:
     if not loop_ids:
-        return None
+        return f"stage2:{pipeline_version}:empty"
     hasher = hashlib.sha1()
     for loop_id in sorted(set(loop_ids)):
         hasher.update(loop_id.encode("utf-8"))
@@ -1125,7 +1302,9 @@ def _compute_data_digest(
     return f"stage2:{pipeline_version}:{digest}"
 
 
-def _summarise_axes(samples: Sequence[Dict[str, float]]) -> Dict[str, Dict[str, float]]:
+def _summarise_axes(
+    samples: Sequence[Dict[str, float]],
+) -> Dict[str, Dict[str, float]]:
     if not samples:
         return {}
     buckets: Dict[str, List[float]] = defaultdict(list)
@@ -1136,10 +1315,14 @@ def _summarise_axes(samples: Sequence[Dict[str, float]]) -> Dict[str, Dict[str, 
     for key, values in buckets.items():
         if not values:
             continue
+        ordered = sorted(values)
+        median = float(statistics.median(ordered))
         summary[key] = {
             "mean": sum(values) / len(values),
             "min": min(values),
             "max": max(values),
+            "p50": median,
+            "p90": _percentile(ordered, 0.9),
         }
     return summary
 
@@ -1232,7 +1415,7 @@ class Stage2Extractor:
         score_rows: List[Dict[str, Any]] = []
         loop_ids: List[str] = []
         axis_pass_samples: List[Dict[str, float]] = []
-        git_commit = _resolve_git_commit()
+        git_commit = _resolve_git_commit() or "unknown"
         passed_scores: List[float] = []
         retry_count = 0
         tempo_with_events = 0
@@ -1241,7 +1424,9 @@ class Stage2Extractor:
         total_seen = 0
         processed = 0
         ghost_threshold = self.settings.metrics.ghost_velocity_threshold
-        articulation_labeler = ArticulationLabeler(self.settings.articulation_thresholds)
+        articulation_labeler = ArticulationLabeler(
+            self.settings.articulation_thresholds,
+        )
 
         limit = self.settings.limit
         iterator: Iterator[Dict[str, Any]] = iter(records)
@@ -1365,7 +1550,6 @@ class Stage2Extractor:
 
             retry_preset_id: Optional[str] = None
             retry_seed: Optional[int] = None
-
             timestamp_now = datetime.now(timezone.utc).isoformat()
 
             exclusion_reason = None
@@ -1575,17 +1759,46 @@ def _build_summary(
     data_digest: Optional[str] = None,
     axis_summary: Optional[Dict[str, Dict[str, float]]] = None,
 ) -> Dict[str, Any]:
-    distribution: Dict[str, Any] = {}
-    if passed_scores:
-        median_value = float(statistics.median(passed_scores))
-        distribution = {
-            "population": "passed_loops",
-            "min": float(min(passed_scores)),
-            "median": median_value,
-            "p50": median_value,
-            "p90": _percentile(list(passed_scores), 0.9),
-            "max": float(max(passed_scores)),
-        }
+    passed_count = len(passed_scores)
+    pass_rate = float(passed_count / processed) if processed else 0.0
+
+    scores_list = [float(score) for score in passed_scores]
+    distribution: Dict[str, Any] = {
+        "population": "passed_loops",
+        "count": passed_count,
+        "pass_rate": pass_rate,
+    }
+    if scores_list:
+        median_value = float(statistics.median(scores_list))
+        distribution.update(
+            {
+                "min": float(min(scores_list)),
+                "median": median_value,
+                "p50": median_value,
+                "p90": _percentile(scores_list, 0.9),
+                "mean": float(statistics.mean(scores_list)),
+                "max": float(max(scores_list)),
+            }
+        )
+    else:
+        distribution.update(
+            {
+                "min": None,
+                "median": None,
+                "p50": None,
+                "p90": None,
+                "mean": None,
+                "max": None,
+            }
+        )
+
+    axis_stats = axis_summary or {}
+    axis_payload: Dict[str, Any] = {
+        "population": "passed_loops",
+        "count": passed_count,
+        "axes": axis_stats,
+    }
+
     summary: Dict[str, Any] = {
         "pipeline_version": settings.pipeline_version,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -1595,6 +1808,10 @@ def _build_summary(
             "tempo_events": tempo_with_events,
             "tempo_missing": tempo_missing,
         },
+        "outputs": {
+            "passed_loops": passed_count,
+            "pass_rate": pass_rate,
+        },
         "exclusions": dict(exclusion_counts),
         "score_distribution": distribution,
         "retry_queue": retry_entries,
@@ -1602,12 +1819,9 @@ def _build_summary(
     }
     if articulation_summary:
         summary["articulation"] = articulation_summary
-    if git_commit:
-        summary["git_commit"] = git_commit
-    if data_digest:
-        summary["data_digest"] = data_digest
-    if axis_summary:
-        summary["score_axes"] = axis_summary
+    summary["git_commit"] = git_commit
+    summary["data_digest"] = data_digest
+    summary["score_axes"] = axis_payload
     return summary
 
 
@@ -1617,8 +1831,14 @@ def _print_summary(summary: Dict[str, Any]) -> None:
     print("=" * 70)
     print(f"Pipeline version : {summary.get('pipeline_version')}")
     inputs = cast(Dict[str, Any], summary.get("inputs", {}))
+    outputs = cast(Dict[str, Any], summary.get("outputs", {}))
     print(f"Total loops      : {inputs.get('total_loops')}")
     print(f"Processed loops  : {inputs.get('processed_loops')}")
+    if "passed_loops" in outputs:
+        print(f"Passed loops     : {outputs.get('passed_loops')}")
+    pass_rate = outputs.get("pass_rate")
+    if isinstance(pass_rate, (int, float)):
+        print(f"Pass rate        : {pass_rate:.3f}")
     print(f"Retry queue size : {summary.get('retry_queue')}")
     distribution = cast(
         Dict[str, Any],
@@ -1629,9 +1849,10 @@ def _print_summary(summary: Dict[str, Any]) -> None:
         if population:
             print(f"Population      : {population}")
         print("Score distribution:")
-        for key in ["min", "median", "p90", "max"]:
-            if key in distribution:
-                print(f"  {key:>6}: {distribution[key]:.2f}")
+        for key in ["min", "median", "mean", "p90", "max"]:
+            value = distribution.get(key)
+            if value is not None:
+                print(f"  {key:>6}: {float(value):.2f}")
     exclusions = cast(Dict[str, Any], summary.get("exclusions") or {})
     if exclusions:
         print("Exclusions:")

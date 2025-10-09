@@ -10,6 +10,7 @@ Stage 2 は Stage 1 で得たドラムループを **学習・検索しやすい
 
 - Stage 1 出力 (dedupe済み MIDI と shard metadata) を再パースし、**イベント粒度**と**ループ粒度**の正規化テーブルを作成する。
 - 既存 `lamda_tools.metrics` に未実装の指標を追加し、**5軸スコア (Timing / Velocity / Groove Harmony / Drum Cohesion / Structure)** を 0–100 点で算出する。
+- 軸名の表記ゆれを `configs/aliases/axes.yaml` で収束させ、テンポ帯域ごとの閾値を YAML から自動供給してスコアリングを安定化させる。
 - スコア閾値 (既定 70 点) を満たさないループを **再処理キュー** に自動登録する。
 - 産物は Parquet を正とし、軽量 CSV/JSONL を併記する。すべての生成物に `pipeline_version`, `git_commit`, `data_digest` を付与する。
 
@@ -228,7 +229,7 @@ JSONL 1 行構造:
 | --- | --- | -------- | ------ |
 | Timing | 20 | `swing_confidence`, `microtiming_std`, `fill_density` | 正規化 / 平均。
 | Velocity | 20 | `ghost_rate`, `accent_rate`, `velocity_range`, `unique_velocity_steps` | 貢献度合計で 0–20。
-| Groove Harmony | 20 | `swing_ratio` の期待レンジ / `rhythm_fingerprint` 類似度 / (ドラムの場合は裏拍適合度) | NA の場合は 10 点基準。
+| Groove Harmony | 20 | `swing_ratio` の期待レンジ / `rhythm_fingerprint` 類似度 / `syncopation_rate` / 裏拍適合度 | NA の場合は 10 点基準。
 | Drum Cohesion | 20 | `drum_collision_rate`, `role_separation`, `hat_transition_rate` | 衝突が多いと減点。
 | Structure | 20 | `repeat_rate`, `variation_factor`, `breakpoint_count` | 4小節周期性をペナルティ化。
 
@@ -255,13 +256,24 @@ python scripts/lamda_stage2_extractor.py \
 - メトリクス設定 (`ghost_velocity_threshold` など)
 - スコアリング閾値と各軸のウェイト
 - `retry_presets` のプリセット内容
+- `aliases_path` で軸名エイリアス定義 (`configs/aliases/axes.yaml`) を指定し、スコア計算時に正規化する。
+- `articulation_thresholds.auto_thresholds.path` でテンポ帯域ごとの閾値 YAML を指定し、`scripts/stage2_thresholds.py` の `ThresholdsProvider` が参照する。
 
-### 7.2 追加ユーティリティ
+### 7.2 閾値キャリブレーションと検証
+
+- 閾値ファイルは `configs/thresholds/schema.thresholds.v1.yaml` で契約を定義し、`tools/validate_thresholds.py` で整合性を検証する。
+- `scripts/stage2_thresholds.py` は `TempoBinner` と `ThresholdsProvider` を提供し、Stage2 extractor がテンポ帯域から自動的に `Band` を引き当てる。
+- 新規閾値を追加する際は `python tools/validate_thresholds.py --thresholds <file>` でスキーマ検証を行い、Stage2 実行前に CI で失敗を検出する。
+- `score.axes_raw.articulation` の算出には Band 情報 (`low`, `high`, `count`, `stats`) が含まれ、監視ダッシュボードにそのまま送信できる。
+- Groove Harmony は ストレート/スウィング双方の `swing_ratio` 整合性、`rhythm_fingerprint` のコサイン類似度、`syncopation_rate`、裏拍ヒット比率を平均化して 0–1 に正規化する。
+- Drum Cohesion は `drum_collision_rate` の抑制、`role_separation` の拡張、`hat_transition_rate` の適度な変化を平均化して算出する。
+
+### 7.3 追加ユーティリティ
 
 - `python scripts/lamda_export_metadata.py --light --csv-out ...` (Stage2 移行後も軽量 CSV 出力に利用)
 - `python scripts/analyze_drumloops_quality.py --sample -1 --report-path ...` (Stage2 で改善した指標を再確認)
 
-### 7.3 役割推定ルール
+### 7.4 役割推定ルール
 
 1. GM 準拠トラック (channel 10) を優先的にドラム扱い。
 2. 残りは `program_norm` を GM マッピング表で正規化し、Perc 系を抽出。
@@ -269,7 +281,7 @@ python scripts/lamda_stage2_extractor.py \
 4. 各ルールのスコアを 0–1 に正規化し、最大値の役割を `instrument_role`、スコアを `role_confidence` とする。
 5. パーカッション等でスコア閾値未満の場合は `perc` or `other` へフォールバック。
 
-### 7.4 スウィング / 三連・テンポ変化の扱い
+### 7.5 スウィング / 三連・テンポ変化の扱い
 
 - `tempo.events` が存在する場合は拍単位で再サンプリングし、IOI と `swing_ratio` を再計測。
 - even / odd / triplet の 3 系統を同時計測し、最も適合度が高いラベルを `swing_phase` に設定。

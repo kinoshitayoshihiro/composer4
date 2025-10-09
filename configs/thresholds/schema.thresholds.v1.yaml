@@ -1,0 +1,27 @@
+# LAMDA Stage2 articulation thresholds schema (v1)
+#
+# This document exists for human reference and CI tooling.
+# The canonical validation rules are implemented in tools/validate_thresholds.py.
+#
+# Top-level structure
+# --------------------
+# mode: str ("auto" | "manual")
+# version: str|int (optional)
+# bins:
+#   tempo: list[float]  # monotonically increasing, len >= 2
+# per_axis:
+#   <axis_name>:
+#     bins: list[AxisBin]  # len == len(bins.tempo) - 1
+# AxisBin structure
+# -----------------
+# bin: [float, float]  # inclusive lower, exclusive upper
+# count: int|null      # sample size used to derive thresholds
+# q1q2q3I: [float,float,float,float] | null  # quartiles+IQR (optional in manual mode)
+# low: float|null      # lower bound in [0, 1]
+# high: float|null     # upper bound in [0, 1]
+#
+# Optional keys
+# -------------
+# metadata: dict   # arbitrary metadata, e.g. git_commit, data_digest
+# notes: str       # free-form documentation
+# weights: dict    # articulation axis weights (legacy compatibility)
