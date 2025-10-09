@@ -29,6 +29,37 @@ jobs:
         run: |
           pip install -r requirements-dev.txt
           pip install mkdocs mkdocs-material mkdocstrings[python]
+      - name: Validate Stage2 thresholds
+        shell: bash
+        run: |
+          python tools/validate_thresholds.py configs/thresholds/articulation.auto.yaml --summary
+      - name: Check Stage2 config wiring
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          import yaml
+
+          config_path = Path('configs/lamda/drums_stage2.yaml')
+          if not config_path.exists():
+              sys.exit(f"Missing Stage2 config: {config_path}")
+          config = yaml.safe_load(config_path.read_text(encoding='utf-8')) or {}
+
+          score_cfg = (config.get('score') or {})
+          aliases_path = score_cfg.get('aliases_path')
+          if not aliases_path:
+              sys.exit('score.aliases_path must be set for Stage2 config')
+
+          articulation_cfg = (config.get('articulation') or {})
+          thresholds_path = articulation_cfg.get('thresholds_path')
+          expected_thresholds = 'configs/thresholds/articulation.auto.yaml'
+          if thresholds_path != expected_thresholds:
+              sys.exit(
+                  f'articulation.thresholds_path should be {expected_thresholds}, got {thresholds_path}',
+              )
+
+          PY
       - name: Build SaxPlugin
         shell: bash
         continue-on-error: true

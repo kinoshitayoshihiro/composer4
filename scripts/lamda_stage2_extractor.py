@@ -30,15 +30,25 @@ from typing import (
 import pandas as pd
 import yaml
 from tqdm import tqdm
+import numpy as np
+from numpy.typing import NDArray
 
 from lamda_tools import MetricConfig, compute_loop_metrics
 from lamda_tools.metadata_io import iter_loop_records, load_metadata_index
 from lamda_tools.metrics import DRUM_CATEGORIES
-from stage2_thresholds import (
-    Band,
-    ThresholdsProvider,
-    build_thresholds_provider,
-)
+
+try:
+    from stage2_thresholds import (
+        Band,
+        ThresholdsProvider,
+        build_thresholds_provider,
+    )
+except ModuleNotFoundError:  # pragma: no cover - fallback when run as module
+    from scripts.stage2_thresholds import (
+        Band,
+        ThresholdsProvider,
+        build_thresholds_provider,
+    )
 
 DEFAULT_CONFIG_PATH = Path("configs/lamda/drums_stage2.yaml")
 DEFAULT_METADATA_INDEX = Path(
@@ -59,6 +69,21 @@ DEFAULT_AXIS_WEIGHTS: Dict[str, float] = {
     "drum_cohesion": 1.0,
     "structure": 1.0,
     "articulation": 1.0,
+}
+
+FloatArray = NDArray[np.float64]
+IntArray = NDArray[np.int64]
+
+STRUCTURE_ROLE_INDEX: Dict[str, int] = {
+    "none": 0,
+    "kick": 1,
+    "snare": 2,
+    "closed_hat": 3,
+    "open_hat": 4,
+    "tom": 5,
+    "perc": 6,
+    "cymbal": 7,
+    "other": 8,
 }
 
 BUILTIN_AXIS_ALIASES: Dict[str, str] = {
@@ -107,9 +132,11 @@ class ArticulationThresholds:
             Dict[str, Any],
             weights_root.get("articulation", {}),
         )
-        weights: Dict[str, float] = {
-            str(key): float(value) for key, value in weights_cfg.items() if value is not None
-        }
+        weights: Dict[str, float] = {}
+        for key, value in weights_cfg.items():
+            if value is None:
+                continue
+            weights[str(key)] = float(value)
         provider: Optional[ThresholdsProvider] = None
         if "per_axis" in raw and "bins" in raw:
             try:
@@ -193,6 +220,60 @@ class ArticulationResult:
 
 
 @dataclass
+class VelocityScoringConfig:
+    nbins: int
+    targets: Dict[str, FloatArray]
+    weights: Dict[str, float]
+    metric_weights: Dict[str, float]
+    prefill_window_beats: float = 0.5
+
+    def target(self, key: str) -> FloatArray:
+        default = self.targets.get("global")
+        if default is None:
+            raise ValueError("velocity targets must define 'global'")
+        if key in self.targets:
+            return self.targets[key]
+        return default
+
+
+@dataclass
+class DensityBandSpec:
+    max_bpm: Optional[float]
+    low: float
+    high: float
+
+
+@dataclass
+class StructureScoringConfig:
+    bands: List[DensityBandSpec]
+    weights: Dict[str, float]
+    grid_divisions: int = 16
+    periodicity_candidates: Tuple[int, ...] = (4, 8, 12, 16)
+
+    def expected_density(self, bpm: Optional[float]) -> Tuple[float, float]:
+        if not self.bands:
+            return 0.0, 0.0
+        if bpm is None:
+            return self.bands[0].low, self.bands[0].high
+        for band in self.bands:
+            if band.max_bpm is None or bpm <= band.max_bpm:
+                return band.low, band.high
+        last = self.bands[-1]
+        return last.low, last.high
+
+
+@dataclass
+class LoopFeatureContext:
+    velocities: FloatArray
+    beats: FloatArray
+    beat_positions: FloatArray
+    bpm: Optional[float]
+    onset_counts_16th: FloatArray
+    role_tokens_16th: IntArray
+    beats_per_bar: float
+
+
+@dataclass
 class Stage2Paths:
     events_parquet: Path
     events_csv_sample: Optional[Path]
@@ -214,6 +295,8 @@ class Stage2Settings:
     limit: Optional[int]
     print_summary: bool
     articulation_thresholds: Optional[ArticulationThresholds]
+    velocity_scoring: Optional[VelocityScoringConfig]
+    structure_scoring: Optional[StructureScoringConfig]
 
 
 def _parse_args() -> argparse.Namespace:
@@ -283,6 +366,158 @@ def _apply_axis_aliases(
     return result
 
 
+def _safe_normalised_histogram(
+    values: Sequence[float],
+    *,
+    nbins: int,
+) -> FloatArray:
+    array = np.asarray(list(values), dtype=np.float64)
+    if array.size != nbins:
+        raise ValueError(
+            f"velocity histogram expected {nbins} entries, found {array.size}",
+        )
+    total = float(array.sum())
+    if total > 0:
+        array = array / total
+    else:
+        array = np.full(nbins, 1.0 / nbins, dtype=np.float64)
+    return array
+
+
+def _resolve_config_path(base_dir: Path, value: str) -> Path:
+    path = Path(value)
+    if not path.is_absolute():
+        path = (base_dir / path).resolve()
+    return path
+
+
+def _load_velocity_scoring_config(
+    velocity_cfg: Dict[str, Any],
+    *,
+    config_dir: Path,
+) -> Optional[VelocityScoringConfig]:
+    if not velocity_cfg:
+        return None
+    target_path_value = velocity_cfg.get("target_histograms_path")
+    if not target_path_value:
+        return None
+    target_path = _resolve_config_path(config_dir, str(target_path_value))
+    if not target_path.exists():
+        raise FileNotFoundError(
+            f"Velocity target histogram file not found: {target_path}",
+        )
+    target_text = target_path.read_text(encoding="utf-8")
+    raw_loaded: Any = yaml.safe_load(target_text) or {}
+    if not isinstance(raw_loaded, dict):
+        raise ValueError(
+            f"Velocity targets file {target_path} must contain a mapping",
+        )
+    raw = cast(Dict[str, Any], raw_loaded)
+    nbins = int(velocity_cfg.get("nbins") or raw.get("nbins") or 16)
+    targets_root = cast(Dict[str, Any], raw.get("targets", raw))
+    targets: Dict[str, FloatArray] = {}
+    for key, values in targets_root.items():
+        if not isinstance(values, Sequence):
+            continue
+        sequence_values = cast(Sequence[float], values)
+        targets[key] = _safe_normalised_histogram(sequence_values, nbins=nbins)
+    if "global" not in targets:
+        message = f"Velocity targets file {target_path} missing 'global' histogram"
+        raise ValueError(message)
+    # Ensure expected keys default to global if missing.
+    for key in ("downbeat", "offbeat", "prefill"):
+        if key not in targets:
+            targets[key] = targets["global"]
+    weights_root = cast(Dict[str, Any], velocity_cfg.get("weights", {}))
+    weights = {
+        "global": float(weights_root.get("global", 0.4)),
+        "downbeat": float(weights_root.get("downbeat", 0.25)),
+        "offbeat": float(weights_root.get("offbeat", 0.2)),
+        "prefill": float(weights_root.get("prefill", 0.15)),
+    }
+    metric_weights_root = cast(
+        Dict[str, Any],
+        velocity_cfg.get("metric_weights", {}),
+    )
+    metric_weights = {
+        "js": float(metric_weights_root.get("js", 0.5)),
+        "cos": float(metric_weights_root.get("cos", 0.5)),
+    }
+    prefill_window = float(velocity_cfg.get("prefill_window_beats", 0.5))
+    return VelocityScoringConfig(
+        nbins=nbins,
+        targets=targets,
+        weights=weights,
+        metric_weights=metric_weights,
+        prefill_window_beats=prefill_window,
+    )
+
+
+def _load_structure_scoring_config(
+    structure_cfg: Dict[str, Any],
+) -> Optional[StructureScoringConfig]:
+    if not structure_cfg:
+        return None
+    bands_config = structure_cfg.get("density_bands")
+    bands: List[DensityBandSpec] = []
+    if isinstance(bands_config, list):
+        bands_list = cast(List[Any], bands_config)
+        for entry_obj in bands_list:
+            if not isinstance(entry_obj, dict):
+                continue
+            entry_dict = cast(Dict[str, Any], entry_obj)
+            max_bpm_val = entry_dict.get("max_bpm")
+            max_bpm = float(max_bpm_val) if max_bpm_val is not None else None
+            low = float(entry_dict.get("low", 0.0))
+            high = float(entry_dict.get("high", low))
+            bands.append(DensityBandSpec(max_bpm=max_bpm, low=low, high=high))
+    elif isinstance(bands_config, dict):
+        bands_dict = cast(Dict[Any, Any], bands_config)
+        for entry_obj in bands_dict.values():
+            if not isinstance(entry_obj, dict):
+                continue
+            entry_dict = cast(Dict[str, Any], entry_obj)
+            max_bpm_val = entry_dict.get("max_bpm")
+            max_bpm = float(max_bpm_val) if max_bpm_val is not None else None
+            low = float(entry_dict.get("low", 0.0))
+            high = float(entry_dict.get("high", low))
+            bands.append(DensityBandSpec(max_bpm=max_bpm, low=low, high=high))
+    if not bands:
+        bands = [
+            DensityBandSpec(max_bpm=95.0, low=2.0, high=6.0),
+            DensityBandSpec(max_bpm=130.0, low=4.0, high=9.0),
+            DensityBandSpec(max_bpm=None, low=6.0, high=12.0),
+        ]
+    bands.sort(
+        key=lambda spec: (float("inf") if spec.max_bpm is None else spec.max_bpm),
+    )
+    weights_root = cast(Dict[str, Any], structure_cfg.get("weights", {}))
+    weights = {
+        "periodicity": float(weights_root.get("periodicity", 0.45)),
+        "diversity": float(weights_root.get("diversity", 0.35)),
+        "density": float(weights_root.get("density", 0.2)),
+    }
+    grid_divisions = int(structure_cfg.get("grid_divisions", 16))
+    periodicity_candidates_raw = structure_cfg.get("periodicity_candidates")
+    if isinstance(periodicity_candidates_raw, Sequence):
+        periodicity_sequence = cast(Sequence[Any], periodicity_candidates_raw)
+        periodicity_candidates = tuple(
+            int(value_obj)
+            for value_obj in periodicity_sequence
+            if isinstance(value_obj, (int, float))
+        )
+        if not periodicity_candidates:
+            periodicity_candidates = (4, 8, 12, 16)
+    else:
+        periodicity_candidates = (4, 8, 12, 16)
+    return StructureScoringConfig(
+        bands=bands,
+        weights=weights,
+        grid_divisions=grid_divisions,
+        periodicity_candidates=periodicity_candidates,
+    )
+
+
 def _resolve_paths(
     config: Dict[str, Any],
     args: argparse.Namespace,
@@ -323,7 +558,7 @@ def _resolve_paths(
         sample_rows = max(0, args.sample_events)
 
     missing_paths_msg = (
-        "Config must define events_parquet, loop_summary_csv, metrics_jsonl, " "and retry_dir paths"
+        "Config must define events_parquet, loop_summary_csv, " "metrics_jsonl, and retry_dir paths"
     )
     if (
         events_parquet is None
@@ -352,6 +587,10 @@ def _build_settings(
     config: Dict[str, Any],
     args: argparse.Namespace,
 ) -> Stage2Settings:
+    if getattr(args, "config", None):
+        config_dir = args.config.resolve().parent
+    else:
+        config_dir = Path(".")
     pipeline_cfg = cast(Dict[str, Any], config.get("pipeline", {}))
     version = str(pipeline_cfg.get("version", "stage2"))
     threshold = float(pipeline_cfg.get("threshold", 70.0))
@@ -375,6 +614,14 @@ def _build_settings(
     for raw_key, value in axis_cfg.items():
         axis_key = str(raw_key)
         axis_weights[axis_key] = float(value)
+
+    velocity_scoring = _load_velocity_scoring_config(
+        cast(Dict[str, Any], score_cfg.get("velocity", {})),
+        config_dir=config_dir,
+    )
+    structure_scoring = _load_structure_scoring_config(
+        cast(Dict[str, Any], score_cfg.get("structure", {})),
+    )
 
     retry_map: Dict[str, Dict[str, Any]] = {}
     raw_retry = cast(List[Any], config.get("retry_presets", []))
@@ -427,6 +674,8 @@ def _build_settings(
         limit=args.limit,
         print_summary=args.print_summary,
         articulation_thresholds=articulation_thresholds,
+        velocity_scoring=velocity_scoring,
+        structure_scoring=structure_scoring,
     )
 
 
@@ -610,6 +859,265 @@ def _event_rows(
         )
         previous_start = start
     return rows, programs
+
+
+def _build_feature_context(
+    notes: Sequence[Sequence[Any]],
+    *,
+    ticks_per_beat: int,
+    time_signature: Tuple[int, int],
+    channel_programs: Dict[int, int],
+    duration_ticks: int,
+    bpm_hint: Optional[float],
+    grid_divisions: int = 16,
+) -> Optional[LoopFeatureContext]:
+    if not notes:
+        return None
+    effective_tpb = ticks_per_beat if ticks_per_beat > 0 else DEFAULT_TICKS_PER_BEAT
+    ts_numerator, ts_denominator = time_signature
+    if ts_denominator <= 0:
+        ts_denominator = 4
+    ts_ratio = 4.0 / float(ts_denominator)
+    beat_ticks = effective_tpb * ts_ratio
+    if beat_ticks <= 0:
+        return None
+    bar_ticks = beat_ticks * float(ts_numerator)
+    if bar_ticks <= 0:
+        bar_ticks = beat_ticks * 4.0
+
+    starts = np.asarray([int(note[1]) for note in notes], dtype=np.float64)
+    velocities = np.asarray([int(note[5]) for note in notes], dtype=np.float64)
+    beats = starts / beat_ticks
+    if bar_ticks > 0:
+        beat_positions = (starts % bar_ticks) / bar_ticks
+    else:
+        beat_positions = np.zeros_like(beats)
+
+    onset_counts = np.zeros(grid_divisions, dtype=np.float64)
+    role_bins = np.zeros(
+        (grid_divisions, len(STRUCTURE_ROLE_INDEX)),
+        dtype=np.float64,
+    )
+    for note in notes:
+        start = int(note[1])
+        channel = int(note[3])
+        pitch = int(note[4])
+        program = channel_programs.get(channel, 0)
+        role, _ = _infer_role(channel, program, pitch)
+        role_index = STRUCTURE_ROLE_INDEX.get(
+            role,
+            STRUCTURE_ROLE_INDEX["other"],
+        )
+
+        if bar_ticks > 0:
+            slot_position = (start % bar_ticks) / bar_ticks
+        else:
+            slot_position = (start / beat_ticks) % 1.0 if beat_ticks else 0.0
+        slot_float = slot_position * grid_divisions
+        slot_index = int(math.floor(slot_float))
+        slot_index = max(0, min(grid_divisions - 1, slot_index))
+
+        onset_counts[slot_index] += 1.0
+        role_bins[slot_index, role_index] += 1.0
+
+    bars = 1.0
+    if bar_ticks > 0 and duration_ticks > 0:
+        bars = max(1.0, math.ceil(duration_ticks / bar_ticks))
+    onset_counts = onset_counts / bars
+    role_tokens = np.argmax(role_bins, axis=1).astype(np.int64)
+    beats_per_bar = float(ts_numerator)
+    return LoopFeatureContext(
+        velocities=velocities,
+        beats=beats,
+        beat_positions=beat_positions,
+        bpm=bpm_hint,
+        onset_counts_16th=onset_counts,
+        role_tokens_16th=role_tokens,
+        beats_per_bar=beats_per_bar if beats_per_bar > 0 else 4.0,
+    )
+
+
+def _normalise_histogram(array: FloatArray) -> FloatArray:
+    total = float(array.sum())
+    if total <= 0:
+        return np.full_like(array, 1.0 / max(1, array.size), dtype=np.float64)
+    return (array / total).astype(np.float64)
+
+
+def _jensen_shannon(
+    p: FloatArray,
+    q: FloatArray,
+    eps: float = 1e-9,
+) -> float:
+    p_safe = np.clip(p, eps, 1.0)
+    q_safe = np.clip(q, eps, 1.0)
+    p_norm = _normalise_histogram(p_safe)
+    q_norm = _normalise_histogram(q_safe)
+    m = 0.5 * (p_norm + q_norm)
+    kl_pm = float(np.sum(p_norm * (np.log(p_norm) - np.log(m))))
+    kl_qm = float(np.sum(q_norm * (np.log(q_norm) - np.log(m))))
+    js = 0.5 * (kl_pm + kl_qm)
+    return float(js)
+
+
+def _cosine_similarity(
+    p: FloatArray,
+    q: FloatArray,
+    eps: float = 1e-9,
+) -> float:
+    numerator = float(np.dot(p, q))
+    denominator = float(np.linalg.norm(p) * np.linalg.norm(q)) + eps
+    return numerator / denominator if denominator > 0 else 0.0
+
+
+def _velocity_axis_score(
+    ctx: LoopFeatureContext,
+    config: VelocityScoringConfig,
+) -> float:
+    if ctx.velocities.size == 0:
+        return 0.0
+    nbins = config.nbins
+    hist_global = np.histogram(
+        ctx.velocities,
+        bins=nbins,
+        range=(0, 128),
+    )[
+        0
+    ].astype(np.float64)
+    p_global = _normalise_histogram(hist_global)
+
+    beat_residual = ctx.beats - np.round(ctx.beats)
+    is_downbeat = np.isclose(beat_residual, 0.0, atol=0.1)
+    hist_downbeat = np.histogram(
+        ctx.velocities[is_downbeat],
+        bins=nbins,
+        range=(0, 128),
+    )[
+        0
+    ].astype(np.float64)
+    p_downbeat = _normalise_histogram(hist_downbeat)
+
+    fractional = np.modf(ctx.beats)[0]
+    is_offbeat = np.isclose(fractional, 0.5, atol=0.1)
+    hist_offbeat = np.histogram(
+        ctx.velocities[is_offbeat],
+        bins=nbins,
+        range=(0, 128),
+    )[
+        0
+    ].astype(np.float64)
+    p_offbeat = _normalise_histogram(hist_offbeat)
+
+    beats_per_bar = max(1.0, ctx.beats_per_bar)
+    window_ratio = config.prefill_window_beats / beats_per_bar
+    threshold = max(0.0, 1.0 - window_ratio)
+    prefill_mask = ctx.beat_positions >= threshold
+    hist_prefill = np.histogram(
+        ctx.velocities[prefill_mask],
+        bins=nbins,
+        range=(0, 128),
+    )[
+        0
+    ].astype(np.float64)
+    p_prefill = _normalise_histogram(hist_prefill)
+
+    def _pair_score(histogram: FloatArray, target_key: str) -> float:
+        target = config.target(target_key)
+        js = _jensen_shannon(histogram, target)
+        js_norm = 1.0 - min(js / math.log(2.0), 1.0)
+        cos = _cosine_similarity(histogram, target)
+        cos_norm = (cos + 1.0) / 2.0
+        js_weight = config.metric_weights.get("js", 0.5)
+        cos_weight = config.metric_weights.get("cos", 0.5)
+        return js_weight * js_norm + cos_weight * cos_norm
+
+    defaults = {
+        "global": 0.4,
+        "downbeat": 0.25,
+        "offbeat": 0.2,
+        "prefill": 0.15,
+    }
+    score = 0.0
+    for key, histogram in (
+        ("global", p_global),
+        ("downbeat", p_downbeat),
+        ("offbeat", p_offbeat),
+        ("prefill", p_prefill),
+    ):
+        weight = config.weights.get(key, defaults[key])
+        score += weight * _pair_score(histogram, key)
+    return float(_clip(score, 0.0, 1.0))
+
+
+def _smooth_onset_grid(counts: FloatArray, window: int = 4) -> FloatArray:
+    if counts.size == 0:
+        return counts
+    kernel = np.ones(window, dtype=np.float64) / float(window)
+    smoothed = np.convolve(counts, kernel, mode="same")
+    max_value = float(smoothed.max())
+    if max_value <= 0:
+        return np.zeros_like(smoothed, dtype=np.float64)
+    return (smoothed / max_value).astype(np.float64)
+
+
+def _periodicity_strength(
+    grid: FloatArray,
+    candidates: Tuple[int, ...],
+) -> float:
+    if grid.size == 0:
+        return 0.0
+    centered = grid - float(np.mean(grid))
+    autocorr = np.correlate(centered, centered, mode="full")[grid.size - 1 :]
+    if autocorr[0] <= 0:
+        return 0.0
+    autocorr /= autocorr[0]
+    peaks: List[float] = []
+    for lag in candidates:
+        if 0 < lag < autocorr.size:
+            peaks.append(float(autocorr[lag]))
+    if not peaks:
+        return 0.0
+    peaks.sort(reverse=True)
+    top = peaks[:2]
+    return float(_clip(sum(top) / len(top), 0.0, 1.0))
+
+
+def _ngram_diversity(tokens: IntArray, n: int = 3) -> float:
+    if tokens.size < n:
+        return 0.0
+    grams = {tuple(tokens[idx : idx + n]) for idx in range(tokens.size - n + 1)}
+    total = max(1, tokens.size - n + 1)
+    ratio = len(grams) / total
+    return float(_clip(ratio, 0.0, 1.0))
+
+
+def _density_fit(value: float, low: float, high: float) -> float:
+    if high <= low:
+        return 0.0
+    mid = 0.5 * (low + high)
+    span = 0.5 * (high - low)
+    if span <= 0:
+        return 0.0
+    distance = abs(value - mid) / span
+    return float(_clip(1.0 - distance, 0.0, 1.0))
+
+
+def _structure_axis_score(
+    ctx: LoopFeatureContext,
+    config: StructureScoringConfig,
+) -> float:
+    grid = _smooth_onset_grid(ctx.onset_counts_16th)
+    periodicity = _periodicity_strength(grid, config.periodicity_candidates)
+    diversity = _ngram_diversity(ctx.role_tokens_16th, n=3)
+    low, high = config.expected_density(ctx.bpm)
+    density_value = float(np.sum(ctx.onset_counts_16th))
+    density_score = _density_fit(density_value, low, high)
+    score = (
+        config.weights.get("periodicity", 0.45) * periodicity
+        + config.weights.get("diversity", 0.35) * diversity
+        + config.weights.get("density", 0.2) * density_score
+    )
+    return float(_clip(score, 0.0, 1.0))
 
 
 def _clip(value: float, lower: float, upper: float) -> float:
@@ -983,7 +1491,8 @@ class ArticulationLabeler:
             metric_value = observation.metrics.get(rule["metric"])
             if metric_value is None:
                 continue
-            support_count = int(observation.support.get(rule["support_key"], 0) or 0)
+            support_value = observation.support.get(rule["support_key"], 0)
+            support_count = int(support_value or 0)
             required = self._auto_support_requirement(rule)
             spec = self._category_spec(rule["category"], rule["config_key"])
             spec_min = spec.get("min_support")
@@ -1030,7 +1539,8 @@ class ArticulationLabeler:
         observation: ArticulationObservation,
     ) -> Dict[str, Any]:
         metric_value = observation.metrics.get(rule["metric"])
-        support_count = int(observation.support.get(rule["support_key"], 0) or 0)
+        support_value = observation.support.get(rule["support_key"], 0)
+        support_count = int(support_value or 0)
         threshold_info = self._resolve_threshold(label, rule, observation)
         high = threshold_info.get("high")
         min_support = int(threshold_info.get("min_support", 0))
@@ -1186,7 +1696,13 @@ class ArticulationLabeler:
         }
 
 
-def _score_axes(metrics: Any) -> Dict[str, float]:
+def _score_axes(
+    metrics: Any,
+    *,
+    ctx: Optional[LoopFeatureContext] = None,
+    velocity_cfg: Optional[VelocityScoringConfig] = None,
+    structure_cfg: Optional[StructureScoringConfig] = None,
+) -> Dict[str, float]:
     def metric(name: str) -> Optional[float]:
         return getattr(metrics, name, None)
 
@@ -1210,25 +1726,36 @@ def _score_axes(metrics: Any) -> Dict[str, float]:
     swing_alignment = _swing_alignment_score(metric("swing_ratio"))
     fingerprint_match = _fingerprint_similarity(fingerprint)
     syncopation_match = _syncopation_alignment(metric("syncopation_rate"))
-    groove_balance = _bandpass(offbeat_ratio, 0.4, 0.4)
+    groove_balance = _bandpass(offbeat_ratio, 0.45, 0.45)
+
+    velocity_legacy = _average(
+        [
+            _bandpass(metric("ghost_rate"), 0.25, 0.25),
+            _bandpass(metric("accent_rate"), 0.25, 0.25),
+            _bandpass(metric("velocity_range"), 80.0, 55.0),
+            _bandpass(metric("unique_velocity_steps"), 5.5, 4.5),
+            _bandpass(metric("velocity_std"), 12.0, 8.0),
+        ]
+    )
+    structure_legacy = _average(
+        [
+            _bandpass(metric("repeat_rate"), 0.60, 0.45),
+            _bandpass(metric("variation_factor"), 0.45, 0.35),
+            _invert_scale(metric("breakpoint_count"), 10.0),
+            _bandpass(metric("note_density_per_bar"), 10.0, 8.0),
+        ]
+    )
 
     axes: Dict[str, float] = {
         "timing": _average(
             [
                 _clamp_opt(metric("swing_confidence"), 0.0, 1.0),
-                _invert_scale(metric("microtiming_std"), 24.0),
-                _bandpass(metric("fill_density"), 0.30, 0.22),
-                _invert_scale(metric("microtiming_rms"), 24.0),
+                _invert_scale(metric("microtiming_std"), 40.0),
+                _invert_scale(metric("microtiming_rms"), 36.0),
+                _bandpass(metric("fill_density"), 0.32, 0.28),
             ]
         ),
-        "velocity": _average(
-            [
-                _bandpass(metric("ghost_rate"), 0.2, 0.2),
-                _bandpass(metric("accent_rate"), 0.2, 0.2),
-                _bandpass(metric("velocity_range"), 70.0, 45.0),
-                _bandpass(metric("unique_velocity_steps"), 6.0, 4.0),
-            ]
-        ),
+        "velocity": velocity_legacy,
         "groove_harmony": _average(
             [
                 swing_alignment,
@@ -1240,24 +1767,33 @@ def _score_axes(metrics: Any) -> Dict[str, float]:
         ),
         "drum_cohesion": _average(
             [
-                _invert_scale(metric("drum_collision_rate"), 0.35),
+                _invert_scale(metric("drum_collision_rate"), 0.45),
                 _clamp_opt(metric("role_separation"), 0.0, 1.0),
-                _bandpass(metric("hat_transition_rate"), 0.5, 0.35),
+                _bandpass(metric("hat_transition_rate"), 0.5, 0.45),
             ]
         ),
-        "structure": _average(
-            [
-                _bandpass(metric("repeat_rate"), 0.55, 0.35),
-                _bandpass(metric("variation_factor"), 0.40, 0.30),
-                _invert_scale(metric("breakpoint_count"), 8.0),
-            ]
-        ),
+        "structure": structure_legacy,
     }
+    if ctx is not None and velocity_cfg is not None:
+        axes["velocity"] = _velocity_axis_score(ctx, velocity_cfg)
+    if ctx is not None and structure_cfg is not None:
+        axes["structure"] = _structure_axis_score(ctx, structure_cfg)
     return axes
 
 
-def score_axes(metrics: Any) -> Dict[str, float]:
-    return _score_axes(metrics)
+def score_axes(
+    metrics: Any,
+    *,
+    ctx: Optional[LoopFeatureContext] = None,
+    velocity_cfg: Optional[VelocityScoringConfig] = None,
+    structure_cfg: Optional[StructureScoringConfig] = None,
+) -> Dict[str, float]:
+    return _score_axes(
+        metrics,
+        ctx=ctx,
+        velocity_cfg=velocity_cfg,
+        structure_cfg=structure_cfg,
+    )
 
 
 def _combine_score(
@@ -1514,6 +2050,33 @@ class Stage2Extractor:
             tempo_lock = _tempo_lock_method(tempos)
             grid_confidence = _grid_confidence(loop_metrics)
 
+            bpm_hint: Optional[float] = None
+            if tempos:
+                try:
+                    bpm_hint = 60_000_000 / float(max(1, tempos[0]))
+                except (TypeError, ValueError):
+                    bpm_hint = None
+            if bpm_hint is None:
+                bpm_value = loop.get("bpm")
+                if bpm_value is not None:
+                    try:
+                        bpm_hint = float(bpm_value)
+                    except (TypeError, ValueError):
+                        bpm_hint = None
+
+            grid_divisions = 16
+            if self.settings.structure_scoring is not None:
+                grid_divisions = self.settings.structure_scoring.grid_divisions
+            feature_ctx = _build_feature_context(
+                notes,
+                ticks_per_beat=ticks_per_beat,
+                time_signature=time_signature,
+                channel_programs=channel_programs,
+                duration_ticks=loop_metrics.duration_ticks,
+                bpm_hint=bpm_hint,
+                grid_divisions=grid_divisions,
+            )
+
             if ticks_per_beat > 0:
                 ts_numerator, ts_denominator = time_signature
                 ts_ratio = 4 / ts_denominator
@@ -1538,7 +2101,12 @@ class Stage2Extractor:
             )
             events_rows.extend(event_rows)
 
-            axes_raw = _score_axes(loop_metrics)
+            axes_raw = _score_axes(
+                loop_metrics,
+                ctx=feature_ctx,
+                velocity_cfg=self.settings.velocity_scoring,
+                structure_cfg=self.settings.structure_scoring,
+            )
             axes_raw["articulation"] = articulation_result.axis_value
             score_total, score_breakdown = _combine_score(
                 axes_raw,

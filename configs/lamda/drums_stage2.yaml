@@ -1,16 +1,45 @@
 pipeline:
   version: "stage2.v2025.10"
-  threshold: 70.0
+  threshold: 50.0
 
 score:
   axes:
-    timing: 1.0
-    velocity: 1.0
+    timing: 2.0
+    velocity: 2.0
     groove_harmony: 1.0
     drum_cohesion: 1.0
     structure: 1.0
     articulation: 1.0
   aliases_path: "../aliases/axes.yaml"
+  velocity:
+    target_histograms_path: "configs/thresholds/velocity_targets.yaml"
+    nbins: 16
+    prefill_window_beats: 0.5
+    weights:
+      global: 0.4
+      downbeat: 0.25
+      offbeat: 0.2
+      prefill: 0.15
+    metric_weights:
+      js: 0.5
+      cos: 0.5
+  structure:
+    grid_divisions: 16
+    periodicity_candidates: [4, 8, 12, 16]
+    weights:
+      periodicity: 0.45
+      diversity: 0.35
+      density: 0.2
+    density_bands:
+      - max_bpm: 95
+        low: 2.0
+        high: 6.0
+      - max_bpm: 130
+        low: 4.0
+        high: 9.0
+      - max_bpm: null
+        low: 6.0
+        high: 12.0
 
 paths:
   input_dir: "."
@@ -37,4 +66,4 @@ metrics:
 retry_presets: []
 
 articulation:
-  thresholds_path: "configs/thresholds/articulation.yaml"
+  thresholds_path: "configs/thresholds/articulation.auto.yaml"
