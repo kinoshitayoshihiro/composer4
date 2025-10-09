@@ -11,6 +11,7 @@ import statistics
 import sys
 import hashlib
 import subprocess
+import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -108,6 +109,8 @@ DETACHE_DURATION_RANGE = (0.9, 2.2)
 DETACHE_GAP_RATIO = 0.15
 PIZZICATO_DURATION_RATIO = 0.65
 VIOLIN_PITCH_RANGE = (55, 103)
+
+_CONDITION_PATTERN = re.compile(r"^\s*(<=|>=|<|>|==|!=)\s*(-?\d+(?:\.\d+)?)\s*$")
 
 
 @dataclass
@@ -311,11 +314,18 @@ class Stage2Paths:
 
 
 @dataclass
+class RetryPresetRule:
+    name: str
+    when: Dict[str, str]
+    action: Dict[str, Any]
+
+
+@dataclass
 class Stage2Settings:
     pipeline_version: str
     threshold: float
     axis_weights: Dict[str, float]
-    retry_presets: Dict[str, Dict[str, Any]]
+    retry_presets: Dict[str, List[RetryPresetRule]]
     metrics: MetricConfig
     paths: Stage2Paths
     limit: Optional[int]
@@ -323,6 +333,129 @@ class Stage2Settings:
     articulation_thresholds: Optional[ArticulationThresholds]
     velocity_scoring: Optional[VelocityScoringConfig]
     structure_scoring: Optional[StructureScoringConfig]
+
+
+def _primary_retry_key(reason: str) -> str:
+    if "_" in reason:
+        return reason.split("_", 1)[0]
+    return reason
+
+
+def _stringify_when(when_obj: Optional[Dict[str, Any]]) -> Dict[str, str]:
+    if when_obj is None:
+        return {}
+    result: Dict[str, str] = {}
+    for key, value in when_obj.items():
+        result[str(key)] = str(value)
+    return result
+
+
+def _load_retry_presets(
+    raw_retry: Sequence[Any],
+) -> Dict[str, List[RetryPresetRule]]:
+    grouped: Dict[str, List[RetryPresetRule]] = defaultdict(list)
+    for item in raw_retry:
+        if not isinstance(item, dict):
+            continue
+        entry = cast(Dict[str, Any], item)
+        reason_obj = entry.get("reason")
+        if not reason_obj:
+            continue
+        reason = str(reason_obj)
+        axis_override = entry.get("axis")
+        axis_key = str(axis_override) if axis_override else _primary_retry_key(reason)
+        when_map = _stringify_when(cast(Optional[Dict[str, Any]], entry.get("when")))
+        action = cast(Dict[str, Any], entry.get("action", {}))
+        grouped[axis_key].append(
+            RetryPresetRule(
+                name=reason,
+                when=when_map,
+                action=action,
+            )
+        )
+    return {key: value for key, value in grouped.items()}
+
+
+def _resolve_condition_value(
+    path: str,
+    context: Dict[str, Any],
+) -> Optional[float]:
+    value: Any = context
+    for part in path.split("."):
+        if isinstance(value, dict) and part in value:
+            value = value[part]
+        else:
+            return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    return None
+
+
+def _compare_numeric(value: float, operator: str, target: float) -> bool:
+    if operator == "<":
+        return value < target
+    if operator == "<=":
+        return value <= target
+    if operator == ">":
+        return value > target
+    if operator == ">=":
+        return value >= target
+    if operator == "==":
+        return value == target
+    if operator == "!=":
+        return value != target
+    return False
+
+
+def _conditions_met(
+    conditions: Dict[str, str],
+    context: Dict[str, Any],
+) -> bool:
+    if not conditions:
+        return True
+    for key, expression in conditions.items():
+        value = _resolve_condition_value(key, context)
+        if value is None:
+            return False
+        match = _CONDITION_PATTERN.match(expression)
+        if match:
+            operator, literal = match.groups()
+            numeric = float(literal)
+            if not _compare_numeric(value, operator, numeric):
+                return False
+            continue
+        try:
+            numeric = float(expression)
+        except ValueError:
+            return False
+        if value != numeric:
+            return False
+    return True
+
+
+def _select_retry_rule(
+    reason_key: str,
+    axes_raw: Dict[str, float],
+    score_total: float,
+    score_breakdown: Dict[str, float],
+    rules: Dict[str, List[RetryPresetRule]],
+) -> Optional[RetryPresetRule]:
+    candidates = rules.get(reason_key, [])
+    context: Dict[str, Any] = {
+        "axes_raw": axes_raw,
+        "score": score_total,
+        "score_breakdown": score_breakdown,
+        "reason": reason_key,
+    }
+    for rule in candidates:
+        if _conditions_met(rule.when, context):
+            return rule
+    fallback = rules.get("default")
+    if fallback:
+        for rule in fallback:
+            if _conditions_met(rule.when, context):
+                return rule
+    return None
 
 
 def _parse_args() -> argparse.Namespace:
@@ -825,18 +958,8 @@ def _build_settings(
         cast(Dict[str, Any], score_cfg.get("structure", {})),
     )
 
-    retry_map: Dict[str, Dict[str, Any]] = {}
     raw_retry = cast(List[Any], config.get("retry_presets", []))
-    for item in raw_retry:
-        if not isinstance(item, dict):
-            continue
-        entry = cast(Dict[str, Any], item)
-        reason_obj = entry.get("reason")
-        if not reason_obj:
-            continue
-        reason = str(reason_obj)
-        action = cast(Dict[str, Any], entry.get("action", {}))
-        retry_map[reason] = action
+    retry_map = _load_retry_presets(raw_retry)
 
     metric_kwargs = cast(Dict[str, Any], config.get("metrics", {}))
     metrics_cfg = MetricConfig(**metric_kwargs)
@@ -1481,25 +1604,33 @@ def _role_stability_score(ctx: LoopFeatureContext) -> float:
     if len(ctx.role_slots_per_bar) < 2:
         return 0.0
     scores: List[float] = []
-    previous = ctx.role_slots_per_bar[0]
+    history: List[Tuple[FrozenSet[int], ...]] = [ctx.role_slots_per_bar[0]]
+    window = 4
     for bar_slots in ctx.role_slots_per_bar[1:]:
-        role_total = 0.0
-        support = 0
-        for index in ROLE_STABILITY_INDICES:
-            ref_slots = previous[index]
-            cur_slots = bar_slots[index]
-            union = ref_slots | cur_slots
-            if not union:
-                role_total += 1.0
-                continue
-            intersection = ref_slots & cur_slots
-            role_total += len(intersection) / len(union)
-            support += 1
-        if support == 0:
-            scores.append(1.0)
-        else:
-            scores.append(role_total / float(support))
-        previous = bar_slots
+        similarities: List[float] = []
+        for lookback in range(1, min(len(history), window) + 1):
+            reference = history[-lookback]
+            role_total = 0.0
+            support = 0
+            for index in ROLE_STABILITY_INDICES:
+                ref_slots = reference[index]
+                cur_slots = bar_slots[index]
+                union = ref_slots | cur_slots
+                if not union:
+                    role_total += 1.0
+                    continue
+                intersection = ref_slots & cur_slots
+                role_total += len(intersection) / len(union)
+                support += 1
+            if support == 0:
+                similarities.append(1.0)
+            else:
+                similarities.append(role_total / float(support))
+        if similarities:
+            scores.append(max(similarities))
+        history.append(bar_slots)
+        if len(history) > window:
+            history.pop(0)
     if not scores:
         return 0.0
     average = sum(scores) / float(len(scores))
@@ -2594,9 +2725,20 @@ class Stage2Extractor:
             if score_total < self.settings.threshold:
                 reason_key = _failure_reason(score_breakdown)
                 exclusion_reason = f"{reason_key}_below_threshold"
-                retry_action = self.settings.retry_presets.get(reason_key, {})
-                retry_preset_id = reason_key
-                retry_seed = _deterministic_seed(loop_id)
+                retry_rule = _select_retry_rule(
+                    reason_key=reason_key,
+                    axes_raw=axes_raw,
+                    score_total=score_total,
+                    score_breakdown=score_breakdown,
+                    rules=self.settings.retry_presets,
+                )
+                retry_action: Optional[Dict[str, Any]]
+                if retry_rule is not None:
+                    retry_action = retry_rule.action
+                    retry_preset_id = retry_rule.name
+                    retry_seed = _deterministic_seed(loop_id)
+                else:
+                    retry_action = None
                 metrics_before: Dict[str, Any] = {
                     "score": score_total,
                     "axis": reason_key,
@@ -2622,15 +2764,16 @@ class Stage2Extractor:
                     "metrics_before": metrics_before,
                     "metrics_after": None,
                 }
-                retry_path = self.settings.paths.retry_dir / f"{loop_id}.json"
-                retry_path.parent.mkdir(parents=True, exist_ok=True)
-                retry_text = json.dumps(
-                    retry_payload,
-                    ensure_ascii=False,
-                    indent=2,
-                )
-                retry_path.write_text(retry_text, encoding="utf-8")
-                retry_count += 1
+                if retry_action is not None and retry_preset_id is not None:
+                    retry_path = self.settings.paths.retry_dir / f"{loop_id}.json"
+                    retry_path.parent.mkdir(parents=True, exist_ok=True)
+                    retry_text = json.dumps(
+                        retry_payload,
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                    retry_path.write_text(retry_text, encoding="utf-8")
+                    retry_count += 1
 
             score_rows.append(
                 {

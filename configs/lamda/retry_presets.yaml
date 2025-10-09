@@ -1,26 +1,13 @@
 presets:
-  - id: vel_smooth
+  - id: microtiming_fix
     when:
-      axes_raw.velocity: "< 0.35"
+      axes_raw.timing: "< 0.40"
     apply:
-      - type: velocity_smooth
-        method: median
-        k_size: 3
-      - type: velocity_remap
-        curve: s-curve
-        lo: 30
-        hi: 112
-        compress: 0.82
-
-  - id: vel_boost
-    when:
-      axes_raw.velocity: "< 0.25"
-    apply:
-      - type: velocity_remap
-        curve: s-curve
-        lo: 34
-        hi: 120
-        compress: 0.7
+      - type: quantize_mild
+        grid: "1/16"
+        tolerance_ms: 18
+      - type: swing_realign
+        target_ratio: band
 
   - id: role_snap
     when:
@@ -33,12 +20,43 @@ presets:
         strength: 0.5
         min_gap_beats: 0.25
 
-  - id: microtiming_fix
+  - id: vel_boost
     when:
-      axes_raw.timing: "< 0.40"
+      axes_raw.velocity: "< 0.25"
     apply:
-      - type: quantize_mild
-        grid: "1/16"
-        tolerance_ms: 18
-      - type: swing_realign
-        target_ratio: band
+      - type: velocity_remap
+        curve: s-curve
+        lo: 34
+        hi: 120
+        compress: 0.70
+
+  - id: vel_chain
+    when:
+      axes_raw.velocity: "< 0.25"
+    apply:
+      - type: velocity_smooth
+        method: median
+        k_size: 3
+      - type: velocity_remap
+        curve: s-curve
+        lo: 30
+        hi: 112
+        compress: 0.82
+      - type: velocity_remap
+        curve: s-curve
+        lo: 34
+        hi: 120
+        compress: 0.70
+
+  - id: vel_smooth
+    when:
+      axes_raw.velocity: "< 0.35"
+    apply:
+      - type: velocity_smooth
+        method: median
+        k_size: 3
+      - type: velocity_remap
+        curve: s-curve
+        lo: 30
+        hi: 112
+        compress: 0.82

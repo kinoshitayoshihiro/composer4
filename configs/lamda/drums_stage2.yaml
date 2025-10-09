@@ -34,8 +34,8 @@ score:
           alpha: 1.0
           downbeat_boost: 0.02
         - max_bpm: null
-          alpha: 1.08
-          downbeat_boost: 0.035
+          alpha: 1.10
+          downbeat_boost: 0.045
   structure:
     grid_divisions: 16
     periodicity_candidates: [4, 8, 12, 16]
@@ -78,14 +78,18 @@ metrics:
   round_digits: 4
 
 retry_presets:
-  - reason: velocity_boost
+  - reason: velocity_chain
     when:
       axes_raw.velocity: "< 0.25"
     action:
-      preset: vel_boost
+      preset: vel_chain
       params:
-        gain_db: 2.0
-        ceiling: 118
+        vmin: 30
+        vmax: 118
+        compress: 0.80
+        boost_compress: 0.70
+        boost_lo: 34
+        boost_hi: 120
   - reason: velocity
     when:
       axes_raw.velocity: "< 0.35"

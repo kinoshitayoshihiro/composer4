@@ -49,6 +49,54 @@ def preset_velocity_smooth(
     return midi
 
 
+def preset_velocity_boost(
+    midi: pm.PrettyMIDI,
+    *,
+    lo: int = 34,
+    hi: int = 120,
+    compress: float = 0.7,
+) -> pm.PrettyMIDI:
+    """Expand the velocity range while biasing towards energetic accents."""
+
+    lo = max(1, min(126, lo))
+    hi = max(lo + 1, min(127, hi))
+    mean_target = 0.5 * (lo + hi)
+    for instrument in midi.instruments:
+        for note in instrument.notes:
+            velocity = int(note.velocity)
+            scaled = lo + (velocity / 127.0) * (hi - lo)
+            boosted = (1 - compress) * scaled + compress * mean_target
+            note.velocity = max(1, min(127, int(round(boosted))))
+    return midi
+
+
+def preset_velocity_chain(
+    midi: pm.PrettyMIDI,
+    *,
+    smooth_vmin: int = 30,
+    smooth_vmax: int = 112,
+    smooth_compress: float = 0.82,
+    boost_lo: int = 34,
+    boost_hi: int = 120,
+    boost_compress: float = 0.7,
+) -> pm.PrettyMIDI:
+    """Apply smoothing first, then apply a range-expanding boost."""
+
+    midi = preset_velocity_smooth(
+        midi,
+        vmin=smooth_vmin,
+        vmax=smooth_vmax,
+        compress=smooth_compress,
+    )
+    midi = preset_velocity_boost(
+        midi,
+        lo=boost_lo,
+        hi=boost_hi,
+        compress=boost_compress,
+    )
+    return midi
+
+
 def _snap_pitch(pitch: int) -> int:
     if 33 <= pitch <= 47:
         if pitch in HAT_PITCHES or 41 <= pitch <= 47:
@@ -112,6 +160,10 @@ def _process_file(midi_path: Path, outdir: Path, preset: str) -> None:
     midi = pm.PrettyMIDI(str(midi_path))
     if preset == "velocity":
         midi = preset_velocity_smooth(midi)
+    elif preset == "velocity_boost":
+        midi = preset_velocity_boost(midi)
+    elif preset == "velocity_chain":
+        midi = preset_velocity_chain(midi)
     elif preset == "rolesnap":
         midi = preset_role_snap(midi)
     elif preset == "structure":
@@ -127,7 +179,13 @@ def main() -> None:
     parser.add_argument("--out", dest="outdir", required=True, help="Output directory")
     parser.add_argument(
         "--preset",
-        choices=["velocity", "rolesnap", "structure"],
+        choices=[
+            "velocity",
+            "velocity_boost",
+            "velocity_chain",
+            "rolesnap",
+            "structure",
+        ],
         required=True,
         help="Preset to apply",
     )

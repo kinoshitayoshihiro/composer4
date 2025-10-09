@@ -1,0 +1,40 @@
+name: Stage2 A/B Summary Comment
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ab-summary-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Post AB summary comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          TFILE=""
+          if [ -f artifacts/auto_tau.yaml ]; then TFILE="--tau-file artifacts/auto_tau.yaml"; fi
+          python scripts/ci/ab_comment.py \
+            --before output/ab/before.jsonl \
+            --after output/ab/after.jsonl \
+            --axes velocity --axes structure \
+            --tau 0.50 \
+            --title "Stage2 A/B Summary" \
+            --marker "AB_SUMMARY: composer4" $TFILE
