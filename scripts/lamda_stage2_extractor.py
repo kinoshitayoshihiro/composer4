@@ -12,17 +12,19 @@ import sys
 import hashlib
 import subprocess
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import (
     Any,
     Dict,
+    FrozenSet,
     Iterable,
     Iterator,
     List,
     Optional,
     Sequence,
+    Set,
     Tuple,
     cast,
 )
@@ -85,6 +87,11 @@ STRUCTURE_ROLE_INDEX: Dict[str, int] = {
     "cymbal": 7,
     "other": 8,
 }
+
+ROLE_STABILITY_ROLES: Tuple[str, ...] = ("kick", "snare", "closed_hat")
+ROLE_STABILITY_INDICES: Tuple[int, ...] = tuple(
+    STRUCTURE_ROLE_INDEX[role] for role in ROLE_STABILITY_ROLES if role in STRUCTURE_ROLE_INDEX
+)
 
 BUILTIN_AXIS_ALIASES: Dict[str, str] = {
     "groove": "groove_harmony",
@@ -226,6 +233,23 @@ class VelocityScoringConfig:
     weights: Dict[str, float]
     metric_weights: Dict[str, float]
     prefill_window_beats: float = 0.5
+    tempo_bins: Tuple[Dict[str, Any], ...] = ()
+    tempo_bin_targets: Tuple[
+        Tuple[Optional[float], Dict[str, FloatArray]],
+        ...,
+    ] = ()
+    normalize_dynamic_range: bool = False
+    dynamic_range: Dict[str, float] = field(default_factory=dict)
+    tempo_dynamic_ranges: Tuple[
+        Tuple[Optional[float], Dict[str, float]],
+        ...,
+    ] = ()
+    phase_compensation: bool = False
+    phase_adjust_db: Dict[str, float] = field(default_factory=dict)
+    tempo_phase_adjust: Tuple[
+        Tuple[Optional[float], Dict[str, float]],
+        ...,
+    ] = ()
 
     def target(self, key: str) -> FloatArray:
         default = self.targets.get("global")
@@ -271,6 +295,8 @@ class LoopFeatureContext:
     onset_counts_16th: FloatArray
     role_tokens_16th: IntArray
     beats_per_bar: float
+    bars: int
+    role_slots_per_bar: Tuple[Tuple[FrozenSet[int], ...], ...]
 
 
 @dataclass
@@ -384,6 +410,54 @@ def _safe_normalised_histogram(
     return array
 
 
+def _parse_range_phase_config(
+    payload: Any,
+) -> Tuple[Dict[str, float], Dict[str, float]]:
+    dynamic: Dict[str, float] = {}
+    phase: Dict[str, float] = {}
+    if not isinstance(payload, dict):
+        return dynamic, phase
+    dynamic_payload = payload.get("dynamic_range")
+    if isinstance(dynamic_payload, dict):
+        for key, value in dynamic_payload.items():
+            try:
+                dynamic[str(key)] = float(value)
+            except (TypeError, ValueError):
+                continue
+    if not dynamic:
+        global_obj = payload.get("global")
+        if isinstance(global_obj, dict):
+            for key in ("min", "max"):
+                candidate = global_obj.get(key)
+                try:
+                    if candidate is not None:
+                        dynamic[key] = float(candidate)
+                except (TypeError, ValueError):
+                    continue
+        for key in ("min", "max"):
+            if key in dynamic:
+                continue
+            candidate = payload.get(key)
+            try:
+                if candidate is not None:
+                    dynamic[key] = float(candidate)
+            except (TypeError, ValueError):
+                continue
+    phase_payload = payload.get("phase_adjust_db")
+    if isinstance(phase_payload, dict):
+        for key, value in phase_payload.items():
+            try:
+                phase[str(key)] = float(value)
+            except (TypeError, ValueError):
+                continue
+    for key, value in payload.items():
+        if key in {"global", "dynamic_range", "phase_adjust_db"}:
+            continue
+        if isinstance(value, (int, float)) and str(key).endswith("_db"):
+            phase[str(key)] = float(value)
+    return dynamic, phase
+
+
 def _resolve_config_path(base_dir: Path, value: str) -> Path:
     path = Path(value)
     if not path.is_absolute():
@@ -419,15 +493,86 @@ def _load_velocity_scoring_config(
     for key, values in targets_root.items():
         if not isinstance(values, Sequence):
             continue
-        sequence_values = cast(Sequence[float], values)
+        try:
+            sequence_values = [float(item) for item in values]
+        except (TypeError, ValueError):
+            continue
         targets[key] = _safe_normalised_histogram(sequence_values, nbins=nbins)
     if "global" not in targets:
-        message = f"Velocity targets file {target_path} missing 'global' histogram"
+        message = (
+            "Velocity targets file "
+            f"{target_path} missing 'global' histogram"
+        )
         raise ValueError(message)
-    # Ensure expected keys default to global if missing.
     for key in ("downbeat", "offbeat", "prefill"):
         if key not in targets:
             targets[key] = targets["global"]
+
+    default_dynamic, default_phase = _parse_range_phase_config(
+        raw.get("range_factors"),
+    )
+
+    tempo_target_entries: List[Tuple[Optional[float], Dict[str, FloatArray]]] = []
+    tempo_dynamic_entries: List[Tuple[Optional[float], Dict[str, float]]] = []
+    tempo_phase_entries: List[Tuple[Optional[float], Dict[str, float]]] = []
+    tempo_targets_root = raw.get("tempo_bins")
+    if tempo_targets_root is None:
+        tempo_targets_root = targets_root.get("tempo_bins")
+    if isinstance(tempo_targets_root, Sequence):
+        tempo_targets_seq = cast(Sequence[Any], tempo_targets_root)
+        for entry in tempo_targets_seq:
+            if not isinstance(entry, dict):
+                continue
+            entry_dict = cast(Dict[str, Any], entry)
+            max_bpm_raw = entry_dict.get("max_bpm")
+            max_bpm: Optional[float]
+            if max_bpm_raw is None:
+                max_bpm = None
+            else:
+                try:
+                    max_bpm = float(max_bpm_raw)
+                except (TypeError, ValueError):
+                    max_bpm = None
+            targets_obj = entry_dict.get("targets")
+            if isinstance(targets_obj, dict):
+                targets_obj = cast(Dict[str, Any], targets_obj)
+            else:
+                targets_obj = {
+                    key: entry_dict.get(key, entry_dict.get(f"hist_{key}"))
+                    for key in ("global", "downbeat", "offbeat", "prefill")
+                }
+            bin_targets: Dict[str, FloatArray] = {}
+            for target_key in ("global", "downbeat", "offbeat", "prefill"):
+                values_obj = targets_obj.get(target_key)
+                if not isinstance(values_obj, Sequence):
+                    continue
+                try:
+                    sequence_values = [float(item) for item in values_obj]
+                except (TypeError, ValueError):
+                    continue
+                bin_targets[target_key] = _safe_normalised_histogram(
+                    sequence_values,
+                    nbins=nbins,
+                )
+            if not bin_targets:
+                continue
+            if "global" not in bin_targets:
+                bin_targets["global"] = targets["global"].copy()
+            for target_key in ("downbeat", "offbeat", "prefill"):
+                if target_key not in bin_targets:
+                    bin_targets[target_key] = targets.get(
+                        target_key,
+                        targets["global"],
+                    ).copy()
+            tempo_target_entries.append((max_bpm, bin_targets))
+
+            range_payload = entry_dict.get("range_factors")
+            if range_payload is not None:
+                dyn_entry, phase_entry = _parse_range_phase_config(range_payload)
+                if dyn_entry:
+                    tempo_dynamic_entries.append((max_bpm, dyn_entry))
+                if phase_entry:
+                    tempo_phase_entries.append((max_bpm, phase_entry))
     weights_root = cast(Dict[str, Any], velocity_cfg.get("weights", {}))
     weights = {
         "global": float(weights_root.get("global", 0.4)),
@@ -444,12 +589,67 @@ def _load_velocity_scoring_config(
         "cos": float(metric_weights_root.get("cos", 0.5)),
     }
     prefill_window = float(velocity_cfg.get("prefill_window_beats", 0.5))
+    tempo_bins: List[Dict[str, Any]] = []
+    tempo_root = velocity_cfg.get("tempo_adaptive")
+    if isinstance(tempo_root, dict):
+        tempo_root_dict = cast(Dict[str, Any], tempo_root)
+        bins_raw = tempo_root_dict.get("bins")
+        if isinstance(bins_raw, Sequence):
+            bins_sequence = cast(Sequence[Any], bins_raw)
+            for entry in bins_sequence:
+                if not isinstance(entry, dict):
+                    continue
+                entry_dict = cast(Dict[str, Any], entry)
+                max_bpm_raw = entry_dict.get("max_bpm")
+                max_bpm = None
+                if max_bpm_raw is not None:
+                    max_bpm = float(max_bpm_raw)
+                tempo_bins.append(
+                    {
+                        "max_bpm": max_bpm,
+                        "alpha": float(entry_dict.get("alpha", 1.0)),
+                        "downbeat_boost": float(
+                            entry_dict.get("downbeat_boost", 0.0),
+                        ),
+                    },
+                )
+
+    def _tempo_bin_key(spec: Dict[str, Any]) -> float:
+        value = spec.get("max_bpm")
+        if value is None:
+            return float("inf")
+        return float(value)
+
+    def _tempo_target_key(entry: Tuple[Optional[float], Any]) -> float:
+        max_bpm = entry[0]
+        if max_bpm is None:
+            return float("inf")
+        return float(max_bpm)
+
+    tempo_bins.sort(key=_tempo_bin_key)
+    tempo_target_entries.sort(key=_tempo_target_key)
+    tempo_dynamic_entries.sort(key=_tempo_target_key)
+    tempo_phase_entries.sort(key=_tempo_target_key)
+
+    normalize_dynamic = bool(velocity_cfg.get("normalize_dynamic_range", False))
+    phase_comp = bool(velocity_cfg.get("phase_compensation", False))
+    dynamic_range = dict(default_dynamic)
+    phase_adjust_db = dict(default_phase)
+
     return VelocityScoringConfig(
         nbins=nbins,
         targets=targets,
         weights=weights,
         metric_weights=metric_weights,
         prefill_window_beats=prefill_window,
+        tempo_bins=tuple(tempo_bins),
+        tempo_bin_targets=tuple(tempo_target_entries),
+        normalize_dynamic_range=normalize_dynamic,
+        dynamic_range=dynamic_range,
+        tempo_dynamic_ranges=tuple(tempo_dynamic_entries),
+        phase_compensation=phase_comp,
+        phase_adjust_db=phase_adjust_db,
+        tempo_phase_adjust=tuple(tempo_phase_entries),
     )
 
 
@@ -488,14 +688,19 @@ def _load_structure_scoring_config(
             DensityBandSpec(max_bpm=130.0, low=4.0, high=9.0),
             DensityBandSpec(max_bpm=None, low=6.0, high=12.0),
         ]
-    bands.sort(
-        key=lambda spec: (float("inf") if spec.max_bpm is None else spec.max_bpm),
-    )
+
+    def _density_band_key(spec: DensityBandSpec) -> float:
+        if spec.max_bpm is None:
+            return float("inf")
+        return float(spec.max_bpm)
+
+    bands.sort(key=_density_band_key)
     weights_root = cast(Dict[str, Any], structure_cfg.get("weights", {}))
     weights = {
         "periodicity": float(weights_root.get("periodicity", 0.45)),
         "diversity": float(weights_root.get("diversity", 0.35)),
         "density": float(weights_root.get("density", 0.2)),
+        "role_stability": float(weights_root.get("role_stability", 0.0)),
     }
     grid_divisions = int(structure_cfg.get("grid_divisions", 16))
     periodicity_candidates_raw = structure_cfg.get("periodicity_candidates")
@@ -894,9 +1099,14 @@ def _build_feature_context(
         beat_positions = np.zeros_like(beats)
 
     onset_counts = np.zeros(grid_divisions, dtype=np.float64)
-    role_bins = np.zeros(
-        (grid_divisions, len(STRUCTURE_ROLE_INDEX)),
-        dtype=np.float64,
+    num_roles = len(STRUCTURE_ROLE_INDEX)
+    role_bins = np.zeros((grid_divisions, num_roles), dtype=np.float64)
+
+    def _create_role_slot_sets() -> List[Set[int]]:
+        return [set() for _ in range(num_roles)]
+
+    role_slot_sets: Dict[int, List[Set[int]]] = defaultdict(
+        _create_role_slot_sets,
     )
     for note in notes:
         start = int(note[1])
@@ -909,7 +1119,9 @@ def _build_feature_context(
             STRUCTURE_ROLE_INDEX["other"],
         )
 
+        bar_index = 0
         if bar_ticks > 0:
+            bar_index = int(start // bar_ticks)
             slot_position = (start % bar_ticks) / bar_ticks
         else:
             slot_position = (start / beat_ticks) % 1.0 if beat_ticks else 0.0
@@ -919,13 +1131,23 @@ def _build_feature_context(
 
         onset_counts[slot_index] += 1.0
         role_bins[slot_index, role_index] += 1.0
+        role_slot_sets[bar_index][role_index].add(slot_index)
 
-    bars = 1.0
+    bars_float = 1.0
     if bar_ticks > 0 and duration_ticks > 0:
-        bars = max(1.0, math.ceil(duration_ticks / bar_ticks))
-    onset_counts = onset_counts / bars
+        bars_float = max(1.0, math.ceil(duration_ticks / bar_ticks))
+    onset_counts = onset_counts / bars_float
     role_tokens = np.argmax(role_bins, axis=1).astype(np.int64)
     beats_per_bar = float(ts_numerator)
+    bars_int = max(1, int(bars_float))
+    role_slots_per_bar_list: List[Tuple[FrozenSet[int], ...]] = []
+    for bar_idx in range(bars_int):
+        slot_sets = role_slot_sets.get(bar_idx)
+        if slot_sets is None:
+            slot_sets = _create_role_slot_sets()
+        frozen_slots = tuple(frozenset(slot_sets[idx]) for idx in range(num_roles))
+        role_slots_per_bar_list.append(frozen_slots)
+    role_slots_per_bar = tuple(role_slots_per_bar_list)
     return LoopFeatureContext(
         velocities=velocities,
         beats=beats,
@@ -934,13 +1156,19 @@ def _build_feature_context(
         onset_counts_16th=onset_counts,
         role_tokens_16th=role_tokens,
         beats_per_bar=beats_per_bar if beats_per_bar > 0 else 4.0,
+        bars=bars_int,
+        role_slots_per_bar=role_slots_per_bar,
     )
 
 
 def _normalise_histogram(array: FloatArray) -> FloatArray:
     total = float(array.sum())
     if total <= 0:
-        return np.full_like(array, 1.0 / max(1, array.size), dtype=np.float64)
+        return np.full_like(
+            array,
+            1.0 / max(1, array.size),
+            dtype=np.float64,
+        )
     return (array / total).astype(np.float64)
 
 
@@ -970,15 +1198,163 @@ def _cosine_similarity(
     return numerator / denominator if denominator > 0 else 0.0
 
 
+def _softmax(values: FloatArray) -> FloatArray:
+    if values.size == 0:
+        return values
+    max_value = float(np.max(values))
+    shifted = values - max_value
+    exps = np.exp(shifted)
+    total = float(np.sum(exps))
+    if total <= 0:
+        return np.full_like(
+            values,
+            1.0 / max(1, values.size),
+            dtype=np.float64,
+        )
+    return (exps / total).astype(np.float64)
+
+
+def _pick_tempo_bin(
+    bpm: Optional[float],
+    bins: Sequence[Dict[str, Any]],
+) -> Dict[str, Any]:
+    if not bins:
+        return {"alpha": 1.0, "downbeat_boost": 0.0}
+    if bpm is None:
+        return bins[0]
+    for entry in bins:
+        max_bpm = entry.get("max_bpm")
+        if max_bpm is None or bpm <= float(max_bpm):
+            return entry
+    return bins[-1]
+
+
+def _pick_tempo_mapping(
+    bpm: Optional[float],
+    specs: Tuple[Tuple[Optional[float], Dict[str, float]], ...],
+) -> Dict[str, float]:
+    if not specs:
+        return {}
+    if bpm is None:
+        return specs[0][1]
+    for max_bpm, mapping in specs:
+        if max_bpm is None or bpm <= max_bpm:
+            return mapping
+    return specs[-1][1]
+
+
+def _pick_tempo_target_overrides(
+    bpm: Optional[float],
+    specs: Tuple[Tuple[Optional[float], Dict[str, FloatArray]], ...],
+) -> Optional[Dict[str, FloatArray]]:
+    if not specs:
+        return None
+    if bpm is None:
+        return specs[0][1]
+    for max_bpm, mapping in specs:
+        if max_bpm is None or bpm <= max_bpm:
+            return mapping
+    return specs[-1][1]
+
+
+def _db_to_gain(value_db: float) -> float:
+    return float(10.0 ** (value_db / 20.0))
+
+
+def _adapt_velocity_targets(
+    config: VelocityScoringConfig,
+    bpm: Optional[float],
+) -> Tuple[
+    Dict[str, FloatArray],
+    Dict[str, float],
+    Dict[str, float],
+    Dict[str, float],
+]:
+    targets = {key: value.copy() for key, value in config.targets.items()}
+    weights = dict(config.weights)
+    dynamic_range = dict(config.dynamic_range)
+    if config.tempo_dynamic_ranges:
+        dynamic_override = _pick_tempo_mapping(
+            bpm,
+            config.tempo_dynamic_ranges,
+        )
+        if dynamic_override:
+            dynamic_range.update(dynamic_override)
+    phase_adjust = dict(config.phase_adjust_db)
+    if config.tempo_phase_adjust:
+        phase_override = _pick_tempo_mapping(
+            bpm,
+            config.tempo_phase_adjust,
+        )
+        if phase_override:
+            phase_adjust.update(phase_override)
+    overrides: Optional[Dict[str, FloatArray]] = _pick_tempo_target_overrides(
+        bpm,
+        config.tempo_bin_targets,
+    )
+    if overrides is not None:
+        for key, histogram in overrides.items():
+            targets[key] = histogram.copy()
+    if not config.tempo_bins:
+        return targets, weights, dynamic_range, phase_adjust
+    bin_cfg = _pick_tempo_bin(bpm, config.tempo_bins)
+    alpha = float(bin_cfg.get("alpha", 1.0))
+    boost = float(bin_cfg.get("downbeat_boost", 0.0))
+
+    for key, histogram in list(targets.items()):
+        logits = np.log(np.clip(histogram, 1e-9, 1.0))
+        targets[key] = _softmax(logits * alpha)
+
+    weights["downbeat"] = weights.get("downbeat", 0.0) + boost
+    weight_total = sum(weights.values())
+    if weight_total > 0:
+        for key in list(weights.keys()):
+            weights[key] /= weight_total
+    return targets, weights, dynamic_range, phase_adjust
+
+
 def _velocity_axis_score(
     ctx: LoopFeatureContext,
     config: VelocityScoringConfig,
 ) -> float:
     if ctx.velocities.size == 0:
         return 0.0
+    (
+        targets_map,
+        weights_map,
+        dynamic_range_map,
+        phase_adjust_map,
+    ) = _adapt_velocity_targets(config, ctx.bpm)
     nbins = config.nbins
+    velocities = ctx.velocities.astype(np.float64)
+    if config.normalize_dynamic_range:
+        min_level = dynamic_range_map.get("min")
+        max_level = dynamic_range_map.get("max")
+        if min_level is not None and max_level is not None and max_level > min_level:
+            span = max_level - min_level
+            velocities = np.clip(
+                (velocities - min_level) * (127.0 / span),
+                0.0,
+                127.0,
+            )
+    phase_gains: Dict[str, float] = {"global": 1.0}
+    if config.phase_compensation:
+        for key, value in phase_adjust_map.items():
+            try:
+                phase_gains[str(key)] = _db_to_gain(float(value))
+            except (TypeError, ValueError):
+                continue
+
+    def _apply_phase(values: FloatArray, *keys: str) -> FloatArray:
+        gain = phase_gains.get("global", 1.0)
+        for key in keys:
+            gain *= phase_gains.get(key, 1.0)
+        if np.isclose(gain, 1.0):
+            return values
+        return np.clip(values * gain, 0.0, 127.0)
+
     hist_global = np.histogram(
-        ctx.velocities,
+        _apply_phase(velocities),
         bins=nbins,
         range=(0, 128),
     )[
@@ -989,7 +1365,7 @@ def _velocity_axis_score(
     beat_residual = ctx.beats - np.round(ctx.beats)
     is_downbeat = np.isclose(beat_residual, 0.0, atol=0.1)
     hist_downbeat = np.histogram(
-        ctx.velocities[is_downbeat],
+        _apply_phase(velocities[is_downbeat], "downbeat"),
         bins=nbins,
         range=(0, 128),
     )[
@@ -1000,7 +1376,7 @@ def _velocity_axis_score(
     fractional = np.modf(ctx.beats)[0]
     is_offbeat = np.isclose(fractional, 0.5, atol=0.1)
     hist_offbeat = np.histogram(
-        ctx.velocities[is_offbeat],
+        _apply_phase(velocities[is_offbeat], "offbeat"),
         bins=nbins,
         range=(0, 128),
     )[
@@ -1013,7 +1389,7 @@ def _velocity_axis_score(
     threshold = max(0.0, 1.0 - window_ratio)
     prefill_mask = ctx.beat_positions >= threshold
     hist_prefill = np.histogram(
-        ctx.velocities[prefill_mask],
+        _apply_phase(velocities[prefill_mask], "prefill"),
         bins=nbins,
         range=(0, 128),
     )[
@@ -1022,7 +1398,9 @@ def _velocity_axis_score(
     p_prefill = _normalise_histogram(hist_prefill)
 
     def _pair_score(histogram: FloatArray, target_key: str) -> float:
-        target = config.target(target_key)
+        target = targets_map.get(target_key, targets_map.get("global"))
+        if target is None:
+            raise ValueError("velocity targets must include 'global'")
         js = _jensen_shannon(histogram, target)
         js_norm = 1.0 - min(js / math.log(2.0), 1.0)
         cos = _cosine_similarity(histogram, target)
@@ -1044,7 +1422,7 @@ def _velocity_axis_score(
         ("offbeat", p_offbeat),
         ("prefill", p_prefill),
     ):
-        weight = config.weights.get(key, defaults[key])
+        weight = weights_map.get(key, defaults[key])
         score += weight * _pair_score(histogram, key)
     return float(_clip(score, 0.0, 1.0))
 
@@ -1067,7 +1445,11 @@ def _periodicity_strength(
     if grid.size == 0:
         return 0.0
     centered = grid - float(np.mean(grid))
-    autocorr = np.correlate(centered, centered, mode="full")[grid.size - 1 :]
+    autocorr = np.correlate(
+        centered,
+        centered,
+        mode="full",
+    )[grid.size - 1 :]
     if autocorr[0] <= 0:
         return 0.0
     autocorr /= autocorr[0]
@@ -1102,6 +1484,37 @@ def _density_fit(value: float, low: float, high: float) -> float:
     return float(_clip(1.0 - distance, 0.0, 1.0))
 
 
+def _role_stability_score(ctx: LoopFeatureContext) -> float:
+    if len(ROLE_STABILITY_INDICES) == 0:
+        return 0.0
+    if len(ctx.role_slots_per_bar) < 2:
+        return 0.0
+    scores: List[float] = []
+    previous = ctx.role_slots_per_bar[0]
+    for bar_slots in ctx.role_slots_per_bar[1:]:
+        role_total = 0.0
+        support = 0
+        for index in ROLE_STABILITY_INDICES:
+            ref_slots = previous[index]
+            cur_slots = bar_slots[index]
+            union = ref_slots | cur_slots
+            if not union:
+                role_total += 1.0
+                continue
+            intersection = ref_slots & cur_slots
+            role_total += len(intersection) / len(union)
+            support += 1
+        if support == 0:
+            scores.append(1.0)
+        else:
+            scores.append(role_total / float(support))
+        previous = bar_slots
+    if not scores:
+        return 0.0
+    average = sum(scores) / float(len(scores))
+    return float(_clip(average, 0.0, 1.0))
+
+
 def _structure_axis_score(
     ctx: LoopFeatureContext,
     config: StructureScoringConfig,
@@ -1112,10 +1525,12 @@ def _structure_axis_score(
     low, high = config.expected_density(ctx.bpm)
     density_value = float(np.sum(ctx.onset_counts_16th))
     density_score = _density_fit(density_value, low, high)
+    role_weight = config.weights.get("role_stability", 0.0)
     score = (
         config.weights.get("periodicity", 0.45) * periodicity
         + config.weights.get("diversity", 0.35) * diversity
         + config.weights.get("density", 0.2) * density_score
+        + role_weight * _role_stability_score(ctx)
     )
     return float(_clip(score, 0.0, 1.0))
 
@@ -1216,6 +1631,66 @@ def fingerprint_similarity(
     return _fingerprint_similarity(fingerprint)
 
 
+def _ghost_rate_window(
+    events: Sequence[Tuple[int, int]],
+    window_beats: float,
+    ticks_per_beat: int,
+    velocity_threshold: int,
+) -> float:
+    if not events or ticks_per_beat <= 0 or window_beats <= 0:
+        return 0.0
+    window_ticks = max(1, int(round(window_beats * ticks_per_beat)))
+    ordered = sorted(events, key=lambda item: item[0])
+    best_ratio = 0.0
+    left = 0
+    ghost_count = 0
+    total_count = 0
+    for right, (start, velocity) in enumerate(ordered):
+        while left <= right and start - ordered[left][0] > window_ticks:
+            total_count -= 1
+            if ordered[left][1] <= velocity_threshold:
+                ghost_count -= 1
+            left += 1
+        total_count += 1
+        if velocity <= velocity_threshold:
+            ghost_count += 1
+        if total_count > 0:
+            window_ratio = ghost_count / total_count
+            if window_ratio > best_ratio:
+                best_ratio = window_ratio
+    return best_ratio
+
+
+def _ghost_rate(
+    events: Sequence[Tuple[int, int]],
+    ticks_per_beat: int,
+    velocity_threshold: int,
+    short_window_beats: float = 0.25,
+    long_window_beats: float = 0.5,
+    window_velocity_cap: Optional[int] = 24,
+) -> float:
+    if not events:
+        return 0.0
+    overall = sum(1 for _, velocity in events if velocity <= velocity_threshold)
+    overall_ratio = overall / len(events)
+    window_threshold = velocity_threshold
+    if window_velocity_cap is not None:
+        window_threshold = min(window_threshold, window_velocity_cap)
+    short_ratio = _ghost_rate_window(
+        events,
+        short_window_beats,
+        ticks_per_beat,
+        window_threshold,
+    )
+    long_ratio = _ghost_rate_window(
+        events,
+        long_window_beats,
+        ticks_per_beat,
+        window_threshold,
+    )
+    return max(overall_ratio, short_ratio, long_ratio)
+
+
 def _compute_articulation_metrics(
     notes: Sequence[Sequence[Any]],
     *,
@@ -1272,8 +1747,12 @@ def _compute_articulation_metrics(
 
     if snare_events:
         total_snare = len(snare_events)
-        ghost_hits = sum(1 for _, velocity in snare_events if velocity <= ghost_threshold)
-        snare_ghost_rate = ghost_hits / total_snare if total_snare else None
+        ghost_ratio = _ghost_rate(
+            snare_events,
+            effective_tpb,
+            ghost_threshold,
+        )
+        snare_ghost_rate = ghost_ratio if total_snare else None
 
         ordered = sorted(snare_events, key=lambda item: item[0])
         flam_pairs = 0

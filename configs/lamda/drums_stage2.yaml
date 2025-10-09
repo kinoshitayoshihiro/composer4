@@ -8,35 +8,49 @@ score:
     velocity: 2.0
     groove_harmony: 1.0
     drum_cohesion: 1.0
-    structure: 1.0
+    structure: 1.2
     articulation: 1.0
   aliases_path: "../aliases/axes.yaml"
   velocity:
     target_histograms_path: "configs/thresholds/velocity_targets.yaml"
     nbins: 16
     prefill_window_beats: 0.5
+    normalize_dynamic_range: true
+    phase_compensation: true
     weights:
-      global: 0.4
-      downbeat: 0.25
-      offbeat: 0.2
+      global: 0.35
+      downbeat: 0.30
+      offbeat: 0.20
       prefill: 0.15
     metric_weights:
-      js: 0.5
-      cos: 0.5
+      js: 0.6
+      cos: 0.4
+    tempo_adaptive:
+      bins:
+        - max_bpm: 95
+          alpha: 0.9
+          downbeat_boost: 0.0
+        - max_bpm: 130
+          alpha: 1.0
+          downbeat_boost: 0.02
+        - max_bpm: null
+          alpha: 1.08
+          downbeat_boost: 0.035
   structure:
     grid_divisions: 16
     periodicity_candidates: [4, 8, 12, 16]
     weights:
-      periodicity: 0.45
-      diversity: 0.35
-      density: 0.2
+      periodicity: 0.40
+      diversity: 0.30
+      density: 0.15
+      role_stability: 0.15
     density_bands:
       - max_bpm: 95
         low: 2.0
         high: 6.0
       - max_bpm: 130
         low: 4.0
-        high: 9.0
+        high: 10.0
       - max_bpm: null
         low: 6.0
         high: 12.0
@@ -63,7 +77,40 @@ metrics:
   max_breakpoints: 3
   round_digits: 4
 
-retry_presets: []
+retry_presets:
+  - reason: velocity_boost
+    when:
+      axes_raw.velocity: "< 0.25"
+    action:
+      preset: vel_boost
+      params:
+        gain_db: 2.0
+        ceiling: 118
+  - reason: velocity
+    when:
+      axes_raw.velocity: "< 0.35"
+    action:
+      preset: vel_smooth
+      params:
+        vmin: 30
+        vmax: 112
+        compress: 0.82
+  - reason: structure
+    when:
+      axes_raw.structure: "< 0.30"
+    action:
+      preset: role_snap
+      params:
+        strength: 0.5
+        min_gap_beats: 0.25
+  - reason: timing
+    when:
+      axes_raw.timing: "< 0.40"
+    action:
+      preset: microtiming_fix
+      params:
+        max_shift_ms: 18
+        quant_grid: "1/16"
 
 articulation:
   thresholds_path: "configs/thresholds/articulation.auto.yaml"

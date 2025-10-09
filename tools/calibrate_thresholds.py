@@ -215,7 +215,8 @@ def main() -> None:
                     low_value: Optional[float] = None
                     high_value: Optional[float] = None
                 else:
-                    low_value = clamp01(q1 - args.beta * spread)
+                    raw_low = q1 - args.beta * spread
+                    low_value = clamp01(raw_low * 0.95)
                     high_value = clamp01(q3 + args.alpha * spread)
                     if low_value > high_value:
                         low_value, high_value = high_value, low_value
@@ -271,7 +272,7 @@ def main() -> None:
                 {
                     "bin": [bins[bucket_index], bins[bucket_index + 1]],
                     "count": sample_count,
-                    "q1q2q3I": None if math.isnan(q1) else [q1, q2, q3, spread],
+                    "q1q2q3I": (None if math.isnan(q1) else [q1, q2, q3, spread]),
                     "low": low_value,
                     "high": high_value,
                 }
