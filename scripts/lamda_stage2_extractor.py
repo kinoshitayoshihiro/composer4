@@ -499,10 +499,7 @@ def _load_velocity_scoring_config(
             continue
         targets[key] = _safe_normalised_histogram(sequence_values, nbins=nbins)
     if "global" not in targets:
-        message = (
-            "Velocity targets file "
-            f"{target_path} missing 'global' histogram"
-        )
+        message = "Velocity targets file " f"{target_path} missing 'global' histogram"
         raise ValueError(message)
     for key in ("downbeat", "offbeat", "prefill"):
         if key not in targets:
@@ -1368,9 +1365,7 @@ def _velocity_axis_score(
         _apply_phase(velocities[is_downbeat], "downbeat"),
         bins=nbins,
         range=(0, 128),
-    )[
-        0
-    ].astype(np.float64)
+    )[0].astype(np.float64)
     p_downbeat = _normalise_histogram(hist_downbeat)
 
     fractional = np.modf(ctx.beats)[0]
@@ -1379,9 +1374,7 @@ def _velocity_axis_score(
         _apply_phase(velocities[is_offbeat], "offbeat"),
         bins=nbins,
         range=(0, 128),
-    )[
-        0
-    ].astype(np.float64)
+    )[0].astype(np.float64)
     p_offbeat = _normalise_histogram(hist_offbeat)
 
     beats_per_bar = max(1.0, ctx.beats_per_bar)
@@ -1392,9 +1385,7 @@ def _velocity_axis_score(
         _apply_phase(velocities[prefill_mask], "prefill"),
         bins=nbins,
         range=(0, 128),
-    )[
-        0
-    ].astype(np.float64)
+    )[0].astype(np.float64)
     p_prefill = _normalise_histogram(hist_prefill)
 
     def _pair_score(histogram: FloatArray, target_key: str) -> float:

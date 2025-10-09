@@ -12,6 +12,16 @@ presets:
         hi: 112
         compress: 0.82
 
+  - id: vel_boost
+    when:
+      axes_raw.velocity: "< 0.25"
+    apply:
+      - type: velocity_remap
+        curve: s-curve
+        lo: 34
+        hi: 120
+        compress: 0.7
+
   - id: role_snap
     when:
       axes_raw.structure: "< 0.30"
