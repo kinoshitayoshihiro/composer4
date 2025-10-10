@@ -1,0 +1,41 @@
+name: Auto Tau Proposals
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  auto-tau:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Generate auto tau proposal (CLAP & MERT)
+        run: |
+          mkdir -p artifacts
+          # CLAP proposal
+          python scripts/ci/auto_tau.py \
+            --input output/drumloops_stage2/metrics_score.B.jsonl \
+            --target-mismatch 15 \
+            --by-instrument --by-tempo \
+            --out artifacts/auto_tau.yaml
+
+          # MERT proposal
+          python scripts/ci/auto_tau.py \
+            --input output/drumloops_stage2/metrics_score.B.jsonl \
+            --target-mismatch 15 \
+            --by-instrument --by-tempo \
+            --cos-key metrics.text_audio_cos_mert \
+            --out artifacts/auto_tau_mert.yaml

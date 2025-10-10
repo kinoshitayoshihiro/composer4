@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Composer4 PR dashboard aggregator."""
+"""PR Comment Aggregator for Composer4 dashboards."""
 from __future__ import annotations
 
 import argparse
@@ -174,24 +174,13 @@ def collect_ab(
 ) -> Dict[str, Any]:
     axes_block: Dict[str, Optional[float]] = {}
     for axis in axes:
-        axes_block[axis] = _median(
-            [
-                _float(pluck(row, f"axes_raw.{axis}"))
-                for row in rows
-            ]
-        )
+        axes_block[axis] = _median([_float(pluck(row, f"axes_raw.{axis}")) for row in rows])
 
-    cos_values = [
-        _float(pluck(row, "metrics.text_audio_cos"))
-        for row in rows
-    ]
+    cos_values = [_float(pluck(row, "metrics.text_audio_cos")) for row in rows]
     cos_filtered = [v for v in cos_values if v is not None]
     mismatch = None
     if cos_filtered:
-        mismatch = 100.0 * (
-            sum(1 for value in cos_filtered if value < tau)
-            / len(cos_filtered)
-        )
+        mismatch = 100.0 * (sum(1 for value in cos_filtered if value < tau) / len(cos_filtered))
 
     return {
         "axes": axes_block,
@@ -207,9 +196,7 @@ def _mismatch_at_tau(
     filtered = [v for v in values if v is not None]
     if not filtered:
         return None
-    return 100.0 * (
-        sum(1 for value in filtered if value < tau) / len(filtered)
-    )
+    return 100.0 * (sum(1 for value in filtered if value < tau) / len(filtered))
 
 
 def recalc_mismatch(
@@ -236,11 +223,7 @@ def build_ab_section(
 
     tau_map = parse_simple_yaml(tau_file) if tau_file else {}
     tau_prop = tau_map.get("global")
-    tau_proposed = (
-        float(tau_prop)
-        if isinstance(tau_prop, (int, float))
-        else None
-    )
+    tau_proposed = float(tau_prop) if isinstance(tau_prop, (int, float)) else None
 
     lines: List[str] = []
     lines.append("### A/B Summary")
@@ -260,9 +243,7 @@ def build_ab_section(
                 axis=axis,
                 before_val=_fmt(before_axis),
                 after_val=_fmt(after_axis),
-                delta_val=_fmt_delta(
-                    _delta(before_axis, after_axis)
-                ),
+                delta_val=_fmt_delta(_delta(before_axis, after_axis)),
             )
         )
     lines.append("")
@@ -338,9 +319,7 @@ def build_crops_section(rows: Sequence[Mapping[str, Any]]) -> Optional[str]:
     lines.append(f"- `cos_std.p50`: {_fmt(stats['cos_std_p50'])}")
     lines.append(f"- `cos_iqr.p50`: {_fmt(stats['cos_iqr_p50'])}")
     lines.append("")
-    lines.append(
-        "_狙い: 長尺・変動素材で一致スコアの安定化（分散・IQRの減少を確認）_"
-    )
+    lines.append("_狙い: 長尺・変動素材で一致スコアの安定化（分散・IQRの減少を確認）_")
     lines.append("")
     return "\n".join(lines)
 
@@ -398,8 +377,7 @@ def build_va_section(path: Optional[str]) -> Optional[str]:
     )
     lines.append("")
     lines.append(
-        "_狙い: 感情曲面（V/A）の中心と散らばりを定点観測 → "
-        "Humanizerや奏法選択の係数キャリブへ_"
+        "_狙い: 感情曲面（V/A）の中心と散らばりを定点観測 → " "Humanizerや奏法選択の係数キャリブへ_"
     )
     lines.append("")
     return "\n".join(lines)
@@ -465,11 +443,7 @@ def build_tau_bucket_preview(
 
     preview: List[Dict[str, Any]] = []
     global_tau = tau_map.get("global")
-    fallback = (
-        float(global_tau)
-        if isinstance(global_tau, (int, float))
-        else None
-    )
+    fallback = float(global_tau) if isinstance(global_tau, (int, float)) else None
 
     for (inst, tempo_bin), values in buckets.items():
         tau = _choose_tau(tau_map, inst, tempo_bin, fallback)
@@ -508,9 +482,7 @@ def build_tau_bucket_preview(
     )
 
     lines: List[str] = []
-    lines.append(
-        f"### {title} (Buckets @ proposed τ, Top-{topk} by |Δ|)"
-    )
+    lines.append(f"### {title} (Buckets @ proposed τ, Top-{topk} by |Δ|)")
     for entry in preview[:topk]:
         lines.append(
             "- `{inst} × {tempo}` | τ={tau:.3f} | mismatch: {before:.1f}%"
@@ -522,6 +494,61 @@ def build_tau_bucket_preview(
                 after=entry["after"],
                 delta=entry["delta"],
                 n=entry["n"],
+            )
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def build_guard_section(path: Optional[str]) -> Optional[str]:
+    if not path or not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except json.JSONDecodeError:
+        return None
+    ok = payload.get("ok")
+    if ok is None:
+        return None
+    raw_results = payload.get("results")
+    results: List[Dict[str, Any]] = []
+    if isinstance(raw_results, list):
+        for item in raw_results:
+            if isinstance(item, dict):
+                results.append(cast(Dict[str, Any], item))
+
+    def _flag(status: Any) -> str:
+        return "PASS ✅" if bool(status) else "FAIL ❌"
+
+    lines: List[str] = []
+    lines.append("### Guard Summary")
+    lines.append(f"- result: **{_flag(ok)}**")
+    for result in results:
+        kind = result.get("kind", "?")
+        report_obj = result.get("report")
+        if isinstance(report_obj, dict):
+            report = cast(Dict[str, Any], report_obj)
+        else:
+            report = {}
+        global_delta = report.get("global_delta")
+        if isinstance(global_delta, (int, float)):
+            delta_text = f"{float(global_delta):+.1f}pp"
+        else:
+            delta_text = "—"
+        bad_buckets_obj = report.get("bad_buckets")
+        if isinstance(bad_buckets_obj, list):
+            bad_buckets: List[Dict[str, Any]] = []
+            for entry in bad_buckets_obj:
+                if isinstance(entry, dict):
+                    bad_buckets.append(cast(Dict[str, Any], entry))
+        else:
+            bad_buckets = []
+        lines.append(
+            "- {kind}: global Δ {delta} | bad buckets: {count}".format(
+                kind=kind,
+                delta=delta_text,
+                count=len(bad_buckets),
             )
         )
     lines.append("")
@@ -591,16 +618,10 @@ def _upsert_comment(
 ) -> None:
     existing = _find_existing_comment(repo, pr_number, MARKER, token)
     if existing is not None:
-        url = (
-            "https://api.github.com/repos/"
-            f"{repo}/issues/comments/{existing}"
-        )
+        url = f"https://api.github.com/repos/{repo}/issues/comments/{existing}"
         _github_request(url, method="PATCH", body={"body": body}, token=token)
     else:
-        url = (
-            "https://api.github.com/repos/"
-            f"{repo}/issues/{pr_number}/comments"
-        )
+        url = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"
         _github_request(url, method="POST", body={"body": body}, token=token)
 
 
@@ -609,11 +630,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--before", default="output/ab/before.jsonl")
     parser.add_argument("--after", default="output/ab/after.jsonl")
     parser.add_argument("--tau", type=float, default=0.50)
-    parser.add_argument("--tau-file", default="artifacts/auto_tau.yaml")
-    parser.add_argument(
-        "--tau-file-mert",
-        default="artifacts/auto_tau_mert.yaml",
-    )
+    parser.add_argument("--tau-file")
+    parser.add_argument("--tau-file-mert")
     parser.add_argument(
         "--axes",
         action="append",
@@ -639,6 +657,10 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument("--title", default="Composer4 Dashboard")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--guard-json",
+        default="artifacts/tau_guard.summary.json",
+    )
     return parser.parse_args(argv)
 
 
@@ -660,6 +682,20 @@ def _normalize_edges(raw: str) -> List[float]:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
 
+    tau_file = args.tau_file
+    if not tau_file:
+        if os.path.exists("configs/metrics/tau.yaml"):
+            tau_file = "configs/metrics/tau.yaml"
+        elif os.path.exists("artifacts/auto_tau.yaml"):
+            tau_file = "artifacts/auto_tau.yaml"
+
+    tau_file_mert = args.tau_file_mert
+    if not tau_file_mert:
+        if os.path.exists("configs/metrics/tau_mert.yaml"):
+            tau_file_mert = "configs/metrics/tau_mert.yaml"
+        elif os.path.exists("artifacts/auto_tau_mert.yaml"):
+            tau_file_mert = "artifacts/auto_tau_mert.yaml"
+
     before_rows = read_jsonl(args.before)
     after_rows = read_jsonl(args.after)
     clap_rows = read_jsonl(args.crops_jsonl)
@@ -671,7 +707,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         after_rows,
         args.axes,
         args.tau,
-        args.tau_file,
+        tau_file,
     )
     if ab_section:
         sections.append(ab_section)
@@ -700,7 +736,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "CLAP Tau Preview",
         before_rows,
         after_rows,
-        args.tau_file,
+        tau_file,
         "metrics.text_audio_cos",
         edges,
     )
@@ -711,12 +747,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "MERT Tau Preview",
         before_rows,
         after_rows,
-        args.tau_file_mert,
+        tau_file_mert,
         "metrics.text_audio_cos_mert",
         edges,
     )
     if mert_tau_section:
         sections.append(mert_tau_section)
+
+    guard_section = build_guard_section(args.guard_json)
+    if guard_section:
+        sections.append(guard_section)
 
     if not sections:
         print(

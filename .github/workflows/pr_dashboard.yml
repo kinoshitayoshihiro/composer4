@@ -1,0 +1,50 @@
+name: Composer4 PR Dashboard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Prerequisite: upstream jobs populate the following artifacts.
+      #   - output/ab/before.jsonl, output/ab/after.jsonl
+      #   - artifacts/auto_tau.yaml, artifacts/auto_tau_mert.yaml
+      #   - artifacts/clap_multicrops.jsonl
+
+      - name: Build VA summary
+        run: |
+          mkdir -p artifacts
+          python scripts/ci/va_summary.py \
+            --input output/ab/after.jsonl \
+            --out artifacts/va_summary.json
+
+      - name: Post unified PR dashboard
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+        run: |
+          python scripts/ci/pr_comment_aggregator.py \
+            --before output/ab/before.jsonl \
+            --after output/ab/after.jsonl \
+            --tau-file artifacts/auto_tau.yaml \
+            --tau-file-mert artifacts/auto_tau_mert.yaml \
+            --crops-jsonl artifacts/clap_multicrops.jsonl \
+            --mert-crops-jsonl artifacts/mert_multicrops.jsonl \
+            --va-json artifacts/va_summary.json \
+            --va-buckets-json artifacts/va_buckets.json \
+            --axes velocity --axes structure \
+            --tempo-edges "95,110,130,150" \
+            --tau 0.50

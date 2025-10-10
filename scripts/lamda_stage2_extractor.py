@@ -13,7 +13,7 @@ import hashlib
 import subprocess
 import re
 from collections import Counter, defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import (
@@ -23,6 +23,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Mapping,
     Optional,
     Sequence,
     Set,
@@ -39,19 +40,6 @@ from numpy.typing import NDArray
 from lamda_tools import MetricConfig, compute_loop_metrics
 from lamda_tools.metadata_io import iter_loop_records, load_metadata_index
 from lamda_tools.metrics import DRUM_CATEGORIES
-
-try:
-    from stage2_thresholds import (
-        Band,
-        ThresholdsProvider,
-        build_thresholds_provider,
-    )
-except ModuleNotFoundError:  # pragma: no cover - fallback when run as module
-    from scripts.stage2_thresholds import (
-        Band,
-        ThresholdsProvider,
-        build_thresholds_provider,
-    )
 
 DEFAULT_CONFIG_PATH = Path("configs/lamda/drums_stage2.yaml")
 DEFAULT_METADATA_INDEX = Path(
@@ -114,55 +102,237 @@ _CONDITION_PATTERN = re.compile(r"^\s*(<=|>=|<|>|==|!=)\s*(-?\d+(?:\.\d+)?)\s*$"
 
 
 @dataclass
-class ArticulationThresholds:
-    mode: str
-    fixed: Dict[str, Any]
-    auto: Dict[str, Any]
+class VelocityScoringConfig:
+    nbins: int
+    targets: Dict[str, FloatArray]
     weights: Dict[str, float]
-    path: Path
-    provider: Optional[ThresholdsProvider] = None
+    metric_weights: Dict[str, float]
+    prefill_window_beats: float = 0.5
+    tempo_bins: Tuple[Dict[str, Any], ...] = ()
+    tempo_bin_targets: Tuple[
+        Tuple[Optional[float], Dict[str, FloatArray]],
+        ...,
+    ] = ()
+    normalize_dynamic_range: bool = False
+    dynamic_range: Dict[str, float] = field(default_factory=dict)
+    tempo_dynamic_ranges: Tuple[
+        Tuple[Optional[float], Dict[str, float]],
+        ...,
+    ] = ()
+    phase_compensation: bool = False
+    phase_adjust_db: Dict[str, float] = field(default_factory=dict)
+    tempo_phase_adjust: Tuple[
+        Tuple[Optional[float], Dict[str, float]],
+        ...,
+    ] = ()
 
-    @classmethod
-    def load(cls, path: Path) -> "ArticulationThresholds":
-        if not path.exists():
-            hint = str(path)
-            raise FileNotFoundError(
-                f"Articulation threshold config not found: {hint}",
-            )
-        raw_text = path.read_text(encoding="utf-8")
-        raw_obj: Any = yaml.safe_load(raw_text) or {}
-        if not isinstance(raw_obj, dict):
-            raise ValueError("Articulation threshold config must be a mapping")
-        raw = cast(Dict[str, Any], raw_obj)
-        mode = str(raw.get("mode", "fixed")).lower()
-        fixed_cfg = cast(Dict[str, Any], raw.get("fixed", {}))
-        auto_cfg = cast(Dict[str, Any], raw.get("auto", {}))
-        weights_root = cast(Dict[str, Any], raw.get("weights", {}))
-        weights_cfg = cast(
-            Dict[str, Any],
-            weights_root.get("articulation", {}),
-        )
-        weights: Dict[str, float] = {}
-        for key, value in weights_cfg.items():
-            if value is None:
-                continue
-            weights[str(key)] = float(value)
-        provider: Optional[ThresholdsProvider] = None
-        if "per_axis" in raw and "bins" in raw:
-            try:
-                provider = build_thresholds_provider(raw)
-            except ValueError as exc:
-                raise ValueError(
-                    f"Invalid articulation thresholds file {path}: {exc}",
-                ) from exc
-        return cls(
-            mode=mode,
-            fixed=fixed_cfg,
-            auto=auto_cfg,
-            weights=weights,
-            path=path,
-            provider=provider,
-        )
+    def target(self, key: str) -> FloatArray:
+        default = self.targets.get("global")
+        if default is None:
+            raise ValueError("velocity targets must define 'global'")
+        if key in self.targets:
+            return self.targets[key]
+        return default
+
+
+@dataclass
+class DensityBandSpec:
+    max_bpm: Optional[float]
+    low: float
+    high: float
+
+
+@dataclass
+class AudioAdaptiveRule:
+    operator: str
+    threshold: float
+    multipliers: Dict[str, float]
+    name: str
+    extras: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class AudioAdaptiveAxisCap:
+    min_scale: Optional[float] = None
+    max_scale: Optional[float] = None
+
+
+@dataclass
+class AudioAdaptiveFusionSource:
+    path: Tuple[str, ...]
+    weight: float
+    required: bool = False
+    bias: float = 0.0
+
+
+@dataclass
+class AudioAdaptiveFusion:
+    sources: Tuple[AudioAdaptiveFusionSource, ...]
+    bias: float = 0.0
+    normalise_weights: bool = True
+    default: Optional[float] = None
+    clamp_min: Optional[float] = None
+    clamp_max: Optional[float] = None
+
+
+@dataclass
+class AudioAdaptiveWeights:
+    pivot_path: Tuple[str, ...]
+    rules: Tuple[AudioAdaptiveRule, ...]
+    fusion: Optional[AudioAdaptiveFusion] = None
+    min_scale: Optional[float] = None
+    max_scale: Optional[float] = None
+    axis_caps: Dict[str, AudioAdaptiveAxisCap] = field(default_factory=dict)
+    normalize_sum: bool = False
+    normalize_target: Optional[float] = None
+    hysteresis_margin: float = 0.0
+    cooldown_loops: int = 0
+
+
+@dataclass
+class AudioAdaptiveState:
+    last_rule_name: Optional[str] = None
+    last_pivot: Optional[float] = None
+    cooldown_remaining: int = 0
+
+
+@dataclass
+class StructureScoringConfig:
+    bands: List[DensityBandSpec]
+    weights: Dict[str, float]
+    grid_divisions: int = 16
+    periodicity_candidates: Tuple[int, ...] = (4, 8, 12, 16)
+
+    def expected_density(self, bpm: Optional[float]) -> Tuple[float, float]:
+        if not self.bands:
+            return 0.0, 0.0
+        if bpm is None:
+            return self.bands[0].low, self.bands[0].high
+        for band in self.bands:
+            if band.max_bpm is None or bpm <= band.max_bpm:
+                return band.low, band.high
+        last = self.bands[-1]
+        return last.low, last.high
+
+
+def _build_feature_context(
+    notes: Sequence[Sequence[Any]],
+    *,
+    ticks_per_beat: int,
+    time_signature: Tuple[int, int],
+    channel_programs: Dict[int, int],
+    duration_ticks: int,
+    bpm_hint: Optional[float],
+    grid_divisions: int = 16,
+) -> Optional[LoopFeatureContext]:
+    if not notes:
+        return None
+
+    ts_numerator, ts_denominator = time_signature
+    if ts_numerator <= 0:
+        ts_numerator = 4
+    if ts_denominator <= 0:
+        ts_denominator = 4
+
+    effective_tpb = float(max(ticks_per_beat, 1))
+    ts_ratio = 4.0 / float(ts_denominator)
+    beat_ticks = effective_tpb * ts_ratio
+    if beat_ticks <= 0:
+        return None
+    bar_ticks = beat_ticks * float(ts_numerator)
+    if bar_ticks <= 0:
+        bar_ticks = beat_ticks * 4.0
+
+    velocities_list: List[float] = []
+    beats_list: List[float] = []
+    beat_positions_list: List[float] = []
+
+    onset_counts = np.zeros(grid_divisions, dtype=np.float64)
+    num_roles = len(STRUCTURE_ROLE_INDEX)
+    role_bins = np.zeros((grid_divisions, num_roles), dtype=np.float64)
+
+    def _create_role_slot_sets() -> List[Set[int]]:
+        return [set() for _ in range(num_roles)]
+
+    role_slot_sets: Dict[int, List[Set[int]]] = defaultdict(_create_role_slot_sets)
+
+    for note in notes:
+        start = int(note[1])
+        velocity = float(note[5])
+        channel = int(note[3])
+        pitch = int(note[4])
+        program = channel_programs.get(channel, 0)
+
+        velocities_list.append(velocity)
+        if beat_ticks > 0:
+            beats_list.append(start / beat_ticks)
+        else:
+            beats_list.append(0.0)
+
+        if bar_ticks > 0:
+            bar_index = int(start // bar_ticks)
+            slot_position = (start % bar_ticks) / bar_ticks
+        else:
+            bar_index = 0
+            slot_position = (start / beat_ticks) % 1.0 if beat_ticks else 0.0
+        beat_positions_list.append(slot_position)
+
+        slot_float = slot_position * grid_divisions
+        slot_index = int(math.floor(slot_float))
+        slot_index = max(0, min(grid_divisions - 1, slot_index))
+
+        onset_counts[slot_index] += 1.0
+        role, _ = _infer_role(channel, program, pitch)
+        role_index = STRUCTURE_ROLE_INDEX.get(role, STRUCTURE_ROLE_INDEX["other"])
+        role_bins[slot_index, role_index] += 1.0
+        role_slot_sets[bar_index][role_index].add(slot_index)
+
+    velocities = np.asarray(velocities_list, dtype=np.float64)
+    beats = np.asarray(beats_list, dtype=np.float64)
+    beat_positions = np.asarray(beat_positions_list, dtype=np.float64)
+
+    bars_float = 1.0
+    if bar_ticks > 0 and duration_ticks > 0:
+        bars_float = max(1.0, math.ceil(duration_ticks / bar_ticks))
+    onset_counts = onset_counts / bars_float
+    role_tokens = np.argmax(role_bins, axis=1).astype(np.int64)
+
+    beats_per_bar = float(ts_numerator) if ts_numerator > 0 else 4.0
+    bars_int = max(1, int(bars_float))
+
+    role_slots_per_bar_list: List[Tuple[FrozenSet[int], ...]] = []
+    for bar_idx in range(bars_int):
+        slot_sets = role_slot_sets.get(bar_idx)
+        if slot_sets is None:
+            slot_sets = _create_role_slot_sets()
+        frozen_slots = tuple(frozenset(slot_sets[idx]) for idx in range(num_roles))
+        role_slots_per_bar_list.append(frozen_slots)
+    role_slots_per_bar = tuple(role_slots_per_bar_list)
+
+    return LoopFeatureContext(
+        velocities=velocities,
+        beats=beats,
+        beat_positions=beat_positions,
+        bpm=bpm_hint,
+        onset_counts_16th=onset_counts,
+        role_tokens_16th=role_tokens,
+        beats_per_bar=beats_per_bar,
+        bars=bars_int,
+        role_slots_per_bar=role_slots_per_bar,
+    )
+
+
+@dataclass
+class LoopFeatureContext:
+    velocities: FloatArray
+    beats: FloatArray
+    beat_positions: FloatArray
+    bpm: Optional[float]
+    onset_counts_16th: FloatArray
+    role_tokens_16th: IntArray
+    beats_per_bar: float
+    bars: int
+    role_slots_per_bar: Tuple[Tuple[FrozenSet[int], ...], ...]
 
     @property
     def total_weight(self) -> float:
@@ -230,79 +400,6 @@ class ArticulationResult:
 
 
 @dataclass
-class VelocityScoringConfig:
-    nbins: int
-    targets: Dict[str, FloatArray]
-    weights: Dict[str, float]
-    metric_weights: Dict[str, float]
-    prefill_window_beats: float = 0.5
-    tempo_bins: Tuple[Dict[str, Any], ...] = ()
-    tempo_bin_targets: Tuple[
-        Tuple[Optional[float], Dict[str, FloatArray]],
-        ...,
-    ] = ()
-    normalize_dynamic_range: bool = False
-    dynamic_range: Dict[str, float] = field(default_factory=dict)
-    tempo_dynamic_ranges: Tuple[
-        Tuple[Optional[float], Dict[str, float]],
-        ...,
-    ] = ()
-    phase_compensation: bool = False
-    phase_adjust_db: Dict[str, float] = field(default_factory=dict)
-    tempo_phase_adjust: Tuple[
-        Tuple[Optional[float], Dict[str, float]],
-        ...,
-    ] = ()
-
-    def target(self, key: str) -> FloatArray:
-        default = self.targets.get("global")
-        if default is None:
-            raise ValueError("velocity targets must define 'global'")
-        if key in self.targets:
-            return self.targets[key]
-        return default
-
-
-@dataclass
-class DensityBandSpec:
-    max_bpm: Optional[float]
-    low: float
-    high: float
-
-
-@dataclass
-class StructureScoringConfig:
-    bands: List[DensityBandSpec]
-    weights: Dict[str, float]
-    grid_divisions: int = 16
-    periodicity_candidates: Tuple[int, ...] = (4, 8, 12, 16)
-
-    def expected_density(self, bpm: Optional[float]) -> Tuple[float, float]:
-        if not self.bands:
-            return 0.0, 0.0
-        if bpm is None:
-            return self.bands[0].low, self.bands[0].high
-        for band in self.bands:
-            if band.max_bpm is None or bpm <= band.max_bpm:
-                return band.low, band.high
-        last = self.bands[-1]
-        return last.low, last.high
-
-
-@dataclass
-class LoopFeatureContext:
-    velocities: FloatArray
-    beats: FloatArray
-    beat_positions: FloatArray
-    bpm: Optional[float]
-    onset_counts_16th: FloatArray
-    role_tokens_16th: IntArray
-    beats_per_bar: float
-    bars: int
-    role_slots_per_bar: Tuple[Tuple[FrozenSet[int], ...], ...]
-
-
-@dataclass
 class Stage2Paths:
     events_parquet: Path
     events_csv_sample: Optional[Path]
@@ -311,6 +408,743 @@ class Stage2Paths:
     retry_dir: Path
     summary_out: Optional[Path]
     sample_event_rows: int = 5000
+    audio_embeddings_parquet: Optional[Path] = None
+
+
+AUDIO_LOOP_DEFAULTS: Dict[str, Optional[Any]] = {
+    "text_audio_cos": None,
+    "text_audio_cos_mert": None,
+    "caption": None,
+    "caption_en": None,
+    "audio.render_path": None,
+    "audio.embedding_path": None,
+}
+
+
+def _as_optional_str(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        return stripped or None
+    text = str(value)
+    return text.strip() or None
+
+
+def _to_optional_float(value: Any) -> Optional[float]:
+    try:
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _coerce_float_array(value: Any) -> Optional[np.ndarray]:
+    if value is None:
+        return None
+    if isinstance(value, np.ndarray):
+        if value.ndim != 1:
+            return None
+        if value.dtype != np.float32:
+            return value.astype(np.float32)
+        return value
+    if isinstance(value, (list, tuple)):
+        try:
+            array = np.asarray(value, dtype=np.float32)
+        except (TypeError, ValueError):
+            return None
+        if array.ndim != 1:
+            return None
+        return array
+    return None
+
+
+def _split_path(path: str) -> Tuple[str, ...]:
+    return tuple(part for part in path.split(".") if part)
+
+
+def _resolve_nested_value(
+    context: Mapping[str, Any],
+    path_parts: Tuple[str, ...],
+) -> Any:
+    value: Any = context
+    for part in path_parts:
+        if isinstance(value, Mapping) and part in value:
+            value = value[part]
+        else:
+            return None
+    return value
+
+
+def _parse_threshold_expression(
+    expression: str,
+) -> Optional[Tuple[str, float]]:
+    match = _CONDITION_PATTERN.match(expression)
+    if not match:
+        return None
+    operator, literal = match.groups()
+    try:
+        return operator, float(literal)
+    except (TypeError, ValueError):
+        return None
+
+
+def _resolve_audio_adaptive_rule(
+    rules: Tuple[AudioAdaptiveRule, ...],
+    name: Optional[str],
+) -> Optional[AudioAdaptiveRule]:
+    if name is None:
+        return None
+    for rule in rules:
+        if rule.name == name:
+            return rule
+    return None
+
+
+def _fuse_audio_adaptive_sources(
+    fusion: AudioAdaptiveFusion,
+    context: Mapping[str, Any],
+) -> Optional[float]:
+    values: List[float] = []
+    weights: List[float] = []
+    for source in fusion.sources:
+        raw_value = _resolve_nested_value(context, source.path)
+        numeric = _to_optional_float(raw_value)
+        if numeric is None:
+            if source.required:
+                return fusion.default
+            continue
+        adjusted = numeric + source.bias
+        values.append(adjusted)
+        weights.append(float(source.weight))
+
+    if not values:
+        return fusion.default
+
+    if fusion.normalise_weights:
+        weight_sum = sum(weights)
+        if weight_sum <= 0.0:
+            weights = [1.0 / float(len(values))] * len(values)
+        else:
+            weights = [w / weight_sum for w in weights]
+
+    fused = sum(value * weight for value, weight in zip(values, weights)) + fusion.bias
+    if fusion.clamp_min is not None:
+        fused = max(fused, fusion.clamp_min)
+    if fusion.clamp_max is not None:
+        fused = min(fused, fusion.clamp_max)
+    return fused
+
+
+def _resolve_audio_adaptive_pivot(
+    adaptive: AudioAdaptiveWeights,
+    context: Mapping[str, Any],
+) -> Optional[float]:
+    if adaptive.fusion is not None:
+        fused = _fuse_audio_adaptive_sources(adaptive.fusion, context)
+        if fused is not None:
+            return fused
+    pivot_raw = _resolve_nested_value(context, adaptive.pivot_path)
+    return _to_optional_float(pivot_raw)
+
+
+def _apply_audio_caps(
+    weights: Dict[str, float],
+    base_weights: Mapping[str, float],
+    adaptive: AudioAdaptiveWeights,
+) -> None:
+    for axis_key, value in weights.items():
+        base_value = base_weights.get(axis_key)
+        if base_value is None:
+            continue
+        min_scale = adaptive.min_scale
+        max_scale = adaptive.max_scale
+        axis_cap = adaptive.axis_caps.get(axis_key)
+        if axis_cap is not None:
+            if axis_cap.min_scale is not None:
+                min_scale = axis_cap.min_scale
+            if axis_cap.max_scale is not None:
+                max_scale = axis_cap.max_scale
+        if min_scale is not None:
+            weights[axis_key] = max(value, base_value * float(min_scale))
+            value = weights[axis_key]
+        if max_scale is not None:
+            weights[axis_key] = min(value, base_value * float(max_scale))
+
+
+def _normalise_audio_weights(
+    weights: Dict[str, float],
+    base_weights: Mapping[str, float],
+    adaptive: AudioAdaptiveWeights,
+) -> None:
+    if not adaptive.normalize_sum:
+        return
+    target_sum = adaptive.normalize_target
+    if target_sum is None:
+        target_sum = sum(float(value) for value in base_weights.values())
+    if target_sum <= 0.0:
+        return
+    bounds: Dict[str, Tuple[float, float]] = {}
+    tiny = 1e-9
+    for axis_key, value in weights.items():
+        base_value = base_weights.get(axis_key, value)
+        min_scale = adaptive.min_scale
+        max_scale = adaptive.max_scale
+        axis_cap = adaptive.axis_caps.get(axis_key)
+        if axis_cap is not None:
+            if axis_cap.min_scale is not None:
+                min_scale = axis_cap.min_scale
+            if axis_cap.max_scale is not None:
+                max_scale = axis_cap.max_scale
+        if min_scale is not None:
+            lower = float(base_value) * float(min_scale)
+        else:
+            lower = 0.0
+        if max_scale is not None:
+            upper = float(base_value) * float(max_scale)
+        else:
+            upper = float("inf")
+        bounds[axis_key] = (lower, upper)
+
+    for _ in range(16):
+        current_sum = sum(float(value) for value in weights.values())
+        delta = target_sum - current_sum
+        if abs(delta) <= tiny:
+            break
+        if delta > 0.0:
+            unbounded = [axis for axis, (_, upper) in bounds.items() if math.isinf(upper)]
+            if unbounded:
+                share = delta / float(len(unbounded))
+                for axis in unbounded:
+                    weights[axis] += share
+                continue
+            adjustable = {
+                axis: bounds[axis][1] - weights[axis]
+                for axis in weights
+                if bounds[axis][1] - weights[axis] > tiny
+            }
+            capacity = sum(adjustable.values())
+            if capacity <= tiny:
+                break
+            for axis, room in adjustable.items():
+                portion = delta * (room / capacity)
+                weights[axis] += min(portion, room)
+        else:
+            adjustable = {
+                axis: weights[axis] - bounds[axis][0]
+                for axis in weights
+                if weights[axis] - bounds[axis][0] > tiny
+            }
+            if not adjustable:
+                break
+            capacity = sum(adjustable.values())
+            if capacity <= tiny:
+                break
+            for axis, room in adjustable.items():
+                portion = (-delta) * (room / capacity)
+                weights[axis] -= min(portion, room)
+
+    for axis, (lower, upper) in bounds.items():
+        if weights[axis] < lower:
+            weights[axis] = lower
+        if weights[axis] > upper:
+            weights[axis] = upper
+
+
+def _evaluate_audio_adaptive_rule(
+    adaptive: Optional[AudioAdaptiveWeights],
+    context: Mapping[str, Any],
+    state: Optional[AudioAdaptiveState],
+) -> Tuple[Optional[AudioAdaptiveRule], Optional[float], Optional[AudioAdaptiveState]]:
+    if adaptive is None:
+        return None, None, state
+
+    if state is None:
+        state = AudioAdaptiveState()
+    else:
+        if state.cooldown_remaining > 0:
+            state.cooldown_remaining = max(0, state.cooldown_remaining - 1)
+
+    pivot_value = _resolve_audio_adaptive_pivot(adaptive, context)
+    if pivot_value is None:
+        state.last_rule_name = None
+        state.last_pivot = None
+        state.cooldown_remaining = 0
+        return None, None, state
+
+    candidate_rule: Optional[AudioAdaptiveRule] = None
+    for rule in adaptive.rules:
+        if _compare_numeric(pivot_value, rule.operator, rule.threshold):
+            candidate_rule = rule
+            break
+
+    last_rule = _resolve_audio_adaptive_rule(adaptive.rules, state.last_rule_name)
+    margin = adaptive.hysteresis_margin
+    if last_rule is not None:
+        if state.cooldown_remaining > 0:
+            candidate_rule = last_rule
+        elif candidate_rule is None and margin > 0.0 and state.last_pivot is not None:
+            if abs(pivot_value - state.last_pivot) < margin:
+                candidate_rule = last_rule
+        elif (
+            candidate_rule is not None
+            and candidate_rule.name != last_rule.name
+            and margin > 0.0
+            and state.last_pivot is not None
+        ):
+            if abs(pivot_value - state.last_pivot) < margin:
+                candidate_rule = last_rule
+
+    if candidate_rule is None:
+        state.last_rule_name = None
+        state.last_pivot = pivot_value
+        state.cooldown_remaining = 0
+        return None, pivot_value, state
+
+    if candidate_rule.name != state.last_rule_name:
+        state.cooldown_remaining = adaptive.cooldown_loops
+    state.last_rule_name = candidate_rule.name
+    state.last_pivot = pivot_value
+
+    return candidate_rule, pivot_value, state
+
+
+def _scale_velocity_phase_compensation(
+    config: Optional[VelocityScoringConfig],
+    factor: Optional[float],
+) -> Optional[VelocityScoringConfig]:
+    if config is None or factor is None:
+        return config
+    try:
+        factor_value = float(factor)
+    except (TypeError, ValueError):
+        return config
+    if not config.phase_compensation:
+        return config
+    if math.isclose(factor_value, 1.0):
+        return config
+
+    def _scaled_map(source: Mapping[str, Any]) -> Dict[str, float]:
+        scaled: Dict[str, float] = {}
+        for key, value in source.items():
+            try:
+                scaled[str(key)] = float(value) * factor_value
+            except (TypeError, ValueError):
+                continue
+        return scaled
+
+    base_adjust = _scaled_map(config.phase_adjust_db)
+    tempo_adjust: Tuple[Tuple[Optional[float], Dict[str, float]], ...] = tuple(
+        (
+            tempo_limit,
+            _scaled_map(adjust_map),
+        )
+        for tempo_limit, adjust_map in config.tempo_phase_adjust
+    )
+
+    return replace(
+        config,
+        phase_adjust_db=base_adjust,
+        tempo_phase_adjust=tempo_adjust,
+    )
+
+
+def _apply_audio_adaptive_weights(
+    base_weights: Dict[str, float],
+    adaptive: Optional[AudioAdaptiveWeights],
+    context: Mapping[str, Any],
+    state: Optional[AudioAdaptiveState] = None,
+    evaluated: Optional[Tuple[Optional[AudioAdaptiveRule], Optional[float]]] = None,
+) -> Tuple[
+    Dict[str, float], Optional[AudioAdaptiveRule], Optional[float], Optional[AudioAdaptiveState]
+]:
+    weights = dict(base_weights)
+    if adaptive is None:
+        return weights, None, None, state
+
+    if evaluated is None:
+        candidate_rule, pivot_value, state = _evaluate_audio_adaptive_rule(
+            adaptive,
+            context,
+            state,
+        )
+    else:
+        candidate_rule, pivot_value = evaluated
+
+    if candidate_rule is None:
+        return weights, None, pivot_value, state
+
+    for axis_key, multiplier in candidate_rule.multipliers.items():
+        if axis_key in weights:
+            weights[axis_key] = weights[axis_key] * float(multiplier)
+
+    _apply_audio_caps(weights, base_weights, adaptive)
+    _normalise_audio_weights(weights, base_weights, adaptive)
+
+    return weights, candidate_rule, pivot_value, state
+
+
+def _build_audio_summary(
+    loop_id: str,
+    audio_row: Optional[AudioGuidanceRow],
+) -> Tuple[Dict[str, Any], Optional[Dict[str, Any]]]:
+    if audio_row is None:
+        return {}, None
+
+    summary: Dict[str, Any] = {
+        "text_audio_cos": audio_row.text_audio_cos,
+        "text_audio_cos_mert": audio_row.text_audio_cos_mert,
+        "caption": audio_row.caption,
+        "caption_en": audio_row.caption_en or audio_row.caption,
+        "render_path": audio_row.render_path or audio_row.audio_path,
+        "embedding_path": audio_row.embedding_path,
+        "model": audio_row.audio_model,
+    }
+
+    clap_embed = audio_row.audio_embed_clap
+    if clap_embed is None and audio_row.extra:
+        clap_embed = _coerce_float_array(
+            audio_row.extra.get("audio_embed_clap")
+            or audio_row.extra.get("audio_embedding_clap")
+            or audio_row.extra.get("audio_embedding")
+        )
+    mert_embed = audio_row.audio_embed_mert
+    if mert_embed is None and audio_row.extra:
+        mert_embed = _coerce_float_array(audio_row.extra.get("audio_embed_mert"))
+    text_embed = audio_row.text_embed
+    if text_embed is None and audio_row.extra:
+        text_embed = _coerce_float_array(
+            audio_row.extra.get("text_embed") or audio_row.extra.get("text_embedding")
+        )
+
+    embed_entry: Optional[Dict[str, Any]] = None
+    if any(embed is not None for embed in (clap_embed, mert_embed, text_embed)):
+        embed_entry = {
+            "loop_id": loop_id,
+            "model": summary.get("model"),
+            "audio_embed_clap": clap_embed,
+            "audio_embed_mert": mert_embed,
+            "text_embed": text_embed,
+        }
+
+    return summary, embed_entry
+
+
+def _write_audio_embeddings(
+    rows: Sequence[Dict[str, Any]],
+    out_path: Path,
+) -> None:
+    if not rows:
+        return
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+    except ImportError:  # pragma: no cover - optional dependency
+        sys.stderr.write("[warn] pyarrow not available; skipping audio embeddings parquet output\n")
+        return
+
+    def _embed_column(key: str) -> List[Optional[List[float]]]:
+        values: List[Optional[List[float]]] = []
+        for row in rows:
+            embed = row.get(key)
+            if embed is None:
+                values.append(None)
+            else:
+                array = _coerce_float_array(embed)
+                if array is None:
+                    values.append(None)
+                else:
+                    values.append([float(x) for x in array.tolist()])
+        return values
+
+    table = pa.table(
+        {
+            "loop_id": pa.array([row.get("loop_id") for row in rows], type=pa.string()),
+            "model": pa.array([row.get("model") for row in rows], type=pa.string()),
+            "audio_embed_clap": pa.array(
+                _embed_column("audio_embed_clap"),
+                type=pa.list_(pa.float32()),
+            ),
+            "audio_embed_mert": pa.array(
+                _embed_column("audio_embed_mert"),
+                type=pa.list_(pa.float32()),
+            ),
+            "text_embed": pa.array(
+                _embed_column("text_embed"),
+                type=pa.list_(pa.float32()),
+            ),
+        }
+    )
+
+    pq.write_table(table, out_path)
+
+
+@dataclass
+class AudioGuidanceRow:
+    loop_id: Optional[str] = None
+    file_digest: Optional[str] = None
+    filename: Optional[str] = None
+    text_audio_cos: Optional[float] = None
+    text_audio_cos_mert: Optional[float] = None
+    caption: Optional[str] = None
+    caption_en: Optional[str] = None
+    audio_path: Optional[str] = None
+    render_path: Optional[str] = None
+    embedding_path: Optional[str] = None
+    audio_embed_clap: Optional[np.ndarray] = None
+    audio_embed_mert: Optional[np.ndarray] = None
+    text_embed: Optional[np.ndarray] = None
+    audio_model: Optional[str] = None
+    extra: Dict[str, Any] = field(default_factory=dict)
+
+    def update_from(self, other: "AudioGuidanceRow") -> None:
+        for field_name in (
+            "loop_id",
+            "file_digest",
+            "filename",
+            "text_audio_cos",
+            "text_audio_cos_mert",
+            "caption",
+            "caption_en",
+            "audio_path",
+            "render_path",
+            "embedding_path",
+            "audio_embed_clap",
+            "audio_embed_mert",
+            "text_embed",
+            "audio_model",
+        ):
+            value = getattr(other, field_name)
+            if value is not None:
+                setattr(self, field_name, value)
+        if other.extra:
+            self.extra.update(other.extra)
+
+    def as_loop_row(self) -> Dict[str, Any]:
+        payload: Dict[str, Optional[Any]] = dict(AUDIO_LOOP_DEFAULTS)
+        payload["text_audio_cos"] = self.text_audio_cos
+        payload["text_audio_cos_mert"] = self.text_audio_cos_mert
+        payload["caption"] = self.caption
+        payload["caption_en"] = self.caption_en or self.caption
+        payload["audio.render_path"] = self.render_path or self.audio_path
+        payload["audio.embedding_path"] = self.embedding_path
+        return payload
+
+    def as_retry_context(self) -> Dict[str, Any]:
+        context: Dict[str, Any] = {}
+        if self.text_audio_cos is not None:
+            context["text_audio_cos"] = self.text_audio_cos
+        if self.text_audio_cos_mert is not None:
+            context["text_audio_cos_mert"] = self.text_audio_cos_mert
+        if self.loop_id:
+            context["loop_id"] = self.loop_id
+        if self.file_digest:
+            context["file_digest"] = self.file_digest
+        if self.caption_en or self.caption:
+            context["caption_en"] = self.caption_en or self.caption
+        if self.caption:
+            context["caption"] = self.caption
+        if self.audio_path:
+            context["audio_path"] = self.audio_path
+        if self.render_path:
+            context["render_path"] = self.render_path
+        return context
+
+
+@dataclass
+class AudioGuidanceStore:
+    rows: Dict[str, AudioGuidanceRow] = field(default_factory=dict)
+    aliases: Dict[str, str] = field(default_factory=dict)
+
+    def _register_alias(self, alias: Optional[str], key: str) -> None:
+        if alias:
+            self.aliases[alias] = key
+
+    def _resolve_key(
+        self,
+        loop_id: Optional[str],
+        file_digest: Optional[str],
+        filename: Optional[str],
+    ) -> Optional[str]:
+        for candidate in (loop_id, file_digest, filename):
+            if candidate and candidate in self.aliases:
+                return self.aliases[candidate]
+        for candidate in (loop_id, file_digest, filename):
+            if candidate and candidate in self.rows:
+                return candidate
+        return None
+
+    def merge(self, row: AudioGuidanceRow) -> None:
+        canonical = self._resolve_key(
+            row.loop_id,
+            row.file_digest,
+            row.filename,
+        )
+        if canonical is None:
+            canonical = row.loop_id or row.file_digest or row.filename
+            if canonical is None:
+                return
+        current = self.rows.get(canonical)
+        if current is None:
+            current = AudioGuidanceRow()
+            self.rows[canonical] = current
+        current.update_from(row)
+        self._register_alias(current.loop_id, canonical)
+        self._register_alias(current.file_digest, canonical)
+        self._register_alias(current.filename, canonical)
+
+    def get(
+        self,
+        loop_id: Optional[str],
+        file_digest: Optional[str],
+        filename: Optional[str],
+    ) -> Optional[AudioGuidanceRow]:
+        key = self._resolve_key(loop_id, file_digest, filename)
+        if key is None:
+            return None
+        return self.rows.get(key)
+
+    def has_rows(self) -> bool:
+        return bool(self.rows)
+
+
+def _resolve_optional_config_path(base_dir: Path, raw: Any) -> Optional[Path]:
+    path_str = _as_optional_str(raw)
+    if path_str is None:
+        return None
+    candidate = Path(path_str)
+    if not candidate.is_absolute():
+        candidate = (base_dir / candidate).resolve()
+    return candidate
+
+
+def _load_audio_alignment(
+    store: AudioGuidanceStore,
+    path: Path,
+    config: Dict[str, Any],
+) -> None:
+    if not path.exists():
+        return
+    loop_field = _as_optional_str(config.get("loop_id_field")) or "loop_id"
+    digest_field = _as_optional_str(config.get("file_digest_field")) or "file_digest"
+    filename_field = _as_optional_str(config.get("filename_field")) or "filename"
+    basename_field = _as_optional_str(config.get("basename_field")) or "basename"
+    clap_field = _as_optional_str(config.get("clap_field")) or "text_audio_cos"
+    clap_alt_field = _as_optional_str(config.get("clap_fallback_field")) or "cos_mean"
+    mert_field = _as_optional_str(config.get("mert_field")) or "text_audio_cos_mert"
+    caption_field = _as_optional_str(config.get("caption_field")) or "caption"
+    caption_en_field = _as_optional_str(config.get("caption_en_field")) or "caption_en"
+    audio_path_field = _as_optional_str(config.get("audio_path_field")) or "audio_path"
+    render_path_field = _as_optional_str(config.get("render_path_field")) or "render_path"
+    embedding_field = _as_optional_str(config.get("embedding_field")) or "embedding_path"
+
+    with path.open("r", encoding="utf-8") as handle:
+        for raw in handle:
+            payload = raw.strip()
+            if not payload:
+                continue
+            try:
+                data = json.loads(payload)
+            except json.JSONDecodeError:
+                continue
+            loop_id = _as_optional_str(data.get(loop_field))
+            file_digest = _as_optional_str(data.get(digest_field))
+            filename = _as_optional_str(data.get(filename_field))
+            if filename is None:
+                filename = _as_optional_str(data.get(basename_field))
+            filtered_keys = {loop_field, digest_field, filename_field, basename_field}
+            row = AudioGuidanceRow(
+                loop_id=loop_id,
+                file_digest=file_digest,
+                filename=filename,
+                text_audio_cos=_to_optional_float(data.get(clap_field)),
+                text_audio_cos_mert=_to_optional_float(data.get(mert_field)),
+                caption=_as_optional_str(data.get(caption_field)),
+                caption_en=_as_optional_str(data.get(caption_en_field)),
+                audio_path=_as_optional_str(data.get(audio_path_field)),
+                render_path=_as_optional_str(data.get(render_path_field)),
+                embedding_path=_as_optional_str(data.get(embedding_field)),
+                extra={k: v for k, v in data.items() if k not in filtered_keys},
+            )
+            if row.text_audio_cos is None and clap_alt_field:
+                row.text_audio_cos = _to_optional_float(data.get(clap_alt_field))
+            clap_embed = _coerce_float_array(
+                data.get("audio_embed_clap")
+                or data.get("audio_embedding_clap")
+                or data.get("audio_embedding")
+            )
+            if clap_embed is not None:
+                row.audio_embed_clap = clap_embed
+            mert_embed = _coerce_float_array(data.get("audio_embed_mert"))
+            if mert_embed is not None:
+                row.audio_embed_mert = mert_embed
+            text_embed = _coerce_float_array(data.get("text_embed") or data.get("text_embedding"))
+            if text_embed is not None:
+                row.text_embed = text_embed
+            model_name = _as_optional_str(
+                data.get("audio_model") or data.get("model") or data.get("guidance_model")
+            )
+            if model_name is not None:
+                row.audio_model = model_name
+            store.merge(row)
+
+
+def _load_audio_captions(
+    store: AudioGuidanceStore,
+    path: Path,
+    config: Dict[str, Any],
+) -> None:
+    if not path.exists():
+        return
+    caption_locale = _as_optional_str(config.get("caption_locale")) or "en"
+    with path.open("r", encoding="utf-8") as handle:
+        try:
+            payload = json.load(handle)
+        except json.JSONDecodeError:
+            return
+    if not isinstance(payload, dict):
+        return
+    for key, value in payload.items():
+        text_default: Optional[str] = None
+        text_en: Optional[str] = None
+        if isinstance(value, str):
+            text_en = value
+        elif isinstance(value, dict):
+            text_default = _as_optional_str(value.get("caption"))
+            text_en = _as_optional_str(
+                value.get("caption_en") or value.get(caption_locale) or text_default
+            )
+        elif value is not None:
+            text_en = _as_optional_str(value)
+        key_str = _as_optional_str(key)
+        if key_str is None:
+            continue
+        row = AudioGuidanceRow(
+            loop_id=key_str if len(key_str) == 32 else None,
+            file_digest=key_str if len(key_str) == 32 else None,
+            filename=key_str if key_str.endswith((".mid", ".midi", ".wav")) else None,
+            caption=text_default,
+            caption_en=text_en or text_default,
+        )
+        store.merge(row)
+
+
+def _build_audio_guidance(
+    config: Dict[str, Any],
+    base_dir: Path,
+) -> Optional[AudioGuidanceStore]:
+    if not config:
+        return None
+    store = AudioGuidanceStore()
+    alignment_path = _resolve_optional_config_path(base_dir, config.get("alignment_jsonl"))
+    if alignment_path is not None:
+        _load_audio_alignment(store, alignment_path, config)
+    captions_path = _resolve_optional_config_path(base_dir, config.get("captions_json"))
+    if captions_path is not None:
+        _load_audio_captions(store, captions_path, config)
+    return store if store.has_rows() else None
 
 
 @dataclass
@@ -333,6 +1167,8 @@ class Stage2Settings:
     articulation_thresholds: Optional[ArticulationThresholds]
     velocity_scoring: Optional[VelocityScoringConfig]
     structure_scoring: Optional[StructureScoringConfig]
+    audio_adaptive_weights: Optional[AudioAdaptiveWeights] = None
+    audio_guidance: Optional[AudioGuidanceStore] = None
 
 
 def _primary_retry_key(reason: str) -> str:
@@ -439,6 +1275,7 @@ def _select_retry_rule(
     score_total: float,
     score_breakdown: Dict[str, float],
     rules: Dict[str, List[RetryPresetRule]],
+    audio_context: Optional[Dict[str, Any]] = None,
 ) -> Optional[RetryPresetRule]:
     candidates = rules.get(reason_key, [])
     context: Dict[str, Any] = {
@@ -447,6 +1284,8 @@ def _select_retry_rule(
         "score_breakdown": score_breakdown,
         "reason": reason_key,
     }
+    if audio_context:
+        context["audio"] = audio_context
     for rule in candidates:
         if _conditions_met(rule.when, context):
             return rule
@@ -853,6 +1692,202 @@ def _load_structure_scoring_config(
     )
 
 
+def _load_audio_adaptive_axis_caps(
+    axes_cfg: Optional[Any],
+) -> Dict[str, AudioAdaptiveAxisCap]:
+    if not isinstance(axes_cfg, dict):
+        return {}
+    caps: Dict[str, AudioAdaptiveAxisCap] = {}
+    for axis_key, raw_cfg in axes_cfg.items():
+        if not isinstance(raw_cfg, Mapping):
+            continue
+        axis_map = cast(Mapping[str, Any], raw_cfg)
+        min_scale = _to_optional_float(axis_map.get("min_scale"))
+        max_scale = _to_optional_float(axis_map.get("max_scale"))
+        caps[str(axis_key)] = AudioAdaptiveAxisCap(
+            min_scale=min_scale,
+            max_scale=max_scale,
+        )
+    return caps
+
+
+def _load_audio_adaptive_fusion(
+    fusion_cfg: Mapping[str, Any],
+) -> Optional[AudioAdaptiveFusion]:
+    sources_cfg = fusion_cfg.get("sources")
+    sources: List[AudioAdaptiveFusionSource] = []
+
+    if isinstance(sources_cfg, Sequence):
+        for entry in cast(Sequence[Any], sources_cfg):
+            if not isinstance(entry, Mapping):
+                continue
+            entry_map = cast(Mapping[str, Any], entry)
+            path_text = _as_optional_str(entry_map.get("path"))
+            if not path_text:
+                continue
+            path_parts = _split_path(path_text)
+            if not path_parts:
+                continue
+            weight_value = _to_optional_float(entry_map.get("weight"))
+            if weight_value is None:
+                continue
+            required = bool(entry_map.get("required", False))
+            bias = _to_optional_float(entry_map.get("bias")) or 0.0
+            sources.append(
+                AudioAdaptiveFusionSource(
+                    path=path_parts,
+                    weight=float(weight_value),
+                    required=required,
+                    bias=bias,
+                )
+            )
+    else:
+        clap_path_text = _as_optional_str(fusion_cfg.get("clap_path")) or "audio.text_audio_cos"
+        mert_path_text = (
+            _as_optional_str(fusion_cfg.get("mert_path")) or "metrics.text_audio_cos_mert"
+        )
+        clap_parts = _split_path(clap_path_text) if clap_path_text else ()
+        mert_parts = _split_path(mert_path_text) if mert_path_text else ()
+        clap_weight = _to_optional_float(fusion_cfg.get("clap_weight"))
+        mert_weight = _to_optional_float(fusion_cfg.get("mert_weight"))
+        default_weight = 0.5
+        if clap_parts:
+            sources.append(
+                AudioAdaptiveFusionSource(
+                    path=clap_parts,
+                    weight=float(clap_weight if clap_weight is not None else default_weight),
+                )
+            )
+        if mert_parts:
+            sources.append(
+                AudioAdaptiveFusionSource(
+                    path=mert_parts,
+                    weight=float(mert_weight if mert_weight is not None else default_weight),
+                )
+            )
+
+    if not sources:
+        return None
+
+    normalise_weights = bool(fusion_cfg.get("normalise_weights", True))
+    bias = _to_optional_float(fusion_cfg.get("bias")) or 0.0
+    default_value = _to_optional_float(fusion_cfg.get("default"))
+    clamp_min = _to_optional_float(fusion_cfg.get("clamp_min"))
+    clamp_max = _to_optional_float(fusion_cfg.get("clamp_max"))
+
+    return AudioAdaptiveFusion(
+        sources=tuple(sources),
+        bias=bias,
+        normalise_weights=normalise_weights,
+        default=default_value,
+        clamp_min=clamp_min,
+        clamp_max=clamp_max,
+    )
+
+
+def _load_audio_adaptive_weights(
+    score_cfg: Dict[str, Any],
+) -> Optional[AudioAdaptiveWeights]:
+    adaptive_root = cast(Dict[str, Any], score_cfg.get("audio_adaptive_weights", {}))
+    if not adaptive_root:
+        return None
+
+    pivot_text = _as_optional_str(adaptive_root.get("pivot"))
+    if not pivot_text:
+        return None
+    pivot_parts = _split_path(pivot_text)
+    if not pivot_parts:
+        return None
+
+    rules_raw = adaptive_root.get("rules")
+    if not isinstance(rules_raw, list):
+        return None
+
+    def _ensure_rule_name(entry: Dict[str, Any], current_index: int) -> str:
+        text = _as_optional_str(entry.get("name") or entry.get("id"))
+        if text:
+            return text
+        return f"rule_{current_index}"
+
+    rules: List[AudioAdaptiveRule] = []
+    for item in cast(List[Any], rules_raw):
+        if not isinstance(item, dict):
+            continue
+        entry = cast(Dict[str, Any], item)
+        condition_text = _as_optional_str(entry.get("if"))
+        if not condition_text:
+            continue
+        condition = _parse_threshold_expression(condition_text)
+        if condition is None:
+            continue
+        operator, threshold = condition
+        multipliers_obj: Any = entry.get("axis_multipliers")
+        if not isinstance(multipliers_obj, dict):
+            multipliers_obj = entry.get("multipliers")
+        if not isinstance(multipliers_obj, dict):
+            continue
+        multipliers: Dict[str, float] = {}
+        for axis_key, value in cast(Dict[Any, Any], multipliers_obj).items():
+            try:
+                multipliers[str(axis_key)] = float(value)
+            except (TypeError, ValueError):
+                continue
+        if not multipliers:
+            continue
+        name = _ensure_rule_name(entry, len(rules))
+        extras_obj = entry.get("extras")
+        extras: Dict[str, Any]
+        if isinstance(extras_obj, Mapping):
+            extras = {str(key): value for key, value in extras_obj.items()}
+        else:
+            extras = {}
+        rules.append(
+            AudioAdaptiveRule(
+                operator=operator,
+                threshold=threshold,
+                multipliers=multipliers,
+                name=name,
+                extras=extras,
+            )
+        )
+
+    if not rules:
+        return None
+
+    fusion_cfg = cast(Dict[str, Any], adaptive_root.get("fusion", {}))
+    fusion = _load_audio_adaptive_fusion(fusion_cfg) if fusion_cfg else None
+
+    caps_cfg = cast(Dict[str, Any], adaptive_root.get("caps", {}))
+    min_scale = _to_optional_float(caps_cfg.get("min_scale")) if caps_cfg else None
+    max_scale = _to_optional_float(caps_cfg.get("max_scale")) if caps_cfg else None
+    axis_caps = _load_audio_adaptive_axis_caps(caps_cfg.get("axes")) if caps_cfg else {}
+
+    normalize_cfg = adaptive_root.get("normalize")
+    normalize_sum = False
+    normalize_target: Optional[float] = None
+    if isinstance(normalize_cfg, dict):
+        normalize_sum = bool(normalize_cfg.get("enabled", True))
+        normalize_target = _to_optional_float(normalize_cfg.get("target_sum"))
+    elif normalize_cfg:
+        normalize_sum = True
+
+    hysteresis_margin = _to_optional_float(adaptive_root.get("hysteresis_margin")) or 0.0
+    cooldown_loops = int(adaptive_root.get("cooldown_loops", 0))
+
+    return AudioAdaptiveWeights(
+        pivot_path=pivot_parts,
+        rules=tuple(rules),
+        fusion=fusion,
+        min_scale=min_scale,
+        max_scale=max_scale,
+        axis_caps=axis_caps,
+        normalize_sum=normalize_sum,
+        normalize_target=normalize_target,
+        hysteresis_margin=float(hysteresis_margin),
+        cooldown_loops=max(0, cooldown_loops),
+    )
+
+
 def _resolve_paths(
     config: Dict[str, Any],
     args: argparse.Namespace,
@@ -887,6 +1922,10 @@ def _resolve_paths(
         "summary_out",
         "stage2_summary.json",
     )
+    audio_embeddings_parquet = _resolve(
+        "audio_embeddings_parquet",
+        "audio_embeddings.parquet",
+    )
 
     sample_rows = int(paths_cfg.get("sample_event_rows", 5000))
     if args.sample_events is not None:
@@ -906,6 +1945,8 @@ def _resolve_paths(
         summary_out.parent.mkdir(parents=True, exist_ok=True)
     if events_csv_sample:
         events_csv_sample.parent.mkdir(parents=True, exist_ok=True)
+    if audio_embeddings_parquet:
+        audio_embeddings_parquet.parent.mkdir(parents=True, exist_ok=True)
 
     return Stage2Paths(
         events_parquet=events_parquet,
@@ -915,6 +1956,7 @@ def _resolve_paths(
         retry_dir=retry_dir,
         summary_out=summary_out,
         sample_event_rows=sample_rows,
+        audio_embeddings_parquet=audio_embeddings_parquet,
     )
 
 
@@ -957,6 +1999,10 @@ def _build_settings(
     structure_scoring = _load_structure_scoring_config(
         cast(Dict[str, Any], score_cfg.get("structure", {})),
     )
+    audio_adaptive_weights = _load_audio_adaptive_weights(score_cfg)
+
+    audio_cfg = cast(Dict[str, Any], config.get("audio", {}))
+    audio_guidance = _build_audio_guidance(audio_cfg, config_dir)
 
     raw_retry = cast(List[Any], config.get("retry_presets", []))
     retry_map = _load_retry_presets(raw_retry)
@@ -1001,6 +2047,8 @@ def _build_settings(
         articulation_thresholds=articulation_thresholds,
         velocity_scoring=velocity_scoring,
         structure_scoring=structure_scoring,
+        audio_adaptive_weights=audio_adaptive_weights,
+        audio_guidance=audio_guidance,
     )
 
 
@@ -1184,101 +2232,6 @@ def _event_rows(
         )
         previous_start = start
     return rows, programs
-
-
-def _build_feature_context(
-    notes: Sequence[Sequence[Any]],
-    *,
-    ticks_per_beat: int,
-    time_signature: Tuple[int, int],
-    channel_programs: Dict[int, int],
-    duration_ticks: int,
-    bpm_hint: Optional[float],
-    grid_divisions: int = 16,
-) -> Optional[LoopFeatureContext]:
-    if not notes:
-        return None
-    effective_tpb = ticks_per_beat if ticks_per_beat > 0 else DEFAULT_TICKS_PER_BEAT
-    ts_numerator, ts_denominator = time_signature
-    if ts_denominator <= 0:
-        ts_denominator = 4
-    ts_ratio = 4.0 / float(ts_denominator)
-    beat_ticks = effective_tpb * ts_ratio
-    if beat_ticks <= 0:
-        return None
-    bar_ticks = beat_ticks * float(ts_numerator)
-    if bar_ticks <= 0:
-        bar_ticks = beat_ticks * 4.0
-
-    starts = np.asarray([int(note[1]) for note in notes], dtype=np.float64)
-    velocities = np.asarray([int(note[5]) for note in notes], dtype=np.float64)
-    beats = starts / beat_ticks
-    if bar_ticks > 0:
-        beat_positions = (starts % bar_ticks) / bar_ticks
-    else:
-        beat_positions = np.zeros_like(beats)
-
-    onset_counts = np.zeros(grid_divisions, dtype=np.float64)
-    num_roles = len(STRUCTURE_ROLE_INDEX)
-    role_bins = np.zeros((grid_divisions, num_roles), dtype=np.float64)
-
-    def _create_role_slot_sets() -> List[Set[int]]:
-        return [set() for _ in range(num_roles)]
-
-    role_slot_sets: Dict[int, List[Set[int]]] = defaultdict(
-        _create_role_slot_sets,
-    )
-    for note in notes:
-        start = int(note[1])
-        channel = int(note[3])
-        pitch = int(note[4])
-        program = channel_programs.get(channel, 0)
-        role, _ = _infer_role(channel, program, pitch)
-        role_index = STRUCTURE_ROLE_INDEX.get(
-            role,
-            STRUCTURE_ROLE_INDEX["other"],
-        )
-
-        bar_index = 0
-        if bar_ticks > 0:
-            bar_index = int(start // bar_ticks)
-            slot_position = (start % bar_ticks) / bar_ticks
-        else:
-            slot_position = (start / beat_ticks) % 1.0 if beat_ticks else 0.0
-        slot_float = slot_position * grid_divisions
-        slot_index = int(math.floor(slot_float))
-        slot_index = max(0, min(grid_divisions - 1, slot_index))
-
-        onset_counts[slot_index] += 1.0
-        role_bins[slot_index, role_index] += 1.0
-        role_slot_sets[bar_index][role_index].add(slot_index)
-
-    bars_float = 1.0
-    if bar_ticks > 0 and duration_ticks > 0:
-        bars_float = max(1.0, math.ceil(duration_ticks / bar_ticks))
-    onset_counts = onset_counts / bars_float
-    role_tokens = np.argmax(role_bins, axis=1).astype(np.int64)
-    beats_per_bar = float(ts_numerator)
-    bars_int = max(1, int(bars_float))
-    role_slots_per_bar_list: List[Tuple[FrozenSet[int], ...]] = []
-    for bar_idx in range(bars_int):
-        slot_sets = role_slot_sets.get(bar_idx)
-        if slot_sets is None:
-            slot_sets = _create_role_slot_sets()
-        frozen_slots = tuple(frozenset(slot_sets[idx]) for idx in range(num_roles))
-        role_slots_per_bar_list.append(frozen_slots)
-    role_slots_per_bar = tuple(role_slots_per_bar_list)
-    return LoopFeatureContext(
-        velocities=velocities,
-        beats=beats,
-        beat_positions=beat_positions,
-        bpm=bpm_hint,
-        onset_counts_16th=onset_counts,
-        role_tokens_16th=role_tokens,
-        beats_per_bar=beats_per_bar if beats_per_bar > 0 else 4.0,
-        bars=bars_int,
-        role_slots_per_bar=role_slots_per_bar,
-    )
 
 
 def _normalise_histogram(array: FloatArray) -> FloatArray:
@@ -2550,6 +3503,7 @@ class Stage2Extractor:
         events_rows: List[Dict[str, Any]] = []
         loop_rows: List[Dict[str, Any]] = []
         score_rows: List[Dict[str, Any]] = []
+        audio_embedding_rows: List[Dict[str, Any]] = []
         loop_ids: List[str] = []
         axis_pass_samples: List[Dict[str, float]] = []
         git_commit = _resolve_git_commit() or "unknown"
@@ -2564,6 +3518,12 @@ class Stage2Extractor:
         articulation_labeler = ArticulationLabeler(
             self.settings.articulation_thresholds,
         )
+
+        adaptive_state: Optional[AudioAdaptiveState]
+        if self.settings.audio_adaptive_weights is not None:
+            adaptive_state = AudioAdaptiveState()
+        else:
+            adaptive_state = None
 
         limit = self.settings.limit
         iterator: Iterator[Dict[str, Any]] = iter(records)
@@ -2613,6 +3573,24 @@ class Stage2Extractor:
             loop_source = str(loop.get("source", "drumloops"))
             file_digest = cast(Optional[str], loop.get("file_digest"))
 
+            audio_row: Optional[AudioGuidanceRow] = None
+            audio_loop_row: Dict[str, Any] = AUDIO_LOOP_DEFAULTS.copy()
+            audio_retry_context: Optional[Dict[str, Any]] = None
+            if self.settings.audio_guidance is not None:
+                audio_row = self.settings.audio_guidance.get(
+                    loop_id,
+                    file_digest,
+                    cast(Optional[str], loop.get("filename")),
+                )
+                if audio_row is not None:
+                    audio_loop_row = audio_row.as_loop_row()
+                    context_candidate = audio_row.as_retry_context()
+                    if context_candidate:
+                        audio_retry_context = context_candidate
+            audio_summary, audio_embedding_entry = _build_audio_summary(loop_id, audio_row)
+            if audio_embedding_entry is not None:
+                audio_embedding_rows.append(audio_embedding_entry)
+
             loop_metrics = compute_loop_metrics(
                 notes,
                 config=self.settings.metrics,
@@ -2633,6 +3611,20 @@ class Stage2Extractor:
                 tempos=tempos,
             )
             metrics_dict.update(articulation_metrics)
+
+            if audio_summary:
+                metrics_dict.setdefault(
+                    "text_audio_cos",
+                    audio_summary.get("text_audio_cos"),
+                )
+                metrics_dict.setdefault(
+                    "text_audio_cos_mert",
+                    audio_summary.get("text_audio_cos_mert"),
+                )
+            else:
+                metrics_dict.setdefault("text_audio_cos", None)
+                metrics_dict.setdefault("text_audio_cos_mert", None)
+            metrics_dict["audio"] = dict(audio_summary)
             observation = ArticulationObservation(
                 loop_id=loop_id,
                 metrics=articulation_metrics,
@@ -2664,6 +3656,36 @@ class Stage2Extractor:
                         bpm_hint = float(bpm_value)
                     except (TypeError, ValueError):
                         bpm_hint = None
+
+            adaptive_rule_preview: Optional[AudioAdaptiveRule] = None
+            adaptive_rule_pivot: Optional[float] = None
+            phase_comp_factor_used: Optional[float] = None
+            velocity_cfg_effective = self.settings.velocity_scoring
+            if self.settings.audio_adaptive_weights is not None:
+                preview_context = {
+                    "audio": audio_summary,
+                    "metrics": metrics_dict,
+                }
+                (
+                    adaptive_rule_preview,
+                    adaptive_rule_pivot,
+                    adaptive_state,
+                ) = _evaluate_audio_adaptive_rule(
+                    self.settings.audio_adaptive_weights,
+                    preview_context,
+                    adaptive_state,
+                )
+                if adaptive_rule_preview is not None and self.settings.velocity_scoring is not None:
+                    phase_comp_factor = adaptive_rule_preview.extras.get("phase_comp_factor")
+                    velocity_cfg_effective = _scale_velocity_phase_compensation(
+                        self.settings.velocity_scoring,
+                        phase_comp_factor,
+                    )
+                    if phase_comp_factor is not None:
+                        try:
+                            phase_comp_factor_used = float(phase_comp_factor)
+                        except (TypeError, ValueError):
+                            phase_comp_factor_used = None
 
             grid_divisions = 16
             if self.settings.structure_scoring is not None:
@@ -2705,14 +3727,56 @@ class Stage2Extractor:
             axes_raw = _score_axes(
                 loop_metrics,
                 ctx=feature_ctx,
-                velocity_cfg=self.settings.velocity_scoring,
+                velocity_cfg=velocity_cfg_effective,
                 structure_cfg=self.settings.structure_scoring,
             )
             axes_raw["articulation"] = articulation_result.axis_value
+            adaptive_context: Dict[str, Any] = {
+                "audio": audio_summary,
+                "metrics": metrics_dict,
+                "axes_raw": axes_raw,
+            }
+            if adaptive_rule_preview is not None or adaptive_rule_pivot is not None:
+                effective_axis_weights, applied_adaptive_rule, adaptive_pivot, adaptive_state = (
+                    _apply_audio_adaptive_weights(
+                        self.settings.axis_weights,
+                        self.settings.audio_adaptive_weights,
+                        adaptive_context,
+                        state=adaptive_state,
+                        evaluated=(adaptive_rule_preview, adaptive_rule_pivot),
+                    )
+                )
+            else:
+                (
+                    effective_axis_weights,
+                    applied_adaptive_rule,
+                    adaptive_pivot,
+                    adaptive_state,
+                ) = _apply_audio_adaptive_weights(
+                    self.settings.axis_weights,
+                    self.settings.audio_adaptive_weights,
+                    adaptive_context,
+                    state=adaptive_state,
+                )
             score_total, score_breakdown = _combine_score(
                 axes_raw,
-                self.settings.axis_weights,
+                effective_axis_weights,
             )
+            metrics_dict["audio.adaptive_axis_weights"] = effective_axis_weights
+            metrics_dict["audio.adaptive_pivot"] = adaptive_pivot
+            metrics_dict["audio.adaptive_rule"] = (
+                {
+                    "name": applied_adaptive_rule.name,
+                    "operator": applied_adaptive_rule.operator,
+                    "threshold": applied_adaptive_rule.threshold,
+                    "multipliers": applied_adaptive_rule.multipliers,
+                    "extras": applied_adaptive_rule.extras,
+                }
+                if applied_adaptive_rule is not None
+                else None
+            )
+            if phase_comp_factor_used is not None:
+                metrics_dict["audio.phase_compensation_factor"] = phase_comp_factor_used
             if score_total >= self.settings.threshold:
                 passed_scores.append(score_total)
                 axis_pass_samples.append(axes_raw)
@@ -2731,6 +3795,7 @@ class Stage2Extractor:
                     score_total=score_total,
                     score_breakdown=score_breakdown,
                     rules=self.settings.retry_presets,
+                    audio_context=audio_retry_context,
                 )
                 retry_action: Optional[Dict[str, Any]]
                 if retry_rule is not None:
@@ -2751,6 +3816,14 @@ class Stage2Extractor:
                     "swing_confidence": loop_metrics.swing_confidence,
                     "articulation_score": articulation_result.score,
                     "axis": axes_raw.get(reason_key),
+                    "text_audio_cos": cast(
+                        Optional[float],
+                        metrics_dict.get("text_audio_cos"),
+                    ),
+                    "text_audio_cos_mert": cast(
+                        Optional[float],
+                        metrics_dict.get("text_audio_cos_mert"),
+                    ),
                 }
                 retry_payload: Dict[str, Any] = {
                     "loop_id": loop_id,
@@ -2764,6 +3837,8 @@ class Stage2Extractor:
                     "metrics_before": metrics_before,
                     "metrics_after": None,
                 }
+                if audio_retry_context:
+                    retry_payload["audio"] = audio_retry_context
                 if retry_action is not None and retry_preset_id is not None:
                     retry_path = self.settings.paths.retry_dir / f"{loop_id}.json"
                     retry_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2781,6 +3856,7 @@ class Stage2Extractor:
                     "score": score_total,
                     "axes": score_breakdown,
                     "axes_raw": axes_raw,
+                    "axis_weights_effective": effective_axis_weights,
                     "threshold": self.settings.threshold,
                     "retry_preset_id": retry_preset_id,
                     "seed": retry_seed,
@@ -2790,6 +3866,9 @@ class Stage2Extractor:
                     "articulation_labels": articulation_result.labels,
                     "articulation_presence": articulation_result.presence,
                     "articulation_axis": articulation_result.axis_value,
+                    "audio_adaptive_rule": metrics_dict["audio.adaptive_rule"],
+                    "audio_adaptive_pivot": adaptive_pivot,
+                    "audio": dict(audio_summary),
                 }
             )
 
@@ -2857,6 +3936,14 @@ class Stage2Extractor:
                 ),
                 "git_commit": git_commit,
             }
+            loop_row.update(AUDIO_LOOP_DEFAULTS)
+            if audio_row is not None:
+                loop_row.update(audio_loop_row)
+                loop_row.setdefault("text_audio_cos", audio_summary.get("text_audio_cos"))
+                loop_row.setdefault(
+                    "text_audio_cos_mert",
+                    audio_summary.get("text_audio_cos_mert"),
+                )
             loop_row.update(_flatten_metrics(metrics_dict))
             loop_rows.append(loop_row)
             loop_ids.append(loop_id)
@@ -2890,6 +3977,12 @@ class Stage2Extractor:
         if loop_rows:
             loop_df = pd.DataFrame(loop_rows)
             loop_df.to_csv(self.settings.paths.loop_summary_csv, index=False)
+
+        if audio_embedding_rows and self.settings.paths.audio_embeddings_parquet is not None:
+            _write_audio_embeddings(
+                audio_embedding_rows,
+                self.settings.paths.audio_embeddings_parquet,
+            )
 
         if score_rows:
             metrics_path = self.settings.paths.metrics_jsonl

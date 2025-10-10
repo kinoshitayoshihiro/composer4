@@ -60,3 +60,41 @@ presets:
         lo: 30
         hi: 112
         compress: 0.82
+
+  # --- Audio-aware presets -------------------------------------------------
+  - id: structure_snap_audio
+    when:
+      exists(audio.text_audio_cos): true
+      audio.text_audio_cos: "< 0.30"
+      axes_raw.structure: "< 0.35"
+    apply:
+      - type: structure_smooth
+        window_beats: 0.50
+        min_gap_beats: 0.25
+      - type: role_snap
+        tolerance: 0.20
+        keep_fill_back: true
+      - type: microtiming_fix
+        max_shift_ms: 12
+        quantize_grid: 0.5
+
+  - id: velocity_chain_audio
+    when:
+      exists(audio.text_audio_cos): true
+      audio.text_audio_cos: "< 0.30"
+      axes_raw.velocity: "< 0.35"
+    apply:
+      - type: velocity_boost
+        boost_lo: 1.10
+        boost_hi: 1.05
+        limit_max: 122
+        phase_sensitive: true
+      - type: velocity_remap
+        compress: 0.85
+        match_histogram: true
+        normalize_dynamic_range: true
+        phase_compensation: true
+      - type: velocity_smooth
+        vmin: 24
+        vmax: 120
+        window_beats: 0.25

@@ -1,0 +1,59 @@
+name: Apply Proposed Tau (via PR label)
+
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  apply-tau:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'apply-proposed-tau') || contains(github.event.pull_request.labels.*.name, 'apply-proposed-tau:force')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run guard (skip if force label)
+        id: guard
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'apply-proposed-tau:force') }}
+        run: |
+          if [ ! -f artifacts/auto_tau.yaml ] && [ ! -f artifacts/auto_tau_mert.yaml ]; then
+            echo "::error:: No auto_tau artifacts found. Run auto_tau workflow first."; exit 2; fi
+          if [ ! -f output/ab/before.jsonl ] || [ ! -f output/ab/after.jsonl ]; then
+            echo "::error:: Missing A/B JSONL (output/ab/*)."; exit 2; fi
+          python scripts/ci/tau_promotion_guard.py \
+            --before output/ab/before.jsonl \
+            --after output/ab/after.jsonl \
+            --tau-file artifacts/auto_tau.yaml \
+            --tau-file-mert artifacts/auto_tau_mert.yaml \
+            --tempo-edges "95,110,130,150" \
+            --min-global-improve-pp 1.0 \
+            --max-bucket-regression-pp 3.0 \
+            --max-regression-buckets 2 \
+            --min-bucket-n 10 \
+            --out artifacts/tau_guard.summary.json
+
+      - name: Upload guard summary artifact
+        if: ${{ always() && !contains(github.event.pull_request.labels.*.name, 'apply-proposed-tau:force') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: tau-guard-summary
+          path: artifacts/tau_guard.summary.json
+          if-no-files-found: ignore
+
+      - name: Promote tau from artifacts to configs
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'apply-proposed-tau:force') || success() }}
+        run: |
+          python scripts/ci/promote_tau_from_artifacts.py --git-commit
+
+      - name: Done
+        run: echo "Tau promotion step finished (if any artifacts existed)."

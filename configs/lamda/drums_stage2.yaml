@@ -41,9 +41,9 @@ score:
     periodicity_candidates: [4, 8, 12, 16]
     weights:
       periodicity: 0.40
-      diversity: 0.30
+      diversity: 0.25
       density: 0.15
-      role_stability: 0.15
+      role_stability: 0.20
     density_bands:
       - max_bpm: 95
         low: 2.0
@@ -54,6 +54,49 @@ score:
       - max_bpm: null
         low: 6.0
         high: 12.0
+  audio_adaptive_weights:
+    pivot: "metrics.text_audio_cos"
+    fusion:
+      clap_weight: 0.7
+      mert_weight: 0.3
+      clamp_min: 0.0
+      clamp_max: 1.0
+    rules:
+      - name: confident
+        if: ">= 0.65"
+        axis_multipliers:
+          timing: 1.15
+          structure: 1.10
+        extras:
+          phase_comp_factor: 0.8
+      - name: uncertain
+        if: "<= 0.35"
+        axis_multipliers:
+          timing: 0.85
+          articulation: 1.10
+    caps:
+      min_scale: 0.90
+      max_scale: 1.20
+      axes:
+        timing:
+          min_scale: 0.9
+          max_scale: 1.2
+        structure:
+          min_scale: 0.9
+          max_scale: 1.10
+        articulation:
+          min_scale: 0.95
+          max_scale: 1.2
+    normalize:
+      enabled: true
+      target_sum: 8.0
+    hysteresis_margin: 0.05
+    cooldown_loops: 3
+
+audio:
+  alignment_jsonl: null
+  captions_json: null
+  caption_locale: "en"
 
 paths:
   input_dir: "."
@@ -67,6 +110,7 @@ paths:
   retry_dir: "retries"
   summary_out: "stage2_summary.json"
   sample_event_rows: 5000
+  audio_embeddings_parquet: "audio_embeddings.parquet"
 
 metrics:
   ghost_velocity_threshold: 45

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import (
     Any,
     Dict,
+    Mapping,
     Iterable,
     List,
     Optional,
@@ -105,8 +106,31 @@ def _resolve_axis_key(key: str) -> Tuple[str, str]:
     return axis_key, axis_name or axis_key
 
 
+def _resolve_nested_value(
+    context: Mapping[str, Any],
+    path: str,
+) -> Any:
+    current_value: Any = context
+    for part in path.split("."):
+        if isinstance(current_value, Mapping) and part in current_value:
+            current_value = cast(Any, current_value[part])
+        else:
+            return None
+    return current_value
+
+
+def _parse_bool_literal(text: str) -> Optional[bool]:
+    normalized = text.strip().lower()
+    if normalized in {"true", "1", "yes", "on"}:
+        return True
+    if normalized in {"false", "0", "no", "off"}:
+        return False
+    return None
+
+
 def _evaluate_condition(
     condition: Any,
+    loop_row: Mapping[str, Any],
     axes_raw: Dict[str, Any],
 ) -> Tuple[bool, List[Dict[str, Any]]]:
     if condition is None:
@@ -154,23 +178,54 @@ def _evaluate_condition(
             },
         ]
 
+    context: Dict[str, Any] = dict(loop_row)
+    context.setdefault("axes_raw", axes_raw)
+
     for item_key, expression in items:
-        key_text, axis_name = _resolve_axis_key(item_key)
-        raw_value = axes_raw.get(axis_name, None)
+        key_text = str(item_key).strip()
+        exists_check = False
+        exists_path = ""
+        if key_text.lower().startswith("exists(") and key_text.endswith(")"):
+            exists_check = True
+            exists_path = key_text[key_text.find("(") + 1 : -1].strip()
+
+        if exists_check:
+            resolved = _resolve_nested_value(context, exists_path)
+            exists_value = resolved is not None
+            expected = _parse_bool_literal(expression)
+            ok = exists_value if expected is None else exists_value is expected
+            clauses.append(
+                {
+                    "key": key_text,
+                    "expression": expression,
+                    "value": exists_value,
+                    "ok": ok,
+                },
+            )
+            if not ok:
+                matched = False
+            continue
+
+        value_obj = _resolve_nested_value(context, key_text)
+        if value_obj is None and "." in key_text:
+            _, axis_name = _resolve_axis_key(key_text)
+            if axis_name and axis_name != key_text:
+                value_obj = axes_raw.get(axis_name)
+
         try:
-            value = float(raw_value) if raw_value is not None else None
+            numeric_value = float(value_obj) if value_obj is not None else None
         except (TypeError, ValueError):
-            value = None
+            numeric_value = None
 
         ok = False
-        if value is not None:
-            ok = _match_expression(value, expression)
+        if numeric_value is not None:
+            ok = _match_expression(numeric_value, expression)
 
         clauses.append(
             {
                 "key": key_text,
                 "expression": expression,
-                "value": value,
+                "value": numeric_value,
                 "ok": ok,
             },
         )
@@ -357,6 +412,7 @@ def process(
                 preset_name = str(preset.get("name") or "<unnamed>")
                 matched, clauses = _evaluate_condition(
                     preset.get("when"),
+                    loop_row,
                     axes_raw,
                 )
 

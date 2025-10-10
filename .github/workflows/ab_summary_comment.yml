@@ -30,11 +30,13 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           TFILE=""
+          TFILE_MERT=""
           if [ -f artifacts/auto_tau.yaml ]; then TFILE="--tau-file artifacts/auto_tau.yaml"; fi
+          if [ -f artifacts/auto_tau_mert.yaml ]; then TFILE_MERT="--tau-file-mert artifacts/auto_tau_mert.yaml"; fi
           python scripts/ci/ab_comment.py \
             --before output/ab/before.jsonl \
             --after output/ab/after.jsonl \
             --axes velocity --axes structure \
-            --tau 0.50 \
+            --tau 0.50 --tau-mert 0.50 \
             --title "Stage2 A/B Summary" \
-            --marker "AB_SUMMARY: composer4" $TFILE
+            --marker "AB_SUMMARY: composer4" $TFILE $TFILE_MERT

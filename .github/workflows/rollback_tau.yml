@@ -1,0 +1,46 @@
+name: Rollback Tau on Guard Failure
+
+on:
+  pull_request:
+    types: [synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-rollback') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download guard summary artifact
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: apply_proposed_tau.yml
+          pr: ${{ github.event.pull_request.number }}
+          name: tau-guard-summary
+          path: artifacts
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check guard summary presence
+        run: |
+          if [ ! -f artifacts/tau_guard.summary.json ]; then
+            echo "::notice:: No guard summary found. Skipping.";
+            exit 0;
+          fi
+
+      - name: Try rollback if guard failed
+        run: |
+          python scripts/ci/rollback_tau_if_guard_failed.py \
+            --guard-json artifacts/tau_guard.summary.json \
+            --require-marker || exit $?

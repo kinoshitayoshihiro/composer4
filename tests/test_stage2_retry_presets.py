@@ -75,3 +75,39 @@ def test_retry_rule_none_when_conditions_fail(value: float):
     rules = build_rules(raw)
     result = select_rule(rules, value)
     assert result is None
+
+
+def test_retry_rule_audio_context_condition():
+    raw: List[Dict[str, Any]] = [
+        {
+            "reason": "velocity_audio_low",
+            "when": {
+                "axes_raw.velocity": "< 0.4",
+                "audio.text_audio_cos": "< 0.35",
+            },
+            "action": {"preset": "vel_chain"},
+        }
+    ]
+    rules = build_rules(raw)
+    axes_raw = {"velocity": 0.32}
+    score_breakdown = {"velocity": 0.32}
+    candidate = select_retry_rule_fn(  # type: ignore[no-any-return]
+        reason_key="velocity",
+        axes_raw=axes_raw,
+        score_total=42.0,
+        score_breakdown=score_breakdown,
+        rules=rules,
+        audio_context={"text_audio_cos": 0.3},
+    )
+    assert candidate is not None
+    assert candidate.name == "velocity_audio_low"
+
+    rejected = select_retry_rule_fn(  # type: ignore[no-any-return]
+        reason_key="velocity",
+        axes_raw=axes_raw,
+        score_total=42.0,
+        score_breakdown=score_breakdown,
+        rules=rules,
+        audio_context={"text_audio_cos": 0.6},
+    )
+    assert rejected is None
