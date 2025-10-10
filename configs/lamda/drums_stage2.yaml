@@ -55,14 +55,20 @@ score:
         low: 6.0
         high: 12.0
   audio_adaptive_weights:
+    enabled: true
     pivot: "metrics.text_audio_cos"
     fusion:
       clap_weight: 0.7
       mert_weight: 0.3
       clamp_min: 0.0
       clamp_max: 1.0
+      temperature: 1.15
+    min_confidence: 0.10
+    missing_policy: "noop"
+    pivot_ema_alpha: 0.35
     rules:
       - name: confident
+        priority: 10
         if: ">= 0.65"
         axis_multipliers:
           timing: 1.15
@@ -70,6 +76,7 @@ score:
         extras:
           phase_comp_factor: 0.8
       - name: uncertain
+        priority: 5
         if: "<= 0.35"
         axis_multipliers:
           timing: 0.85
@@ -92,6 +99,18 @@ score:
       target_sum: 8.0
     hysteresis_margin: 0.05
     cooldown_loops: 3
+    cooldown_by_rule:
+      confident: 2
+      uncertain: 2
+    max_total_delta: 1.5
+    max_total_delta_per_axis:
+      timing: 0.05
+      velocity: 0.15
+      structure: 0.10
+      groove_harmony: 0.08
+      drum_cohesion: 0.08
+      articulation: 0.08
+    log_level: "summary"
 
 audio:
   alignment_jsonl: null

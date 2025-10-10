@@ -73,7 +73,7 @@ def _parse_axis_limit(raw: str) -> AxisLimit:
     match = _LIMIT_PATTERN.match(raw)
     if not match:
         raise ValueError(
-            ("Invalid axis limit " f"'{raw}'. " "Expected format 'axis<value' or 'axis<=value'."),
+            "Invalid axis limit " f"'{raw}'. " "Expected format 'axis<value' or 'axis<=value'."
         )
     axis, operator, threshold_text = match.groups()
     return AxisLimit(
@@ -263,6 +263,62 @@ def _record_preset_stat(stats: PresetStats, name: str, matched: bool) -> None:
         entry["unmatched"] += 1
 
 
+def _append_limited(
+    sequence: List[Dict[str, Any]],
+    item: Dict[str, Any],
+    *,
+    limit: int = 20,
+) -> None:
+    sequence.append(item)
+    if len(sequence) > limit:
+        del sequence[:-limit]
+
+
+def _ensure_retry_state(loop_row: Dict[str, Any]) -> Dict[str, Any]:
+    state_obj = loop_row.get("_retry_state")
+    if not isinstance(state_obj, dict):
+        state_obj = {}
+    state = cast(Dict[str, Any], state_obj)
+    for key in (
+        "attempts",
+        "cooldowns",
+        "last_axis",
+        "last_score",
+        "last_delta",
+    ):
+        sub = state.get(key)
+        if not isinstance(sub, dict):
+            state[key] = {}
+    loop_row["_retry_state"] = state
+    return state
+
+
+def _ensure_retry_control(loop_row: Dict[str, Any]) -> Dict[str, Any]:
+    payload = loop_row.get("_retry_control")
+    if not isinstance(payload, dict):
+        payload = {}
+    control = cast(Dict[str, Any], payload)
+    blocked = control.get("blocked")
+    if not isinstance(blocked, list):
+        control["blocked"] = []
+    applied = control.get("applied")
+    if not isinstance(applied, list):
+        control["applied"] = []
+    loop_row["_retry_control"] = control
+    return control
+
+
+def _coerce_float(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
 def _is_gzip_path(path: Path) -> bool:
     suffixes = path.suffixes
     if not suffixes:
@@ -343,6 +399,7 @@ def process(
     max_rounds: Optional[int] = None,
     explain_writer: Optional[TextIO] = None,
 ) -> Tuple[List[str], int, PresetStats]:
+    _ = output_path  # preserved for API compatibility
     presets = load_presets(presets_path)
     if not presets:
         return [], 0, {}
@@ -408,22 +465,37 @@ def process(
                 continue
 
             applied_any = False
+            retry_state = _ensure_retry_state(loop_row)
+            retry_control = _ensure_retry_control(loop_row)
+            blocked_notes = cast(
+                List[Dict[str, Any]],
+                retry_control["blocked"],
+            )
+            applied_notes = cast(
+                List[Dict[str, Any]],
+                retry_control["applied"],
+            )
+            attempts_state = cast(Dict[str, Any], retry_state["attempts"])
+            cooldown_state = cast(Dict[str, Any], retry_state["cooldowns"])
+            last_axis_state = cast(Dict[str, Any], retry_state["last_axis"])
+            last_score_state = cast(Dict[str, Any], retry_state["last_score"])
+            last_delta_state = cast(Dict[str, Any], retry_state["last_delta"])
             for preset in presets:
-                preset_name = str(preset.get("name") or "<unnamed>")
+                preset_id = str(preset.get("id") or preset.get("name") or "<unnamed>")
                 matched, clauses = _evaluate_condition(
                     preset.get("when"),
                     loop_row,
                     axes_raw,
                 )
 
-                _record_preset_stat(preset_stats, preset_name, matched)
+                _record_preset_stat(preset_stats, preset_id, matched)
 
                 if explain_writer is not None:
                     explain_writer.write(
                         json.dumps(
                             {
                                 "loop_id": loop_row.get("loop_id"),
-                                "preset": preset_name,
+                                "preset": preset_id,
                                 "matched": matched,
                                 "clauses": clauses,
                             },
@@ -433,6 +505,188 @@ def process(
                     )
 
                 if matched:
+                    control_raw = preset.get("control")
+                    if isinstance(control_raw, Mapping):
+                        control_cfg = cast(Mapping[str, Any], control_raw)
+                    else:
+                        control_cfg = None
+                    blocked_by_control = False
+                    cooldown_key = preset_id
+                    axis_name = str(preset.get("axis") or "").strip()
+                    current_axis_value: Optional[float] = None
+                    previous_axis_value: Optional[float] = None
+                    delta_value: Optional[float] = None
+                    cooldown_runs = 0
+                    attempts_done = int(_coerce_float(attempts_state.get(preset_id)) or 0)
+                    max_attempts_limit: Optional[int] = None
+                    min_delta_threshold: Optional[float] = None
+                    min_delta_dict: Optional[Dict[str, Any]] = None
+                    priority_value: int = 0
+
+                    if control_cfg is not None:
+                        cooldown_key = str(control_cfg.get("cooldown_key") or preset_id)
+                        axis_name = str(control_cfg.get("axis") or axis_name).strip()
+                        cooldown_runs_value = _coerce_float(control_cfg.get("cooldown_runs")) or 0
+                        cooldown_runs = int(cooldown_runs_value)
+
+                        # Priority support
+                        priority_raw = control_cfg.get("priority")
+                        if priority_raw is not None:
+                            try:
+                                priority_value = int(priority_raw)
+                            except (TypeError, ValueError):
+                                priority_value = 0
+
+                        max_attempts_raw = control_cfg.get("max_attempts")
+                        if max_attempts_raw is not None:
+                            try:
+                                max_attempts_limit = int(max_attempts_raw)
+                            except (TypeError, ValueError):
+                                max_attempts_limit = None
+
+                        # min_delta: support both float (backward compat) and dict (new)
+                        min_delta_raw = control_cfg.get("min_delta")
+                        if min_delta_raw is not None:
+                            if isinstance(min_delta_raw, dict):
+                                min_delta_dict = cast(Dict[str, Any], min_delta_raw)
+                            else:
+                                try:
+                                    min_delta_threshold = float(min_delta_raw)
+                                except (TypeError, ValueError):
+                                    min_delta_threshold = None
+
+                        if cooldown_runs > 0:
+                            cooldown_remaining_value = (
+                                _coerce_float(cooldown_state.get(cooldown_key)) or 0
+                            )
+                            remaining = int(cooldown_remaining_value)
+                            if remaining > 0:
+                                cooldown_state[cooldown_key] = max(
+                                    remaining - 1,
+                                    0,
+                                )
+                                blocked_by_control = True
+                                _append_limited(
+                                    blocked_notes,
+                                    {
+                                        "preset": preset_id,
+                                        "reason": "cooldown",
+                                        "cooldown_key": cooldown_key,
+                                        "remaining": remaining,
+                                    },
+                                )
+
+                        if (
+                            not blocked_by_control
+                            and max_attempts_limit is not None
+                            and max_attempts_limit > 0
+                        ):
+                            if attempts_done >= max_attempts_limit:
+                                blocked_by_control = True
+                                _append_limited(
+                                    blocked_notes,
+                                    {
+                                        "preset": preset_id,
+                                        "reason": "max_attempts",
+                                        "cooldown_key": cooldown_key,
+                                        "attempts": attempts_done,
+                                        "limit": max_attempts_limit,
+                                    },
+                                )
+
+                        if axis_name:
+                            current_axis_value = _coerce_float(axes_raw.get(axis_name))
+                            previous_axis_value = _coerce_float(last_axis_state.get(cooldown_key))
+                            if current_axis_value is not None and previous_axis_value is not None:
+                                delta_value = current_axis_value - previous_axis_value
+                            if (
+                                not blocked_by_control
+                                and min_delta_threshold is not None
+                                and current_axis_value is not None
+                                and previous_axis_value is not None
+                                and delta_value is not None
+                                and delta_value < min_delta_threshold
+                            ):
+                                blocked_by_control = True
+                                _append_limited(
+                                    blocked_notes,
+                                    {
+                                        "preset": preset_id,
+                                        "reason": "min_delta",
+                                        "cooldown_key": cooldown_key,
+                                        "delta": delta_value,
+                                        "threshold": min_delta_threshold,
+                                        "axis": axis_name,
+                                    },
+                                )
+
+                        # min_delta dict support (score_total + axes_raw)
+                        if not blocked_by_control and min_delta_dict is not None:
+                            block_reasons = []
+                            score_total_req = _coerce_float(min_delta_dict.get("score_total"))
+                            if score_total_req is not None:
+                                prev_score = _coerce_float(last_score_state.get(cooldown_key))
+                                if score_value is not None and prev_score is not None:
+                                    score_delta = score_value - prev_score
+                                    if score_delta < score_total_req:
+                                        block_reasons.append(
+                                            f"score_delta={score_delta:.3f}<{score_total_req:.3f}"
+                                        )
+
+                            axes_raw_req = min_delta_dict.get("axes_raw")
+                            if isinstance(axes_raw_req, dict):
+                                for ax_name, ax_threshold in axes_raw_req.items():
+                                    ax_threshold_f = _coerce_float(ax_threshold)
+                                    if ax_threshold_f is None:
+                                        continue
+                                    curr_val = _coerce_float(axes_raw.get(ax_name))
+                                    prev_val = _coerce_float(
+                                        last_axis_state.get(f"{cooldown_key}:{ax_name}")
+                                    )
+                                    if curr_val is not None and prev_val is not None:
+                                        ax_delta = curr_val - prev_val
+                                        if ax_delta < ax_threshold_f:
+                                            block_reasons.append(
+                                                f"{ax_name}_delta={ax_delta:.3f}<{ax_threshold_f:.3f}"
+                                            )
+
+                            if block_reasons:
+                                blocked_by_control = True
+                                _append_limited(
+                                    blocked_notes,
+                                    {
+                                        "preset": preset_id,
+                                        "reason": "min_delta_dict",
+                                        "cooldown_key": cooldown_key,
+                                        "details": block_reasons,
+                                    },
+                                )
+
+                        if axis_name and current_axis_value is not None:
+                            last_axis_state[cooldown_key] = current_axis_value
+                        if delta_value is not None:
+                            last_delta_state[cooldown_key] = delta_value
+
+                        # Store axes_raw values for min_delta_dict
+                        if min_delta_dict and "axes_raw" in min_delta_dict:
+                            axes_raw_req = min_delta_dict["axes_raw"]
+                            if isinstance(axes_raw_req, dict):
+                                for ax_name in axes_raw_req.keys():
+                                    curr_val = _coerce_float(axes_raw.get(ax_name))
+                                    if curr_val is not None:
+                                        last_axis_state[f"{cooldown_key}:{ax_name}"] = curr_val
+
+                        if blocked_by_control:
+                            continue
+                    else:
+                        if axis_name:
+                            current_axis_value = _coerce_float(axes_raw.get(axis_name))
+                            if current_axis_value is not None:
+                                last_axis_state.setdefault(
+                                    axis_name,
+                                    current_axis_value,
+                                )
+
                     steps_raw = preset.get("apply", [])
                     if isinstance(steps_raw, list):
                         steps_seq = cast(List[Any], steps_raw)
@@ -445,11 +699,53 @@ def process(
                             loop_row = _apply_steps(loop_row, typed_steps)
                             applied_any = True
                             applied_total += 1
+                            if control_cfg is not None:
+                                attempts_state[preset_id] = attempts_done + 1
+                                if cooldown_runs > 0:
+                                    cooldown_state[cooldown_key] = cooldown_runs
+                                elif cooldown_key in cooldown_state:
+                                    cooldown_state[cooldown_key] = 0
+                                if axis_name:
+                                    if current_axis_value is not None:
+                                        last_axis_state[cooldown_key] = current_axis_value
+                                if delta_value is not None:
+                                    last_delta_state[cooldown_key] = delta_value
+                                if score_value is not None:
+                                    last_score_state[cooldown_key] = score_value
+
+                                # Store axes_raw for min_delta_dict
+                                if min_delta_dict and "axes_raw" in min_delta_dict:
+                                    axes_raw_req = min_delta_dict["axes_raw"]
+                                    if isinstance(axes_raw_req, dict):
+                                        for ax_name in axes_raw_req.keys():
+                                            curr_val = _coerce_float(axes_raw.get(ax_name))
+                                            if curr_val is not None:
+                                                key = f"{cooldown_key}:{ax_name}"
+                                                last_axis_state[key] = curr_val
+
+                                if round_index is not None:
+                                    applied_round = round_index
+                                else:
+                                    applied_round = max(existing_round, 0) + 1
+                                _append_limited(
+                                    applied_notes,
+                                    {
+                                        "preset": preset_id,
+                                        "cooldown_key": cooldown_key,
+                                        "round": applied_round,
+                                        "attempt": attempts_state[preset_id],
+                                        "axis": axis_name or None,
+                                        "axis_value": current_axis_value,
+                                        "delta": delta_value,
+                                        "priority": priority_value,
+                                    },
+                                )
 
             if applied_any:
-                loop_row["_retry_round"] = (
-                    round_index if round_index is not None else max(existing_round, 0) + 1
-                )
+                if round_index is not None:
+                    loop_row["_retry_round"] = round_index
+                else:
+                    loop_row["_retry_round"] = max(existing_round, 0) + 1
 
             output_lines.append(json.dumps(loop_row, ensure_ascii=False))
 

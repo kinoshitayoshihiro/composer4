@@ -148,6 +148,7 @@ class AudioAdaptiveRule:
     threshold: float
     multipliers: Dict[str, float]
     name: str
+    priority: int = 0
     extras: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -173,12 +174,16 @@ class AudioAdaptiveFusion:
     default: Optional[float] = None
     clamp_min: Optional[float] = None
     clamp_max: Optional[float] = None
+    temperature: Optional[float] = None
 
 
 @dataclass
 class AudioAdaptiveWeights:
     pivot_path: Tuple[str, ...]
     rules: Tuple[AudioAdaptiveRule, ...]
+    enabled: bool = True
+    min_confidence: Optional[float] = None
+    missing_policy: str = "noop"
     fusion: Optional[AudioAdaptiveFusion] = None
     min_scale: Optional[float] = None
     max_scale: Optional[float] = None
@@ -187,6 +192,11 @@ class AudioAdaptiveWeights:
     normalize_target: Optional[float] = None
     hysteresis_margin: float = 0.0
     cooldown_loops: int = 0
+    cooldown_by_rule: Dict[str, int] = field(default_factory=dict)
+    max_total_delta: Optional[float] = None
+    max_total_delta_per_axis: Dict[str, float] = field(default_factory=dict)
+    pivot_ema_alpha: Optional[float] = None
+    log_level: str = "summary"
 
 
 @dataclass
@@ -194,6 +204,16 @@ class AudioAdaptiveState:
     last_rule_name: Optional[str] = None
     last_pivot: Optional[float] = None
     cooldown_remaining: int = 0
+    rule_cooldowns: Dict[str, int] = field(default_factory=dict)
+    pivot_ema: Optional[float] = None
+
+
+@dataclass
+class AudioAdaptiveEvaluation:
+    rule: Optional[AudioAdaptiveRule]
+    pivot: Optional[float]
+    state: Optional[AudioAdaptiveState]
+    flags: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -502,6 +522,33 @@ def _resolve_audio_adaptive_rule(
     return None
 
 
+def _temperature_scale_value(
+    value: Optional[float],
+    temperature: Optional[float],
+    clamp_min: Optional[float] = None,
+    clamp_max: Optional[float] = None,
+) -> Optional[float]:
+    if value is None or temperature is None:
+        return value
+    try:
+        temp = float(temperature)
+    except (TypeError, ValueError):
+        return value
+    if temp <= 0.0 or math.isclose(temp, 1.0):
+        return value
+    epsilon = 1e-6
+    lower = clamp_min if clamp_min is not None else 0.0
+    upper = clamp_max if clamp_max is not None else 1.0
+    span = max(epsilon, float(upper) - float(lower))
+    normalised = (float(value) - lower) / span
+    normalised = min(max(normalised, epsilon), 1.0 - epsilon)
+    logit = math.log(normalised / (1.0 - normalised))
+    scaled = 1.0 / (1.0 + math.exp(-logit / temp))
+    result = lower + scaled * span
+    result = min(max(result, lower), upper)
+    return result
+
+
 def _fuse_audio_adaptive_sources(
     fusion: AudioAdaptiveFusion,
     context: Mapping[str, Any],
@@ -534,6 +581,7 @@ def _fuse_audio_adaptive_sources(
         fused = max(fused, fusion.clamp_min)
     if fusion.clamp_max is not None:
         fused = min(fused, fusion.clamp_max)
+    fused = _temperature_scale_value(fused, fusion.temperature, fusion.clamp_min, fusion.clamp_max)
     return fused
 
 
@@ -656,58 +704,226 @@ def _evaluate_audio_adaptive_rule(
     adaptive: Optional[AudioAdaptiveWeights],
     context: Mapping[str, Any],
     state: Optional[AudioAdaptiveState],
-) -> Tuple[Optional[AudioAdaptiveRule], Optional[float], Optional[AudioAdaptiveState]]:
+) -> AudioAdaptiveEvaluation:
+    flags: Dict[str, Any] = {}
     if adaptive is None:
-        return None, None, state
+        return AudioAdaptiveEvaluation(None, None, state, flags)
 
     if state is None:
         state = AudioAdaptiveState()
-    else:
-        if state.cooldown_remaining > 0:
-            state.cooldown_remaining = max(0, state.cooldown_remaining - 1)
+        flags["state_initialised"] = True
 
-    pivot_value = _resolve_audio_adaptive_pivot(adaptive, context)
-    if pivot_value is None:
+    state.rule_cooldowns = dict(state.rule_cooldowns or {})
+
+    cooldown_before = state.cooldown_remaining
+    flags["cooldown_before"] = cooldown_before
+    flags["rule_cooldowns_before"] = dict(state.rule_cooldowns)
+
+    if not adaptive.enabled:
         state.last_rule_name = None
         state.last_pivot = None
         state.cooldown_remaining = 0
-        return None, None, state
+        state.rule_cooldowns.clear()
+        state.pivot_ema = None
+        flags.update(
+            {
+                "disabled": True,
+                "selected_rule_name": None,
+                "initial_rule_name": None,
+                "hysteresis_applied": False,
+                "cooldown_active": False,
+                "cooldown_remaining": 0,
+                "rule_cooldowns": {},
+            }
+        )
+        return AudioAdaptiveEvaluation(None, None, state, flags)
+
+    if state.cooldown_remaining > 0:
+        state.cooldown_remaining = max(0, state.cooldown_remaining - 1)
+        flags["cooldown_decremented"] = True
+
+    cooldown_active = state.cooldown_remaining > 0
+    flags["cooldown_active_before"] = cooldown_before > 0
+
+    if state.rule_cooldowns:
+        decremented: Dict[str, int] = {}
+        for key, remaining in list(state.rule_cooldowns.items()):
+            new_value = max(0, int(remaining) - 1)
+            if new_value <= 0:
+                state.rule_cooldowns.pop(key, None)
+            else:
+                state.rule_cooldowns[key] = new_value
+                decremented[key] = new_value
+        if decremented:
+            flags["rule_cooldowns_decremented"] = decremented
+    flags["rule_cooldowns_after"] = dict(state.rule_cooldowns)
+
+    pivot_value = _resolve_audio_adaptive_pivot(adaptive, context)
+    if adaptive.fusion is not None and adaptive.fusion.temperature is not None:
+        try:
+            flags["temperature"] = float(adaptive.fusion.temperature)
+        except (TypeError, ValueError):
+            flags["temperature"] = adaptive.fusion.temperature
+    missing_policy = adaptive.missing_policy.lower()
+    flags["missing_policy"] = missing_policy
+    if pivot_value is None:
+        if missing_policy == "zero":
+            pivot_value = 0.0
+            flags["missing_policy_applied"] = "zero"
+        elif missing_policy == "last" and state.last_pivot is not None:
+            pivot_value = state.last_pivot
+            flags["missing_policy_applied"] = "last"
+        else:
+            state.last_rule_name = None
+            state.last_pivot = None
+            state.cooldown_remaining = 0
+            state.rule_cooldowns.clear()
+            state.pivot_ema = None
+            flags.update(
+                {
+                    "pivot_missing": True,
+                    "selected_rule_name": None,
+                    "initial_rule_name": None,
+                    "hysteresis_applied": False,
+                    "cooldown_active": cooldown_active,
+                    "cooldown_remaining": state.cooldown_remaining,
+                    "rule_cooldowns": {},
+                }
+            )
+            return AudioAdaptiveEvaluation(None, None, state, flags)
+    else:
+        flags["missing_policy_applied"] = None
+
+    pivot_numeric: Optional[float]
+    try:
+        pivot_numeric = float(pivot_value) if pivot_value is not None else None
+    except (TypeError, ValueError):
+        pivot_numeric = None
+
+    min_conf = adaptive.min_confidence
+    if min_conf is not None and pivot_numeric is not None and pivot_numeric < float(min_conf):
+        state.last_rule_name = None
+        state.last_pivot = pivot_numeric
+        state.cooldown_remaining = 0
+        state.rule_cooldowns.clear()
+        state.pivot_ema = None
+        flags.update(
+            {
+                "below_min_confidence": True,
+                "selected_rule_name": None,
+                "initial_rule_name": None,
+                "hysteresis_applied": False,
+                "cooldown_active": cooldown_active,
+                "cooldown_remaining": state.cooldown_remaining,
+                "rule_cooldowns": {},
+            }
+        )
+        return AudioAdaptiveEvaluation(None, pivot_numeric, state, flags)
+
+    pivot_raw = pivot_numeric
+    if pivot_numeric is not None:
+        flags["pivot_raw"] = pivot_numeric
+        alpha = adaptive.pivot_ema_alpha
+        alpha_value: Optional[float]
+        try:
+            alpha_value = float(alpha) if alpha is not None else None
+        except (TypeError, ValueError):
+            alpha_value = None
+        if alpha_value is not None and 0.0 < alpha_value <= 1.0:
+            previous = state.pivot_ema
+            if previous is None:
+                state.pivot_ema = pivot_numeric
+            else:
+                state.pivot_ema = (alpha_value * pivot_numeric) + ((1.0 - alpha_value) * previous)
+            pivot_numeric = state.pivot_ema
+            flags["pivot_ema"] = state.pivot_ema
+        pivot_value = pivot_numeric
+    else:
+        flags["pivot_raw"] = pivot_value
 
     candidate_rule: Optional[AudioAdaptiveRule] = None
-    for rule in adaptive.rules:
+    matched_rules: List[Tuple[int, AudioAdaptiveRule]] = []
+    for index, rule in enumerate(adaptive.rules):
         if _compare_numeric(pivot_value, rule.operator, rule.threshold):
-            candidate_rule = rule
-            break
+            matched_rules.append((index, rule))
+
+    if matched_rules:
+        matched_rules.sort(key=lambda pair: (pair[1].priority, -pair[0]), reverse=True)
+        candidate_rule = matched_rules[0][1]
+        flags["matched_rules"] = [rule.name for _, rule in matched_rules]
+
+    initial_rule = candidate_rule
+    flags["initial_rule_name"] = initial_rule.name if initial_rule else None
 
     last_rule = _resolve_audio_adaptive_rule(adaptive.rules, state.last_rule_name)
     margin = adaptive.hysteresis_margin
+    hysteresis_applied = False
+    rule_specific_cooldowns = adaptive.cooldown_by_rule or {}
+    rule_cooldown_blocked: Optional[Dict[str, Any]] = None
+
     if last_rule is not None:
-        if state.cooldown_remaining > 0:
+        if cooldown_active:
             candidate_rule = last_rule
         elif candidate_rule is None and margin > 0.0 and state.last_pivot is not None:
             if abs(pivot_value - state.last_pivot) < margin:
                 candidate_rule = last_rule
+                hysteresis_applied = True
         elif (
             candidate_rule is not None
             and candidate_rule.name != last_rule.name
             and margin > 0.0
             and state.last_pivot is not None
+            and abs(pivot_value - state.last_pivot) < margin
         ):
-            if abs(pivot_value - state.last_pivot) < margin:
-                candidate_rule = last_rule
+            candidate_rule = last_rule
+            hysteresis_applied = True
+
+    if candidate_rule is not None and rule_specific_cooldowns:
+        remaining = int(state.rule_cooldowns.get(candidate_rule.name, 0))
+        if remaining > 0:
+            rule_cooldown_blocked = {
+                "name": candidate_rule.name,
+                "remaining": remaining,
+            }
+            flags["rule_cooldown_blocked"] = rule_cooldown_blocked
+            candidate_rule = None
 
     if candidate_rule is None:
         state.last_rule_name = None
         state.last_pivot = pivot_value
         state.cooldown_remaining = 0
-        return None, pivot_value, state
+        flags.update(
+            {
+                "selected_rule_name": None,
+                "hysteresis_applied": hysteresis_applied,
+                "cooldown_active": cooldown_active,
+                "cooldown_remaining": state.cooldown_remaining,
+                "rule_cooldowns": dict(state.rule_cooldowns),
+                "rule_cooldown_blocked": rule_cooldown_blocked,
+            }
+        )
+        return AudioAdaptiveEvaluation(None, pivot_value, state, flags)
 
     if candidate_rule.name != state.last_rule_name:
         state.cooldown_remaining = adaptive.cooldown_loops
     state.last_rule_name = candidate_rule.name
     state.last_pivot = pivot_value
 
-    return candidate_rule, pivot_value, state
+    configured_cooldown = int(rule_specific_cooldowns.get(candidate_rule.name, 0) or 0)
+    if configured_cooldown > 0:
+        state.rule_cooldowns[candidate_rule.name] = configured_cooldown
+
+    flags.update(
+        {
+            "selected_rule_name": candidate_rule.name,
+            "hysteresis_applied": hysteresis_applied,
+            "cooldown_active": cooldown_active,
+            "cooldown_remaining": state.cooldown_remaining,
+            "rule_cooldowns": dict(state.rule_cooldowns),
+        }
+    )
+
+    return AudioAdaptiveEvaluation(candidate_rule, pivot_value, state, flags)
 
 
 def _scale_velocity_phase_compensation(
@@ -755,34 +971,223 @@ def _apply_audio_adaptive_weights(
     adaptive: Optional[AudioAdaptiveWeights],
     context: Mapping[str, Any],
     state: Optional[AudioAdaptiveState] = None,
-    evaluated: Optional[Tuple[Optional[AudioAdaptiveRule], Optional[float]]] = None,
+    evaluated: Optional[AudioAdaptiveEvaluation] = None,
 ) -> Tuple[
-    Dict[str, float], Optional[AudioAdaptiveRule], Optional[float], Optional[AudioAdaptiveState]
+    Dict[str, float],
+    Optional[AudioAdaptiveRule],
+    Optional[float],
+    Optional[AudioAdaptiveState],
+    Dict[str, Any],
 ]:
+    weights_before = dict(base_weights)
     weights = dict(base_weights)
-    if adaptive is None:
-        return weights, None, None, state
 
-    if evaluated is None:
-        candidate_rule, pivot_value, state = _evaluate_audio_adaptive_rule(
+    evaluation: Optional[AudioAdaptiveEvaluation] = evaluated
+    if adaptive is None:
+        details = {
+            "rule": None,
+            "rule_name": None,
+            "pivot": None,
+            "weights": {"before": weights_before, "after": dict(weights)},
+            "hysteresis_applied": False,
+            "cooldown_active": False,
+            "cooldown_remaining": 0,
+            "disabled": True,
+            "missing_policy_applied": None,
+            "below_min_confidence": False,
+            "rule_cooldown_blocked": None,
+            "total_delta": 0.0,
+            "total_delta_limited": False,
+            "flags": {},
+        }
+        return weights, None, None, state, details
+
+    if evaluation is None:
+        evaluation = _evaluate_audio_adaptive_rule(
             adaptive,
             context,
             state,
         )
-    else:
-        candidate_rule, pivot_value = evaluated
+
+    candidate_rule = evaluation.rule
+    pivot_value = evaluation.pivot
+    state = evaluation.state
+    flags = dict(evaluation.flags)
+
+    cooldown_remaining = state.cooldown_remaining if state is not None else 0
+    cooldown_active = bool(flags.get("cooldown_active", cooldown_remaining > 0))
+
+    details: Dict[str, Any] = {
+        "rule": candidate_rule,
+        "rule_name": candidate_rule.name if candidate_rule else None,
+        "pivot": pivot_value,
+        "weights": {"before": weights_before, "after": dict(weights)},
+        "hysteresis_applied": bool(flags.get("hysteresis_applied", False)),
+        "cooldown_active": cooldown_active,
+        "cooldown_remaining": cooldown_remaining,
+        "disabled": bool(flags.get("disabled", False)),
+        "missing_policy_applied": flags.get("missing_policy_applied"),
+        "below_min_confidence": bool(flags.get("below_min_confidence", False)),
+        "rule_cooldown_blocked": flags.get("rule_cooldown_blocked"),
+        "total_delta": 0.0,
+        "total_delta_limited": False,
+        "flags": flags,
+        "log_level": adaptive.log_level,
+    }
 
     if candidate_rule is None:
-        return weights, None, pivot_value, state
+        details["weights"]["after"] = dict(weights)
+        return weights, None, pivot_value, state, details
 
+    pending_updates: Dict[str, float] = {}
+    total_delta = 0.0
     for axis_key, multiplier in candidate_rule.multipliers.items():
         if axis_key in weights:
-            weights[axis_key] = weights[axis_key] * float(multiplier)
+            base_value = weights[axis_key]
+            try:
+                target_value = base_value * float(multiplier)
+            except (TypeError, ValueError):
+                continue
+            pending_updates[axis_key] = target_value
+            total_delta += abs(target_value - base_value)
+
+    details["total_delta"] = float(total_delta)
+
+    # Per-axis delta limiting (priority over global max_total_delta)
+    per_axis_limits = adaptive.max_total_delta_per_axis
+    if per_axis_limits:
+        for axis_key, target_value in list(pending_updates.items()):
+            axis_limit = per_axis_limits.get(axis_key)
+            if axis_limit is not None:
+                base_value = weights[axis_key]
+                delta = abs(target_value - base_value)
+                if delta > axis_limit:
+                    ratio_axis = axis_limit / delta
+                    adjusted_value = base_value + (target_value - base_value) * ratio_axis
+                    pending_updates[axis_key] = adjusted_value
+                    details.setdefault("per_axis_limited", {})[axis_key] = {
+                        "original_delta": float(delta),
+                        "limit": float(axis_limit),
+                        "ratio": float(ratio_axis),
+                    }
+        # Recalculate total_delta after per-axis limiting
+        total_delta = sum(abs(pending_updates[axis] - weights[axis]) for axis in pending_updates)
+        details["total_delta"] = float(total_delta)
+
+    # Global max_total_delta (fallback if no per-axis limits)
+    max_total_delta = adaptive.max_total_delta
+    ratio = 1.0
+    if max_total_delta is not None:
+        try:
+            max_total_delta_value = float(max_total_delta)
+        except (TypeError, ValueError):
+            max_total_delta_value = None
+        if (
+            max_total_delta_value is not None
+            and max_total_delta_value >= 0.0
+            and total_delta > max_total_delta_value > 0.0
+        ):
+            ratio = max_total_delta_value / total_delta
+            details["total_delta_limited"] = True
+            details["total_delta_ratio"] = ratio
+
+    if ratio != 1.0:
+        for axis_key, target_value in list(pending_updates.items()):
+            base_value = weights[axis_key]
+            adjusted_value = base_value + (target_value - base_value) * ratio
+            pending_updates[axis_key] = adjusted_value
+
+        total_delta = sum(abs(pending_updates[axis] - weights[axis]) for axis in pending_updates)
+        details["total_delta"] = float(total_delta)
+
+    for axis_key, target_value in pending_updates.items():
+        weights[axis_key] = target_value
 
     _apply_audio_caps(weights, base_weights, adaptive)
     _normalise_audio_weights(weights, base_weights, adaptive)
+    # Re-apply per-axis caps after normalisation to enforce hard limits.
+    _apply_audio_caps(weights, base_weights, adaptive)
 
-    return weights, candidate_rule, pivot_value, state
+    details["weights"]["after"] = dict(weights)
+
+    return weights, candidate_rule, pivot_value, state, details
+
+
+def _adaptive_rule_to_dict(rule: Optional[AudioAdaptiveRule]) -> Optional[Dict[str, Any]]:
+    if rule is None:
+        return None
+    return {
+        "name": rule.name,
+        "operator": rule.operator,
+        "threshold": rule.threshold,
+        "multipliers": dict(rule.multipliers),
+        "extras": dict(rule.extras),
+        "priority": rule.priority,
+    }
+
+
+def _summarise_adaptive_flags(flags: Mapping[str, Any], log_level: str) -> Dict[str, Any]:
+    if log_level == "debug":
+        return dict(flags)
+    summary_keys = (
+        "initial_rule_name",
+        "selected_rule_name",
+        "hysteresis_applied",
+        "cooldown_before",
+        "cooldown_remaining",
+        "cooldown_active",
+        "rule_cooldown_blocked",
+        "pivot_raw",
+        "pivot_ema",
+        "temperature",
+        "matched_rules",
+    )
+    return {key: flags.get(key) for key in summary_keys if key in flags}
+
+
+def _summarise_adaptive_details(
+    details: Mapping[str, Any],
+    applied_rule: Optional[AudioAdaptiveRule],
+    log_level: str,
+) -> Dict[str, Any]:
+    base: Dict[str, Any] = {
+        "rule": _adaptive_rule_to_dict(applied_rule),
+        "rule_name": details.get("rule_name"),
+        "pivot": details.get("pivot"),
+        "total_delta": details.get("total_delta"),
+        "total_delta_limited": details.get("total_delta_limited"),
+        "total_delta_ratio": details.get("total_delta_ratio"),
+        "hysteresis_applied": details.get("hysteresis_applied"),
+        "cooldown_active": details.get("cooldown_active"),
+        "cooldown_remaining": details.get("cooldown_remaining"),
+        "missing_policy_applied": details.get("missing_policy_applied"),
+        "below_min_confidence": details.get("below_min_confidence"),
+        "rule_cooldown_blocked": details.get("rule_cooldown_blocked"),
+        "log_level": log_level,
+    }
+
+    weights_entry = details.get("weights")
+    if isinstance(weights_entry, Mapping):
+        after_weights = cast(Mapping[str, Any], weights_entry.get("after"))
+        if isinstance(after_weights, Mapping):
+            base["weights_after"] = {
+                str(axis): float(value)
+                for axis, value in after_weights.items()
+                if isinstance(value, (int, float))
+            }
+        if log_level == "debug":
+            before_weights = cast(Mapping[str, Any], weights_entry.get("before"))
+            if isinstance(before_weights, Mapping):
+                base["weights_before"] = {
+                    str(axis): float(value)
+                    for axis, value in before_weights.items()
+                    if isinstance(value, (int, float))
+                }
+
+    if log_level == "debug":
+        base["flags"] = details.get("flags")
+
+    return base
 
 
 def _build_audio_summary(
@@ -1774,6 +2179,7 @@ def _load_audio_adaptive_fusion(
     default_value = _to_optional_float(fusion_cfg.get("default"))
     clamp_min = _to_optional_float(fusion_cfg.get("clamp_min"))
     clamp_max = _to_optional_float(fusion_cfg.get("clamp_max"))
+    temperature = _to_optional_float(fusion_cfg.get("temperature"))
 
     return AudioAdaptiveFusion(
         sources=tuple(sources),
@@ -1782,6 +2188,7 @@ def _load_audio_adaptive_fusion(
         default=default_value,
         clamp_min=clamp_min,
         clamp_max=clamp_max,
+        temperature=temperature,
     )
 
 
@@ -1841,18 +2248,32 @@ def _load_audio_adaptive_weights(
             extras = {str(key): value for key, value in extras_obj.items()}
         else:
             extras = {}
+        priority_value = entry.get("priority")
+        try:
+            priority = int(priority_value) if priority_value is not None else 0
+        except (TypeError, ValueError):
+            priority = 0
         rules.append(
             AudioAdaptiveRule(
                 operator=operator,
                 threshold=threshold,
                 multipliers=multipliers,
                 name=name,
+                priority=priority,
                 extras=extras,
             )
         )
 
     if not rules:
         return None
+
+    enabled = bool(adaptive_root.get("enabled", True))
+
+    min_confidence = _to_optional_float(adaptive_root.get("min_confidence"))
+    missing_policy = _as_optional_str(adaptive_root.get("missing_policy")) or "noop"
+    missing_policy = missing_policy.lower()
+    if missing_policy not in {"noop", "zero", "last"}:
+        missing_policy = "noop"
 
     fusion_cfg = cast(Dict[str, Any], adaptive_root.get("fusion", {}))
     fusion = _load_audio_adaptive_fusion(fusion_cfg) if fusion_cfg else None
@@ -1873,10 +2294,40 @@ def _load_audio_adaptive_weights(
 
     hysteresis_margin = _to_optional_float(adaptive_root.get("hysteresis_margin")) or 0.0
     cooldown_loops = int(adaptive_root.get("cooldown_loops", 0))
+    cooldown_by_rule_cfg = adaptive_root.get("cooldown_by_rule", {})
+    cooldown_by_rule: Dict[str, int] = {}
+    if isinstance(cooldown_by_rule_cfg, Mapping):
+        for key, value in cooldown_by_rule_cfg.items():
+            try:
+                loops = int(value)
+            except (TypeError, ValueError):
+                continue
+            if loops > 0:
+                cooldown_by_rule[str(key)] = loops
+
+    max_total_delta = _to_optional_float(adaptive_root.get("max_total_delta"))
+
+    # Load max_total_delta_per_axis
+    max_total_delta_per_axis: Dict[str, float] = {}
+    per_axis_raw = adaptive_root.get("max_total_delta_per_axis")
+    if isinstance(per_axis_raw, dict):
+        for axis_key, limit_val in per_axis_raw.items():
+            limit_f = _to_optional_float(limit_val)
+            if limit_f is not None and limit_f >= 0.0:
+                max_total_delta_per_axis[str(axis_key)] = limit_f
+
+    pivot_ema_alpha = _to_optional_float(adaptive_root.get("pivot_ema_alpha"))
+    log_level_text = _as_optional_str(adaptive_root.get("log_level")) or "summary"
+    log_level = log_level_text.lower()
+    if log_level not in {"summary", "debug"}:
+        log_level = "summary"
 
     return AudioAdaptiveWeights(
         pivot_path=pivot_parts,
         rules=tuple(rules),
+        enabled=enabled,
+        min_confidence=min_confidence,
+        missing_policy=missing_policy,
         fusion=fusion,
         min_scale=min_scale,
         max_scale=max_scale,
@@ -1885,6 +2336,11 @@ def _load_audio_adaptive_weights(
         normalize_target=normalize_target,
         hysteresis_margin=float(hysteresis_margin),
         cooldown_loops=max(0, cooldown_loops),
+        cooldown_by_rule=cooldown_by_rule,
+        max_total_delta=max_total_delta,
+        max_total_delta_per_axis=max_total_delta_per_axis,
+        pivot_ema_alpha=pivot_ema_alpha,
+        log_level=log_level,
     )
 
 
@@ -3520,10 +3976,28 @@ class Stage2Extractor:
         )
 
         adaptive_state: Optional[AudioAdaptiveState]
+        adaptive_outcomes: Optional[Counter[str]]
+        adaptive_skipped_reasons: Optional[Counter[str]]
+        adaptive_rule_counts: Optional[Counter[str]]
+        adaptive_total_delta_sum: Optional[float]
+        adaptive_total_delta_samples: Optional[int]
+        adaptive_total_delta_limited: Optional[int]
         if self.settings.audio_adaptive_weights is not None:
             adaptive_state = AudioAdaptiveState()
+            adaptive_outcomes = Counter()
+            adaptive_skipped_reasons = Counter()
+            adaptive_rule_counts = Counter()
+            adaptive_total_delta_sum = 0.0
+            adaptive_total_delta_samples = 0
+            adaptive_total_delta_limited = 0
         else:
             adaptive_state = None
+            adaptive_outcomes = None
+            adaptive_skipped_reasons = None
+            adaptive_rule_counts = None
+            adaptive_total_delta_sum = None
+            adaptive_total_delta_samples = None
+            adaptive_total_delta_limited = None
 
         limit = self.settings.limit
         iterator: Iterator[Dict[str, Any]] = iter(records)
@@ -3658,6 +4132,7 @@ class Stage2Extractor:
                         bpm_hint = None
 
             adaptive_rule_preview: Optional[AudioAdaptiveRule] = None
+            adaptive_evaluation_preview: Optional[AudioAdaptiveEvaluation] = None
             adaptive_rule_pivot: Optional[float] = None
             phase_comp_factor_used: Optional[float] = None
             velocity_cfg_effective = self.settings.velocity_scoring
@@ -3666,14 +4141,17 @@ class Stage2Extractor:
                     "audio": audio_summary,
                     "metrics": metrics_dict,
                 }
-                (
-                    adaptive_rule_preview,
-                    adaptive_rule_pivot,
-                    adaptive_state,
-                ) = _evaluate_audio_adaptive_rule(
+                adaptive_evaluation_preview = _evaluate_audio_adaptive_rule(
                     self.settings.audio_adaptive_weights,
                     preview_context,
                     adaptive_state,
+                )
+                adaptive_rule_preview = adaptive_evaluation_preview.rule
+                adaptive_rule_pivot = adaptive_evaluation_preview.pivot
+                adaptive_state = adaptive_evaluation_preview.state
+                metrics_dict["audio.adaptive_preview"] = _summarise_adaptive_flags(
+                    adaptive_evaluation_preview.flags,
+                    self.settings.audio_adaptive_weights.log_level,
                 )
                 if adaptive_rule_preview is not None and self.settings.velocity_scoring is not None:
                     phase_comp_factor = adaptive_rule_preview.extras.get("phase_comp_factor")
@@ -3736,15 +4214,19 @@ class Stage2Extractor:
                 "metrics": metrics_dict,
                 "axes_raw": axes_raw,
             }
-            if adaptive_rule_preview is not None or adaptive_rule_pivot is not None:
-                effective_axis_weights, applied_adaptive_rule, adaptive_pivot, adaptive_state = (
-                    _apply_audio_adaptive_weights(
-                        self.settings.axis_weights,
-                        self.settings.audio_adaptive_weights,
-                        adaptive_context,
-                        state=adaptive_state,
-                        evaluated=(adaptive_rule_preview, adaptive_rule_pivot),
-                    )
+            if adaptive_evaluation_preview is not None:
+                (
+                    effective_axis_weights,
+                    applied_adaptive_rule,
+                    adaptive_pivot,
+                    adaptive_state,
+                    adaptive_details,
+                ) = _apply_audio_adaptive_weights(
+                    self.settings.axis_weights,
+                    self.settings.audio_adaptive_weights,
+                    adaptive_context,
+                    state=adaptive_state,
+                    evaluated=adaptive_evaluation_preview,
                 )
             else:
                 (
@@ -3752,6 +4234,7 @@ class Stage2Extractor:
                     applied_adaptive_rule,
                     adaptive_pivot,
                     adaptive_state,
+                    adaptive_details,
                 ) = _apply_audio_adaptive_weights(
                     self.settings.axis_weights,
                     self.settings.audio_adaptive_weights,
@@ -3764,17 +4247,56 @@ class Stage2Extractor:
             )
             metrics_dict["audio.adaptive_axis_weights"] = effective_axis_weights
             metrics_dict["audio.adaptive_pivot"] = adaptive_pivot
-            metrics_dict["audio.adaptive_rule"] = (
-                {
-                    "name": applied_adaptive_rule.name,
-                    "operator": applied_adaptive_rule.operator,
-                    "threshold": applied_adaptive_rule.threshold,
-                    "multipliers": applied_adaptive_rule.multipliers,
-                    "extras": applied_adaptive_rule.extras,
-                }
-                if applied_adaptive_rule is not None
-                else None
+            metrics_dict["audio.adaptive_rule"] = _adaptive_rule_to_dict(applied_adaptive_rule)
+            details_log_level = self.settings.audio_adaptive_weights.log_level
+            metrics_dict["audio.adaptive_details"] = _summarise_adaptive_details(
+                adaptive_details,
+                applied_adaptive_rule,
+                details_log_level,
             )
+            if (
+                adaptive_details
+                and adaptive_outcomes is not None
+                and adaptive_rule_counts is not None
+                and adaptive_skipped_reasons is not None
+                and adaptive_total_delta_sum is not None
+                and adaptive_total_delta_samples is not None
+                and adaptive_total_delta_limited is not None
+            ):
+                delta_value = adaptive_details.get("total_delta")
+                try:
+                    adaptive_total_delta_sum += (
+                        float(delta_value) if delta_value is not None else 0.0
+                    )
+                except (TypeError, ValueError):
+                    pass
+                adaptive_total_delta_samples += 1
+                if adaptive_details.get("total_delta_limited"):
+                    adaptive_total_delta_limited += 1
+
+                if applied_adaptive_rule is not None:
+                    adaptive_outcomes["applied"] += 1
+                    adaptive_rule_counts[applied_adaptive_rule.name] += 1
+                else:
+                    reason = "no_rule"
+                    if adaptive_details.get("disabled"):
+                        reason = "disabled"
+                    elif adaptive_details.get("below_min_confidence"):
+                        reason = "below_min_confidence"
+                    elif adaptive_details.get("missing_policy_applied"):
+                        reason = f"missing_{adaptive_details['missing_policy_applied']}"
+                    elif adaptive_details.get("rule_cooldown_blocked"):
+                        reason = "rule_cooldown"
+                    elif adaptive_details.get("cooldown_active"):
+                        reason = "global_cooldown"
+                    elif adaptive_details.get("hysteresis_applied"):
+                        reason = "hysteresis_hold"
+                    else:
+                        flags_map = adaptive_details.get("flags")
+                        if isinstance(flags_map, Mapping) and flags_map.get("pivot_missing"):
+                            reason = "pivot_missing"
+                    adaptive_outcomes["skipped"] += 1
+                    adaptive_skipped_reasons[reason] += 1
             if phase_comp_factor_used is not None:
                 metrics_dict["audio.phase_compensation_factor"] = phase_comp_factor_used
             if score_total >= self.settings.threshold:
@@ -3945,6 +4467,25 @@ class Stage2Extractor:
                     audio_summary.get("text_audio_cos_mert"),
                 )
             loop_row.update(_flatten_metrics(metrics_dict))
+            adaptive_rule_entry = metrics_dict.get("audio.adaptive_rule")
+            if isinstance(adaptive_rule_entry, Mapping):
+                loop_row["audio_adaptive_rule_name"] = adaptive_rule_entry.get("name")
+            else:
+                loop_row["audio_adaptive_rule_name"] = None
+            loop_row["audio_adaptive_pivot"] = metrics_dict.get("audio.adaptive_pivot")
+            adaptive_detail_entry = metrics_dict.get("audio.adaptive_details")
+            if isinstance(adaptive_detail_entry, Mapping):
+                loop_row["audio_adaptive_total_delta"] = adaptive_detail_entry.get("total_delta")
+                loop_row["audio_adaptive_total_delta_limited"] = adaptive_detail_entry.get(
+                    "total_delta_limited",
+                )
+                loop_row["audio_adaptive_total_delta_ratio"] = adaptive_detail_entry.get(
+                    "total_delta_ratio",
+                )
+            else:
+                loop_row["audio_adaptive_total_delta"] = None
+                loop_row["audio_adaptive_total_delta_limited"] = None
+                loop_row["audio_adaptive_total_delta_ratio"] = None
             loop_rows.append(loop_row)
             loop_ids.append(loop_id)
 
@@ -3990,6 +4531,33 @@ class Stage2Extractor:
                 for row in score_rows:
                     stream.write(json.dumps(row, ensure_ascii=False) + "\n")
 
+        audio_adaptive_summary: Optional[Dict[str, Any]] = None
+        if (
+            self.settings.audio_adaptive_weights is not None
+            and adaptive_outcomes is not None
+            and adaptive_rule_counts is not None
+            and adaptive_skipped_reasons is not None
+            and adaptive_total_delta_sum is not None
+            and adaptive_total_delta_samples is not None
+            and adaptive_total_delta_limited is not None
+        ):
+            average_delta = (
+                adaptive_total_delta_sum / adaptive_total_delta_samples
+                if adaptive_total_delta_samples
+                else 0.0
+            )
+            audio_adaptive_summary = {
+                "outcomes": dict(adaptive_outcomes),
+                "skipped_reasons": dict(adaptive_skipped_reasons),
+                "applied_rules": dict(adaptive_rule_counts),
+                "total_delta": {
+                    "sum": adaptive_total_delta_sum,
+                    "average": average_delta,
+                    "samples": adaptive_total_delta_samples,
+                    "limited": adaptive_total_delta_limited,
+                },
+            }
+
         summary = _build_summary(
             settings=self.settings,
             processed=processed,
@@ -4003,6 +4571,7 @@ class Stage2Extractor:
             git_commit=git_commit,
             data_digest=data_digest,
             axis_summary=_summarise_axes(axis_pass_samples),
+            audio_adaptive=audio_adaptive_summary,
         )
 
         if self.settings.paths.summary_out:
@@ -4032,6 +4601,7 @@ def _build_summary(
     git_commit: Optional[str] = None,
     data_digest: Optional[str] = None,
     axis_summary: Optional[Dict[str, Dict[str, float]]] = None,
+    audio_adaptive: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     passed_count = len(passed_scores)
     pass_rate = float(passed_count / processed) if processed else 0.0
@@ -4096,6 +4666,8 @@ def _build_summary(
     summary["git_commit"] = git_commit
     summary["data_digest"] = data_digest
     summary["score_axes"] = axis_payload
+    if audio_adaptive:
+        summary["audio_adaptive"] = audio_adaptive
     return summary
 
 

@@ -98,3 +98,114 @@ presets:
         vmin: 24
         vmax: 120
         window_beats: 0.25
+
+# --- Control-enabled presets (audio-aware) -------------------------------
+  - id: velocity_chain_audio_v1
+    axis: velocity
+    when:
+      exists(audio.text_audio_cos): true
+      audio.text_audio_cos: "< 0.30"
+      axes_raw.velocity: "< 0.35"
+    control:
+      cooldown_runs: 1
+      max_attempts: 2
+      min_delta: 0.03
+      cooldown_key: "velocity_chain"
+    apply:
+      - type: velocity_boost
+        boost_lo: 1.10
+        boost_hi: 1.05
+        limit_max: 122
+        phase_sensitive: true
+      - type: velocity_remap
+        compress: 0.85
+        match_histogram: true
+        normalize_dynamic_range: true
+        phase_compensation: true
+      - type: velocity_smooth
+        vmin: 24
+        vmax: 120
+        window_beats: 0.25
+
+  - id: velocity_chain_fallback_v1
+    axis: velocity
+    when:
+      axes_raw.velocity: "< 0.35"
+    control:
+      cooldown_runs: 1
+      max_attempts: 2
+      min_delta: 0.03
+      cooldown_key: "velocity_chain"
+    apply:
+      - type: velocity_remap
+        compress: 0.88
+        match_histogram: true
+        normalize_dynamic_range: true
+      - type: velocity_smooth
+        vmin: 28
+        vmax: 118
+        window_beats: 0.33
+
+  - id: structure_snap_audio_v1
+    axis: structure
+    when:
+      exists(audio.text_audio_cos): true
+      audio.text_audio_cos: "< 0.35"
+      axes_raw.structure: "< 0.40"
+    control:
+      priority: 48
+      cooldown_runs: 1
+      max_attempts: 2
+      min_delta: 0.02
+      cooldown_key: "structure_snap"
+    apply:
+      - type: role_snap
+        window_beats: 2.0
+        tolerance: 0.25
+        keep_fill_back: true
+      - type: structure_smooth
+        note_density_max: "auto+15%"
+        cycle_strength: "auto"
+
+# --- ChatGPT提案: priority + min_delta.axes_raw 対応プリセット ---
+  - id: velocity_chain_audio_v2
+    reason: "velocity_low_and_audio_match"
+    when:
+      axes_raw.velocity: "< 0.30"
+      audio.text_audio_cos: ">= 0.35"
+      audio.min_confidence: ">= 0.70"
+    control:
+      priority: 50
+      cooldown_runs: 2
+      max_attempts: 3
+      min_delta:
+        score_total: 1.0
+        axes_raw:
+          velocity: 0.05
+      cooldown_key: "velocity_chain_v2"
+    apply:
+      - type: velocity_chain
+        boost_lo: 0.15
+        boost_hi: 0.10
+        smooth_win_beats: 0.5
+        remap_1: {in_lo: 0.10, in_hi: 0.60, out_lo: 0.20, out_hi: 0.75}
+        remap_2: {in_lo: 0.20, in_hi: 0.75, out_lo: 0.25, out_hi: 0.85}
+
+  - id: structure_snap_audio_v2
+    reason: "structure_low_but_audio_confident"
+    when:
+      axes_raw.structure: "< 0.35"
+      audio.min_confidence: ">= 0.65"
+    control:
+      priority: 48
+      cooldown_runs: 1
+      max_attempts: 2
+      min_delta:
+        axes_raw:
+          structure: 0.04
+      cooldown_key: "structure_snap_v2"
+    apply:
+      - type: structure_snap
+        win_bars: 2
+        target_period_beats: 4
+        density_cap: 10.0
