@@ -19,7 +19,7 @@ Dependencies: pretty_midi, numpy
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Sequence, Tuple, List
 import math
 import re
@@ -67,9 +67,9 @@ class KeyswitchConfig:
 
 @dataclass
 class GuitarControlsConfig:
-    strum: StrumConfig = StrumConfig()
-    cc: CCConfig = CCConfig()
-    ks: KeyswitchConfig = KeyswitchConfig()
+    strum: StrumConfig = field(default_factory=StrumConfig)
+    cc: CCConfig = field(default_factory=CCConfig)
+    ks: KeyswitchConfig = field(default_factory=KeyswitchConfig)
 
 
 # -------------------------- helpers --------------------------

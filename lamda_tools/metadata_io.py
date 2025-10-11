@@ -57,23 +57,53 @@ def iter_loop_records(
     metadata_dir: Optional[Path] = None,
     index_path: Optional[Path] = None,
 ) -> Iterator[Dict[str, Any]]:
-    """Yield loop entries across all shards with attached shard metadata."""
+    """Yield loop entries across all shards with attached shard metadata.
+
+    Supports both aggregated index files that reference shard pickle files and
+    direct shard payloads that contain a ``loops`` list at the top level.
+    """
 
     shards = index_data.get("shards", []) or []
-    for shard_entry in shards:
-        shard_path = _resolve_shard_path(shard_entry, metadata_dir, index_path)
-        if not shard_path.exists():
-            continue
-        with shard_path.open("rb") as stream:
-            shard_payload = pickle.load(stream)
-        loops = shard_payload.get("loops", []) or []
-        for loop in loops:
-            yield {
-                "loop": loop,
-                "shard_index": shard_entry.get("index"),
-                "shard_path": str(shard_path),
-                "shard_summary": shard_entry.get("metrics_summary"),
-            }
+    if shards:
+        for shard_entry in shards:
+            shard_path = _resolve_shard_path(shard_entry, metadata_dir, index_path)
+            if not shard_path.exists():
+                continue
+            with shard_path.open("rb") as stream:
+                shard_payload = pickle.load(stream)
+            loops = shard_payload.get("loops", []) or []
+            shard_summary = (
+                shard_entry.get("metrics_summary")
+                or shard_payload.get("summary")
+                or shard_payload.get("metrics_summary")
+            )
+            shard_index = shard_entry.get("index")
+            for loop in loops:
+                yield {
+                    "loop": loop,
+                    "shard_index": shard_index,
+                    "shard_path": str(shard_path),
+                    "shard_summary": shard_summary,
+                }
+        return
+
+    loops = index_data.get("loops", []) or []
+    if not loops:
+        return
+
+    shard_path = None
+    if index_path is not None:
+        shard_path = str(index_path.resolve())
+    shard_index = index_data.get("shard_index")
+    shard_summary = index_data.get("summary") or index_data.get("metrics_summary")
+
+    for loop in loops:
+        yield {
+            "loop": loop,
+            "shard_index": shard_index,
+            "shard_path": shard_path,
+            "shard_summary": shard_summary,
+        }
 
 
 def flatten_loop_record(

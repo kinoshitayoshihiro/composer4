@@ -20,46 +20,48 @@ presets:
         strength: 0.5
         min_gap_beats: 0.25
 
-  - id: vel_boost
+  # --- Velocity cascade: low → medium threshold ---
+  - id: velocity_chain_v1
+    reason: "low_velocity"
     when:
       axes_raw.velocity: "< 0.25"
-    apply:
-      - type: velocity_remap
-        curve: s-curve
-        lo: 34
-        hi: 120
-        compress: 0.70
-
-  - id: vel_chain
-    when:
-      axes_raw.velocity: "< 0.25"
+    control:
+      priority: 50
+      cooldown_runs: 2
+      max_attempts: 2
+      min_delta: 0.04
+      cooldown_key: "velocity_chain"
     apply:
       - type: velocity_smooth
         method: median
         k_size: 3
       - type: velocity_remap
         curve: s-curve
-        lo: 30
-        hi: 112
+        lo: 28
+        hi: 95
         compress: 0.82
       - type: velocity_remap
         curve: s-curve
         lo: 34
-        hi: 120
+        hi: 112
         compress: 0.70
 
-  - id: vel_smooth
+  - id: velocity_smooth_fallback
+    reason: "medium_velocity"
     when:
+      axes_raw.velocity: ">= 0.25"
       axes_raw.velocity: "< 0.35"
+    control:
+      priority: 40
+      cooldown_runs: 1
+      max_attempts: 1
+      min_delta: 0.02
+      cooldown_key: "velocity_smooth"
     apply:
       - type: velocity_smooth
         method: median
         k_size: 3
-      - type: velocity_remap
-        curve: s-curve
-        lo: 30
-        hi: 112
-        compress: 0.82
+        window_beats: 0.33
 
   # --- Audio-aware presets -------------------------------------------------
   - id: structure_snap_audio

@@ -1,0 +1,133 @@
+# Stage3 Evaluation Prompts
+# Fixed prompt set for consistent A/B testing
+
+prompts:
+  - name: intense_rock_groove
+    emotion: intense
+    genre: rock
+    valence: 0.6
+    arousal: 0.9
+    score: 60
+    tempo: 120
+    time_signature: "4/4"
+    caption: "パワフルなロックビート"
+    technique: ghost
+
+  - name: calm_jazz_swing
+    emotion: calm
+    genre: jazz
+    valence: 0.5
+    arousal: 0.3
+    score: 55
+    tempo: 100
+    time_signature: "4/4"
+    caption: "落ち着いたジャズスウィング"
+
+  - name: happy_pop_upbeat
+    emotion: happy
+    genre: pop
+    valence: 0.8
+    arousal: 0.7
+    score: 65
+    tempo: 128
+    time_signature: "4/4"
+    caption: "明るいポップグルーヴ"
+    technique: flam
+
+  - name: dark_hiphop_slow
+    emotion: dark
+    genre: hiphop
+    valence: 0.2
+    arousal: 0.4
+    score: 50
+    tempo: 80
+    time_signature: "4/4"
+    caption: "重厚なヒップホップビート"
+
+  - name: bright_funk_mid
+    emotion: bright
+    genre: funk
+    valence: 0.7
+    arousal: 0.6
+    score: 58
+    tempo: 110
+    time_signature: "4/4"
+    caption: "キャッチーなファンクグルーヴ"
+    technique: ghost
+
+  - name: tense_electronic_fast
+    emotion: tense
+    genre: electronic
+    valence: 0.3
+    arousal: 0.8
+    score: 52
+    tempo: 140
+    time_signature: "4/4"
+    caption: "緊迫したエレクトロニックビート"
+
+  - name: warm_ballad_slow
+    emotion: warm
+    genre: ballad
+    valence: 0.6
+    arousal: 0.2
+    score: 48
+    tempo: 72
+    time_signature: "4/4"
+    caption: "温かいバラードパターン"
+
+  - name: sad_ambient_sparse
+    emotion: sad
+    genre: ambient
+    valence: 0.3
+    arousal: 0.2
+    score: 45
+    tempo: 60
+    time_signature: "3/4"
+    caption: "物悲しいアンビエントリズム"
+
+  - name: intense_metal_complex
+    emotion: intense
+    genre: metal
+    valence: 0.4
+    arousal: 1.0
+    score: 70
+    tempo: 180
+    time_signature: "4/4"
+    caption: "激しいメタルドラム"
+    technique: flam
+
+  - name: happy_reggae_groove
+    emotion: happy
+    genre: reggae
+    valence: 0.7
+    arousal: 0.5
+    score: 54
+    tempo: 90
+    time_signature: "4/4"
+    caption: "陽気なレゲエグルーヴ"
+
+  # Audio similarity conditioning examples
+  - name: audio_reference_high_clap
+    emotion: intense
+    genre: rock
+    valence: 0.6
+    arousal: 0.8
+    score: 65
+    tempo: 125
+    time_signature: "4/4"
+    caption: "参照音源に類似したロックビート"
+    audio_clap: 0.85
+    audio_mert: 0.75
+    technique: ghost
+
+  - name: audio_reference_mid_mert
+    emotion: calm
+    genre: jazz
+    valence: 0.5
+    arousal: 0.4
+    score: 58
+    tempo: 95
+    time_signature: "4/4"
+    caption: "参照音源の雰囲気を持つジャズ"
+    audio_clap: 0.5
+    audio_mert: 0.65

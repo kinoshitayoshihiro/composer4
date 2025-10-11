@@ -66,8 +66,8 @@ def should_accept(
 
     prev_axes = prev.get("axes_raw", {})
     post_axes = post.get("axes_raw", {})
-    prev_score = _coerce_float(prev.get("score"))
-    post_score = _coerce_float(post.get("score"))
+    prev_score = _coerce_float(prev.get("score_total"))
+    post_score = _coerce_float(post.get("score_total"))
 
     # Handle both old float format and new dict format
     if isinstance(min_delta_raw, dict):
@@ -101,14 +101,52 @@ def should_accept(
                 else:
                     ok_axes = False
 
+        # Audio boost: small text_audio_cos improvement can help
+        prev_audio = prev.get("audio", {})
+        post_audio = post.get("audio", {})
+        prev_cos = _coerce_float(prev_audio.get("text_audio_cos"))
+        post_cos = _coerce_float(post_audio.get("text_audio_cos"))
+        audio_boost = False
+        delta_audio_cos = None
+
+        if prev_cos is not None and post_cos is not None:
+            delta_audio_cos = post_cos - prev_cos
+            # Small boost: +0.02 improvement helps borderline cases
+            if delta_audio_cos >= 0.02:
+                audio_boost = True
+
+        # Final decision: (ok_total AND ok_axes) OR audio_boost
+        final_ok = (ok_total and ok_axes) or (ok_total and audio_boost)
+
+        # Determine acceptance reason
+        accept_reason = "rejected"
+        if final_ok:
+            if ok_total and ok_axes:
+                accept_reason = "score+axes"
+            elif ok_total and audio_boost:
+                accept_reason = "score+audio_boost"
+            else:
+                accept_reason = "accepted"
+        else:
+            # Rejection reason
+            if not ok_total:
+                accept_reason = "insufficient_score_gain"
+            elif not ok_axes:
+                accept_reason = "axes_degraded"
+            else:
+                accept_reason = "rejected_unknown"
+
         meta = {
             "delta_total": delta_total,
             "deltas_axes": deltas_axes,
+            "delta_audio_cos": delta_audio_cos,
             "ok_total": ok_total,
             "ok_axes": ok_axes,
+            "audio_boost": audio_boost,
+            "accept_reason": accept_reason,
             "criteria": {"score_total": total_req, "axes_raw": axes_req},
         }
-        return (ok_total and ok_axes), meta
+        return final_ok, meta
     else:
         # Legacy float format: treat as simple score threshold
         threshold_f = _coerce_float(min_delta_raw)

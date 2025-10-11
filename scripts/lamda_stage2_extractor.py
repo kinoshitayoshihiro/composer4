@@ -354,42 +354,6 @@ class LoopFeatureContext:
     bars: int
     role_slots_per_bar: Tuple[Tuple[FrozenSet[int], ...], ...]
 
-    @property
-    def total_weight(self) -> float:
-        return sum(self.weights.values())
-
-    def tempo_bins(self) -> List[float]:
-        if self.provider is not None:
-            return self.provider.bins.edges
-        tempo_cfg = cast(Dict[str, Any], self.auto.get("bins", {}))
-        bins_obj = tempo_cfg.get("tempo", [])
-        if not isinstance(bins_obj, list):
-            return []
-        result: List[float] = []
-        for bound in cast(List[Any], bins_obj):
-            try:
-                result.append(float(bound))
-            except (TypeError, ValueError):
-                continue
-        return result
-
-    def auto_min_support(self, category: str) -> Optional[int]:
-        values = cast(Dict[str, Any], self.auto.get("min_support", {}))
-        if category not in values:
-            return None
-        try:
-            return int(values[category])
-        except (TypeError, ValueError):
-            return None
-
-    def hysteresis_drop_ratio(self) -> float:
-        quantiles_cfg = cast(Dict[str, Any], self.auto.get("quantiles", {}))
-        value = quantiles_cfg.get("hysteresis_drop_iqr", 0.1)
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return 0.1
-
 
 @dataclass
 class ArticulationObservation:
@@ -439,6 +403,105 @@ AUDIO_LOOP_DEFAULTS: Dict[str, Optional[Any]] = {
     "audio.render_path": None,
     "audio.embedding_path": None,
 }
+
+
+@dataclass
+class ArticulationThresholds:
+    mode: str
+    fixed: Dict[str, Any]
+    auto: Dict[str, Any]
+    weights: Dict[str, float]
+    path: Path
+    provider: Optional[Any] = None
+
+    @classmethod
+    def load(cls, path: Path) -> "ArticulationThresholds":
+        if not path.exists():
+            raise FileNotFoundError(f"Articulation thresholds file not found: {path}")
+        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        if not isinstance(raw, dict):
+            raise ValueError("Articulation thresholds config must be a mapping")
+
+        mode = str(raw.get("mode", "fixed"))
+        fixed_section = raw.get("fixed", {})
+        fixed = cast(Dict[str, Any], fixed_section if isinstance(fixed_section, dict) else {})
+
+        auto_section: Dict[str, Any] = {}
+        candidate_auto = raw.get("auto")
+        if isinstance(candidate_auto, dict):
+            auto_section = cast(Dict[str, Any], candidate_auto)
+        else:
+            for key in ("bins", "quantiles", "min_support", "features", "per_axis"):
+                value = raw.get(key)
+                if value is not None:
+                    auto_section[key] = value
+
+        weights_root = raw.get("weights", {})
+        if isinstance(weights_root, dict) and "articulation" in weights_root:
+            weights_source = weights_root.get("articulation", {})
+        else:
+            weights_source = weights_root
+        weights: Dict[str, float] = {}
+        if isinstance(weights_source, dict):
+            for key, value in weights_source.items():
+                try:
+                    weights[str(key)] = float(value)
+                except (TypeError, ValueError):
+                    continue
+
+        return cls(
+            mode=mode,
+            fixed=fixed,
+            auto=auto_section,
+            weights=weights,
+            path=path,
+        )
+
+    @property
+    def total_weight(self) -> float:
+        return sum(float(value) for value in self.weights.values())
+
+    def tempo_bins(self) -> List[float]:
+        if self.provider is not None:
+            bins_obj = getattr(self.provider, "bins", None)
+            edges = getattr(bins_obj, "edges", None)
+            if edges is not None:
+                return [float(bound) for bound in edges]
+        bins_cfg = self.auto.get("bins")
+        tempo_values: Any
+        if isinstance(bins_cfg, Mapping):
+            tempo_values = bins_cfg.get("tempo")
+        else:
+            tempo_values = bins_cfg
+        result: List[float] = []
+        if isinstance(tempo_values, Sequence):
+            for entry in cast(Sequence[Any], tempo_values):
+                try:
+                    result.append(float(entry))
+                except (TypeError, ValueError):
+                    continue
+        return result
+
+    def auto_min_support(self, category: str) -> Optional[int]:
+        min_support_cfg = self.auto.get("min_support")
+        if isinstance(min_support_cfg, Mapping):
+            value = min_support_cfg.get(category)
+            try:
+                if value is not None:
+                    return int(value)
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    def hysteresis_drop_ratio(self) -> float:
+        quantiles_cfg = self.auto.get("quantiles")
+        if isinstance(quantiles_cfg, Mapping):
+            value = quantiles_cfg.get("hysteresis_drop_iqr", 0.1)
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return 0.1
+        return 0.1
 
 
 def _as_optional_str(value: Any) -> Optional[str]:
@@ -1837,9 +1900,18 @@ def _parse_range_phase_config(
 
 def _resolve_config_path(base_dir: Path, value: str) -> Path:
     path = Path(value)
-    if not path.is_absolute():
-        path = (base_dir / path).resolve()
-    return path
+    if path.is_absolute():
+        return path
+
+    candidate = (base_dir / path).resolve()
+    if candidate.exists():
+        return candidate
+
+    fallback = Path(value).resolve()
+    if fallback.exists():
+        return fallback
+
+    return candidate
 
 
 def _load_velocity_scoring_config(
@@ -2307,7 +2379,7 @@ def _load_audio_adaptive_weights(
 
     max_total_delta = _to_optional_float(adaptive_root.get("max_total_delta"))
 
-    # Load max_total_delta_per_axis
+    # Load max_total_delta_per_axis (from root or caps.per_axis_max_delta)
     max_total_delta_per_axis: Dict[str, float] = {}
     per_axis_raw = adaptive_root.get("max_total_delta_per_axis")
     if isinstance(per_axis_raw, dict):
@@ -2315,6 +2387,16 @@ def _load_audio_adaptive_weights(
             limit_f = _to_optional_float(limit_val)
             if limit_f is not None and limit_f >= 0.0:
                 max_total_delta_per_axis[str(axis_key)] = limit_f
+
+    # Also check caps.per_axis_max_delta (alternative location)
+    if caps_cfg and "per_axis_max_delta" in caps_cfg:
+        per_axis_caps = caps_cfg["per_axis_max_delta"]
+        if isinstance(per_axis_caps, dict):
+            for axis_key, limit_val in per_axis_caps.items():
+                limit_f = _to_optional_float(limit_val)
+                if limit_f is not None and limit_f >= 0.0:
+                    # Prefer caps location if both exist
+                    max_total_delta_per_axis[str(axis_key)] = limit_f
 
     pivot_ema_alpha = _to_optional_float(adaptive_root.get("pivot_ema_alpha"))
     log_level_text = _as_optional_str(adaptive_root.get("log_level")) or "summary"
@@ -4015,10 +4097,21 @@ class Stage2Extractor:
             if not output_path:
                 exclusions["missing_output_path"] += 1
                 continue
-            midi_path = Path(output_path)
-            if not midi_path.is_absolute():
-                midi_path = self.input_dir / midi_path
-            if not midi_path.exists():
+            raw_midi_path = Path(output_path)
+            candidate_paths: Tuple[Path, ...]
+            if raw_midi_path.is_absolute():
+                candidate_paths = (raw_midi_path,)
+            else:
+                candidate_paths = (
+                    raw_midi_path,
+                    self.input_dir / raw_midi_path,
+                )
+            midi_path: Optional[Path] = None
+            for candidate in candidate_paths:
+                if candidate.exists():
+                    midi_path = candidate
+                    break
+            if midi_path is None:
                 exclusions["missing_file"] += 1
                 continue
 
@@ -4574,6 +4667,12 @@ class Stage2Extractor:
             audio_adaptive=audio_adaptive_summary,
         )
 
+        # Save velocity coverage histogram by BPM band
+        _save_velocity_coverage_histogram(
+            score_rows,
+            self.settings.paths.metrics_jsonl.parent / "velocity_coverage.json",
+        )
+
         if self.settings.paths.summary_out:
             summary_text = json.dumps(summary, ensure_ascii=False, indent=2)
             self.settings.paths.summary_out.write_text(
@@ -4711,6 +4810,73 @@ def _failure_reason(breakdown: Dict[str, float]) -> str:
     if not breakdown:
         return "unknown"
     return min(breakdown.items(), key=lambda item: item[1])[0]
+
+
+def _save_velocity_coverage_histogram(
+    score_rows: List[Dict[str, Any]],
+    output_path: Path,
+) -> None:
+    """Save velocity observation histogram by BPM band.
+
+    Args:
+        score_rows: List of score metrics
+        output_path: Path to save histogram JSON
+    """
+    # BPM bins
+    bpm_bins = {
+        "slow_<=95": (0, 95),
+        "mid_96-130": (96, 130),
+        "fast_>130": (131, 300),
+    }
+
+    # Velocity bins (0.1 increments)
+    vel_bins = [i / 10.0 for i in range(0, 11)]  # 0.0, 0.1, ..., 1.0
+
+    histogram: Dict[str, Dict[str, int]] = {}
+    for band_name in bpm_bins:
+        histogram[band_name] = {f"{v:.1f}": 0 for v in vel_bins}
+
+    for row in score_rows:
+        bpm = row.get("bpm") or row.get("tempo", 120)
+        axes_raw = row.get("axes_raw", {})
+        velocity = axes_raw.get("velocity", 0.0)
+
+        # Find BPM band
+        band = None
+        for band_name, (low, high) in bpm_bins.items():
+            if low <= bpm <= high:
+                band = band_name
+                break
+
+        if band is None:
+            continue
+
+        # Find velocity bin
+        vel_key = f"{min(1.0, max(0.0, round(velocity, 1))):.1f}"
+        if vel_key in histogram[band]:
+            histogram[band][vel_key] += 1
+
+    # Calculate coverage (non-zero bins)
+    coverage_stats = {}
+    for band_name, counts in histogram.items():
+        total_bins = len(vel_bins)
+        non_zero = sum(1 for c in counts.values() if c > 0)
+        coverage_stats[band_name] = {
+            "coverage_ratio": non_zero / total_bins if total_bins else 0.0,
+            "non_zero_bins": non_zero,
+            "total_bins": total_bins,
+        }
+
+    output = {
+        "histogram": histogram,
+        "coverage": coverage_stats,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+
+    print(f"Saved velocity coverage histogram to {output_path}")
 
 
 def main() -> None:

@@ -9,6 +9,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
+try:
+    from tqdm import tqdm
+except ImportError:
+    # Fallback if tqdm not available
+    def tqdm(iterable, **kwargs):
+        return iterable
+
+
 # 楽器カテゴリパターン（Los Angeles MIDI Dataset用）
 TARGETS = {
     "bass": [
@@ -26,7 +34,8 @@ TARGETS = {
 def load_pickles(pickle_paths: list[Path]) -> list[dict[str, Any]]:
     """Load LAMD pickle files and convert to uniform dict format."""
     meta: list[dict[str, Any]] = []
-    for pp in pickle_paths:
+    print(f"Loading {len(pickle_paths)} pickle files...")
+    for pp in tqdm(pickle_paths, desc="Loading metadata", unit="file"):
         try:
             with open(pp, "rb") as f:
                 obj = pickle.load(f)
@@ -103,15 +112,23 @@ def main() -> None:
     args = ap.parse_args()
 
     root = Path(args.root)
+    print(f"Discovering metadata files in {root}...")
     meta_pickles = discover_meta(root)
+    print(f"Found {len(meta_pickles)} metadata pickle files")
+
+    print(f"Discovering MIDI files in {root}...")
     midi_files = discover_midis(root)
+    print(f"Found {len(midi_files)} MIDI files")
+
     midi_index = {p.name: p for p in midi_files}
 
     metas = load_pickles(meta_pickles)
+    print(f"Loaded {len(metas)} metadata records")
 
     n_total, n_out = 0, 0
+    print(f"\nExtracting {args.instrument} tracks...")
     with open(args.out, "w", encoding="utf-8") as w:
-        for md in metas:
+        for md in tqdm(metas, desc=f"Processing {args.instrument}", unit="file"):
             try:
                 fn = str(md.get("filename", ""))
                 patches = md.get("patches", [])
@@ -140,7 +157,14 @@ def main() -> None:
                 n_out += 1
             except (OSError, ValueError, KeyError) as e:
                 print(f"[skip] {e}", file=sys.stderr)
-    print(f"[done] total_meta={n_total} -> matched={n_out}")
+
+    print(f"\n{'='*70}")
+    print(f"✅ Extraction complete!")
+    print(f"{'='*70}")
+    print(f"Total metadata records: {n_total}")
+    print(f"Matched {args.instrument} files: {n_out}")
+    print(f"Output: {args.out}")
+    print(f"{'='*70}")
 
 
 if __name__ == "__main__":
