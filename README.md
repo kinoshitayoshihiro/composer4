@@ -1825,8 +1825,8 @@ Stage3 implements GPT-2-based conditional MIDI generation with LoRA fine-tuning.
 ✅ CI quality gate with schema validation (`.github/workflows/eval_gate.yml`)
 
 ### Remaining Tasks (7-day priority)
-🟡 **VPTT Sample Expansion**: Expand to 50 samples with orthogonal design (2 instruments × 3 techniques × 3 tempos × 3 dynamics)  
-🟡 **Caption Attribute Normalization**: Implement `caption_to_attrs.py` for MuseCoco [genre][mood][tempo][intensity][texture] tokens  
+✅ **VPTT Sample Expansion**: Expand to 50 samples with orthogonal design (2 instruments × 3 techniques × 3 tempos × 3 dynamics)  
+✅ **Caption Attribute Normalization**: Implement `caption_to_attrs.py` for MuseCoco [genre][mood][tempo][intensity][texture] tokens  
 🟡 **Smoke Test Execution**: Full pipeline test (2 epochs, 200 samples → 3 prompts × 1 sample → evaluation → A/B summary)  
 🟡 **CI Smoke Gate**: Add 3-prompt × 1-sample job to eval_gate.yml (thresholds: pass_rate≥0.65, bar/beat violations<0.05, text_audio_cos≥0.60)  
 🟡 **Architecture Documentation**: Create `docs/stage3_architecture.md` with condition tokenization flow, training loop details, evaluation metrics
@@ -1850,7 +1850,24 @@ python scripts/collect_conditions.py \
 python scripts/validate_conditions.py conditions/stage3_conditions.parquet --strict
 ```
 
-**3. Train**
+**3. Normalize Captions to Attributes**
+```bash
+# Convert natural language captions to MuseCoco-style attributes
+python scripts/caption_to_attrs.py \
+    --input data/metascore_captions.jsonl \
+    --output data/metascore_attrs.jsonl \
+    --vocab configs/attribute_vocab.yaml
+```
+
+**4. Generate VPTT Samples**
+```bash
+# Generate 50 orthogonal performance technique samples
+python scripts/generate_vptt_samples.py \
+    --output-dir data/vptt_samples \
+    --num-samples 50 --seed 42
+```
+
+**5. Train**
 ```bash
 python ml/stage3_generator.py \
     --model-name gpt2 --lora-rank 8 --lora-alpha 16 \
@@ -1860,7 +1877,7 @@ python ml/stage3_generator.py \
     --gradient-accumulation-steps 4 --learning-rate 2e-4
 ```
 
-**4. Generate**
+**6. Generate**
 ```bash
 python ml/stage3_infer.py \
     --model output/stage3_model \
@@ -1869,7 +1886,7 @@ python ml/stage3_infer.py \
     --output output/generated.mid
 ```
 
-**5. Evaluate**
+**7. Evaluate**
 ```bash
 python scripts/quick_eval_stage2.py output/generated.mid \
     --out-report eval/stage3_report.json
@@ -1877,7 +1894,7 @@ python scripts/ab_summarize_v2.py eval/stage3_report.json \
     --baseline-report eval/baseline.json --out eval/ab_summary.md
 ```
 
-**6. Collect Failures & Retry**
+**8. Collect Failures & Retry**
 ```bash
 python scripts/collect_failures.py eval/stage3_report.json \
     --criteria configs/failure_criteria.yaml \

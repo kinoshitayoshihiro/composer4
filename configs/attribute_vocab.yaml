@@ -1,0 +1,202 @@
+# MuseCoco Attribute Vocabulary
+# Used by scripts/caption_to_attrs.py to normalize captions
+#
+# Format: Each attribute type maps canonical values to synonym lists
+
+genre:
+  jazz:
+    - jazz
+    - swing
+    - bebop
+    - blues
+  classical:
+    - classical
+    - orchestral
+    - symphony
+    - symphonic
+    - baroque
+    - romantic
+    - chamber
+  rock:
+    - rock
+    - metal
+    - punk
+    - alternative
+    - grunge
+  pop:
+    - pop
+    - dance
+    - disco
+    - electronic
+    - edm
+    - house
+  folk:
+    - folk
+    - country
+    - bluegrass
+    - acoustic
+    - americana
+  latin:
+    - latin
+    - salsa
+    - bossa
+    - bossa nova
+    - tango
+    - samba
+  ambient:
+    - ambient
+    - atmospheric
+    - soundscape
+    - drone
+    - minimalist
+  other:
+    - experimental
+    - avant-garde
+    - fusion
+    - world
+    - ethnic
+
+mood:
+  cheerful:
+    - cheerful
+    - happy
+    - joyful
+    - upbeat
+    - bright
+    - energetic
+    - lively
+    - optimistic
+  calm:
+    - calm
+    - peaceful
+    - serene
+    - tranquil
+    - relaxing
+    - gentle
+    - soothing
+    - meditative
+  melancholic:
+    - melancholic
+    - sad
+    - sorrowful
+    - nostalgic
+    - wistful
+    - pensive
+    - reflective
+    - longing
+  dramatic:
+    - dramatic
+    - intense
+    - powerful
+    - epic
+    - grand
+    - majestic
+    - heroic
+    - triumphant
+  mysterious:
+    - mysterious
+    - enigmatic
+    - dark
+    - eerie
+    - haunting
+    - ominous
+    - sinister
+    - suspenseful
+  playful:
+    - playful
+    - whimsical
+    - light
+    - fun
+    - bouncy
+    - quirky
+    - mischievous
+  romantic:
+    - romantic
+    - tender
+    - loving
+    - sweet
+    - sentimental
+    - passionate
+    - intimate
+  neutral:
+    - neutral
+    - moderate
+    - balanced
+    - indifferent
+
+tempo:
+  very_slow:
+    - very slow
+    - grave
+    - largo
+    - adagio
+  slow:
+    - slow
+    - lento
+    - andante
+    - leisurely
+  moderate:
+    - moderate
+    - moderato
+    - allegretto
+    - medium tempo
+    - medium
+  fast:
+    - fast
+    - allegro
+    - vivace
+    - upbeat
+    - brisk
+  very_fast:
+    - very fast
+    - presto
+    - prestissimo
+    - rapid
+    - frantic
+
+intensity:
+  low:
+    - soft
+    - quiet
+    - gentle
+    - subtle
+    - low
+    - delicate
+    - pianissimo
+    - piano
+  medium:
+    - medium
+    - moderate
+    - balanced
+    - mezzo-forte
+  high:
+    - loud
+    - strong
+    - powerful
+    - intense
+    - high
+    - forceful
+    - fortissimo
+    - forte
+
+texture:
+  sparse:
+    - sparse
+    - minimal
+    - simple
+    - thin
+    - spacious
+    - open
+    - solo
+  moderate:
+    - moderate
+    - balanced
+    - medium
+  dense:
+    - dense
+    - complex
+    - rich
+    - thick
+    - layered
+    - full
+    - orchestrated
