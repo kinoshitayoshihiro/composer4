@@ -266,5 +266,34 @@ def main():
         print("Usage: python -m ml.performance_monitor --report <path_to_report.json>")
 
 
+def compare_models(
+    baseline_report: PerformanceReport,
+    comparison_report: PerformanceReport,
+) -> dict[str, Any]:
+    """Compare two performance reports (standalone helper).
+    
+    Args:
+        baseline_report: Baseline model report (e.g., Standard)
+        comparison_report: Comparison model report (e.g., Performer)
+    
+    Returns:
+        Comparison metrics including speedup and memory reduction
+    """
+    speedup = baseline_report.latency_mean / comparison_report.latency_mean
+    latency_delta = baseline_report.latency_mean - comparison_report.latency_mean
+    memory_delta = baseline_report.peak_memory_mean - comparison_report.peak_memory_mean
+    memory_reduction_pct = (memory_delta / baseline_report.peak_memory_mean) * 100
+    
+    return {
+        "speedup": speedup,
+        "latency_delta_ms": latency_delta,
+        "memory_delta_mb": memory_delta,
+        "memory_reduction": memory_reduction_pct,
+        "p95_speedup": baseline_report.latency_p95 / comparison_report.latency_p95,
+        "faster": comparison_report.latency_mean < baseline_report.latency_mean,
+        "less_memory": comparison_report.peak_memory_mean < baseline_report.peak_memory_mean,
+    }
+
+
 if __name__ == "__main__":
     main()
