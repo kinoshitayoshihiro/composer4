@@ -27,6 +27,11 @@ from typing import Any, Sequence
 import pretty_midi
 import yaml
 
+# Stage3 v1.1: MIDI humanizer import
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from scripts.humanize_midi import MIDIHumanizer
+
 try:  # pragma: no cover - optional heavyweight dependencies
     import torch
 except Exception:  # pragma: no cover - optional dependency guard
@@ -629,6 +634,24 @@ def main(argv: Sequence[str] | None = None) -> None:
         help="Path to generation log JSONL",
     )
     parser.add_argument("--verbose", action="store_true", help="Verbose logging")
+    # Stage3 v1.1: Humanization options
+    parser.add_argument(
+        "--humanize",
+        action="store_true",
+        help="Apply velocity/timing humanization to generated MIDI (v1.1 enhancement)",
+    )
+    parser.add_argument(
+        "--humanize-velocity-std",
+        type=float,
+        default=12.0,
+        help="Velocity variation std for humanization (default: 12.0)",
+    )
+    parser.add_argument(
+        "--humanize-timing-jitter",
+        type=float,
+        default=0.018,
+        help="Timing jitter in seconds for humanization (default: 0.018)",
+    )
 
     args = parser.parse_args(argv)
     setup_logging(args.verbose)
@@ -695,6 +718,24 @@ def main(argv: Sequence[str] | None = None) -> None:
         midi_path = midi_dir / f"{slug}_s{sample_idx:02d}.mid"
         decode_stats = decode_to_midi(result["tokens"], tokenizer, midi_path)
 
+        # Stage3 v1.1: Apply humanization if requested
+        if args.humanize:
+            logging.info("Applying humanization to %s", midi_path)
+            humanizer = MIDIHumanizer(
+                velocity_std=args.humanize_velocity_std,
+                timing_jitter_seconds=args.humanize_timing_jitter,
+                accent_strength=1.3,
+                seed=42,  # Reproducible humanization
+            )
+            midi_obj = pretty_midi.PrettyMIDI(str(midi_path))
+            humanized_midi = humanizer.humanize(midi_obj)
+            humanized_midi.write(str(midi_path))
+            logging.info(
+                "  Humanization applied (velocity_std=%.1f, timing_jitter=%.3fs)",
+                args.humanize_velocity_std,
+                args.humanize_timing_jitter,
+            )
+
         generation_params = {
             "temperature": args.temperature,
             "top_p": args.top_p,
@@ -703,6 +744,9 @@ def main(argv: Sequence[str] | None = None) -> None:
             "max_bars": args.max_bars,
             "device": args.device,
             "bar_constraint": not args.disable_bar_constraint,
+            "humanize": args.humanize,  # v1.1
+            "humanize_velocity_std": args.humanize_velocity_std if args.humanize else None,
+            "humanize_timing_jitter": args.humanize_timing_jitter if args.humanize else None,
         }
 
         gen_id = logger.log_generation(

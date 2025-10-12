@@ -1,0 +1,20 @@
+# GrooVAE Humanizer Dependencies
+# For Stage3 v1.1 quality enhancement (Velocity/Timing improvement)
+
+# Magenta - Google's music generation library
+# Includes GrooVAE pretrained model for drum humanization
+magenta>=2.1.4
+
+# TensorFlow - Required by Magenta
+# Note: Magenta supports TF 2.x
+tensorflow>=2.8.0,<2.16.0
+
+# Note Sequence - MIDI processing utilities
+# Included in magenta (version locked to 0.0.3)
+# note-seq>=0.0.5  # REMOVED: conflicts with magenta 2.1.4
+
+# Additional utilities for MIDI conversion
+pretty_midi>=0.2.10
+
+# Progress bar for batch processing
+tqdm>=4.65.0
