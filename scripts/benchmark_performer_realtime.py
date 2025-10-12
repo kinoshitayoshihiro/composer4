@@ -81,6 +81,7 @@ def measure_inference_time(
             temperature=0.9,
             top_p=0.95,
             pad_token_id=0,
+            use_cache=False,  # Disable KV cache for Performer compatibility
         )
     
     # GPU synchronization for accurate timing
