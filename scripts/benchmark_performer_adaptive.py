@@ -1,31 +1,41 @@
 #!/usr/bin/env python3
-"""Adaptive Attention Benchmark - Automatically selects Standard or Performer.
+"""Adaptive Attention Benchmark - SDPA/Standard/Performer.
 
 This script uses the Adaptive Attention Selector to automatically choose
 the best attention mechanism based on device and sequence length.
 
+Updated for SDPA (PyTorch 2.x Flash Attention):
+- SDPA is now the default for GPU (proven 2-4x faster)
+- Performer is kept for compatibility but NOT selected by default
+- Standard is used for CPU or as fallback
+
 Usage:
-    # Auto mode (selects based on threshold)
+    # Auto mode (SDPA for GPU, Standard for CPU)
     python scripts/benchmark_performer_adaptive.py \\
         --device cuda \\
         --num-samples 10 \\
         --prompt-length 64 \\
         --max-new-tokens 512 \\
         --attn auto \\
-        --attn-threshold 1024 \\
         --output results/adaptive_attn_n576.json
 
-    # Force Performer
+    # Force SDPA (Flash Attention)
     python scripts/benchmark_performer_adaptive.py \\
         --device cuda \\
-        --attn performer \\
-        --output results/forced_performer.json
+        --attn sdpa \\
+        --output results/forced_sdpa.json
 
     # Force Standard
     python scripts/benchmark_performer_adaptive.py \\
         --device cuda \\
         --attn standard \\
         --output results/forced_standard.json
+        
+    # Force Performer (experimental, proven slower)
+    python scripts/benchmark_performer_adaptive.py \\
+        --device cuda \\
+        --attn performer \\
+        --output results/forced_performer.json
 """
 
 from __future__ import annotations
@@ -43,7 +53,8 @@ from transformers import GPT2Config, GPT2LMHeadModel
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ml.attention_performer import replace_attention_layers
+from ml.attention_performer import replace_attention_layers as replace_attention_layers_performer
+from ml.attention_sdpa import replace_attention_layers_sdpa, log_sdpa_backend_info
 from ml.attn_selector import apply_adaptive_attention, AttnAutoConfig
 
 logging.basicConfig(
@@ -210,7 +221,7 @@ def run_benchmark(
 
 def main() -> None:
     """Main benchmark execution with adaptive attention selection."""
-    parser = argparse.ArgumentParser(description="Adaptive Attention Benchmark")
+    parser = argparse.ArgumentParser(description="Adaptive Attention Benchmark (SDPA/Standard/Performer)")
     parser.add_argument("--device", default="cuda", choices=["cuda", "cpu"], help="Device")
     parser.add_argument("--num-samples", type=int, default=10, help="Number of samples")
     parser.add_argument("--prompt-length", type=int, default=64, help="Prompt length")
@@ -218,9 +229,9 @@ def main() -> None:
     parser.add_argument("--n-embd", type=int, default=768, help="Embedding dimension")
     parser.add_argument("--n-layer", type=int, default=12, help="Number of layers")
     parser.add_argument("--num-random-features", type=int, default=128, help="Performer random features")
-    parser.add_argument("--attn", choices=["auto", "standard", "performer"], default="auto", 
-                        help="Attention selection: auto (threshold-based), standard (force), performer (force)")
-    parser.add_argument("--attn-threshold", type=int, default=1024, help="Threshold for auto mode")
+    parser.add_argument("--attn", choices=["auto", "standard", "sdpa", "performer"], default="auto", 
+                        help="Attention selection: auto (SDPA for GPU), standard, sdpa (Flash), performer (slow)")
+    parser.add_argument("--attn-threshold", type=int, default=512, help="Threshold for auto mode (unused for SDPA)")
     parser.add_argument("--output", required=True, help="Output JSON file")
     args = parser.parse_args()
     
@@ -232,11 +243,73 @@ def main() -> None:
     seq_len = args.prompt_length + args.max_new_tokens
     
     logger.info("=" * 80)
-    logger.info("🎯 Adaptive Attention Benchmark")
+    logger.info("🎯 Adaptive Attention Benchmark (SDPA/Standard/Performer)")
     logger.info("=" * 80)
     logger.info(f"Device: {args.device}")
     if args.device == "cuda":
         logger.info(f"GPU: {torch.cuda.get_device_name(0)}")
+        logger.info(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.2f} GB")
+        
+        # Log SDPA backend availability
+        logger.info("")
+        log_sdpa_backend_info()
+    
+    logger.info(f"Sequence length: {seq_len} (prompt: {args.prompt_length}, new: {args.max_new_tokens})")
+    logger.info(f"Attention mode: {args.attn}")
+    if args.attn == "auto":
+        logger.info(f"   Threshold: {args.attn_threshold}")
+    
+    # Create model
+    logger.info("")
+    logger.info(f"🔧 Creating GPT-2 model (n_embd={args.n_embd}, n_layer={args.n_layer})")
+    model = create_dummy_model(n_embd=args.n_embd, n_layer=args.n_layer)
+    
+    # Apply adaptive attention
+    logger.info("")
+    logger.info("🎭 Applying Adaptive Attention Selector...")
+    
+    if args.attn == "auto":
+        cfg = AttnAutoConfig(
+            threshold=args.attn_threshold,
+            num_random_features=args.num_random_features,
+            idempotent=True
+        )
+        applied_kind = apply_adaptive_attention(
+            model,
+            device=args.device,
+            seq_len=seq_len,
+            replace_sdpa_fn=replace_attention_layers_sdpa,
+            replace_performer_fn=replace_attention_layers_performer,
+            cfg=cfg
+        )
+    elif args.attn == "sdpa":
+        num_replaced = replace_attention_layers_sdpa(model, causal=True)
+        applied_kind = "sdpa"
+        logger.info(f"   SDPA replaced {num_replaced} layers")
+        try:
+            setattr(model, "_attn_kind", "sdpa")
+        except Exception:
+            pass
+    elif args.attn == "performer":
+        replace_attention_layers_performer(model, num_random_features=args.num_random_features)
+        applied_kind = "performer"
+        try:
+            setattr(model, "_attn_kind", "performer")
+        except Exception:
+            pass
+    else:  # standard
+        applied_kind = "standard"
+        try:
+            setattr(model, "_attn_kind", "standard")
+        except Exception:
+            pass
+    
+    logger.info(f"✅ Attention selected: {applied_kind.upper()}")
+    logger.info(f"   Device: {args.device}")
+    logger.info(f"   Seq len: {seq_len}")
+    if applied_kind == "performer":
+        logger.info(f"   Random features: {args.num_random_features}")
+        logger.info(f"   ⚠️  WARNING: Performer proven 2-3x SLOWER in empirical tests")
         logger.info(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.2f} GB")
     logger.info(f"Sequence length: {seq_len} (prompt: {args.prompt_length}, new: {args.max_new_tokens})")
     logger.info(f"Attention mode: {args.attn}")
