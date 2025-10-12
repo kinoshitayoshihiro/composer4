@@ -426,7 +426,10 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
 
         for candidate in candidates:
             if candidate.exists():
+                logging.debug("✓ Found MIDI: %s", candidate)
                 return candidate
+            else:
+                logging.debug("✗ Not found: %s", candidate)
 
         return None
 
