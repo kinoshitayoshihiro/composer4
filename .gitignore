@@ -51,6 +51,7 @@ checkpoints/
 # 認証情報
 *.json
 !package.json
+!results/*.json  # Allow benchmark results
 marutakesyobou-*.json
 *.service-account.json
 *.key
@@ -83,6 +84,9 @@ checkpoints/
 *.wav
 *.mp3
 *.flac
+
+# Allow benchmark result images
+!results/*.png
 
 # GitHub 50MB制限対応で除外する大きなファイル
 tree.md
