@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Quick Install Script for composer2-3 Dependencies
+# =============================================================================
+# This script installs all required dependencies in the correct order.
+# Usage:
+#   chmod +x install_deps.sh
+#   ./install_deps.sh [option]
+#
+# Options:
+#   --dev      Install development dependencies (includes pytest, mypy, etc.)
+#   --test     Install test dependencies only
+#   --minimal  Install only core runtime dependencies
+#   --all      Install everything (default)
+# =============================================================================
+
+set -e  # Exit on error
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Parse arguments
+MODE="${1:---all}"
+
+log_info "Installation mode: $MODE"
+log_info "Working directory: $SCRIPT_DIR"
+
+# Check Python version
+PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+log_info "Python version: $PYTHON_VERSION"
+
+# Upgrade pip first
+log_info "Upgrading pip..."
+python3 -m pip install --upgrade pip
+
+# Special handling for PyTorch (platform-specific)
+install_pytorch() {
+    log_info "Installing PyTorch..."
+    if python3 -c "import torch" 2>/dev/null; then
+        TORCH_VERSION=$(python3 -c "import torch; print(torch.__version__)" 2>/dev/null || echo "unknown")
+        log_info "PyTorch already installed: $TORCH_VERSION"
+    else
+        log_warn "PyTorch not found. Installing CPU version..."
+        log_warn "For GPU support, install manually with CUDA-specific wheel URL"
+        pip install torch>=2.3,\<2.4 || {
+            log_error "PyTorch installation failed. Try manually:"
+            log_error "  pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu"
+            exit 1
+        }
+    fi
+}
+
+install_pytorch
+
+case "$MODE" in
+    --minimal)
+        log_info "Installing minimal runtime dependencies..."
+        pip install -r requirements.txt
+        ;;
+    
+    --test)
+        log_info "Installing test dependencies..."
+        pip install -r requirements-test.txt
+        ;;
+    
+    --dev)
+        log_info "Installing development dependencies..."
+        # Install base requirements first
+        pip install -r requirements.txt
+        # Then dev-specific packages
+        pip install -r requirements-dev.txt
+        ;;
+    
+    --all|*)
+        log_info "Installing ALL dependencies (runtime + dev + test + extras)..."
+        
+        # Install in dependency order
+        log_info "Step 1/5: Core runtime dependencies"
+        pip install -r requirements.txt
+        
+        log_info "Step 2/5: Extra ML/Audio packages"
+        if [ -f requirements-extra.txt ]; then
+            pip install -r requirements-extra.txt
+        fi
+        
+        log_info "Step 3/5: Development tools"
+        pip install -r requirements-dev.txt
+        
+        log_info "Step 4/5: Test framework"
+        pip install -r requirements-test.txt
+        
+        log_info "Step 5/5: Optional packages"
+        if [ -f requirements-optional.txt ]; then
+            pip install -r requirements-optional.txt || log_warn "Some optional packages failed to install (non-critical)"
+        fi
+        ;;
+esac
+
+# Verify critical packages
+log_info "Verifying installation..."
+python3 -c "import torch; import numpy; import librosa; import music21; print('✅ Core packages OK')" || {
+    log_error "Core package verification failed!"
+    exit 1
+}
+
+python3 -c "import pytest; import jsonschema; print('✅ Test/CI packages OK')" || {
+    log_warn "Test packages missing (run with --dev or --test to install)"
+}
+
+log_info "========================================="
+log_info "✅ Installation completed successfully!"
+log_info "========================================="
+log_info ""
+log_info "Next steps:"
+log_info "  1. Run tests:      pytest tests/"
+log_info "  2. Run evaluation: python3 scripts/quick_eval_stage2.py --help"
+log_info "  3. Run CI gate:    python3 scripts/ci_eval_gate.py --help"
+log_info ""

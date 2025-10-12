@@ -1,0 +1,184 @@
+name: Stage3 Evaluation Gate
+
+on:
+  pull_request:
+    paths:
+      - 'ml/stage3_*.py'
+      - 'ml/generation_logger.py'
+      - 'scripts/quick_eval_stage2.py'
+      - 'scripts/ci_eval_gate.py'
+      - 'configs/stage3/**'
+      - 'checkpoints/**'
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      model_commit:
+        description: 'Model checkpoint commit SHA (or "latest")'
+        required: false
+        default: 'latest'
+      num_samples:
+        description: 'Number of samples to generate'
+        required: false
+        default: '32'
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements-test.txt
+          pip install jsonschema pandas pyarrow pyyaml
+
+      - name: Validate conditions schema
+        if: hashFiles('conditions/stage3_conditions.parquet') != ''
+        run: |
+          python scripts/validate_conditions.py conditions/stage3_conditions.parquet --strict
+
+      - name: Verify schema file exists
+        run: |
+          if [ ! -f outputs/eval/schema/quick_eval_v1.json ]; then
+            echo "❌ Schema file missing"
+            exit 2
+          fi
+
+      - name: Run quick evaluation
+        id: eval
+        run: |
+          # Use existing MIDI directory if available, otherwise generate
+          MIDI_DIR="outputs/eval_stage2/midi"
+          NUM_SAMPLES="${{ github.event.inputs.num_samples || '32' }}"
+          
+          if [ -d "$MIDI_DIR" ] && [ "$(ls -A $MIDI_DIR/*.mid 2>/dev/null | wc -l)" -ge "$NUM_SAMPLES" ]; then
+            echo "Using existing MIDI files from $MIDI_DIR"
+            python scripts/quick_eval_stage2.py \
+              --midi-dir "$MIDI_DIR" \
+              --num-samples "$NUM_SAMPLES" \
+              --timeout 90 \
+              --fallback \
+              --verbose
+          else
+            echo "Generating new samples (requires model checkpoint)"
+            # This path requires model artifacts to be available
+            # Adjust paths based on your CI artifact storage
+            python scripts/quick_eval_stage2.py \
+              --model checkpoints/stage3/latest \
+              --tokenizer configs/stage3/tokenizer.json \
+              --prompts configs/stage3/prompts_eval.yaml \
+              --num-samples "$NUM_SAMPLES" \
+              --device cpu \
+              --timeout 90 \
+              --fallback \
+              --verbose
+          fi
+
+      - name: Run quality gate
+        run: |
+          LATEST_REPORT=$(ls -t outputs/eval_stage2/eval_report_*.json | head -1)
+          
+          if [ -z "$LATEST_REPORT" ]; then
+            echo "❌ No evaluation report found"
+            exit 2
+          fi
+          
+          echo "Checking report: $LATEST_REPORT"
+          
+          python scripts/ci_eval_gate.py "$LATEST_REPORT" \
+            --schema outputs/eval/schema/quick_eval_v1.json \
+            --overall-pass-rate-min 0.70 \
+            --overall-p50-min 55.0 \
+            --overall-p90-min 70.0 \
+            --error-rate-max 0.20 \
+            --bar-violation-rate-max 0.10 \
+            --min-sample-count 5 \
+            --verbose
+
+      - name: Upload evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results
+          path: |
+            outputs/eval_stage2/*.json
+            outputs/eval_stage2/midi/*.mid
+          retention-days: 14
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const reportDir = 'outputs/eval_stage2';
+            const files = fs.readdirSync(reportDir)
+              .filter(f => f.startsWith('eval_report_') && f.endsWith('.json'))
+              .sort()
+              .reverse();
+            
+            if (files.length === 0) {
+              console.log('No report found');
+              return;
+            }
+            
+            const reportPath = path.join(reportDir, files[0]);
+            const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+            
+            const overall = report.overall || {};
+            const meta = report.meta || {};
+            const errors = report.errors || {};
+            
+            const passRate = (overall.pass_rate * 100).toFixed(1);
+            const p50 = overall.p50?.toFixed(1) || '0.0';
+            const p90 = overall.p90?.toFixed(1) || '0.0';
+            const violations = (overall.bar_beat_violation_rate * 100).toFixed(1);
+            const errorCount = errors.total || 0;
+            
+            const comment = `## 🎵 Stage3 Evaluation Report
+            
+            **Model**: \`${meta.model_commit?.substring(0, 12) || 'unknown'}\`
+            **Samples**: ${meta.n || 0}
+            **Stage2**: ${meta.stage2_version || 'unknown'}
+            
+            ### Quality Metrics
+            | Metric | Value | Threshold |
+            |--------|-------|-----------|
+            | Pass Rate | ${passRate}% | ≥ 70% |
+            | P50 Score | ${p50} | ≥ 55.0 |
+            | P90 Score | ${p90} | ≥ 70.0 |
+            | Violations | ${violations}% | ≤ 10% |
+            | Errors | ${errorCount} | - |
+            
+            ${overall.pass_rate >= 0.70 && overall.p50 >= 55 && overall.p90 >= 70 ? '✅ **Quality Gate PASSED**' : '❌ **Quality Gate FAILED**'}
+            
+            <details>
+            <summary>View stratified breakdown</summary>
+            
+            ${JSON.stringify(report.stratified, null, 2)}
+            </details>
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

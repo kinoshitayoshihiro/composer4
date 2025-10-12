@@ -4,6 +4,7 @@ mido>=1.2
 librosa>=0.10
 httpx>=0.23.3
 pytest-asyncio>=0.23
+pytest>=7.4,<9.0
 numpy>=1.26,<2.0
 tqdm>=4.66
 colorama>=0.4
@@ -23,3 +24,10 @@ tensorboard
 tensorboardX
 torchmetrics
 jsonschema>=4.21
+
+# Code quality and formatting
+flake8>=7.0
+black>=24.0
+
+# Audio synthesis
+dawdreamer>=0.7.0

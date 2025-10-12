@@ -20,8 +20,9 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
 import pretty_midi
 import yaml
@@ -35,6 +36,13 @@ try:  # pragma: no cover - optional heavyweight dependencies
     from transformers import GPT2LMHeadModel
 except Exception:  # pragma: no cover - optional dependency guard
     GPT2LMHeadModel = None  # type: ignore
+
+from ml.generation_logger import GenerationLogger
+
+
+def _slugify(value: str) -> str:
+    slug = re.sub(r"[^0-9a-zA-Z]+", "_", value).strip("_")
+    return slug or "prompt"
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -51,6 +59,7 @@ class Stage3Tokenizer:
 
     def __init__(self, vocab_path: Path) -> None:
         data = json.loads(vocab_path.read_text())
+        self.raw_config = data
         self.token_to_id = data["token_to_id"]
         self.id_to_token = {int(k): v for k, v in data["token_to_id"].items()}
         self.beat_division = data.get("beat_division", 24)
@@ -58,6 +67,7 @@ class Stage3Tokenizer:
         self.velocity_bins = data.get("velocity_bins", 16)
         self.max_duration = data.get("max_duration", 256)
         self.max_bars = data.get("max_bars", 16)
+        self.audio_bins = data.get("audio_bins", 10)
 
         self.pad_id = self.token_to_id.get("<pad>", 0)
         self.bos_id = self.token_to_id.get("<bos>", 1)
@@ -72,17 +82,18 @@ class Stage3Tokenizer:
     @staticmethod
     def quantize(value: float, buckets: int = 10) -> int:
         """Quantize a value in [0, 1] to discrete bucket (floor-based, unbiased).
-        
+
         Single source of truth for quantization - imported from stage3_generator.
-        
+
         Args:
             value: Value in [0, 1] range
             buckets: Number of discrete buckets
-        
+
         Returns:
             Bucket index in [0, buckets-1]
         """
         import math
+
         if math.isnan(value):
             return -1
         clamped = min(max(value, 0.0), 1.0)
@@ -107,25 +118,40 @@ class Stage3Tokenizer:
         # Valence/Arousal bins
         valence = prompt.get("valence")
         if valence is not None:
-            bucket = int(min(10, max(0, round(float(valence) * 10))))
-            tok = self.token_to_id.get(f"<valence:{bucket}>")
-            if tok is not None:
-                tokens.append(tok)
+            try:
+                valence_value = float(valence)
+            except (TypeError, ValueError):
+                valence_value = None
+            if valence_value is not None:
+                bucket = int(min(10, max(0, round(valence_value * 10))))
+                tok = self.token_to_id.get(f"<valence:{bucket}>")
+                if tok is not None:
+                    tokens.append(tok)
 
         arousal = prompt.get("arousal")
         if arousal is not None:
-            bucket = int(min(10, max(0, round(float(arousal) * 10))))
-            tok = self.token_to_id.get(f"<arousal:{bucket}>")
-            if tok is not None:
-                tokens.append(tok)
+            try:
+                arousal_value = float(arousal)
+            except (TypeError, ValueError):
+                arousal_value = None
+            if arousal_value is not None:
+                bucket = int(min(10, max(0, round(arousal_value * 10))))
+                tok = self.token_to_id.get(f"<arousal:{bucket}>")
+                if tok is not None:
+                    tokens.append(tok)
 
         # Score bucket
         score = prompt.get("score")
         if score is not None:
-            bucket = int(min(9, max(0, round(float(score) / 10.0))))
-            tok = self.token_to_id.get(f"<score:{bucket}>")
-            if tok is not None:
-                tokens.append(tok)
+            try:
+                score_value = float(score)
+            except (TypeError, ValueError):
+                score_value = None
+            if score_value is not None:
+                bucket = int(min(9, max(0, round(score_value / 10.0))))
+                tok = self.token_to_id.get(f"<score:{bucket}>")
+                if tok is not None:
+                    tokens.append(tok)
 
         # Caption tokens
         caption = str(prompt.get("caption", ""))
@@ -144,26 +170,40 @@ class Stage3Tokenizer:
         # Audio similarity (CLAP/MERT) - use unified quantize method
         audio_clap = prompt.get("audio_clap")
         if audio_clap is not None:
-            bucket = self.quantize(float(audio_clap), buckets=10)
-            if bucket >= 0:
-                tok = self.token_to_id.get(f"AUDIOCLAP_{bucket}")
-                if tok is not None:
-                    tokens.append(tok)
+            try:
+                clap_value = float(audio_clap)
+            except (TypeError, ValueError):
+                clap_value = None
+            if clap_value is not None:
+                bucket = self.quantize(clap_value, buckets=self.audio_bins)
+                if bucket >= 0:
+                    tok = self.token_to_id.get(f"AUDIOCLAP_{bucket}")
+                    if tok is not None:
+                        tokens.append(tok)
 
         audio_mert = prompt.get("audio_mert")
         if audio_mert is not None:
-            bucket = self.quantize(float(audio_mert), buckets=10)
-            if bucket >= 0:
-                tok = self.token_to_id.get(f"AUDIOMERT_{bucket}")
-                if tok is not None:
-                    tokens.append(tok)
+            try:
+                mert_value = float(audio_mert)
+            except (TypeError, ValueError):
+                mert_value = None
+            if mert_value is not None:
+                bucket = self.quantize(mert_value, buckets=self.audio_bins)
+                if bucket >= 0:
+                    tok = self.token_to_id.get(f"AUDIOMERT_{bucket}")
+                    if tok is not None:
+                        tokens.append(tok)
 
         # Separator
         tokens.append(self.sep_id)
 
         # Tempo
         tempo = prompt.get("tempo", 120)
-        tempo_bucket = ((int(tempo) + 5) // 10) * 10
+        try:
+            tempo_int = int(float(tempo))
+        except (TypeError, ValueError):
+            tempo_int = 120
+        tempo_bucket = ((tempo_int + 5) // 10) * 10
         tempo_bucket = max(40, min(240, tempo_bucket))
         tok = self.token_to_id.get(f"TEMPO_{tempo_bucket}")
         if tok is not None:
@@ -209,10 +249,10 @@ def build_forbidden_mask(
                 forbidden_ids.add(bar_tok_id)
 
     # Rule 2: BEAT order enforcement
-    # If last_beat=2, forbid BEAT_1 (can't go backward)
+    # If last_beat=2, forbid BEAT_1,2 (can't go backward or repeat)
     # If last_beat=4 (in 4/4), forbid BEAT_1-4, only allow new BAR
     if last_beat > 0:
-        for beat_num in range(1, last_beat):
+        for beat_num in range(1, last_beat + 1):  # Include last_beat itself
             beat_tok_name = f"BEAT_{beat_num}"
             beat_tok_id = tokenizer.token_to_id.get(beat_tok_name)
             if beat_tok_id is not None:
@@ -226,13 +266,23 @@ def build_forbidden_mask(
                 if beat_tok_id is not None:
                     forbidden_ids.add(beat_tok_id)
 
+    # Rule 3: Forbid beats beyond time signature limit
+    # For any beat > time_signature_beats, always forbid
+    # (e.g., BEAT_5+ in 4/4, BEAT_7+ in 6/8)
+    max_beat_in_vocab = 8  # Assume max BEAT_8 in vocabulary
+    for beat_num in range(time_signature_beats + 1, max_beat_in_vocab + 1):
+        beat_tok_name = f"BEAT_{beat_num}"
+        beat_tok_id = tokenizer.token_to_id.get(beat_tok_name)
+        if beat_tok_id is not None:
+            forbidden_ids.add(beat_tok_id)
+
     return forbidden_ids
 
 
 def generate_sequences(
     model: torch.nn.Module,
     tokenizer: Stage3Tokenizer,
-    prompts: list[dict[str, object]],
+    prompts: list[dict[str, Any]],
     *,
     num_samples: int = 1,
     max_length: int = 2048,
@@ -242,7 +292,7 @@ def generate_sequences(
     top_k: int = 50,
     device: str = "cpu",
     enforce_bar_constraint: bool = True,
-) -> list[list[int]]:
+) -> list[dict[str, Any]]:
     """Generate token sequences from prompts with constraint sampling.
 
     Args:
@@ -252,10 +302,10 @@ def generate_sequences(
         raise RuntimeError("torch is required for inference")
 
     model.eval()
-    all_sequences: list[list[int]] = []
+    all_sequences: list[dict[str, Any]] = []
 
     with torch.no_grad():
-        for prompt in prompts:
+        for prompt_index, prompt in enumerate(prompts):
             logging.info("Generating for prompt: %s", prompt.get("name", "unnamed"))
             condition_ids = tokenizer.encode_prompt(prompt)
 
@@ -343,11 +393,21 @@ def generate_sequences(
                         generated = torch.cat([generated, eos_tensor], dim=-1)
                         break
 
-                all_sequences.append(generated[0].tolist())
+                sequence_tokens = generated[0].tolist()
+                all_sequences.append(
+                    {
+                        "tokens": sequence_tokens,
+                        "prompt": prompt,
+                        "prompt_index": prompt_index,
+                        "sample_index": sample_idx,
+                        "num_tokens": len(sequence_tokens),
+                        "bar_constraint_violated": bar_constraint_violated,
+                    }
+                )
                 logging.info(
                     "  Sample %d: %d tokens (bars: %d)",
                     sample_idx + 1,
-                    len(generated[0]),
+                    len(sequence_tokens),
                     current_bar + 1,
                 )
 
@@ -549,7 +609,25 @@ def main(argv: Sequence[str] | None = None) -> None:
     parser.add_argument("--temperature", type=float, default=0.9, help="Sampling temperature")
     parser.add_argument("--top-p", type=float, default=0.9, help="Nucleus sampling threshold")
     parser.add_argument("--top-k", type=int, default=50, help="Top-k sampling threshold")
-    parser.add_argument("--device", type=str, default="cpu", choices=["cpu", "cuda"], help="Device")
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cpu",
+        choices=["cpu", "cuda", "mps"],
+        help="Device to run inference on",
+    )
+    parser.add_argument("--max-bars", type=int, default=8, help="Maximum bars to generate")
+    parser.add_argument(
+        "--disable-bar-constraint",
+        action="store_true",
+        help="Disable BAR/BEAT constraint enforcement",
+    )
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        default=Path("outputs/stage3/generation_log.jsonl"),
+        help="Path to generation log JSONL",
+    )
     parser.add_argument("--verbose", action="store_true", help="Verbose logging")
 
     args = parser.parse_args(argv)
@@ -557,6 +635,11 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     if torch is None or GPT2LMHeadModel is None:
         raise RuntimeError("Install torch and transformers for inference")
+
+    if args.device == "mps":
+        if not hasattr(torch.backends, "mps") or not torch.backends.mps.is_available():
+            logging.warning("MPS backend not available; falling back to CPU")
+            args.device = "cpu"
 
     # Load tokenizer
     logging.info("Loading tokenizer from %s", args.tokenizer)
@@ -566,6 +649,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     logging.info("Loading model from %s", args.model)
     model = GPT2LMHeadModel.from_pretrained(str(args.model))
     model.to(args.device)
+
+    logger = GenerationLogger(log_file=str(args.log_file))
+    tokenizer_hash = logger.compute_tokenizer_hash(tokenizer.raw_config)
 
     # Load prompts
     logging.info("Loading prompts from %s", args.prompts)
@@ -585,10 +671,12 @@ def main(argv: Sequence[str] | None = None) -> None:
         prompts=prompts,
         num_samples=args.num_samples,
         max_length=args.max_length,
+        max_bars=args.max_bars,
         temperature=args.temperature,
         top_p=args.top_p,
         top_k=args.top_k,
         device=args.device,
+        enforce_bar_constraint=not args.disable_bar_constraint,
     )
 
     # Save outputs
@@ -596,10 +684,50 @@ def main(argv: Sequence[str] | None = None) -> None:
     midi_dir = args.out / "midi"
     midi_dir.mkdir(exist_ok=True)
 
-    for idx, seq in enumerate(sequences):
-        midi_path = midi_dir / f"generated_{idx:04d}.mid"
-        decode_to_midi(seq, tokenizer, midi_path)
-        logging.info("Saved MIDI: %s", midi_path)
+    records: list[dict[str, Any]] = []
+
+    for result in sequences:
+        prompt: dict[str, Any] = result["prompt"]
+        prompt_idx = int(result["prompt_index"])
+        sample_idx = int(result["sample_index"])
+        prompt_name = str(prompt.get("name", f"prompt_{prompt_idx:02d}"))
+        slug = _slugify(f"{prompt_name}_p{prompt_idx:02d}")
+        midi_path = midi_dir / f"{slug}_s{sample_idx:02d}.mid"
+        decode_stats = decode_to_midi(result["tokens"], tokenizer, midi_path)
+
+        generation_params = {
+            "temperature": args.temperature,
+            "top_p": args.top_p,
+            "top_k": args.top_k,
+            "max_length": args.max_length,
+            "max_bars": args.max_bars,
+            "device": args.device,
+            "bar_constraint": not args.disable_bar_constraint,
+        }
+
+        gen_id = logger.log_generation(
+            prompt=prompt,
+            output_file=str(midi_path),
+            model_checkpoint=str(args.model),
+            tokenizer_hash=tokenizer_hash,
+            num_tokens=int(result["num_tokens"]),
+            generation_params=generation_params,
+        )
+        logger.embed_metadata_in_midi(str(midi_path), gen_id)
+        logging.info("Saved MIDI: %s (generation_id=%s)", midi_path, gen_id)
+
+        record = {
+            "generation_id": gen_id,
+            "prompt": prompt,
+            "prompt_name": prompt_name,
+            "prompt_index": prompt_idx,
+            "sample_index": sample_idx,
+            "output_file": str(midi_path),
+            "num_tokens": int(result["num_tokens"]),
+            "bar_constraint_violated": bool(result["bar_constraint_violated"]),
+            **decode_stats,
+        }
+        records.append(record)
 
     # Save metadata
     metadata_path = args.out / "generation_metadata.json"
@@ -613,6 +741,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         "temperature": args.temperature,
         "top_p": args.top_p,
         "top_k": args.top_k,
+        "max_bars": args.max_bars,
+        "bar_constraint_enabled": not args.disable_bar_constraint,
+        "log_file": str(args.log_file),
+        "records": records,
+        "logger_summary": logger.summary(),
     }
     metadata_path.write_text(json.dumps(metadata, indent=2))
     logging.info("Generation complete. Metadata saved to %s", metadata_path)

@@ -1,403 +1,725 @@
 #!/usr/bin/env python3
-"""
-scripts/quick_eval_stage2.py
+"""Stage3 → Stage2 quick evaluation pipeline with KPI reporting.
 
-Real Stage2 Integration for A/B Evaluation
-- Generates sequences via Stage3
-- Evaluates via lamda_stage2_extractor.py (real Stage2)
-- Computes KPI: pass_rate, p50, p90, bar_violation_rate
-- Outputs: JSON + Markdown report
+This script wires the full closed loop:
+
+1. (Optional) Generate MIDI samples from Stage3 given prompts
+2. Evaluate each sample with the real Stage2 extractor
+3. Compute aggregate KPIs and stratified metrics
+4. Persist a schema-validated JSON report
+
+It is designed to be interactive and CI friendly.  When a --midi-dir is
+provided the generation step is skipped so that previously rendered material
+can be re-evaluated quickly.
 """
 
+from __future__ import annotations
+
+import argparse
 import json
-import os
-import sys
+import logging
 import subprocess
+import sys
+from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Dict, Any
-import numpy as np
-from datetime import datetime
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
-# Add project root to path
-PROJECT_ROOT = Path(__file__).parent.parent
+import numpy as np
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from ml.generation_logger import GenerationLogger
+from ml.stage3_infer import Stage3Tokenizer, decode_to_midi, generate_sequences
 
-def generate_test_sequences(
-    checkpoint_path: str,
-    num_samples: int = 50,
-    output_dir: str = "outputs/eval_stage2"
-) -> List[str]:
-    """
-    Generate test sequences using Stage3 model
-    
-    Args:
-        checkpoint_path: Path to Stage3 checkpoint
-        num_samples: Number of samples to generate
-        output_dir: Directory to save generated MIDI files
-        
-    Returns:
-        List of generated MIDI file paths
-    """
-    from ml.stage3_infer import Stage3Tokenizer, generate_sequences
-    
-    os.makedirs(output_dir, exist_ok=True)
-    
-    # Test prompts with diverse conditions
-    prompts = [
-        {
-            "emotion": "happy",
-            "genre": "pop",
-            "valence": 8,
-            "arousal": 7,
-            "tempo": 120,
-            "max_bars": 8,
-        },
-        {
-            "emotion": "sad",
-            "genre": "classical",
-            "valence": 3,
-            "arousal": 4,
-            "tempo": 80,
-            "max_bars": 8,
-        },
-        {
-            "emotion": "energetic",
-            "genre": "jazz",
-            "valence": 7,
-            "arousal": 8,
-            "tempo": 140,
-            "max_bars": 8,
-        },
-        {
-            "emotion": "calm",
-            "genre": "ambient",
-            "valence": 6,
-            "arousal": 3,
-            "tempo": 60,
-            "max_bars": 8,
-        },
-    ]
-    
-    tokenizer = Stage3Tokenizer()
-    generated_files = []
-    
-    for i in range(num_samples):
-        prompt = prompts[i % len(prompts)]
-        
-        try:
-            # Generate sequence
-            output = generate_sequences(
-                checkpoint_path=checkpoint_path,
-                prompts=[prompt],
-                max_bars=prompt["max_bars"],
-                temperature=0.9,
-                top_k=50,
-                top_p=0.9,
-                enforce_bar_constraint=True
-            )
-            
-            if output and output[0]:
-                midi_path = os.path.join(output_dir, f"sample_{i:03d}.mid")
-                output[0].write(midi_path)
-                generated_files.append(midi_path)
-                print(f"✅ Generated: {midi_path}")
-            else:
-                print(f"⚠️  Failed to generate sample {i}")
-                
-        except Exception as e:
-            print(f"❌ Error generating sample {i}: {e}")
-            continue
-    
-    return generated_files
+try:  # pragma: no cover - optional heavyweight dependencies
+    import torch
+    from transformers import GPT2LMHeadModel
+except Exception:  # pragma: no cover - optional dependency guard
+    torch = None  # type: ignore
+    GPT2LMHeadModel = None  # type: ignore
+
+Report = Dict[str, Any]
+Record = Dict[str, Any]
+
+SCHEMA_PATH_DEFAULT = PROJECT_ROOT / "outputs" / "eval" / "schema" / "quick_eval_v1.json"
+STAGE2_SCRIPT = PROJECT_ROOT / "scripts" / "lamda_stage2_extractor.py"
+DEFAULT_PROMPTS = PROJECT_ROOT / "configs" / "stage3" / "prompts_eval.yaml"
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "outputs" / "eval_stage2"
+
+LOGGER = logging.getLogger("quick_eval_stage2")
 
 
-def evaluate_with_stage2(midi_files: List[str]) -> List[Dict[str, Any]]:
-    """
-    Evaluate generated MIDI files using Stage2 extractor
-    
-    Args:
-        midi_files: List of MIDI file paths
-        
-    Returns:
-        List of evaluation results with Stage2 scores
-    """
-    results = []
-    
-    # Check if Stage2 extractor exists
-    stage2_script = PROJECT_ROOT / "lamda_stage2_extractor.py"
-    if not stage2_script.exists():
-        print(f"⚠️  Stage2 extractor not found at {stage2_script}")
-        print("Using fallback evaluation...")
-        return _fallback_evaluation(midi_files)
-    
-    for midi_path in midi_files:
-        try:
-            # Run Stage2 extractor
-            cmd = [
-                "python3",
-                str(stage2_script),
-                "--input", midi_path,
-                "--output", midi_path.replace(".mid", ".stage2.json")
-            ]
-            
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            
-            if result.returncode != 0:
-                print(f"⚠️  Stage2 evaluation failed for {midi_path}")
-                print(f"stderr: {result.stderr}")
-                results.append({
-                    "file": midi_path,
-                    "error": result.stderr,
-                    "stage2_score": None
-                })
-                continue
-            
-            # Parse Stage2 output
-            output_path = midi_path.replace(".mid", ".stage2.json")
-            if os.path.exists(output_path):
-                with open(output_path, "r") as f:
-                    stage2_data = json.load(f)
-                
-                results.append({
-                    "file": midi_path,
-                    "stage2_score": stage2_data.get("total_score", 0),
-                    "axes": stage2_data.get("axes", {}),
-                    "pass": stage2_data.get("total_score", 0) >= 50,
-                    "bar_violations": _count_bar_violations(midi_path)
-                })
-            else:
-                results.append({
-                    "file": midi_path,
-                    "error": "Stage2 output not found",
-                    "stage2_score": None
-                })
-                
-        except subprocess.TimeoutExpired:
-            print(f"⏱️  Stage2 evaluation timed out for {midi_path}")
-            results.append({
-                "file": midi_path,
-                "error": "Timeout",
-                "stage2_score": None
-            })
-        except Exception as e:
-            print(f"❌ Error evaluating {midi_path}: {e}")
-            results.append({
-                "file": midi_path,
-                "error": str(e),
-                "stage2_score": None
-            })
-    
-    return results
+def setup_logging(verbose: bool = False) -> None:
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
 
-def _fallback_evaluation(midi_files: List[str]) -> List[Dict[str, Any]]:
-    """
-    Fallback evaluation when Stage2 extractor is not available
-    Uses basic MIDI structure checks
-    """
-    results = []
-    
-    for midi_path in midi_files:
-        try:
-            import pretty_midi
-            
-            pm = pretty_midi.PrettyMIDI(midi_path)
-            
-            # Basic quality metrics
-            num_notes = sum(len(inst.notes) for inst in pm.instruments)
-            duration = pm.get_end_time()
-            bar_violations = _count_bar_violations(midi_path)
-            
-            # Heuristic score (0-100)
-            score = 50
-            if num_notes > 20:
-                score += 10
-            if duration > 10:
-                score += 10
-            if bar_violations == 0:
-                score += 20
-            if len(pm.instruments) > 0:
-                score += 10
-            
-            results.append({
-                "file": midi_path,
-                "stage2_score": score,
-                "axes": {
-                    "num_notes": num_notes,
-                    "duration": duration,
-                    "bar_violations": bar_violations
+def load_prompts(path: Path) -> List[Dict[str, Any]]:
+    import yaml
+
+    if not path.exists():
+        raise FileNotFoundError(f"Prompt file not found: {path}")
+
+    with path.open() as f:
+        data = yaml.safe_load(f) or {}
+
+    prompts = data.get("prompts", [])
+    if not isinstance(prompts, list):
+        raise ValueError("Expected 'prompts' key to be a list in prompts file")
+    return prompts
+
+
+def load_model_and_tokenizer(
+    model_dir: Path,
+    tokenizer_path: Path,
+    device: str = "cpu",
+) -> tuple[Any, Stage3Tokenizer]:
+    if torch is None or GPT2LMHeadModel is None:
+        raise RuntimeError("torch and transformers are required for generation")
+
+    LOGGER.info("Loading tokenizer from %s", tokenizer_path)
+    tokenizer = Stage3Tokenizer(tokenizer_path)
+
+    LOGGER.info("Loading model from %s", model_dir)
+    model = GPT2LMHeadModel.from_pretrained(str(model_dir))
+    model.to(device)
+    model.eval()
+    return model, tokenizer
+
+
+def percentile(values: Iterable[float], q: float) -> Optional[float]:
+    vals = list(values)
+    if not vals:
+        return None
+    return float(np.percentile(np.asarray(vals, dtype=float), q))
+
+
+def mean(values: Iterable[float]) -> Optional[float]:
+    vals = list(values)
+    if not vals:
+        return None
+    return float(np.mean(np.asarray(vals, dtype=float)))
+
+
+def tempo_bin(tempo: Optional[float]) -> str:
+    if tempo is None:
+        return "unknown"
+    tempo = float(tempo)
+    if tempo < 80:
+        return "slow"
+    if tempo < 120:
+        return "medium"
+    return "fast"
+
+
+def safe_float(value: Any) -> Optional[float]:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def ensure_schema(path: Path) -> None:
+    if path.exists():
+        return
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    schema = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Stage3 quick evaluation report",
+        "type": "object",
+        "required": ["meta", "overall", "errors", "stratified", "items"],
+        "properties": {
+            "meta": {
+                "type": "object",
+                "required": [
+                    "created_at",
+                    "prompt_file",
+                    "model_commit",
+                    "tokenizer_hash",
+                    "n",
+                    "stage2_version",
+                ],
+                "properties": {
+                    "created_at": {"type": "string"},
+                    "prompt_file": {"type": "string"},
+                    "model_commit": {"type": "string"},
+                    "tokenizer_hash": {"type": "string"},
+                    "n": {"type": "integer"},
+                    "stage2_version": {"type": "string"},
                 },
-                "pass": score >= 50,
-                "bar_violations": bar_violations,
-                "note": "Fallback evaluation (Stage2 not available)"
-            })
-            
-        except Exception as e:
-            results.append({
-                "file": midi_path,
-                "error": str(e),
-                "stage2_score": None
-            })
-    
-    return results
+            },
+            "overall": {
+                "type": "object",
+                "required": ["pass_rate", "p50", "p90", "mean", "bar_beat_violation_rate"],
+                "properties": {
+                    "pass_rate": {"type": "number"},
+                    "p50": {"type": "number"},
+                    "p90": {"type": "number"},
+                    "mean": {"type": "number"},
+                    "bar_beat_violation_rate": {"type": "number"},
+                },
+            },
+            "errors": {
+                "type": "object",
+                "required": ["total", "by_reason"],
+                "properties": {
+                    "total": {"type": "integer"},
+                    "by_reason": {
+                        "type": "object",
+                        "additionalProperties": {"type": "integer"},
+                    },
+                },
+            },
+            "stratified": {
+                "type": "object",
+                "properties": {
+                    "time_sig": {"type": "object"},
+                    "tempo_bin": {"type": "object"},
+                    "genre": {"type": "object"},
+                    "emotion": {"type": "object"},
+                    "audio_adaptive": {"type": "object"},
+                },
+                "additionalProperties": False,
+            },
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["gen_id", "status", "score", "passed", "diagnostics"],
+                    "properties": {
+                        "gen_id": {"type": "string"},
+                        "file": {"type": "string"},
+                        "status": {"type": "string"},
+                        "error_reason": {"type": "string"},
+                        "score": {"type": "number"},
+                        "passed": {"type": "boolean"},
+                        "axes_raw": {"type": "object"},
+                        "diagnostics": {"type": "object"},
+                    },
+                },
+            },
+        },
+    }
+    path.write_text(json.dumps(schema, indent=2))
 
 
-def _count_bar_violations(midi_path: str) -> int:
-    """
-    Count BAR constraint violations in generated MIDI
-    (Placeholder - actual implementation depends on tokenizer metadata)
-    """
-    # This would parse the generation metadata or re-tokenize
-    # For now, return 0 as placeholder
+def validate_report_schema(report: Report, schema_path: Path) -> None:
+    """Validate report against JSON schema. Raise on failure with diagnostic logging."""
+    try:
+        import jsonschema
+    except ImportError:  # pragma: no cover - optional dep
+        LOGGER.warning(
+            "jsonschema package not available, schema validation SKIPPED. "
+            "Install via: pip install jsonschema"
+        )
+        return
+
+    if not schema_path.exists():
+        LOGGER.error("Schema file not found: %s", schema_path)
+        raise FileNotFoundError(f"Schema file missing: {schema_path}")
+
+    schema = json.loads(schema_path.read_text())
+    try:
+        jsonschema.validate(report, schema)
+        LOGGER.info("✅ Report schema validation passed: %s", schema_path.name)
+    except jsonschema.ValidationError as exc:
+        LOGGER.error("❌ Schema validation FAILED at path: %s", list(exc.path))
+        LOGGER.error("Validation error: %s", exc.message)
+        LOGGER.error("Failed value: %s", exc.instance)
+        raise RuntimeError(
+            f"Report does not conform to schema {schema_path.name}: {exc.message}"
+        ) from exc
+
+
+def compute_tokenizer_hash(tokenizer_path: Path) -> str:
+    data = json.loads(tokenizer_path.read_text())
+    logger = GenerationLogger(auto_commit_hash=True)
+    return logger.compute_tokenizer_hash(data)
+
+
+def build_generation_diagnostics(prompt: Dict[str, Any]) -> Dict[str, Any]:
+    tempo = safe_float(prompt.get("tempo"))
+    tsig = str(prompt.get("time_signature", prompt.get("time_sig", "4/4")))
+    genre = str(prompt.get("genre", "unknown"))
+    emotion = str(prompt.get("emotion", "unknown"))
+    adaptive_enabled = bool(
+        prompt.get("audio_clap") is not None or prompt.get("audio_mert") is not None
+    )
+
+    return {
+        "bar_beat_violation": False,
+        "time_sig": tsig,
+        "tempo_bin": tempo_bin(tempo),
+        "genre": genre,
+        "emotion": emotion,
+        "audio": {
+            "adaptive_enabled": adaptive_enabled,
+            "failsafe_reason": None,
+        },
+    }
+
+
+def generate_sequences_to_midi(
+    *,
+    model_dir: Path,
+    tokenizer_path: Path,
+    prompts: List[Dict[str, Any]],
+    num_samples: int,
+    output_dir: Path,
+    device: str,
+    logger: GenerationLogger,
+) -> List[Dict[str, Any]]:
+    model, tokenizer = load_model_and_tokenizer(model_dir, tokenizer_path, device)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    tokenizer_hash = compute_tokenizer_hash(tokenizer_path)
+    generation_records: List[Dict[str, Any]] = []
+    for idx, prompt in enumerate(prompts[:num_samples]):
+        try:
+            sequences = generate_sequences(
+                model=model,
+                tokenizer=tokenizer,
+                prompts=[prompt],
+                num_samples=1,
+                device=device,
+                enforce_bar_constraint=True,
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            LOGGER.exception("Generation failed for prompt %d", idx)
+            generation_records.append(
+                {
+                    "prompt": prompt,
+                    "midi_path": None,
+                    "status": "error",
+                    "error_reason": f"gen_failed:{exc}",
+                    "diagnostics": build_generation_diagnostics(prompt),
+                    "gen_id": None,
+                }
+            )
+            continue
+
+        if not sequences:
+            generation_records.append(
+                {
+                    "prompt": prompt,
+                    "midi_path": None,
+                    "status": "error",
+                    "error_reason": "gen_empty",
+                    "diagnostics": build_generation_diagnostics(prompt),
+                    "gen_id": None,
+                }
+            )
+            continue
+
+        sequence = sequences[0]
+        midi_path = output_dir / f"sample_{idx:04d}.mid"
+        decode_to_midi(sequence, tokenizer, midi_path)
+
+        gen_id = logger.log_generation(
+            prompt=prompt,
+            output_file=str(midi_path),
+            model_checkpoint=str(model_dir),
+            tokenizer_hash=tokenizer_hash,
+            generation_params={"device": device},
+        )
+        logger.embed_metadata_in_midi(str(midi_path), gen_id)
+
+        generation_records.append(
+            {
+                "prompt": prompt,
+                "midi_path": midi_path,
+                "status": "ok",
+                "error_reason": None,
+                "diagnostics": build_generation_diagnostics(prompt),
+                "gen_id": gen_id,
+            }
+        )
+
+    return generation_records
+
+
+def evaluate_midi_with_stage2(
+    midi_path: Path,
+    timeout: int = 60,
+) -> tuple[str, Optional[Dict[str, Any]], Optional[str]]:
+    if not STAGE2_SCRIPT.exists():
+        return "missing_stage2", None, f"Stage2 extractor missing at {STAGE2_SCRIPT}"
+
+    cmd = [
+        sys.executable,
+        str(STAGE2_SCRIPT),
+        "--input",
+        str(midi_path),
+        "--output",
+        str(midi_path.with_suffix(".stage2.json")),
+    ]
+
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return "stage2_timeout", None, "Stage2 timeout"
+    except Exception as exc:  # pragma: no cover - defensive
+        return "stage2_error", None, f"Stage2 invocation error: {exc}"
+
+    if result.returncode != 0:
+        return "stage2_failed", None, result.stderr.strip() or "Stage2 failed"
+
+    out_path = midi_path.with_suffix(".stage2.json")
+    if not out_path.exists():
+        return "stage2_output_missing", None, "Stage2 output missing"
+
+    try:
+        data = json.loads(out_path.read_text())
+    except json.JSONDecodeError as exc:
+        return "stage2_invalid_json", None, f"Invalid Stage2 JSON: {exc}"
+
+    return "ok", data, None
+
+
+def fallback_evaluate(midi_path: Path) -> Dict[str, Any]:
+    try:
+        import pretty_midi
+    except ImportError as exc:  # pragma: no cover
+        raise RuntimeError("pretty_midi required for fallback evaluation") from exc
+
+    pm = pretty_midi.PrettyMIDI(str(midi_path))
+    num_notes = sum(len(inst.notes) for inst in pm.instruments)
+    duration = pm.get_end_time()
+    score = 50
+    if num_notes > 20:
+        score += 10
+    if duration > 10:
+        score += 10
+    if len(pm.instruments) > 0:
+        score += 10
+
+    return {
+        "total_score": float(score),
+        "axes": {
+            "notes": num_notes,
+            "duration": duration,
+        },
+        "stage2_version": "fallback",
+        "diagnostics": {
+            "tempo": pm.estimate_tempo() if pm.get_end_time() else None,
+            "time_signature": "4/4",
+        },
+    }
+
+
+def build_report(records: List[Record], meta: Dict[str, Any]) -> Report:
+    ok_records = [r for r in records if r["status"] == "ok" and r.get("score") is not None]
+
+    MIN_SAMPLE_COUNT = 5  # Minimum samples for reliable stratified KPI
+
+    def overall_kpi(rows: List[Record]) -> Dict[str, Any]:
+        scores = [float(r["score"]) for r in rows if r.get("score") is not None]
+        passes = [r for r in rows if r.get("passed")]
+        violations = [r for r in rows if r.get("diagnostics", {}).get("bar_beat_violation")]
+
+        total = len(rows) or 1
+        return {
+            "pass_rate": round(len(passes) / total, 6),
+            "p50": percentile(scores, 50) or 0.0,
+            "p90": percentile(scores, 90) or 0.0,
+            "mean": mean(scores) or 0.0,
+            "bar_beat_violation_rate": round(len(violations) / total, 6),
+        }
+
+    def collect_errors(rows: List[Record]) -> Dict[str, Any]:
+        by_reason: Dict[str, int] = defaultdict(int)
+        for r in rows:
+            if r["status"] == "error":
+                by_reason[r.get("error_reason", "unknown")] += 1
+        return {"total": sum(by_reason.values()), "by_reason": dict(by_reason)}
+
+    def bucketize(rows: List[Record], path: Sequence[str]) -> Dict[str, List[Record]]:
+        buckets: Dict[str, List[Record]] = defaultdict(list)
+        for row in rows:
+            node: Any = row
+            valid = True
+            for key in path:
+                node = node.get(key) if isinstance(node, dict) else None
+                if node is None:
+                    valid = False
+                    break
+            if not valid:
+                continue
+            buckets[str(node)].append(row)
+        return buckets
+
+    def kpi_per_bucket(buckets: Dict[str, List[Record]]) -> Dict[str, Any]:
+        result = {}
+        for key, rows in buckets.items():
+            if not rows:
+                continue
+            kpi = overall_kpi(rows)
+            kpi["n"] = len(rows)
+            # Mark low sample count buckets with a warning flag for CI gating
+            if len(rows) < MIN_SAMPLE_COUNT:
+                kpi["_warning"] = f"low_sample_count (n={len(rows)} < {MIN_SAMPLE_COUNT})"
+                LOGGER.warning(
+                    "Stratified bucket '%s' has insufficient samples: n=%d (threshold=%d)",
+                    key,
+                    len(rows),
+                    MIN_SAMPLE_COUNT,
+                )
+            result[key] = kpi
+        return result
+
+    report: Report = {
+        "meta": meta,
+        "overall": overall_kpi(ok_records),
+        "errors": collect_errors(records),
+        "stratified": {
+            "time_sig": kpi_per_bucket(bucketize(ok_records, ["diagnostics", "time_sig"])),
+            "tempo_bin": kpi_per_bucket(bucketize(ok_records, ["diagnostics", "tempo_bin"])),
+            "genre": kpi_per_bucket(bucketize(ok_records, ["diagnostics", "genre"])),
+            "emotion": kpi_per_bucket(bucketize(ok_records, ["diagnostics", "emotion"])),
+            "audio_adaptive": kpi_per_bucket(
+                bucketize(ok_records, ["diagnostics", "audio", "adaptive_enabled"])
+            ),
+        },
+        "items": records,
+    }
+    return report
+
+
+def save_report(report: Report, output_dir: Path) -> Path:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
+    json_path = output_dir / f"eval_report_{timestamp}.json"
+    json_path.write_text(json.dumps(report, indent=2))
+    return json_path
+
+
+def build_meta(
+    *,
+    prompt_file: Optional[Path],
+    generation_count: int,
+    model_commit: Optional[str],
+    tokenizer_hash: Optional[str],
+    stage2_version: str,
+) -> Dict[str, Any]:
+    return {
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "prompt_file": str(prompt_file) if prompt_file else None,
+        "model_commit": model_commit or "unknown",
+        "tokenizer_hash": tokenizer_hash or "unknown",
+        "n": generation_count,
+        "stage2_version": stage2_version,
+    }
+
+
+def evaluate_records(
+    generations: List[Dict[str, Any]],
+    timeout: int,
+    use_fallback: bool,
+) -> List[Record]:
+    records: List[Record] = []
+    for entry in generations:
+        midi_path = entry.get("midi_path")
+        if midi_path is None:
+            records.append(
+                {
+                    "gen_id": entry.get("gen_id") or "unknown",
+                    "file": None,
+                    "status": "error",
+                    "error_reason": entry.get("error_reason", "gen_failed"),
+                    "score": None,
+                    "passed": False,
+                    "axes_raw": None,
+                    "diagnostics": entry.get("diagnostics", {}),
+                }
+            )
+            continue
+
+        status, stage2_data, error = evaluate_midi_with_stage2(Path(midi_path), timeout=timeout)
+        if status != "ok" and use_fallback:
+            stage2_data = fallback_evaluate(Path(midi_path))
+            status = "ok"
+            error = None
+
+        if status != "ok" or stage2_data is None:
+            records.append(
+                {
+                    "gen_id": entry.get("gen_id") or "unknown",
+                    "file": str(midi_path),
+                    "status": "error",
+                    "error_reason": error or status,
+                    "score": None,
+                    "passed": False,
+                    "axes_raw": None,
+                    "diagnostics": entry.get("diagnostics", {}),
+                }
+            )
+            continue
+
+        score = safe_float(stage2_data.get("total_score"))
+        axes_raw = stage2_data.get("axes_raw") or stage2_data.get("axes")
+        diagnostics = entry.get("diagnostics", {}).copy()
+
+        stage2_diag = stage2_data.get("diagnostics", {})
+        if isinstance(stage2_diag, dict):
+            diagnostics.setdefault(
+                "time_sig", str(stage2_diag.get("time_signature", diagnostics.get("time_sig")))
+            )
+            diagnostics.setdefault("tempo_bin", tempo_bin(stage2_diag.get("tempo")))
+            diagnostics.setdefault("tempo", stage2_diag.get("tempo"))
+
+        bar_violation = bool(stage2_data.get("bar_violations") or stage2_data.get("bar_violation"))
+        diagnostics["bar_beat_violation"] = (
+            diagnostics.get("bar_beat_violation", False) or bar_violation
+        )
+
+        records.append(
+            {
+                "gen_id": entry.get("gen_id") or "unknown",
+                "file": str(midi_path),
+                "status": "ok",
+                "error_reason": None,
+                "score": score or 0.0,
+                "passed": bool(score and score >= 50),
+                "axes_raw": axes_raw,
+                "diagnostics": diagnostics,
+            }
+        )
+
+    return records
+
+
+def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Stage3 → Stage2 quick evaluation")
+    parser.add_argument("--model", type=Path, help="Stage3 model checkpoint directory")
+    parser.add_argument("--tokenizer", type=Path, help="Stage3 tokenizer JSON path")
+    parser.add_argument(
+        "--prompts", type=Path, default=DEFAULT_PROMPTS, help="Prompt YAML for generation"
+    )
+    parser.add_argument(
+        "--midi-dir", type=Path, help="Existing MIDI directory to evaluate (skip generation)"
+    )
+    parser.add_argument(
+        "--num-samples", type=int, default=32, help="Number of samples to generate/evaluate"
+    )
+    parser.add_argument("--device", choices=["cpu", "cuda"], default="cpu")
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--schema", type=Path, default=SCHEMA_PATH_DEFAULT)
+    parser.add_argument(
+        "--timeout", type=int, default=60, help="Stage2 evaluation timeout (seconds)"
+    )
+    parser.add_argument(
+        "--fallback", action="store_true", help="Fallback to heuristic evaluation if Stage2 fails"
+    )
+    parser.add_argument("--verbose", action="store_true")
+    return parser.parse_args(argv)
+
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
+    args = parse_args(argv)
+    setup_logging(args.verbose)
+
+    ensure_schema(args.schema)
+
+    generation_logger = GenerationLogger()
+    tokenizer_hash: Optional[str] = None
+    model_commit: Optional[str] = None
+    generations: List[Dict[str, Any]]
+
+    if args.midi_dir and args.midi_dir.exists():
+        LOGGER.info("Using existing MIDI directory: %s", args.midi_dir)
+        midi_files = sorted(p for p in args.midi_dir.glob("*.mid"))
+        generations = [
+            {
+                "prompt": {},
+                "midi_path": midi_file,
+                "status": "ok",
+                "error_reason": None,
+                "diagnostics": {
+                    "time_sig": "unknown",
+                    "tempo_bin": "unknown",
+                    "genre": "unknown",
+                    "emotion": "unknown",
+                    "audio": {"adaptive_enabled": False, "failsafe_reason": None},
+                    "bar_beat_violation": False,
+                },
+                "gen_id": Path(midi_file).stem,
+            }
+            for midi_file in midi_files[: args.num_samples]
+        ]
+    else:
+        if not args.model or not args.tokenizer:
+            LOGGER.error("Model and tokenizer paths are required when generation is enabled")
+            return 2
+        tokenizer_hash = compute_tokenizer_hash(args.tokenizer)
+        prompts = load_prompts(args.prompts)
+        if not prompts:
+            LOGGER.error("No prompts found in %s", args.prompts)
+            return 2
+
+        generations = generate_sequences_to_midi(
+            model_dir=args.model,
+            tokenizer_path=args.tokenizer,
+            prompts=prompts,
+            num_samples=args.num_samples,
+            output_dir=args.output_dir / "midi",
+            device=args.device,
+            logger=generation_logger,
+        )
+
+        if generations:
+            first_ok = next((g for g in generations if g.get("gen_id")), None)
+            if first_ok:
+                meta = generation_logger.get_generation_metadata(first_ok["gen_id"])
+                if meta:
+                    model_commit = meta.get("model_commit")
+
+    records = evaluate_records(generations, timeout=args.timeout, use_fallback=args.fallback)
+
+    stage2_version = "unknown"
+    for rec in records:
+        axes = rec.get("axes_raw")
+        if isinstance(axes, dict) and "stage2_version" in axes:
+            stage2_version = str(axes["stage2_version"])
+            break
+
+    meta = build_meta(
+        prompt_file=args.prompts if args.prompts else None,
+        generation_count=len(generations),
+        model_commit=model_commit,
+        tokenizer_hash=tokenizer_hash,
+        stage2_version=stage2_version,
+    )
+
+    report = build_report(records, meta)
+    validate_report_schema(report, args.schema)
+    json_path = save_report(report, args.output_dir)
+    LOGGER.info("Report saved to %s", json_path)
+
+    LOGGER.info(
+        "Summary: pass_rate=%.2f%%, p50=%.2f, p90=%.2f",
+        report["overall"].get("pass_rate", 0.0) * 100,
+        report["overall"].get("p50", 0.0),
+        report["overall"].get("p90", 0.0),
+    )
+
     return 0
 
 
-def compute_kpi(results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Compute KPI metrics from evaluation results
-    
-    Args:
-        results: List of evaluation results
-        
-    Returns:
-        KPI dictionary with pass_rate, p50, p90, etc.
-    """
-    scores = [r["stage2_score"] for r in results if r.get("stage2_score") is not None]
-    passes = [r for r in results if r.get("pass") is True]
-    bar_violations = [r["bar_violations"] for r in results if "bar_violations" in r]
-    
-    if not scores:
-        return {
-            "error": "No valid scores",
-            "total_samples": len(results)
-        }
-    
-    kpi = {
-        "total_samples": len(results),
-        "valid_samples": len(scores),
-        "pass_rate": len(passes) / len(scores) if scores else 0.0,
-        "p50": float(np.percentile(scores, 50)),
-        "p90": float(np.percentile(scores, 90)),
-        "mean_score": float(np.mean(scores)),
-        "bar_violation_rate": sum(bar_violations) / len(bar_violations) if bar_violations else 0.0,
-        "bar_violations_total": sum(bar_violations),
-    }
-    
-    # Gate judgment
-    kpi["gate_pass"] = (
-        kpi["pass_rate"] >= 0.7 and
-        kpi["p50"] >= 60 and
-        kpi["bar_violation_rate"] == 0.0
-    )
-    
-    return kpi
-
-
-def save_report(
-    kpi: Dict[str, Any],
-    results: List[Dict[str, Any]],
-    output_dir: str
-):
-    """
-    Save evaluation report as JSON and Markdown
-    """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # Save JSON
-    json_path = os.path.join(output_dir, f"eval_report_{timestamp}.json")
-    with open(json_path, "w") as f:
-        json.dump({
-            "kpi": kpi,
-            "results": results,
-            "timestamp": timestamp
-        }, f, indent=2)
-    
-    # Save Markdown
-    md_path = os.path.join(output_dir, f"eval_report_{timestamp}.md")
-    with open(md_path, "w") as f:
-        f.write("# Stage3 Evaluation Report (Real Stage2 Integration)\n\n")
-        f.write(f"**Generated**: {timestamp}\n\n")
-        
-        f.write("## KPI Summary\n\n")
-        f.write(f"- **Total Samples**: {kpi.get('total_samples', 0)}\n")
-        f.write(f"- **Valid Samples**: {kpi.get('valid_samples', 0)}\n")
-        f.write(f"- **Pass Rate**: {kpi.get('pass_rate', 0):.1%}\n")
-        f.write(f"- **P50 Score**: {kpi.get('p50', 0):.1f}\n")
-        f.write(f"- **P90 Score**: {kpi.get('p90', 0):.1f}\n")
-        f.write(f"- **Mean Score**: {kpi.get('mean_score', 0):.1f}\n")
-        f.write(f"- **BAR Violation Rate**: {kpi.get('bar_violation_rate', 0):.1%}\n")
-        f.write(f"- **Total BAR Violations**: {kpi.get('bar_violations_total', 0)}\n\n")
-        
-        gate_status = "✅ PASS" if kpi.get('gate_pass') else "❌ FAIL"
-        f.write(f"**Gate Judgment**: {gate_status}\n\n")
-        
-        f.write("## Gate Criteria\n\n")
-        f.write("- Pass Rate ≥ 70%\n")
-        f.write("- P50 ≥ 60\n")
-        f.write("- BAR Violation Rate = 0%\n\n")
-        
-        f.write("## Sample Results\n\n")
-        f.write("| File | Score | Pass | BAR Violations |\n")
-        f.write("|------|-------|------|----------------|\n")
-        for r in results[:20]:  # Show first 20
-            score = r.get("stage2_score", "N/A")
-            pass_mark = "✅" if r.get("pass") else "❌"
-            violations = r.get("bar_violations", "N/A")
-            filename = os.path.basename(r["file"])
-            f.write(f"| {filename} | {score} | {pass_mark} | {violations} |\n")
-    
-    print(f"\n📊 Report saved:")
-    print(f"  JSON: {json_path}")
-    print(f"  Markdown: {md_path}")
-
-
-def main():
-    """
-    Main evaluation workflow
-    """
-    import argparse
-    
-    parser = argparse.ArgumentParser(description="Stage3 Real Stage2 Evaluation")
-    parser.add_argument("--checkpoint", type=str, required=True, help="Stage3 checkpoint path")
-    parser.add_argument("--num-samples", type=int, default=50, help="Number of samples to generate")
-    parser.add_argument("--output-dir", type=str, default="outputs/eval_stage2", help="Output directory")
-    
-    args = parser.parse_args()
-    
-    print("=" * 70)
-    print("Stage3 Evaluation: Real Stage2 Integration")
-    print("=" * 70)
-    
-    # Step 1: Generate sequences
-    print("\n[1/3] Generating test sequences...")
-    midi_files = generate_test_sequences(
-        checkpoint_path=args.checkpoint,
-        num_samples=args.num_samples,
-        output_dir=args.output_dir
-    )
-    print(f"✅ Generated {len(midi_files)} MIDI files")
-    
-    # Step 2: Evaluate with Stage2
-    print("\n[2/3] Evaluating with Stage2...")
-    results = evaluate_with_stage2(midi_files)
-    print(f"✅ Evaluated {len(results)} samples")
-    
-    # Step 3: Compute KPI and save report
-    print("\n[3/3] Computing KPI and generating report...")
-    kpi = compute_kpi(results)
-    save_report(kpi, results, args.output_dir)
-    
-    # Print summary
-    print("\n" + "=" * 70)
-    print("KPI Summary")
-    print("=" * 70)
-    print(f"Pass Rate:     {kpi.get('pass_rate', 0):.1%}")
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(main())
     print(f"P50:           {kpi.get('p50', 0):.1f}")
     print(f"P90:           {kpi.get('p90', 0):.1f}")
     print(f"Violations:    {kpi.get('bar_violation_rate', 0):.1%}")

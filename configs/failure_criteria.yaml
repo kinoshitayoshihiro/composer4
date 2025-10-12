@@ -1,0 +1,39 @@
+# Failure Criteria Configuration for Stage3 Sample Collection
+
+# Minimum acceptable Stage2 total score
+score_threshold: 45.0
+
+# Minimum acceptable text-audio cosine similarity (CLAP/MERT)
+text_audio_cos_threshold: 0.50
+
+# Enable emotion mismatch detection
+check_emotion_mismatch: true
+
+# Enable structure violation detection (BAR/BEAT order)
+check_structure_violations: true
+
+# Maximum number of failures to collect per category
+# (prevents bias toward a single failure type)
+max_failures_per_category: 50
+
+# Preset recommendations per failure type
+preset_mapping:
+  low_score: "velocity_chain_audio"
+  low_text_audio_cos: "audio_adaptive"
+  emotion_mismatch: "emotion_correction"
+  structure_violations: "structure_repair"
+
+# Advanced filters (optional)
+advanced:
+  # Minimum note count to consider for retry
+  min_note_count: 16
+  
+  # Exclude samples with extremely low scores (likely corrupted)
+  exclude_score_below: 10.0
+  
+  # Retry priority weights (higher = more urgent)
+  priority_weights:
+    low_score: 3
+    low_text_audio_cos: 2
+    emotion_mismatch: 2
+    structure_violations: 1

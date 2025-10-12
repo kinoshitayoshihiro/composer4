@@ -1,259 +1,183 @@
 #!/usr/bin/env python3
-"""
-build_forbidden_mask の多拍子(3/4, 6/8)テスト。
+"""Unit tests for multi time-signature music guards."""
 
-前提:
-- ml.stage3_infer.build_forbidden_mask が実装済み
-- 拍子に応じた BEAT 上限制御と逆行防止を検証
-"""
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Dict
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import pytest
+
+# Ensure project root on path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from ml.stage3_infer import build_forbidden_mask
 
 
-def test_34_time_sig_progression():
-    """3/4拍子: BEAT_1~3のみ有効、逆行防止確認"""
-    print("=" * 70)
-    print("Test 1: 3/4 Time Signature - Beat Progression")
-    print("=" * 70)
-    
-    from ml.stage3_infer import build_forbidden_mask
-    
-    class MockTokenizer:
-        max_bars = 16
-        token_to_id = {}
-        # BAR tokens
-        for i in range(16):
-            token_to_id[f"BAR_{i}"] = 100 + i
-        # BEAT tokens (1-8 to cover various time sigs)
-        for i in range(1, 9):
-            token_to_id[f"BEAT_{i}"] = 200 + i
-    
-    tokenizer = MockTokenizer()
-    
-    # Case 1: last_beat=1 in 3/4
-    print("\nCase 1: last_beat=1 (3/4)")
+class MockTokenizer:
+    """Minimal tokenizer stub exposing the fields build_forbidden_mask expects."""
+
+    def __init__(self, max_bars: int = 16, max_beats: int = 8) -> None:
+        self.max_bars = max_bars
+        self.token_to_id: Dict[str, int] = {}
+        for i in range(max_bars):
+            self.token_to_id[f"BAR_{i}"] = 100 + i
+        for i in range(1, max_beats + 1):
+            self.token_to_id[f"BEAT_{i}"] = 200 + i
+
+
+def _forbidden_names(tokenizer: MockTokenizer, mask: set[int]) -> set[str]:
+    return {
+        name
+        for name, idx in tokenizer.token_to_id.items()
+        if idx in mask and name.startswith(("BAR_", "BEAT_"))
+    }
+
+
+@pytest.mark.parametrize("max_bars", [2, 4, 8])
+def test_timesig_34_order_and_overflow(max_bars: int) -> None:
+    tokenizer = MockTokenizer(max_bars=max_bars)
+
     forbid = build_forbidden_mask(
         tokenizer=tokenizer,
-        current_bar=1,
-        max_bars=8,
-        last_beat=1,
+        current_bar=max_bars,
+        max_bars=max_bars,
+        last_beat=2,
         time_signature_beats=3,
     )
-    
-    # BEAT_2, BEAT_3 should be allowed
-    # BEAT_4+ should be forbidden (out of range)
-    beat_1_id = tokenizer.token_to_id.get("BEAT_1")
-    beat_2_id = tokenizer.token_to_id.get("BEAT_2")
-    beat_3_id = tokenizer.token_to_id.get("BEAT_3")
-    beat_4_id = tokenizer.token_to_id.get("BEAT_4")
-    
-    assert beat_1_id in forbid, "BEAT_1 should be forbidden (backward jump)"
-    assert beat_2_id not in forbid, "BEAT_2 should be allowed"
-    assert beat_3_id not in forbid, "BEAT_3 should be allowed"
-    assert beat_4_id in forbid, "BEAT_4 should be forbidden (out of 3/4 range)"
-    
-    print(f"  ✅ BEAT_1 forbidden (backward): {beat_1_id in forbid}")
-    print(f"  ✅ BEAT_2 allowed: {beat_2_id not in forbid}")
-    print(f"  ✅ BEAT_3 allowed: {beat_3_id not in forbid}")
-    print(f"  ✅ BEAT_4 forbidden (range): {beat_4_id in forbid}")
-    
-    # Case 2: last_beat=3 (final beat of 3/4)
-    print("\nCase 2: last_beat=3 (final beat, should force new BAR)")
-    forbid = build_forbidden_mask(
+
+    names = _forbidden_names(tokenizer, forbid)
+
+    assert "BEAT_1" in names and "BEAT_2" in names, "Backward beats must be blocked"
+    assert "BEAT_3" not in names, "Forward beat should remain legal"
+
+    assert all(
+        f"BAR_{b}" in names for b in range(max_bars, tokenizer.max_bars)
+    ), "BAR overflow is not guarded"
+
+
+def test_timesig_68_sequence_and_bar_end() -> None:
+    tokenizer = MockTokenizer(max_bars=8, max_beats=8)
+
+    forbid_mid = build_forbidden_mask(
         tokenizer=tokenizer,
         current_bar=2,
+        max_bars=8,
+        last_beat=4,
+        time_signature_beats=6,
+    )
+
+    names_mid = _forbidden_names(tokenizer, forbid_mid)
+    assert {"BEAT_1", "BEAT_2", "BEAT_3"}.issubset(names_mid)
+    assert {"BEAT_5", "BEAT_6"}.isdisjoint(names_mid)
+    assert {"BEAT_7", "BEAT_8"}.issubset(names_mid)
+
+    forbid_end = build_forbidden_mask(
+        tokenizer=tokenizer,
+        current_bar=2,
+        max_bars=8,
+        last_beat=6,
+        time_signature_beats=6,
+    )
+    names_end = _forbidden_names(tokenizer, forbid_end)
+    assert all(f"BEAT_{i}" in names_end for i in range(1, 7)), "Bar boundary should force new BAR"
+
+
+def test_time_signature_change_resets_rules() -> None:
+    tokenizer = MockTokenizer(max_bars=8, max_beats=6)
+
+    # Previous state in 3/4 reaching bar end
+    _ = build_forbidden_mask(
+        tokenizer=tokenizer,
+        current_bar=3,
         max_bars=8,
         last_beat=3,
         time_signature_beats=3,
     )
-    
-    # All BEAT tokens should be forbidden (must advance to new BAR)
-    assert beat_1_id in forbid, "BEAT_1 should be forbidden"
-    assert beat_2_id in forbid, "BEAT_2 should be forbidden"
-    assert beat_3_id in forbid, "BEAT_3 should be forbidden"
-    
-    print(f"  ✅ All BEATs forbidden (force new BAR): {all(tokenizer.token_to_id[f'BEAT_{i}'] in forbid for i in [1,2,3])}")
 
-
-def test_68_time_sig_six_eighths():
-    """6/8拍子: BEAT_1~6のみ有効、逆行防止確認"""
-    print("\n" + "=" * 70)
-    print("Test 2: 6/8 Time Signature - Six Eighths")
-    print("=" * 70)
-    
-    from ml.stage3_infer import build_forbidden_mask
-    
-    class MockTokenizer:
-        max_bars = 16
-        token_to_id = {}
-        for i in range(16):
-            token_to_id[f"BAR_{i}"] = 100 + i
-        for i in range(1, 9):
-            token_to_id[f"BEAT_{i}"] = 200 + i
-    
-    tokenizer = MockTokenizer()
-    
-    # Case: last_beat=4 in 6/8
-    print("\nCase: last_beat=4 (6/8)")
+    # Switch to 4/4: should allow BEAT_1 and forbid non-existent BEAT_5
     forbid = build_forbidden_mask(
         tokenizer=tokenizer,
-        current_bar=0,
-        max_bars=16,
-        last_beat=4,
-        time_signature_beats=6,
-    )
-    
-    beat_ids = {i: tokenizer.token_to_id[f"BEAT_{i}"] for i in range(1, 9)}
-    
-    # BEAT_1~3 should be forbidden (backward)
-    # BEAT_5~6 should be allowed
-    # BEAT_7+ should be forbidden (out of range)
-    for i in [1, 2, 3]:
-        assert beat_ids[i] in forbid, f"BEAT_{i} should be forbidden (backward)"
-        print(f"  ✅ BEAT_{i} forbidden (backward)")
-    
-    for i in [5, 6]:
-        assert beat_ids[i] not in forbid, f"BEAT_{i} should be allowed"
-        print(f"  ✅ BEAT_{i} allowed")
-    
-    for i in [7, 8]:
-        assert beat_ids[i] in forbid, f"BEAT_{i} should be forbidden (out of range)"
-        print(f"  ✅ BEAT_{i} forbidden (range)")
-
-
-def test_bar_overflow_cap():
-    """BAR上限到達時のオーバーフロー防止"""
-    print("\n" + "=" * 70)
-    print("Test 3: BAR Overflow Prevention")
-    print("=" * 70)
-    
-    from ml.stage3_infer import build_forbidden_mask
-    
-    class MockTokenizer:
-        max_bars = 16
-        token_to_id = {}
-        for i in range(16):
-            token_to_id[f"BAR_{i}"] = 100 + i
-        for i in range(1, 5):
-            token_to_id[f"BEAT_{i}"] = 200 + i
-    
-    tokenizer = MockTokenizer()
-    
-    # current_bar=8, max_bars=8 (at limit)
-    print("\nCase: current_bar=8, max_bars=8")
-    forbid = build_forbidden_mask(
-        tokenizer=tokenizer,
-        current_bar=8,
+        current_bar=3,
         max_bars=8,
-        last_beat=1,
+        last_beat=0,
         time_signature_beats=4,
     )
-    
-    # BAR_8 and higher should be forbidden
-    for i in range(8, 16):
-        bar_id = tokenizer.token_to_id.get(f"BAR_{i}")
-        if bar_id is not None:
-            assert bar_id in forbid, f"BAR_{i} should be forbidden (overflow)"
-    
-    print(f"  ✅ BAR_8~15 all forbidden (overflow prevention)")
-    
-    # current_bar=7, max_bars=8 (not yet at limit)
-    print("\nCase: current_bar=7, max_bars=8")
-    forbid = build_forbidden_mask(
+
+    names = _forbidden_names(tokenizer, forbid)
+    assert "BEAT_1" not in names, "Beat order did not reset after time signature change"
+    assert "BEAT_5" in names, "Non-existent beat should remain forbidden"
+
+
+def test_time_signature_transition_sequence() -> None:
+    """Test consecutive time signature changes: 4/4 → 3/4 → 6/8."""
+    tokenizer = MockTokenizer(max_bars=8, max_beats=8)
+
+    # Phase 1: 4/4, last_beat=2
+    forbid_44 = build_forbidden_mask(
         tokenizer=tokenizer,
-        current_bar=7,
+        current_bar=1,
         max_bars=8,
-        last_beat=1,
+        last_beat=2,
         time_signature_beats=4,
     )
-    
-    # BAR_7 should be allowed (still under limit)
-    bar_7_id = tokenizer.token_to_id.get("BAR_7")
-    assert bar_7_id not in forbid, "BAR_7 should be allowed (under limit)"
-    
-    print(f"  ✅ BAR_7 allowed (under limit)")
+    names_44 = _forbidden_names(tokenizer, forbid_44)
+    assert {"BEAT_1", "BEAT_2"}.issubset(names_44), "4/4: backward beats must be blocked"
+    assert {"BEAT_3", "BEAT_4"}.isdisjoint(names_44), "4/4: forward beats should be allowed"
+    assert {"BEAT_5", "BEAT_6", "BEAT_7", "BEAT_8"}.issubset(
+        names_44
+    ), "4/4: beats beyond 4 should be blocked"
 
-
-def test_combined_constraints_34():
-    """複合制約: 3/4拍子でBAR上限+BEAT境界"""
-    print("\n" + "=" * 70)
-    print("Test 4: Combined Constraints (3/4 at BAR limit)")
-    print("=" * 70)
-    
-    from ml.stage3_infer import build_forbidden_mask
-    
-    class MockTokenizer:
-        max_bars = 16
-        token_to_id = {}
-        for i in range(16):
-            token_to_id[f"BAR_{i}"] = 100 + i
-        for i in range(1, 9):
-            token_to_id[f"BEAT_{i}"] = 200 + i
-    
-    tokenizer = MockTokenizer()
-    
-    # current_bar=8 (at limit), last_beat=2 (in 3/4)
-    print("\nCase: current_bar=8, last_beat=2 (3/4)")
-    forbid = build_forbidden_mask(
+    # Phase 2: Transition to 3/4, reset with last_beat=0
+    forbid_34 = build_forbidden_mask(
         tokenizer=tokenizer,
-        current_bar=8,
+        current_bar=2,
+        max_bars=8,
+        last_beat=0,
+        time_signature_beats=3,
+    )
+    names_34 = _forbidden_names(tokenizer, forbid_34)
+    assert "BEAT_1" not in names_34, "3/4: BEAT_1 should be allowed after reset"
+    assert {"BEAT_4", "BEAT_5", "BEAT_6", "BEAT_7", "BEAT_8"}.issubset(
+        names_34
+    ), "3/4: beats beyond 3 should be blocked"
+
+    # Phase 3: Continue in 3/4 with last_beat=2
+    forbid_34_mid = build_forbidden_mask(
+        tokenizer=tokenizer,
+        current_bar=2,
         max_bars=8,
         last_beat=2,
         time_signature_beats=3,
     )
-    
-    # BAR_8+ forbidden
-    bar_forbidden = sum(1 for i in range(8, 16) if tokenizer.token_to_id[f"BAR_{i}"] in forbid)
-    assert bar_forbidden == 8, f"Expected 8 BAR tokens forbidden, got {bar_forbidden}"
-    
-    # BEAT_1~2 forbidden, BEAT_3 allowed
-    beat_1_id = tokenizer.token_to_id["BEAT_1"]
-    beat_2_id = tokenizer.token_to_id["BEAT_2"]
-    beat_3_id = tokenizer.token_to_id["BEAT_3"]
-    
-    assert beat_1_id in forbid, "BEAT_1 should be forbidden (backward)"
-    assert beat_2_id in forbid, "BEAT_2 should be forbidden (backward)"
-    assert beat_3_id not in forbid, "BEAT_3 should be allowed"
-    
-    print(f"  ✅ {bar_forbidden} BAR tokens forbidden (overflow)")
-    print(f"  ✅ BEAT_1,2 forbidden (backward), BEAT_3 allowed")
+    names_34_mid = _forbidden_names(tokenizer, forbid_34_mid)
+    assert {"BEAT_1", "BEAT_2"}.issubset(names_34_mid), "3/4: backward beats blocked"
+    assert "BEAT_3" not in names_34_mid, "3/4: BEAT_3 should be allowed"
 
+    # Phase 4: Transition to 6/8, reset with last_beat=0
+    forbid_68 = build_forbidden_mask(
+        tokenizer=tokenizer,
+        current_bar=3,
+        max_bars=8,
+        last_beat=0,
+        time_signature_beats=6,
+    )
+    names_68 = _forbidden_names(tokenizer, forbid_68)
+    assert "BEAT_1" not in names_68, "6/8: BEAT_1 should be allowed after reset"
+    assert {"BEAT_7", "BEAT_8"}.issubset(names_68), "6/8: beats beyond 6 should be blocked"
 
-def main():
-    """Run all multi-time-signature tests"""
-    print("\n" + "=" * 70)
-    print("Music Guards: Multi-Time-Signature Test Suite")
-    print("=" * 70)
-    
-    try:
-        test_34_time_sig_progression()
-        test_68_time_sig_six_eighths()
-        test_bar_overflow_cap()
-        test_combined_constraints_34()
-        
-        print("\n" + "=" * 70)
-        print("✅ All Multi-Time-Signature Tests Passed!")
-        print("=" * 70)
-        print("\nValidated:")
-        print("  ✅ 3/4 time signature (BEAT_1~3)")
-        print("  ✅ 6/8 time signature (BEAT_1~6)")
-        print("  ✅ BAR overflow prevention")
-        print("  ✅ BEAT backward jump prevention")
-        print("  ✅ BEAT boundary enforcement (force new BAR)")
-        print("  ✅ Combined constraints (BAR+BEAT)")
-        print()
-        
-    except Exception as e:
-        print(f"\n❌ Test failed: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
+    # Phase 5: Continue in 6/8 with last_beat=5
+    forbid_68_mid = build_forbidden_mask(
+        tokenizer=tokenizer,
+        current_bar=3,
+        max_bars=8,
+        last_beat=5,
+        time_signature_beats=6,
+    )
+    names_68_mid = _forbidden_names(tokenizer, forbid_68_mid)
+    assert {"BEAT_1", "BEAT_2", "BEAT_3", "BEAT_4", "BEAT_5"}.issubset(
+        names_68_mid
+    ), "6/8: backward beats blocked"
+    assert "BEAT_6" not in names_68_mid, "6/8: BEAT_6 should be allowed"
+    assert {"BEAT_7", "BEAT_8"}.issubset(names_68_mid), "6/8: out-of-range beats blocked"

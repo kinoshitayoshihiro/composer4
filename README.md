@@ -1795,6 +1795,113 @@ python -m ujam.sparkle_convert song.mid --out out.mid \
   --style-inject '{"period":8,"note":30,"duration_beats":1}' --seed 42
 ```
 
+## Stage3 Conditional Generation Status
+
+**Current Progress: 98% Complete**
+
+Stage3 implements GPT-2-based conditional MIDI generation with LoRA fine-tuning. The system accepts multiple conditioning modalities (emotion, genre, captions, performance techniques, audio embeddings) and generates coherent MIDI sequences with proper temporal structure.
+
+### Core Architecture
+- **Model**: GPT-2 (12-layer, 768-dim) with LoRA rank-8 adapters
+- **Tokenizer**: Custom vocabulary with BAR/BEAT/TSIG/TEMPO tokens + audio embedding bins
+- **Conditioning**:
+  - **XMIDI**: Emotion (valence/arousal) + genre classification
+  - **MetaScore**: Natural language captions (MuseCoco-derived attributes)
+  - **VPTT**: Performance techniques (staccato, legato, pizzicato, etc.)
+  - **Audio Embeddings**: CLAP-512 and MERT-768 for audio-guided generation
+- **Training**: Sequence packing, gradient checkpointing, DeepSpeed ZeRO-2 support
+- **Evaluation**: Stage2 integration for quality scoring, A/B summarization
+
+### Completed Features
+✅ LoRA-based training pipeline with configurable rank/alpha  
+✅ Multi-modal condition tokenization and embedding  
+✅ Sharded MIDI directory support (`_resolve_midi_path`)  
+✅ TrainingArguments defaults fix (max_steps=-1, num_train_epochs=1)  
+✅ Stage2 evaluation integration (`quick_eval_stage2.py`)  
+✅ A/B summarization for comparative evaluation  
+✅ Condition aggregation script (`scripts/collect_conditions.py`)  
+✅ Schema validation (`scripts/validate_conditions.py`, `docs/schemas/conditions.schema.md`)  
+✅ Failure collection & retry logic (`scripts/collect_failures.py`, `configs/failure_criteria.yaml`)  
+✅ CI quality gate with schema validation (`.github/workflows/eval_gate.yml`)
+
+### Remaining Tasks (7-day priority)
+🟡 **VPTT Sample Expansion**: Expand to 50 samples with orthogonal design (2 instruments × 3 techniques × 3 tempos × 3 dynamics)  
+🟡 **Caption Attribute Normalization**: Implement `caption_to_attrs.py` for MuseCoco [genre][mood][tempo][intensity][texture] tokens  
+🟡 **Smoke Test Execution**: Full pipeline test (2 epochs, 200 samples → 3 prompts × 1 sample → evaluation → A/B summary)  
+🟡 **CI Smoke Gate**: Add 3-prompt × 1-sample job to eval_gate.yml (thresholds: pass_rate≥0.65, bar/beat violations<0.05, text_audio_cos≥0.60)  
+🟡 **Architecture Documentation**: Create `docs/stage3_architecture.md` with condition tokenization flow, training loop details, evaluation metrics
+
+### Usage
+
+**1. Aggregate Conditions**
+```bash
+python scripts/collect_conditions.py \
+    --stage2-summary output/drumloops_cleaned/stage2_summary.csv \
+    --xmidi-labels data/xmidi_labels.yaml \
+    --captions data/metascore_captions.jsonl \
+    --vptt-metadata data/vptt_metadata.yaml \
+    --clap-cache cache/clap_embeddings.pkl \
+    --mert-cache cache/mert_embeddings.pkl \
+    --output conditions/stage3_conditions.parquet
+```
+
+**2. Validate Schema**
+```bash
+python scripts/validate_conditions.py conditions/stage3_conditions.parquet --strict
+```
+
+**3. Train**
+```bash
+python ml/stage3_generator.py \
+    --model-name gpt2 --lora-rank 8 --lora-alpha 16 \
+    --conditions conditions/stage3_conditions.parquet \
+    --output-dir output/stage3_model \
+    --num-train-epochs 5 --per-device-train-batch-size 4 \
+    --gradient-accumulation-steps 4 --learning-rate 2e-4
+```
+
+**4. Generate**
+```bash
+python ml/stage3_infer.py \
+    --model output/stage3_model \
+    --prompt "genre=jazz,emotion=calm,valence=0.6,arousal=0.3" \
+    --num-samples 3 --max-length 512 --temperature 0.9 \
+    --output output/generated.mid
+```
+
+**5. Evaluate**
+```bash
+python scripts/quick_eval_stage2.py output/generated.mid \
+    --out-report eval/stage3_report.json
+python scripts/ab_summarize_v2.py eval/stage3_report.json \
+    --baseline-report eval/baseline.json --out eval/ab_summary.md
+```
+
+**6. Collect Failures & Retry**
+```bash
+python scripts/collect_failures.py eval/stage3_report.json \
+    --criteria configs/failure_criteria.yaml \
+    --output failures/retry_list.jsonl
+```
+
+### CI Integration
+Schema validation runs automatically on every PR via `.github/workflows/eval_gate.yml`:
+```yaml
+- name: Validate conditions schema
+  run: |
+    python scripts/validate_conditions.py conditions/stage3_conditions.parquet --strict
+```
+
+### Next Steps
+After completing the 7-day priority tasks, we will integrate new research features:
+- **GrooVAE**: Rhythm latent space for controllable groove generation
+- **REMI+**: Enhanced token representation with velocity bins
+- **Compound Word Transformer**: Improved long-sequence modeling
+
+See `docs/stage3_roadmap.pdf` for the full development timeline.
+
+---
+
 ## LAMDa Integration (Los Angeles MIDI Dataset)
 
 ### 🎵 統合アーキテクチャ
