@@ -72,6 +72,11 @@ jobs:
       - name: Run tests
         run: poetry run pytest --cov=. -q
 
+      - name: Run humanizer tests (v1.1)
+        run: |
+          poetry run pytest tests/test_humanizer.py -v
+          poetry run pytest tests/test_humanizer_integration.py -v
+
       - name: Run LoRA CLI smoke tests
         if: matrix.light == '0'
         run: poetry run pytest tests/test_lora_cli_smoke.py -q
