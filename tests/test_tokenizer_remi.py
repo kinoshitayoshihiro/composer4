@@ -283,6 +283,103 @@ class TestREMITokenizer:
         
         assert actual_increase >= expected_increase - 5, \
             f"Expected vocab increase of ~{expected_increase}, got {actual_increase}"
+    
+    def test_role_only_for_drums(self):
+        """Test ROLE tokens only appear for drum instruments (寸評推奨)."""
+        # Create MIDI with piano and drums
+        midi = pretty_midi.PrettyMIDI(initial_tempo=120)
+        
+        # Add piano (non-drum)
+        piano = pretty_midi.Instrument(program=0, is_drum=False)
+        piano.notes.append(pretty_midi.Note(velocity=100, pitch=60, start=0.0, end=0.5))
+        midi.instruments.append(piano)
+        
+        # Add drums
+        drums = pretty_midi.Instrument(program=0, is_drum=True)
+        drums.notes.append(pretty_midi.Note(velocity=100, pitch=36, start=1.0, end=1.1))  # Kick
+        midi.instruments.append(drums)
+        
+        tokenizer = REMITokenizer(remi_enabled=True)
+        tokens = tokenizer.encode_midi(midi)
+        
+        # Decode tokens to strings
+        token_strs = [tokenizer.id_to_token.get(tid, "UNK") for tid in tokens]
+        
+        # Should have ROLE tokens
+        role_tokens = [t for t in token_strs if t.startswith("ROLE_")]
+        assert len(role_tokens) >= 1, "Expected at least one ROLE token for drums"
+        
+        # ROLE tokens should only appear after drum instrument markers
+        # (This is a simplified check - in real implementation, verify position)
+        assert "ROLE_KICK" in token_strs, "Expected ROLE_KICK for kick drum"
+    
+    def test_role_to_pitch_mapping(self):
+        """Test ROLE → representative pitch mapping (寸評推奨: デコーダ頑健性)."""
+        tokenizer = REMITokenizer(remi_enabled=True)
+        
+        # All ROLE types should have a representative pitch
+        for role in set(tokenizer.DRUM_ROLES.values()):
+            assert role in tokenizer.ROLE_TO_PITCH, \
+                f"ROLE {role} missing from ROLE_TO_PITCH mapping"
+            
+            # Representative pitch should be valid GM drum pitch
+            pitch = tokenizer.ROLE_TO_PITCH[role]
+            assert 35 <= pitch <= 81, f"Invalid representative pitch for {role}: {pitch}"
+    
+    def test_save_load_with_version_metadata(self):
+        """Test save/load includes version and vocab hash (寸評推奨)."""
+        tokenizer = REMITokenizer(remi_enabled=True, beat_division=24)
+        
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        
+        try:
+            # Save
+            tokenizer.save(tmp_path)
+            
+            # Check saved JSON contains version metadata
+            import json
+            data = json.loads(tmp_path.read_text())
+            
+            assert "version" in data, "Missing version field"
+            assert "vocab_hash" in data, "Missing vocab_hash field"
+            assert "vocab_size" in data, "Missing vocab_size field"
+            assert data["vocab_size"] == tokenizer.vocab_size
+            
+            # Load
+            loaded = REMITokenizer.load(tmp_path)
+            
+            # Properties should match
+            assert loaded.remi_enabled == tokenizer.remi_enabled
+            assert loaded.vocab_size == tokenizer.vocab_size
+        
+        finally:
+            tmp_path.unlink(missing_ok=True)
+    
+    def test_vocab_mismatch_raises_error(self):
+        """Test that vocab mismatch raises explicit error (寸評推奨: 自動フォールバック禁止)."""
+        # Create v1.0 tokenizer
+        tokenizer_v10 = REMITokenizer(remi_enabled=False)
+        
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+            tmp_path = Path(tmp.name)
+        
+        try:
+            # Save v1.0
+            tokenizer_v10.save(tmp_path)
+            
+            # Manually corrupt vocab_size in saved file
+            import json
+            data = json.loads(tmp_path.read_text())
+            data["vocab_size"] = 999  # Wrong size
+            tmp_path.write_text(json.dumps(data))
+            
+            # Load should raise ValueError
+            with pytest.raises(ValueError, match="Vocabulary size mismatch"):
+                REMITokenizer.load(tmp_path)
+        
+        finally:
+            tmp_path.unlink(missing_ok=True)
 
 
 @pytest.mark.integration

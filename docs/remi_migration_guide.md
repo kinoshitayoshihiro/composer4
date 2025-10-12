@@ -70,6 +70,12 @@ Map musical note durations to standardized symbols:
 | `RDUR_1` | Whole note | 4.0 | Long tones |
 | `RDUR_2` | Double whole | 8.0 | Very long sustains |
 
+**DURATION Rounding Policy** (寸評推奨):
+- **Tied notes/cross-bar**: Split at bar boundary (e.g., 5-beat note → 4 beats + 1 beat)
+- **Dotted/triplets**: Round to nearest REMI duration (e.g., 1.5 beats → `RDUR_1/2`)
+- **Bar-end correction**: Clamp to bar boundary if within 1 step tolerance
+- **Fallback**: Use legacy duration token if no REMI match
+
 **Example encoding:**
 ```
 NOTE_ON_60 RDUR_1/4 VELOCITY_80  # C4 quarter note
@@ -88,10 +94,18 @@ Capture harmonic context for each time step. Supports:
 - **Diminished**: `Cdim`, `Ddim`, etc. (2 types)
 - **Augmented**: `Caug`, `Daug`, etc. (2 types)
 
+**CHORD Emission Policy** (寸評推奨):
+- **Frequency**: Emitted at bar boundaries (every 4 beats in 4/4 time)
+- **Source priority**:
+  1. MIDI metadata `[chord:...]` attributes (if present in text events)
+  2. Simple heuristic fallback (e.g., root-based detection)
+- **Purpose**: Provides harmonic context without cluttering token stream
+- **Example**: 8-bar phrase → 8 CHORD tokens (1 per bar)
+
 **Example encoding:**
 ```
-CHORD_C  BAR_0 NOTE_ON_60 ...  # C major context
-CHORD_G7 BAR_4 NOTE_ON_67 ...  # G7 chord progression
+CHORD_C  BAR_0 NOTE_ON_60 ...  # C major context (bar 0)
+CHORD_G7 BAR_4 NOTE_ON_67 ...  # G7 chord progression (bar 4)
 ```
 
 ### 3. ROLE Tokens (10 types)

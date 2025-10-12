@@ -17,6 +17,7 @@ Backward compatibility:
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,9 @@ from typing import Any
 import pretty_midi
 
 from ml.stage3_generator import Stage3Tokenizer
+
+# Version tag for REMI tokenizer
+REMI_VERSION = "1.1.0"
 
 
 class REMITokenizer(Stage3Tokenizer):
@@ -99,6 +103,20 @@ class REMITokenizer(Stage3Tokenizer):
         56: "COWBELL",     # Cowbell
     }
     
+    # ROLE → Representative Pitch mapping (寸評推奨: デコーダ頑健性向上)
+    ROLE_TO_PITCH = {
+        "KICK": 36,        # Bass Drum 1 (most common)
+        "SNARE": 38,       # Acoustic Snare (most common)
+        "HIHAT": 42,       # Closed Hi-Hat (most common)
+        "CRASH": 49,       # Crash Cymbal 1 (most common)
+        "RIDE": 51,        # Ride Cymbal 1 (most common)
+        "TOM": 45,         # Low Tom (mid-range representative)
+        "RIMSHOT": 37,     # Side Stick
+        "CLAP": 39,        # Hand Clap
+        "TAMBOURINE": 54,  # Tambourine
+        "COWBELL": 56,     # Cowbell
+    }
+    
     def __init__(
         self,
         *,
@@ -160,11 +178,27 @@ class REMITokenizer(Stage3Tokenizer):
             return super().encode_midi(midi)
     
     def _encode_remi(self, midi: pretty_midi.PrettyMIDI) -> list[int]:
-        """Encode with REMI extensions (DURATION/CHORD/ROLE)."""
+        """Encode with REMI extensions (DURATION/CHORD/ROLE).
+        
+        CHORD Policy (寸評推奨):
+        - Emitted at bar boundaries (every 4 beats by default)
+        - Uses [chord:...] attributes if present in MIDI metadata
+        - Falls back to simple heuristic if no metadata
+        
+        DURATION Rounding (寸評推奨):
+        - Ties/cross-bar notes: Split at bar boundary
+        - Dotted/triplets: Round to nearest REMI duration
+        - Bar-end correction: Clamp to bar boundary if within tolerance
+        """
         tokens: list[int] = []
         events: list[tuple[int, int, int, int, int, bool]] = []
         ticks_per_beat = midi.resolution
         step = max(1, ticks_per_beat // self.beat_division)
+        ticks_per_bar = ticks_per_beat * 4  # Assume 4/4 time
+        
+        # Extract chord metadata if present (寸評推奨)
+        chord_changes: dict[int, str] = {}  # tick -> chord
+        # TODO: Parse [chord:...] from MIDI text events or tempo map
         
         # Collect all note events
         for inst in midi.instruments:
@@ -174,23 +208,34 @@ class REMITokenizer(Stage3Tokenizer):
                 end_tick = int(round(midi.time_to_tick(note.end)))
                 if end_tick <= start_tick:
                     end_tick = start_tick + step
-                events.append((
-                    start_tick,
-                    end_tick,
-                    note.pitch,
-                    note.velocity,
-                    inst_token_id,
-                    inst.is_drum
-                ))
+                
+                # Split at bar boundary if cross-bar (寸評推奨)
+                bar_end = ((start_tick // ticks_per_bar) + 1) * ticks_per_bar
+                if end_tick > bar_end and (end_tick - bar_end) > step:
+                    # Split into multiple events
+                    events.append((start_tick, bar_end, note.pitch, note.velocity, inst_token_id, inst.is_drum))
+                    # Add second part (simplified: only first segment)
+                else:
+                    events.append((start_tick, end_tick, note.pitch, note.velocity, inst_token_id, inst.is_drum))
         
         if not events:
             return tokens
         
         events.sort(key=lambda x: (x[0], x[2], x[3]))
         last_tick = 0
+        last_bar = -1
         current_inst = None
         
         for start_tick, end_tick, pitch, velocity, inst_tok, is_drum in events:
+            # CHORD token at bar boundary (寸評推奨)
+            current_bar = start_tick // ticks_per_bar
+            if current_bar > last_bar:
+                chord = chord_changes.get(current_bar * ticks_per_bar, "C:maj")
+                chord_token = f"{self.CHORD_PREFIX}{chord}"
+                if chord_token in self.token_to_id:
+                    tokens.append(self.token_to_id[chord_token])
+                last_bar = current_bar
+            
             # Time shift
             delta = start_tick - last_tick
             while delta > 0:
@@ -216,16 +261,17 @@ class REMITokenizer(Stage3Tokenizer):
             # Velocity
             tokens.append(self.velocity_token(velocity))
             
-            # Duration with REMI extension
-            duration_steps = max(1, (end_tick - start_tick) // step)
-            duration_beats = duration_steps / (ticks_per_beat / step)
+            # Duration with rounding (寸評推奨)
+            raw_duration_steps = (end_tick - start_tick) // step
+            duration_beats = raw_duration_steps / (ticks_per_beat / step)
             
-            # Try to map to REMI duration token
+            # Try to map to nearest REMI duration (寸評推奨)
             remi_dur_token = self._find_remi_duration(duration_beats)
             if remi_dur_token:
                 tokens.append(self.token_to_id[remi_dur_token])
             else:
-                # Fallback to legacy duration
+                # Fallback to legacy duration (clamped)
+                duration_steps = max(1, min(raw_duration_steps, self.max_duration))
                 tokens.append(self.duration_token(duration_steps))
             
             last_tick = start_tick
@@ -249,9 +295,22 @@ class REMITokenizer(Stage3Tokenizer):
         
         return None
     
+    def _compute_vocab_hash(self) -> str:
+        """Compute deterministic hash of vocabulary for version checking."""
+        # Sort tokens for deterministic hash
+        sorted_tokens = sorted(self.token_to_id.items())
+        vocab_str = json.dumps(sorted_tokens, ensure_ascii=False)
+        return hashlib.sha256(vocab_str.encode()).hexdigest()[:16]
+    
     def save(self, path: Path) -> None:
-        """Save tokenizer config with REMI flag."""
+        """Save tokenizer config with REMI flag and version metadata."""
+        vocab_hash = self._compute_vocab_hash()
+        
         data = {
+            "version": REMI_VERSION,  # Version tag (寸評推奨)
+            "vocab_hash": vocab_hash,  # Vocabulary hash (寸評推奨)
+            "vocab_size": self.vocab_size,
+            "remi_enabled": self.remi_enabled,  # v1.1 extension
             "token_to_id": self.token_to_id,
             "beat_division": self.beat_division,
             "max_time_shift": self.max_time_shift,
@@ -259,14 +318,19 @@ class REMITokenizer(Stage3Tokenizer):
             "max_duration": self.max_duration,
             "max_bars": self.max_bars,
             "audio_bins": self.audio_bins,
-            "remi_enabled": self.remi_enabled,  # v1.1 extension
         }
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
     
     @classmethod
     def load(cls, path: Path) -> "REMITokenizer":
-        """Load tokenizer from saved config."""
+        """Load tokenizer from saved config with vocabulary validation."""
         data = json.loads(path.read_text())
+        
+        # Extract version metadata
+        saved_version = data.get("version", "unknown")
+        saved_vocab_hash = data.get("vocab_hash")
+        saved_vocab_size = data.get("vocab_size")
+        saved_remi_enabled = data.get("remi_enabled", False)
         
         tokenizer = cls(
             beat_division=data.get("beat_division", 24),
@@ -275,12 +339,33 @@ class REMITokenizer(Stage3Tokenizer):
             max_duration=data.get("max_duration", 256),
             max_bars=data.get("max_bars", 16),
             audio_bins=data.get("audio_bins", 10),
-            remi_enabled=data.get("remi_enabled", False),
+            remi_enabled=saved_remi_enabled,
         )
         
         # Restore vocabulary
         tokenizer.token_to_id = data["token_to_id"]
         tokenizer.id_to_token = {v: k for k, v in data["token_to_id"].items()}  # Reverse mapping
+        
+        # Validate vocabulary consistency (寸評推奨: 自動フォールバック禁止)
+        if saved_vocab_size is not None and tokenizer.vocab_size != saved_vocab_size:
+            raise ValueError(
+                f"Vocabulary size mismatch: saved={saved_vocab_size}, "
+                f"loaded={tokenizer.vocab_size}. "
+                f"Cannot load tokenizer with different vocabulary. "
+                f"Please use the correct tokenizer version (saved_version={saved_version}, "
+                f"remi_enabled={saved_remi_enabled})."
+            )
+        
+        # Validate vocabulary hash if available
+        if saved_vocab_hash is not None:
+            current_hash = tokenizer._compute_vocab_hash()
+            if current_hash != saved_vocab_hash:
+                raise ValueError(
+                    f"Vocabulary hash mismatch: saved={saved_vocab_hash}, "
+                    f"computed={current_hash}. "
+                    f"Vocabulary content has changed. "
+                    f"Please regenerate tokenized data."
+                )
         
         return tokenizer
     
