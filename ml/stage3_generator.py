@@ -32,6 +32,12 @@ from typing import Iterable, Iterator, Sequence
 import pandas as pd
 import pretty_midi
 
+try:  # pragma: no cover - optional cache integration
+    from ml.audio_embedding_cache import AudioEmbeddingCache, compute_file_hash
+except Exception:  # pragma: no cover - optional dependency guard
+    AudioEmbeddingCache = None  # type: ignore
+    compute_file_hash = None  # type: ignore
+
 try:  # pragma: no cover - optional heavyweight dependencies
     import torch
     from torch.utils.data import Dataset, random_split
@@ -338,6 +344,7 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
         max_length: int = 2048,
         genre_weights: dict[str, float] | None = None,
         tempo_bins: int = 5,
+        audio_cache_dir: Path | None = None,
     ) -> None:
         if torch is None:
             raise RuntimeError("torch is required to build Stage3Dataset")
@@ -353,12 +360,28 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
         self.max_length = max_length
         self.genre_weights = genre_weights or {}
         self.tempo_bins = tempo_bins
+        self.audio_cache_queries = 0
+        self.audio_cache_hits = 0
 
         self.samples: list[EncodedSample] = []
         self.condition_counter: Counter[str] = Counter()
         self.lengths: list[int] = []
         self.skipped_files: list[str] = []
         self.sample_weights: list[float] = []
+
+        self.audio_cache = None
+        if audio_cache_dir is not None:
+            if AudioEmbeddingCache is None:
+                logging.warning(
+                    "AudioEmbeddingCache unavailable; ignoring --audio-cache path %s",
+                    audio_cache_dir,
+                )
+            else:
+                self.audio_cache = AudioEmbeddingCache(cache_dir=str(audio_cache_dir))
+                logging.info(
+                    "Audio embedding cache enabled (%s)",
+                    audio_cache_dir,
+                )
 
         self.techniques_by_digest = self._load_technique_metadata(technique_metadata)
         self._load_metadata()
@@ -384,6 +407,29 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
                 mapping[digest].add(str(tech))
         return mapping
 
+    def _resolve_midi_path(self, row: pd.Series) -> Path | None:
+        """Locate the MIDI file corresponding to a metadata row."""
+
+        candidates: list[Path] = []
+
+        filename_entry = row.get("filename")
+        if isinstance(filename_entry, str) and filename_entry.strip():
+            candidates.append(self.midi_root / filename_entry.strip())
+
+        digest_entry = row.get("file_digest")
+        if isinstance(digest_entry, str) and digest_entry.strip():
+            digest = digest_entry.strip()
+            digest_name = digest if digest.endswith(".mid") else f"{digest}.mid"
+            candidates.append(self.midi_root / digest_name)
+            shard_dir = self.midi_root / digest[0]
+            candidates.append(shard_dir / digest_name)
+
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+
+        return None
+
     def _load_metadata(self) -> None:
         logging.info("Loading metadata from %s", self.metadata_path)
         df = pd.read_csv(self.metadata_path)
@@ -391,17 +437,14 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
             df = df.head(self.max_samples)
 
         for idx, row in df.iterrows():
-            midi_path = self.midi_root / str(row.get("filename", ""))
-            if not midi_path.exists():
-                # Try digest fallback
-                digest = str(row.get("file_digest", "")) + ".mid"
-                alt_path = self.midi_root / digest
-                if alt_path.exists():
-                    midi_path = alt_path
-                else:
-                    self.skipped_files.append(str(midi_path))
-                    logging.debug("Skip missing MIDI: %s", midi_path)
-                    continue
+            midi_path = self._resolve_midi_path(row)
+            if midi_path is None:
+                filename_entry = row.get("filename")
+                digest_entry = row.get("file_digest")
+                identifier = str(filename_entry or digest_entry or "<unknown>")
+                self.skipped_files.append(identifier)
+                logging.debug("Skip missing MIDI for %s", identifier)
+                continue
 
             try:
                 midi = pretty_midi.PrettyMIDI(str(midi_path))
@@ -415,6 +458,9 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
                 continue
 
             condition_tokens = self._build_condition_tokens(row)
+            condition_tokens.extend(self._get_audio_condition_tokens(row, midi_path))
+            if condition_tokens:
+                condition_tokens = list(dict.fromkeys(condition_tokens))
             condition_ids = [self.tokenizer.ensure_condition_token(tok) for tok in condition_tokens]
             for tok in condition_tokens:
                 self.condition_counter[tok] += 1
@@ -496,6 +542,53 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
         tokens = list(dict.fromkeys(tokens))  # preserve order, remove duplicates
         return tokens
 
+    def _get_audio_condition_tokens(self, row: pd.Series, midi_path: Path) -> list[str]:
+        """Derive AUDIOCLAP/AUDIOMERT tokens using the embedding cache if available."""
+
+        if self.audio_cache is None:
+            return []
+
+        self.audio_cache_queries += 1
+
+        candidate_keys: list[str] = []
+
+        digest_entry = row.get("file_digest")
+        if isinstance(digest_entry, str) and digest_entry.strip():
+            digest = digest_entry.strip().replace(".mid", "")
+            candidate_keys.extend([digest, f"{digest}.mid"])
+
+        if compute_file_hash is not None:
+            try:
+                file_hash = compute_file_hash(str(midi_path))
+                candidate_keys.append(file_hash)
+            except Exception as exc:  # pragma: no cover - filesystem dependent
+                logging.debug("Failed to hash %s for audio cache: %s", midi_path, exc)
+
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        ordered_keys: list[str] = []
+        for key in candidate_keys:
+            if key not in seen:
+                seen.add(key)
+                ordered_keys.append(key)
+
+        tokens: list[str] = []
+        audio_bins = getattr(self.tokenizer, "audio_bins", self.tempo_bins)
+        for key in ordered_keys:
+            clap_bucket, mert_bucket = self.audio_cache.get_bucket_tokens(key, buckets=audio_bins)
+            if clap_bucket is None and mert_bucket is None:
+                continue
+
+            if clap_bucket is not None:
+                tokens.append(f"AUDIOCLAP_{clap_bucket}")
+            if mert_bucket is not None:
+                tokens.append(f"AUDIOMERT_{mert_bucket}")
+
+            self.audio_cache_hits += 1
+            break  # Prefer first successful key
+
+        return tokens
+
     def _compute_sample_weights(self) -> None:
         """Compute sampling weights based on (genre, emotion) pair distribution.
 
@@ -573,6 +666,14 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
             "avg_length": float(sum(self.lengths) / len(self.lengths)),
             "condition_counts": dict(self.condition_counter),
             "skipped_files": self.skipped_files,
+            "audio_cache": {
+                "enabled": self.audio_cache is not None,
+                "queries": self.audio_cache_queries,
+                "hits": self.audio_cache_hits,
+                "cache_dir": str(self.audio_cache.cache_dir)
+                if self.audio_cache is not None
+                else None,
+            },
         }
 
     def save_summary(self, path: Path) -> None:
@@ -747,6 +848,7 @@ def train_stage3(args: argparse.Namespace) -> None:
         velocity_bins=args.velocity_bins,
         max_duration=args.max_duration,
         max_bars=args.max_bars,
+        audio_bins=args.tempo_bins,
     )
 
     dataset = Stage3Dataset(
@@ -760,6 +862,9 @@ def train_stage3(args: argparse.Namespace) -> None:
         max_samples=args.max_samples,
         min_length=getattr(args, "min_seq_length", 20),
         max_length=getattr(args, "max_seq_length", 2048),
+        genre_weights=getattr(args, "genre_weights", None),
+        tempo_bins=args.tempo_bins,
+        audio_cache_dir=args.audio_cache,
     )
 
     summary = dataset.summary()
@@ -798,6 +903,9 @@ def train_stage3(args: argparse.Namespace) -> None:
         use_lora=not args.disable_lora,
     )
 
+    save_steps = args.save_steps if args.save_steps is not None else args.save_every
+    eval_steps = args.eval_steps if args.eval_steps is not None else args.eval_every
+
     training_args = TrainingArguments(
         output_dir=str(args.out / "checkpoints"),
         overwrite_output_dir=True,
@@ -806,30 +914,39 @@ def train_stage3(args: argparse.Namespace) -> None:
         learning_rate=args.lr,
         weight_decay=args.weight_decay,
         warmup_steps=args.warmup_steps,
-        max_steps=args.steps if args.steps is not None else None,
-        num_train_epochs=args.epochs if args.epochs is not None else None,
+        max_steps=args.steps if args.steps is not None else -1,
+        num_train_epochs=args.epochs if args.epochs is not None else 1,
         logging_steps=max(1, args.logging_steps),
-        save_strategy="steps" if args.save_steps else "no",
-        save_steps=args.save_steps or 0,
+        save_strategy="steps" if save_steps else "no",
+        save_steps=save_steps or 0,
         fp16=args.fp16,
         bf16=args.bf16,
         report_to=["none"],
-        eval_strategy="steps" if eval_dataset is not None else "no",
-        eval_steps=args.eval_steps if eval_dataset is not None else None,
+        eval_strategy="steps" if eval_dataset is not None and eval_steps else "no",
+        eval_steps=eval_steps if eval_dataset is not None else None,
         gradient_checkpointing=args.gradient_checkpointing,
         remove_unused_columns=False,
         max_grad_norm=args.clip_grad_norm,  # Gradient clipping
         lr_scheduler_type=args.lr_scheduler,  # Cosine/linear scheduler
         seed=args.seed,
+        dataloader_num_workers=args.num_workers,
     )
 
     # Choose collator based on packing option
     if getattr(args, "pack_sequences", False):
-        data_collator = lambda batch: collate_batch_packed(
-            batch, tokenizer.pad_id, tokenizer.eos_id, max_length=args.max_length
-        )
+
+        def _packed_collator(batch: list[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
+            return collate_batch_packed(
+                batch, tokenizer.pad_id, tokenizer.eos_id, max_length=args.max_length
+            )
+
+        data_collator = _packed_collator
     else:
-        data_collator = lambda batch: collate_batch(batch, tokenizer.pad_id)
+
+        def _standard_collator(batch: list[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
+            return collate_batch(batch, tokenizer.pad_id)
+
+        data_collator = _standard_collator
 
     trainer = Trainer(
         model=model,
@@ -876,6 +993,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--max-duration", type=int, default=256, help="Maximum duration token value"
     )
+    parser.add_argument(
+        "--tempo-bins", type=int, default=10, help="Quantisation buckets for tempo/audio tokens"
+    )
+    parser.add_argument(
+        "--audio-cache",
+        type=Path,
+        help="Directory containing cached audio embeddings (CLAP/MERT)",
+    )
 
     parser.add_argument("--batch-size", type=int, default=2, help="Per-device batch size")
     parser.add_argument("--grad-accum", type=int, default=1, help="Gradient accumulation steps")
@@ -887,20 +1012,40 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--logging-steps", type=int, default=50, help="Logging interval")
     parser.add_argument("--save-steps", type=int, help="Checkpoint interval")
     parser.add_argument("--eval-steps", type=int, default=200, help="Evaluation interval")
+    parser.add_argument("--save-every", type=int, help="Alias for --save-steps")
+    parser.add_argument("--eval-every", type=int, help="Alias for --eval-steps")
     parser.add_argument("--eval-split", type=float, default=0.05, help="Evaluation split ratio")
     parser.add_argument("--fp16", action="store_true", help="Enable fp16 training if supported")
     parser.add_argument("--bf16", action="store_true", help="Enable bf16 training if supported")
     parser.add_argument(
         "--gradient-checkpointing", action="store_true", help="Enable gradient checkpointing"
     )
+    parser.add_argument(
+        "--precision",
+        choices=["fp16", "bf16", "fp32"],
+        help="Select numeric precision (overrides --fp16/--bf16 flags)",
+    )
+    parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=0,
+        help="Number of DataLoader workers (0 disables multiprocessing)",
+    )
 
     parser.add_argument("--n-layer", type=int, default=12, help="Transformer layers")
     parser.add_argument("--n-head", type=int, default=12, help="Attention heads")
     parser.add_argument("--n-embd", type=int, default=768, help="Embedding dimension")
     parser.add_argument("--lora-rank", type=int, default=8, help="LoRA rank")
+    parser.add_argument("--lora-r", dest="lora_rank", type=int, help="Alias for --lora-rank")
     parser.add_argument("--lora-alpha", type=int, help="LoRA alpha scaling")
     parser.add_argument(
         "--disable-lora", action="store_true", help="Disable LoRA even if available"
+    )
+    parser.add_argument(
+        "--use-lora",
+        dest="disable_lora",
+        action="store_false",
+        help="Explicitly enable LoRA even if disabled elsewhere",
     )
 
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
@@ -935,6 +1080,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
+    if getattr(args, "precision", None):
+        args.fp16 = args.precision == "fp16"
+        args.bf16 = args.precision == "bf16"
+        if args.precision == "fp32":
+            args.fp16 = False
+            args.bf16 = False
     setup_logging(args.verbose)
     train_stage3(args)
 
