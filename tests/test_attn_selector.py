@@ -17,14 +17,12 @@ def test_select_cpu_always_standard():
 
 
 def test_select_cuda_threshold():
-    """GPU should respect threshold for Performer selection."""
-    # Below threshold -> Standard
-    assert select_attention("cuda", 256, threshold=1024) == "standard"
-    assert select_attention("cuda", 1023, threshold=1024) == "standard"
-    
-    # At or above threshold -> Performer
-    assert select_attention("cuda", 1024, threshold=1024) == "performer"
-    assert select_attention("cuda", 2048, threshold=1024) == "performer"
+    """GPU should default to SDPA (not Performer)."""
+    # GPU always returns SDPA by default (regardless of threshold)
+    assert select_attention("cuda", 256, threshold=1024) == "sdpa"
+    assert select_attention("cuda", 1023, threshold=1024) == "sdpa"
+    assert select_attention("cuda", 1024, threshold=1024) == "sdpa"
+    assert select_attention("cuda", 2048, threshold=1024) == "sdpa"
 
 
 def test_force_override():
@@ -34,19 +32,23 @@ def test_force_override():
     
     # Force Standard on GPU with long sequence
     assert select_attention("cuda", 9999, force="standard") == "standard"
+    
+    # Force SDPA explicitly
+    assert select_attention("cpu", 128, force="sdpa") == "sdpa"
 
 
 def test_apply_adaptive_calls_replace_once():
-    """Verify replace_fn is called with correct parameters."""
-    calls = []
+    """Verify replace_sdpa_fn is called with correct parameters."""
+    sdpa_calls = []
     
-    def fake_replace(model, num_random_features=128):
-        calls.append(num_random_features)
+    def fake_replace_sdpa(model, causal=True):
+        sdpa_calls.append(causal)
         model.replaced = True
+        return 12  # Simulated number of replaced layers
 
     model = types.SimpleNamespace()
     cfg = AttnAutoConfig(
-        threshold=1024,
+        threshold=512,
         num_random_features=256,
         idempotent=True
     )
@@ -55,25 +57,26 @@ def test_apply_adaptive_calls_replace_once():
         model,
         device="cuda",
         seq_len=2048,
-        replace_fn=fake_replace,
+        replace_sdpa_fn=fake_replace_sdpa,
         cfg=cfg
     )
     
-    assert kind == "performer"
-    assert calls == [256]
-    assert getattr(model, "_attn_kind") == "performer"
+    assert kind == "sdpa"
+    assert sdpa_calls == [True]  # causal=True
+    assert getattr(model, "_attn_kind") == "sdpa"
 
 
 def test_apply_adaptive_idempotent():
     """Second call should not re-apply if idempotent=True."""
-    calls = []
+    sdpa_calls = []
     
-    def fake_replace(model, num_random_features=128):
-        calls.append(num_random_features)
+    def fake_replace_sdpa(model, causal=True):
+        sdpa_calls.append(causal)
+        return 12
 
     model = types.SimpleNamespace()
     cfg = AttnAutoConfig(
-        threshold=1024,
+        threshold=512,
         num_random_features=256,
         idempotent=True
     )
@@ -83,99 +86,113 @@ def test_apply_adaptive_idempotent():
         model,
         device="cuda",
         seq_len=2048,
-        replace_fn=fake_replace,
+        replace_sdpa_fn=fake_replace_sdpa,
         cfg=cfg
     )
-    assert kind1 == "performer"
-    assert calls == [256]
+    assert kind1 == "sdpa"
+    assert sdpa_calls == [True]
     
     # Second call (should be skipped)
     kind2 = apply_adaptive_attention(
         model,
         device="cuda",
         seq_len=2048,
-        replace_fn=fake_replace,
+        replace_sdpa_fn=fake_replace_sdpa,
         cfg=cfg
     )
-    assert kind2 == "performer"
-    assert calls == [256]  # No additional calls
+    assert kind2 == "sdpa"
+    assert sdpa_calls == [True]  # No additional calls
 
 
 def test_apply_adaptive_standard_path_no_replace():
-    """Standard path should not call replace_fn."""
-    calls = []
+    """Standard path (CPU) should not call replace functions."""
+    sdpa_calls = []
+    performer_calls = []
     
-    def fake_replace(model, num_random_features=128):
-        calls.append(num_random_features)
+    def fake_replace_sdpa(model, causal=True):
+        sdpa_calls.append(causal)
+        return 12
+    
+    def fake_replace_performer(model, num_random_features=128):
+        performer_calls.append(num_random_features)
     
     model = types.SimpleNamespace()
-    cfg = AttnAutoConfig(threshold=1024, num_random_features=128)
+    cfg = AttnAutoConfig(threshold=512, num_random_features=128)
     
     kind = apply_adaptive_attention(
         model,
-        device="cuda",
-        seq_len=128,  # Below threshold
-        replace_fn=fake_replace,
+        device="cpu",  # CPU -> standard
+        seq_len=2048,
+        replace_sdpa_fn=fake_replace_sdpa,
+        replace_performer_fn=fake_replace_performer,
         cfg=cfg
     )
     
     assert kind == "standard"
-    assert calls == []  # replace_fn should not be called
+    assert sdpa_calls == []  # No SDPA replacement on CPU
+    assert performer_calls == []  # No Performer replacement
     assert getattr(model, "_attn_kind") == "standard"
 
 
 def test_apply_adaptive_force_performer():
     """Force parameter should work with apply_adaptive_attention."""
-    calls = []
+    performer_calls = []
     
-    def fake_replace(model, num_random_features=128):
-        calls.append(num_random_features)
+    def fake_replace_performer(model, num_random_features=128):
+        performer_calls.append(num_random_features)
     
     model = types.SimpleNamespace()
-    cfg = AttnAutoConfig(threshold=1024, num_random_features=128)
+    cfg = AttnAutoConfig(threshold=512, num_random_features=128)
     
     # Force Performer on CPU with short sequence
     kind = apply_adaptive_attention(
         model,
         device="cpu",
         seq_len=64,
-        replace_fn=fake_replace,
+        replace_performer_fn=fake_replace_performer,
         cfg=cfg,
         force="performer"
     )
     
     assert kind == "performer"
-    assert calls == [128]
+    assert performer_calls == [128]
 
 
 def test_apply_adaptive_force_standard():
     """Force standard should skip replacement even on GPU+long seq."""
-    calls = []
+    sdpa_calls = []
+    performer_calls = []
     
-    def fake_replace(model, num_random_features=128):
-        calls.append(num_random_features)
+    def fake_replace_sdpa(model, causal=True):
+        sdpa_calls.append(causal)
+        return 12
+    
+    def fake_replace_performer(model, num_random_features=128):
+        performer_calls.append(num_random_features)
     
     model = types.SimpleNamespace()
-    cfg = AttnAutoConfig(threshold=1024, num_random_features=128)
+    cfg = AttnAutoConfig(threshold=512, num_random_features=128)
     
     kind = apply_adaptive_attention(
         model,
         device="cuda",
         seq_len=4096,  # Long sequence
-        replace_fn=fake_replace,
+        replace_sdpa_fn=fake_replace_sdpa,
+        replace_performer_fn=fake_replace_performer,
         cfg=cfg,
         force="standard"  # Force Standard
     )
     
     assert kind == "standard"
-    assert calls == []  # No replacement
+    assert sdpa_calls == []  # No replacement
+    assert performer_calls == []  # No replacement
 
 
 def test_config_defaults():
     """Verify default configuration values."""
     cfg = AttnAutoConfig()
     
-    assert cfg.threshold == 1024
+    assert cfg.threshold == 512  # Updated default for SDPA
     assert cfg.num_random_features == 128
     assert cfg.idempotent is True
 
