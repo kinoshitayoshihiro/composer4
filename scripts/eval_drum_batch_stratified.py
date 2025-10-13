@@ -38,6 +38,10 @@ GM_ROLE = {
     51: "RIDE", 59: "RIDE", 53: "RIDE",
 }
 
+# Bass constants
+BASS_RANGE_MIN = 28  # E1
+BASS_RANGE_MAX = 55  # G3
+
 
 def parse_time_sig(s: str) -> Tuple[int, int]:
     try:
@@ -212,6 +216,123 @@ def file_metrics(mid_path: Path, style_hint: str) -> Dict[str, Any]:
     }
 
 
+def guess_bass_track(pm: pretty_midi.PrettyMIDI) -> int:
+    """
+    Guess bass track by lowest average pitch (simple & fast).
+    Returns track index or -1 if no bass found.
+    """
+    cand = []
+    for idx, inst in enumerate(pm.instruments):
+        if inst.is_drum:
+            continue
+        if inst.notes:
+            avg_pitch = sum(n.pitch for n in inst.notes) / len(inst.notes)
+            name = (inst.name or "").lower()
+            # Prioritize tracks with "bass" in name
+            priority = -10 if "bass" in name else 0
+            cand.append((avg_pitch + priority, idx))
+    if not cand:
+        return -1
+    cand.sort()
+    return cand[0][1]
+
+
+def file_metrics_bass(mid_path: Path, drum_ref_mid: Path = None) -> Dict[str, Any]:
+    """
+    Evaluate bass-specific metrics from MIDI file.
+
+    Metrics:
+      - downbeat_anchor_rate: Fraction of bars with note on downbeat
+      - range_ok_rate: Fraction of notes in E1-G3 range
+      - velocity_std: Standard deviation of velocities
+      - notes_per_bar: Average notes per bar
+      - kick_align_rate: Alignment with drum kick (optional)
+    """
+    pm = pretty_midi.PrettyMIDI(str(mid_path))
+    meta_path = mid_path.with_suffix(".meta.json")
+    meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+
+    tempo = float(meta.get("tempo", 120))
+    tsig = meta.get("time_sig", "4/4")
+    bars = int(meta.get("length_bars", 16))
+    barL = bar_len_sec(tempo, tsig)
+
+    # Guess bass track
+    b_idx = guess_bass_track(pm)
+    if b_idx < 0:
+        return {
+            "file": str(mid_path),
+            "tempo": tempo, "bars": bars, "time_sig": tsig,
+            "downbeat_anchor_rate": 0.0,
+            "range_ok_rate": 0.0,
+            "velocity_std": 0.0,
+            "notes_per_bar": 0.0,
+            "kick_align_rate": None,
+        }
+
+    bass_notes = [{"start": n.start, "vel": n.velocity, "pitch": n.pitch}
+                  for n in pm.instruments[b_idx].notes]
+    bass_notes.sort(key=lambda x: (x["start"], x["pitch"]))
+
+    # 1) downbeat_anchor_rate
+    anchor_bars = 0
+    for b in range(bars):
+        t0 = b * barL
+        if any(abs(n["start"] - t0) <= 0.035 for n in bass_notes):
+            anchor_bars += 1
+    downbeat_anchor_rate = anchor_bars / max(bars, 1)
+
+    # 2) range_ok_rate
+    in_range = sum(1 for n in bass_notes if BASS_RANGE_MIN <= n["pitch"] <= BASS_RANGE_MAX)
+    range_ok_rate = in_range / max(len(bass_notes), 1)
+
+    # 3) velocity_std
+    vels = [n["vel"] for n in bass_notes]
+    velocity_std = float(statistics.pstdev(vels)) if len(vels) > 1 else 0.0
+
+    # 4) notes_per_bar
+    notes_per_bar = len(bass_notes) / max(bars, 1)
+
+    # 5) kick_align_rate (optional, requires drum reference)
+    kick_align_rate = None
+    if drum_ref_mid is not None and Path(drum_ref_mid).exists():
+        try:
+            dpm = pretty_midi.PrettyMIDI(str(drum_ref_mid))
+            kicks = []
+            for inst in dpm.instruments:
+                if not inst.is_drum:
+                    continue
+                for n in inst.notes:
+                    if n.pitch in (35, 36):  # KICK
+                        kicks.append(n.start)
+            kicks.sort()
+            if kicks:
+                import bisect
+                aligned = 0
+                for n in bass_notes:
+                    i = bisect.bisect_left(kicks, n["start"])
+                    cand = []
+                    if i < len(kicks):
+                        cand.append(kicks[i])
+                    if i > 0:
+                        cand.append(kicks[i - 1])
+                    if cand and min(abs(n["start"] - t) for t in cand) <= 0.040:
+                        aligned += 1
+                kick_align_rate = aligned / max(len(bass_notes), 1)
+        except Exception:
+            pass  # Ignore errors in reference loading
+
+    return {
+        "file": str(mid_path),
+        "tempo": tempo, "bars": bars, "time_sig": tsig,
+        "downbeat_anchor_rate": round(downbeat_anchor_rate, 4),
+        "range_ok_rate": round(range_ok_rate, 4),
+        "velocity_std": round(velocity_std, 3),
+        "notes_per_bar": round(notes_per_bar, 2),
+        "kick_align_rate": None if kick_align_rate is None else round(kick_align_rate, 4),
+    }
+
+
 def avg(rows, k, default=0.0):
     vals = [r[k] for r in rows if k in r]
     return round(sum(vals) / len(vals), 4) if vals else default
@@ -220,22 +341,40 @@ def avg(rows, k, default=0.0):
 def summarize(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     if not rows:
         return {"count": 0}
-    return {
-        "count": len(rows),
-        "hat_grid_conform": avg(rows, "hat_grid_conform"),
-        "snare_backbeat_rate": avg(rows, "snare_backbeat_rate"),
-        "kick_downbeat_rate": avg(rows, "kick_downbeat_rate"),
-        "bar_violation_rate": avg(rows, "bar_violation_rate"),
-        "velocity_std": round(sum(r["velocity_std"] for r in rows) / len(rows), 3),
-        "notes_per_bar": avg(rows, "notes_per_bar"),
-        "kick_per_bar": avg(rows, "kick_per_bar"),
-        "snare_per_bar": avg(rows, "snare_per_bar"),
-        "hihat_per_bar": avg(rows, "hihat_per_bar"),
-        "crash_per_bar": avg(rows, "crash_per_bar"),
-        "tom_per_bar": avg(rows, "tom_per_bar"),
-        "crash_on_bar1_rate": avg(rows, "crash_on_bar1_rate"),
-        "fill_coverage_rate": avg(rows, "fill_coverage_rate"),
-    }
+    
+    # Detect instrument type from first row
+    is_bass = "downbeat_anchor_rate" in rows[0]
+    
+    summary = {"count": len(rows)}
+    
+    if is_bass:
+        # Bass metrics
+        summary.update({
+            "downbeat_anchor_rate": avg(rows, "downbeat_anchor_rate"),
+            "range_ok_rate": avg(rows, "range_ok_rate"),
+            "velocity_std": round(sum(r["velocity_std"] for r in rows if "velocity_std" in r) / len(rows), 3),
+            "notes_per_bar": avg(rows, "notes_per_bar"),
+            "kick_align_rate": avg(rows, "kick_align_rate") if any("kick_align_rate" in r and r["kick_align_rate"] is not None for r in rows) else None,
+        })
+    else:
+        # Drum metrics
+        summary.update({
+            "hat_grid_conform": avg(rows, "hat_grid_conform"),
+            "snare_backbeat_rate": avg(rows, "snare_backbeat_rate"),
+            "kick_downbeat_rate": avg(rows, "kick_downbeat_rate"),
+            "bar_violation_rate": avg(rows, "bar_violation_rate"),
+            "velocity_std": round(sum(r["velocity_std"] for r in rows) / len(rows), 3),
+            "notes_per_bar": avg(rows, "notes_per_bar"),
+            "kick_per_bar": avg(rows, "kick_per_bar"),
+            "snare_per_bar": avg(rows, "snare_per_bar"),
+            "hihat_per_bar": avg(rows, "hihat_per_bar"),
+            "crash_per_bar": avg(rows, "crash_per_bar"),
+            "tom_per_bar": avg(rows, "tom_per_bar"),
+            "crash_on_bar1_rate": avg(rows, "crash_on_bar1_rate"),
+            "fill_coverage_rate": avg(rows, "fill_coverage_rate"),
+        })
+    
+    return summary
 
 
 def gather_files(root: Path) -> Dict[str, List[Path]]:
@@ -258,6 +397,7 @@ def main():
     ap.add_argument("--dir-B", required=True)
     ap.add_argument("--out-json", required=True)
     ap.add_argument("--out-csv", default="")
+    ap.add_argument("--instrument", default="drum", choices=["drum", "bass"])
     args = ap.parse_args()
 
     A = gather_files(Path(args.dir_A))
@@ -269,14 +409,26 @@ def main():
     for tag in tags:
         rowsA = []
         rowsB = []
-        for mid in A.get(tag, []):
-            style_hint = tag.split("_")[0] if "_" in tag else "pop_straight"
-            rowsA.append(file_metrics(mid, style_hint))
-            per_file.append({"group": "A", "tag": tag, **rowsA[-1]})
-        for mid in B.get(tag, []):
-            style_hint = tag.split("_")[0] if "_" in tag else "pop_straight"
-            rowsB.append(file_metrics(mid, style_hint))
-            per_file.append({"group": "B", "tag": tag, **rowsB[-1]})
+        
+        if args.instrument == "bass":
+            # Bass metrics
+            for mid in A.get(tag, []):
+                rowsA.append(file_metrics_bass(mid))
+                per_file.append({"group": "A", "tag": tag, **rowsA[-1]})
+            for mid in B.get(tag, []):
+                rowsB.append(file_metrics_bass(mid))
+                per_file.append({"group": "B", "tag": tag, **rowsB[-1]})
+        else:
+            # Drum metrics (existing)
+            for mid in A.get(tag, []):
+                style_hint = tag.split("_")[0] if "_" in tag else "pop_straight"
+                rowsA.append(file_metrics(mid, style_hint))
+                per_file.append({"group": "A", "tag": tag, **rowsA[-1]})
+            for mid in B.get(tag, []):
+                style_hint = tag.split("_")[0] if "_" in tag else "pop_straight"
+                rowsB.append(file_metrics(mid, style_hint))
+                per_file.append({"group": "B", "tag": tag, **rowsB[-1]})
+        
         strata[tag] = {"A": {"summary": summarize(rowsA), "count": len(rowsA)},
                        "B": {"summary": summarize(rowsB), "count": len(rowsB)}}
 
@@ -292,10 +444,14 @@ def main():
 
     if args.out_csv:
         with open(args.out_csv, "w", newline="", encoding="utf-8") as f:
-            cols = ["group", "tag", "file", "style_hint", "tempo", "bars",
-                    "hat_grid_conform", "snare_backbeat_rate", "kick_downbeat_rate", "bar_violation_rate",
-                    "velocity_std", "notes_per_bar", "kick_per_bar", "snare_per_bar", "hihat_per_bar", "crash_per_bar", "tom_per_bar",
-                    "crash_on_bar1_rate", "fill_coverage_rate"]
+            if args.instrument == "bass":
+                cols = ["group", "tag", "file", "tempo", "bars", "time_sig",
+                        "downbeat_anchor_rate", "range_ok_rate", "velocity_std", "notes_per_bar", "kick_align_rate"]
+            else:
+                cols = ["group", "tag", "file", "style_hint", "tempo", "bars",
+                        "hat_grid_conform", "snare_backbeat_rate", "kick_downbeat_rate", "bar_violation_rate",
+                        "velocity_std", "notes_per_bar", "kick_per_bar", "snare_per_bar", "hihat_per_bar", "crash_per_bar", "tom_per_bar",
+                        "crash_on_bar1_rate", "fill_coverage_rate"]
             w = csv.DictWriter(f, fieldnames=cols)
             w.writeheader()
             for r in per_file:

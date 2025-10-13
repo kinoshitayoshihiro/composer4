@@ -21,6 +21,7 @@ Example:
 from __future__ import annotations
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -28,7 +29,6 @@ from pathlib import Path
 try:
     from adapters.run_drum_adapter import DrumAdapter
 except ImportError:
-    import sys
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from adapters.run_drum_adapter import DrumAdapter
 
@@ -60,6 +60,7 @@ def main():
     ap.add_argument("--n-per-stratum", type=int, default=3)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out-root", default="output")
+    ap.add_argument("--instrument", default="drum", choices=["drum", "bass"])
 
     # A/B toggles（必要に応じて増やせます）
     ap.add_argument("--A-humanize", dest="A_humanize", default="true")
@@ -86,7 +87,16 @@ def main():
     A_style_override = getattr(args, "A_style_override", "").strip() or None
     B_style_override = getattr(args, "B_style_override", "").strip() or None
 
-    adapter = DrumAdapter()
+    # Select adapter based on instrument
+    if args.instrument == "bass":
+        try:
+            from adapters.bass_adapter import BassAdapter
+            adapter = BassAdapter(out_dir=str(outA))
+        except ImportError:
+            print("❌ BassAdapter not found. Please check adapters/bass_adapter.py")
+            sys.exit(1)
+    else:
+        adapter = DrumAdapter()
 
     manifest = {"created_at": time.time(), "items": []}
 
@@ -98,27 +108,60 @@ def main():
                 for i in range(n_per):
                     seed = seed0 + i
 
-                    # ---- A ----
+                    # Build conditions dict (supports both Drum and Bass adapters)
                     styleA = A_style_override or style
-                    rA = adapter.generate_one(
-                        tempo=tempo, time_sig=time_sig, length_bars=bars,
-                        style=styleA, density=dens, swing=0.0, seed=seed,
-                        apply_humanizer=A_hum,
-                    )
-                    pmA = rA["pretty_midi"]
-                    midA = outA / tag / f"A_{tag}_seed{seed}_{i}.mid"
-                    save_pm(pmA, midA)
+                    styleB = B_style_override or style
+                    
+                    condA = {
+                        "tempo": tempo,
+                        "time_sig": time_sig,
+                        "length_bars": bars,
+                        "style": styleA,
+                        "density": dens,
+                    }
+                    condB = {
+                        "tempo": tempo,
+                        "time_sig": time_sig,
+                        "length_bars": bars,
+                        "style": styleB,
+                        "density": dens,
+                    }
+                    
+                    # ---- A ----
+                    if args.instrument == "bass":
+                        # BassAdapter uses conditions dict + seed
+                        adapter.out_dir = outA / tag
+                        rA = adapter.generate_one(
+                            conditions=condA, seed=seed, apply_humanizer=A_hum, save=True
+                        )
+                        midA = Path(rA["midi_path"])
+                    else:
+                        # DrumAdapter uses keyword args
+                        rA = adapter.generate_one(
+                            tempo=tempo, time_sig=time_sig, length_bars=bars,
+                            style=styleA, density=dens, swing=0.0, seed=seed,
+                            apply_humanizer=A_hum,
+                        )
+                        pmA = rA["pretty_midi"]
+                        midA = outA / tag / f"A_{tag}_seed{seed}_{i}.mid"
+                        save_pm(pmA, midA)
 
                     # ---- B ----
-                    styleB = B_style_override or style
-                    rB = adapter.generate_one(
-                        tempo=tempo, time_sig=time_sig, length_bars=bars,
-                        style=styleB, density=dens, swing=0.0, seed=seed,
-                        apply_humanizer=B_hum,
-                    )
-                    pmB = rB["pretty_midi"]
-                    midB = outB / tag / f"B_{tag}_seed{seed}_{i}.mid"
-                    save_pm(pmB, midB)
+                    if args.instrument == "bass":
+                        adapter.out_dir = outB / tag
+                        rB = adapter.generate_one(
+                            conditions=condB, seed=seed, apply_humanizer=B_hum, save=True
+                        )
+                        midB = Path(rB["midi_path"])
+                    else:
+                        rB = adapter.generate_one(
+                            tempo=tempo, time_sig=time_sig, length_bars=bars,
+                            style=styleB, density=dens, swing=0.0, seed=seed,
+                            apply_humanizer=B_hum,
+                        )
+                        pmB = rB["pretty_midi"]
+                        midB = outB / tag / f"B_{tag}_seed{seed}_{i}.mid"
+                        save_pm(pmB, midB)
 
                     manifest["items"].append({
                         "tag": tag,

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-METRICS = [
+METRICS_DRUM = [
     ("hat_grid_conform", "Hi-hat Grid Conform ↑", True),
     ("snare_backbeat_rate", "Snare Backbeat Rate ↑", True),
     ("kick_downbeat_rate", "Kick Downbeat Rate ↑", True),
@@ -28,7 +28,15 @@ METRICS = [
     ("fill_coverage_rate", "Fill Coverage ↑", True),
 ]
 
-THR_DEFAULT = {
+METRICS_BASS = [
+    ("downbeat_anchor_rate", "Downbeat Anchor Rate ↑", True),
+    ("range_ok_rate", "Range OK Rate ↑", True),
+    ("velocity_std", "Velocity Std ↑", True),
+    ("notes_per_bar", "Notes/Bar (info)", None),
+    ("kick_align_rate", "Kick Align Rate ↑", True),
+]
+
+THR_DEFAULT_DRUM = {
     "bar_violation_rate_max": 0.0,
     "hat_grid_conform_min": 0.85,
     "snare_backbeat_rate_min": 0.80,
@@ -36,25 +44,50 @@ THR_DEFAULT = {
     "velocity_std_min": 8.0,
 }
 
+THR_DEFAULT_BASS = {
+    "downbeat_anchor_rate_min": 0.85,
+    "range_ok_rate_min": 0.95,
+    "velocity_std_min": 7.0,
+}
+
 
 def check_accept(summary, thr):
+    """Check if summary meets acceptance thresholds (instrument-agnostic)."""
     ok = True
     reasons = []
-    if summary["bar_violation_rate"] > thr["bar_violation_rate_max"]:
-        ok = False
-        reasons.append(f"bar_violation_rate {summary['bar_violation_rate']} > {thr['bar_violation_rate_max']}")
-    if summary["hat_grid_conform"] < thr["hat_grid_conform_min"]:
-        ok = False
-        reasons.append(f"hat_grid_conform {summary['hat_grid_conform']} < {thr['hat_grid_conform_min']}")
-    if summary["snare_backbeat_rate"] < thr["snare_backbeat_rate_min"]:
-        ok = False
-        reasons.append(f"snare_backbeat_rate {summary['snare_backbeat_rate']} < {thr['snare_backbeat_rate_min']}")
-    if summary["kick_downbeat_rate"] < thr["kick_downbeat_rate_min"]:
-        ok = False
-        reasons.append(f"kick_downbeat_rate {summary['kick_downbeat_rate']} < {thr['kick_downbeat_rate_min']}")
-    if summary["velocity_std"] < thr["velocity_std_min"]:
-        ok = False
-        reasons.append(f"velocity_std {summary['velocity_std']} < {thr['velocity_std_min']}")
+    
+    # Detect instrument type
+    is_bass = "downbeat_anchor_rate" in summary
+    
+    if is_bass:
+        # Bass acceptance checks
+        if summary.get("downbeat_anchor_rate", 0.0) < thr.get("downbeat_anchor_rate_min", 0.0):
+            ok = False
+            reasons.append(f"downbeat_anchor_rate {summary['downbeat_anchor_rate']} < {thr['downbeat_anchor_rate_min']}")
+        if summary.get("range_ok_rate", 0.0) < thr.get("range_ok_rate_min", 0.0):
+            ok = False
+            reasons.append(f"range_ok_rate {summary['range_ok_rate']} < {thr['range_ok_rate_min']}")
+        if summary.get("velocity_std", 0.0) < thr.get("velocity_std_min", 0.0):
+            ok = False
+            reasons.append(f"velocity_std {summary['velocity_std']} < {thr['velocity_std_min']}")
+    else:
+        # Drum acceptance checks
+        if summary.get("bar_violation_rate", 1.0) > thr.get("bar_violation_rate_max", 0.0):
+            ok = False
+            reasons.append(f"bar_violation_rate {summary['bar_violation_rate']} > {thr['bar_violation_rate_max']}")
+        if summary.get("hat_grid_conform", 0.0) < thr.get("hat_grid_conform_min", 0.0):
+            ok = False
+            reasons.append(f"hat_grid_conform {summary['hat_grid_conform']} < {thr['hat_grid_conform_min']}")
+        if summary.get("snare_backbeat_rate", 0.0) < thr.get("snare_backbeat_rate_min", 0.0):
+            ok = False
+            reasons.append(f"snare_backbeat_rate {summary['snare_backbeat_rate']} < {thr['snare_backbeat_rate_min']}")
+        if summary.get("kick_downbeat_rate", 0.0) < thr.get("kick_downbeat_rate_min", 0.0):
+            ok = False
+            reasons.append(f"kick_downbeat_rate {summary['kick_downbeat_rate']} < {thr['kick_downbeat_rate_min']}")
+        if summary.get("velocity_std", 0.0) < thr.get("velocity_std_min", 0.0):
+            ok = False
+            reasons.append(f"velocity_std {summary['velocity_std']} < {thr['velocity_std_min']}")
+    
     return ok, reasons
 
 
@@ -102,13 +135,19 @@ def main():
     lines.append(f"- n(A)={overallA.get('count', 0)}, n(B)={overallB.get('count', 0)}")
     lines.append("")
 
+    # Detect instrument type
+    is_bass = "downbeat_anchor_rate" in overallB
+    metrics = METRICS_BASS if is_bass else METRICS_DRUM
+    
     # Overall table
     lines.append("## Overall")
     lines.append("| Metric | A | B | Δ(B−A) | Note |")
     lines.append("|---|---:|---:|---:|:--|")
-    for key, label, hib in METRICS:
+    for key, label, hib in metrics:
         a = overallA.get(key, 0.0)
         b = overallB.get(key, 0.0)
+        if a is None: a = 0.0
+        if b is None: b = 0.0
         d = round(b - a, 4)
         lines.append(f"| {label} | {a:.4f} | {b:.4f} | {d:+.4f} | {emoji(d, hib)} |")
     lines.append("")
@@ -126,9 +165,11 @@ def main():
         labels = []
         Avals = []
         Bvals = []
-        for key, label, hib in METRICS:
+        for key, label, hib in metrics:
             a = sA.get(key, 0.0)
             b = sB.get(key, 0.0)
+            if a is None: a = 0.0
+            if b is None: b = 0.0
             d = round(b - a, 4)
             lines.append(f"| {label} | {a:.4f} | {b:.4f} | {d:+.4f} | {emoji(d, hib)} |")
             labels.append(label)
@@ -141,7 +182,9 @@ def main():
         lines.append("")
 
     # Acceptance (overall B)
-    ok, reasons = check_accept(overallB, dict(THR_DEFAULT))
+    is_bass = "downbeat_anchor_rate" in overallB
+    thr = THR_DEFAULT_BASS if is_bass else THR_DEFAULT_DRUM
+    ok, reasons = check_accept(overallB, dict(thr))
     lines.append("## Acceptance (overall B)")
     if ok:
         lines.append("**✅ PASS**")
