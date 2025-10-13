@@ -64,6 +64,54 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def force_sdpa_kernel(kind: str) -> None:
+    """Force specific SDPA kernel backend.
+    
+    Args:
+        kind: "flash", "mem", or "math"
+    """
+    if not hasattr(torch.backends.cuda, 'sdp_kernel'):
+        logger.warning("⚠️  sdp_kernel not available, ignoring --force-sdp")
+        return
+    
+    enable_flash = (kind == "flash")
+    enable_mem = (kind == "mem")
+    enable_math = (kind == "math")
+    
+    try:
+        torch.backends.cuda.sdp_kernel(
+            enable_flash=enable_flash,
+            enable_mem_efficient=enable_mem,
+            enable_math=enable_math
+        )
+        logger.info(f"✅ Forced SDPA kernel: {kind.upper()}")
+    except Exception as e:
+        logger.warning(f"⚠️  Failed to force SDPA kernel {kind}: {e}")
+
+
+def convert_model_for_half(model: torch.nn.Module, dtype: torch.dtype) -> torch.nn.Module:
+    """Convert model to half precision while keeping LayerNorm in FP32.
+    
+    Args:
+        model: Model to convert
+        dtype: torch.float16 or torch.bfloat16
+        
+    Returns:
+        Converted model
+    """
+    import torch.nn as nn
+    
+    # Convert model to half precision
+    model = model.to(dtype)
+    
+    # Keep LayerNorm in FP32 for numerical stability
+    for module in model.modules():
+        if isinstance(module, nn.LayerNorm):
+            module.float()
+    
+    return model
+
+
 def create_dummy_model(n_embd: int = 768, n_head: int = 12, n_layer: int = 12) -> GPT2LMHeadModel:
     """Create a dummy GPT-2 model for benchmarking.
     
@@ -93,16 +141,16 @@ def measure_inference_time(
     input_ids: torch.Tensor,
     max_new_tokens: int,
     device: str,
-    use_fp16: bool = False,
+    amp_dtype: torch.dtype = torch.float32,
 ) -> tuple[float, int, float, float]:
     """Measure actual inference time and memory.
     
     Args:
-        model: GPT-2 model
+        model: GPT-2 model (already converted to target dtype if needed)
         input_ids: Input token IDs
         max_new_tokens: Number of tokens to generate
         device: Device string ("cuda" or "cpu")
-        use_fp16: Use float16 for Flash Attention (SDPA only)
+        amp_dtype: Autocast dtype (torch.float16, torch.bfloat16, or torch.float32)
     
     Returns:
         (latency_ms, total_length, peak_memory_mb, avg_memory_mb)
@@ -120,9 +168,11 @@ def measure_inference_time(
     # Measure inference time
     start_time = time.time()
     
-    # Use autocast for fp16 if enabled (enables Flash Attention)
-    if use_fp16 and device == "cuda":
-        with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
+    # Use autocast if amp_dtype is not float32
+    use_autocast = (amp_dtype != torch.float32 and device == "cuda")
+    
+    if use_autocast:
+        with torch.no_grad(), torch.autocast(device_type='cuda', dtype=amp_dtype):
             output = model.generate(
                 input_ids,
                 max_new_tokens=max_new_tokens,
@@ -130,7 +180,7 @@ def measure_inference_time(
                 temperature=0.9,
                 top_p=0.95,
                 pad_token_id=0,
-                use_cache=False,  # Disable KV cache for Performer compatibility
+                use_cache=False,  # Disable KV cache for compatibility
             )
     else:
         with torch.no_grad():
@@ -141,7 +191,7 @@ def measure_inference_time(
                 temperature=0.9,
                 top_p=0.95,
                 pad_token_id=0,
-                use_cache=False,  # Disable KV cache for Performer compatibility
+                use_cache=False,  # Disable KV cache for compatibility
             )
     
     # GPU synchronization for accurate timing
@@ -170,17 +220,17 @@ def run_benchmark(
     prompt_length: int,
     max_new_tokens: int,
     device: str,
-    use_fp16: bool = False,
+    amp_dtype: torch.dtype = torch.float32,
 ) -> dict:
     """Run inference benchmark on a model.
     
     Args:
-        model: GPT-2 model
+        model: GPT-2 model (already converted to target dtype)
         num_samples: Number of benchmark samples
         prompt_length: Input prompt length
         max_new_tokens: Number of tokens to generate
         device: Device string ("cuda" or "cpu")
-        use_fp16: Use float16 with autocast (enables Flash Attention)
+        amp_dtype: Autocast dtype (torch.float16, torch.bfloat16, or torch.float32)
     
     Returns:
         Performance statistics dict
@@ -208,7 +258,7 @@ def run_benchmark(
             input_ids=input_ids,
             max_new_tokens=max_new_tokens,
             device=device,
-            use_fp16=use_fp16,
+            amp_dtype=amp_dtype,
         )
         
         latencies.append(latency_ms)
@@ -265,13 +315,41 @@ def main() -> None:
     parser.add_argument("--attn-threshold", type=int, default=512, help="Threshold for auto mode (unused for SDPA)")
     parser.add_argument("--use-fp16", action="store_true", 
                         help="Use float16 with autocast (enables Flash Attention for SDPA)")
+    parser.add_argument("--use-bf16", action="store_true",
+                        help="Use bfloat16 with autocast (L4-optimized, often faster than fp16)")
+    parser.add_argument("--use-fp16", action="store_true", 
+                        help="Use float16 with autocast (enables Flash Attention for SDPA)")
+    parser.add_argument("--use-bf16", action="store_true",
+                        help="Use bfloat16 with autocast (L4-optimized, often faster than fp16)")
+    parser.add_argument("--force-sdp", choices=["flash", "mem", "math"], default=None,
+                        help="Force specific SDPA kernel (flash/mem_efficient/math)")
     parser.add_argument("--output", required=True, help="Output JSON file")
     args = parser.parse_args()
+    
+    # Validate dtype options
+    if args.use_fp16 and args.use_bf16:
+        logger.error("❌ Cannot use both --use-fp16 and --use-bf16")
+        sys.exit(1)
+    
+    # Determine amp_dtype
+    if args.use_bf16:
+        amp_dtype = torch.bfloat16
+        dtype_name = "BF16"
+    elif args.use_fp16:
+        amp_dtype = torch.float16
+        dtype_name = "FP16"
+    else:
+        amp_dtype = torch.float32
+        dtype_name = "FP32"
     
     # Check CUDA availability
     if args.device == "cuda" and not torch.cuda.is_available():
         logger.warning("⚠️  CUDA not available, falling back to CPU")
         args.device = "cpu"
+    
+    # Force SDPA kernel if requested
+    if args.force_sdp and args.device == "cuda":
+        force_sdpa_kernel(args.force_sdp)
     
     seq_len = args.prompt_length + args.max_new_tokens
     
@@ -279,6 +357,9 @@ def main() -> None:
     logger.info("🎯 Adaptive Attention Benchmark (SDPA/Standard/Performer)")
     logger.info("=" * 80)
     logger.info(f"Device: {args.device}")
+    logger.info(f"Precision: {dtype_name} (autocast={amp_dtype != torch.float32})")
+    if args.force_sdp:
+        logger.info(f"Forced SDPA kernel: {args.force_sdp.upper()}")
     if args.device == "cuda":
         logger.info(f"GPU: {torch.cuda.get_device_name(0)}")
         logger.info(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.2f} GB")
@@ -289,7 +370,6 @@ def main() -> None:
     
     logger.info(f"Sequence length: {seq_len} (prompt: {args.prompt_length}, new: {args.max_new_tokens})")
     logger.info(f"Attention mode: {args.attn}")
-    logger.info(f"Use FP16: {args.use_fp16}" + (" (Flash Attention enabled)" if args.use_fp16 and args.attn in ["auto", "sdpa"] else ""))
     if args.attn == "auto":
         logger.info(f"   Threshold: {args.attn_threshold}")
     
@@ -297,6 +377,11 @@ def main() -> None:
     logger.info("")
     logger.info(f"🔧 Creating GPT-2 model (n_embd={args.n_embd}, n_layer={args.n_layer})")
     model = create_dummy_model(n_embd=args.n_embd, n_layer=args.n_layer)
+    
+    # Convert model to half precision if needed (BEFORE attention replacement)
+    if amp_dtype != torch.float32 and args.device == "cuda":
+        logger.info(f"🔄 Converting model to {dtype_name} (LayerNorm kept in FP32)")
+        model = convert_model_for_half(model, amp_dtype)
     
     # Apply adaptive attention
     logger.info("")
@@ -414,7 +499,7 @@ def main() -> None:
         prompt_length=args.prompt_length,
         max_new_tokens=args.max_new_tokens,
         device=args.device,
-        use_fp16=args.use_fp16,
+        amp_dtype=amp_dtype,
     )
     
     # Print results
@@ -441,7 +526,10 @@ def main() -> None:
         "num_random_features": args.num_random_features if applied_kind == "performer" else None,
         "threshold": args.attn_threshold,
         "mode": args.attn,
+        "dtype": dtype_name,
         "use_fp16": args.use_fp16,
+        "use_bf16": args.use_bf16,
+        "force_sdp": args.force_sdp,
     }
     
     report_data = {
