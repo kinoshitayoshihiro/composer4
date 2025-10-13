@@ -1,0 +1,143 @@
+name: Stage3 Drum Validation
+
+on:
+  pull_request:
+    paths:
+      - "generator/**"
+      - "adapters/**"
+      - "scripts/**"
+      - "data/drum_patterns/**"
+      - ".github/workflows/stage3_drum_validation.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install deps (minimal)
+        run: |
+          python -m pip install -U pip
+          pip install pretty_midi mido numpy music21
+
+      - name: Generate (Stage3 Drum)
+        run: |
+          chmod +x scripts/run_stage3_drum_eval.sh
+          # 3サンプル・短めで高速スモーク
+          N_SAMPLES=3 LENGTH_BARS=8 STYLE=pop_straight SEED=42 ./scripts/run_stage3_drum_eval.sh
+        env:
+          PYTHONPATH: .
+
+      - name: Batch evaluate (current)
+        run: |
+          mkdir -p output/reports
+          python scripts/eval_drum_batch.py \
+            --input-dir output/drumgen \
+            --output-json output/reports/current.json \
+            --output-csv  output/reports/current_files.csv
+        env:
+          PYTHONPATH: .
+
+      # （任意）ベースラインが repo にある場合だけ A/B 比較
+      - name: Optional baseline evaluate
+        if: ${{ hashFiles('output/drumgen_baseline/*.mid') != '' }}
+        run: |
+          python scripts/eval_drum_batch.py \
+            --input-dir output/drumgen_baseline \
+            --output-json output/reports/baseline.json
+        env:
+          PYTHONPATH: .
+
+      - name: A/B report (or thresholds)
+        run: |
+          if [ -f output/reports/baseline.json ]; then
+            python scripts/ab_report_simple.py \
+              --eval-a output/reports/baseline.json \
+              --eval-b output/reports/current.json \
+              --out-md output/reports/ab_report.md \
+              --name-a "baseline" --name-b "current" --strict-exit
+          else
+            # ベースラインがない場合は B単体の受け入れ判定でゲート
+            python scripts/check_acceptance.py \
+              --eval-json output/reports/current.json --strict-exit
+          fi
+        env:
+          PYTHONPATH: .
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage3-drum-reports
+          path: |
+            output/reports/*.json
+            output/reports/*.csv
+            output/reports/*.md
+            output/drumgen/*.mid
+            output/drumgen/*.meta.json
+
+  validate_stratified:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install deps (with matplotlib)
+        run: |
+          python -m pip install -U pip
+          pip install pretty_midi mido numpy music21 matplotlib
+
+      - name: Stratified A/B generate
+        run: |
+          python scripts/gen_ab_stratified.py \
+            --styles pop_straight --densities mid --tempos 120 \
+            --length-bars 8 --n-per-stratum 2 \
+            --A-humanize true --B-humanize false \
+            --out-root output
+        env:
+          PYTHONPATH: .
+
+      - name: Stratified A/B evaluate
+        run: |
+          python scripts/eval_drum_batch_stratified.py \
+            --dir-A output/drumgen_A --dir-B output/drumgen_B \
+            --out-json output/reports/ab_stratified.json \
+            --out-csv output/reports/ab_stratified_files.csv
+        env:
+          PYTHONPATH: .
+
+      - name: Rich A/B report
+        run: |
+          mkdir -p output/reports/plots
+          python scripts/ab_report_rich.py \
+            --ab-json output/reports/ab_stratified.json \
+            --out-md output/reports/ab_stratified_report.md \
+            --plot-dir output/reports/plots
+        env:
+          PYTHONPATH: .
+
+      - name: Upload stratified artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage3-drum-stratified-reports
+          path: |
+            output/reports/ab_stratified*.json
+            output/reports/ab_stratified*.csv
+            output/reports/ab_stratified*.md
+            output/reports/plots/*.png
+            output/drumgen_A/**/*.mid
+            output/drumgen_B/**/*.mid
+            output/drumgen_AB_manifest.json
