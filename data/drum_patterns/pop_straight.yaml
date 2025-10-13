@@ -1,0 +1,27 @@
+# Pop straight 8th pattern (minimal)
+meter: "4/4"
+tempo_range: [80, 160]
+roles: [KICK, SNARE, HIHAT, CRASH, RIDE, TOM]
+grid: 8th
+swing: 0
+
+base:
+  # 0..7 = 8分グリッド（小節内）
+  KICK:  [0, 4]                      # 1拍/3拍
+  SNARE: [2, 6]                      # 2拍/4拍（バックビート）
+  HIHAT: [0,1,2,3,4,5,6,7]           # 8分刻み
+
+variations:
+  low:
+    HIHAT: keep
+  mid:
+    KICK:  [0,3,4,7]
+  high:
+    KICK:  [0,3,4,5,7]
+    HIHAT: keep
+
+fill:
+  every_bars: 8
+  max_hits: 6
+  roles: [SNARE, TOM, CRASH]
+  strategy: "end_of_bar"

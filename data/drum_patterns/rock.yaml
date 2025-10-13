@@ -1,0 +1,31 @@
+# Rock (8th/16th mixed)
+meter: "4/4"
+tempo_range: [90, 180]
+roles: [KICK, SNARE, HIHAT, CRASH, RIDE, TOM]
+grid: 16th
+swing: 0
+
+base:
+  # 0..15 = 16分グリッド
+  KICK:   [0, 8]                 # 1拍/3拍
+  SNARE:  [4, 12]                # 2拍/4拍
+  HIHAT:  [0,2,4,6,8,10,12,14]   # 8分相当（16分で刻むなら 0..15 all）
+
+variations:
+  low:
+    HIHAT: [0,2,4,6,8,10,12,14]
+  mid:
+    KICK:  [0,7,8,14]
+    HIHAT: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]  # 16分刻み
+  high:
+    KICK:  [0,3,7,8,12,14,15]
+    HIHAT: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+
+intro:
+  crash_on_bar1: true
+
+fill:
+  every_bars: 8
+  max_hits: 8
+  roles: [SNARE, TOM, CRASH]
+  strategy: "end_of_bar"

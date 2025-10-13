@@ -1,0 +1,29 @@
+# Shuffle (12/8 feel) - triplet grid風のスウィング
+meter: "4/4"
+tempo_range: [70, 140]
+roles: [KICK, SNARE, HIHAT, CRASH, RIDE, TOM]
+grid: 12th        # 12連符格子でshuffleを表現
+swing: 6          # 体感 6〜8% 程度（Humanizer併用前提）
+
+base:
+  # 0..11 = 12連符インデックス
+  # Hihat は 0,3,6,9 を基本に、shuffleの裏を薄く（3連中の中音符を少なめ）
+  KICK:  [0, 6]                 # 1拍頭/3拍頭
+  SNARE: [3, 9]                 # 2拍頭/4拍頭（shuffleの着地点を強調）
+  HIHAT: [0,3,6,9, 0+12,3+12]   # 実装側でbar wrap可（ここでは1小節内の例）
+
+variations:
+  low:
+    HIHAT: [0,3,6,9]
+  mid:
+    KICK:  [0,5,6,11]
+    HIHAT: [0,3,6,9, 2,8]
+  high:
+    KICK:  [0,4,6,10,11]
+    HIHAT: [0,3,6,9, 2,5,8,11]
+
+fill:
+  every_bars: 12
+  max_hits: 8
+  roles: [SNARE, TOM, CRASH]
+  strategy: "end_of_bar"
