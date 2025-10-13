@@ -60,7 +60,7 @@ def main():
     ap.add_argument("--n-per-stratum", type=int, default=3)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out-root", default="output")
-    ap.add_argument("--instrument", default="drum", choices=["drum", "bass", "piano"])
+    ap.add_argument("--instrument", default="drum", choices=["drum", "bass", "piano", "guitar", "strings"])
 
     # A/B toggles（必要に応じて増やせます）
     ap.add_argument("--A-humanize", dest="A_humanize", default="true")
@@ -77,8 +77,10 @@ def main():
     n_per = args.n_per_stratum
     seed0 = args.seed
 
-    outA = Path(args.out_root) / "drumgen_A"
-    outB = Path(args.out_root) / "drumgen_B"
+    # Instrument-specific output directory names
+    inst_name = args.instrument
+    outA = Path(args.out_root) / f"{inst_name}gen_A"
+    outB = Path(args.out_root) / f"{inst_name}gen_B"
     ensure_dir(outA)
     ensure_dir(outB)
 
@@ -88,7 +90,21 @@ def main():
     B_style_override = getattr(args, "B_style_override", "").strip() or None
 
     # Select adapter based on instrument
-    if args.instrument == "piano":
+    if args.instrument == "guitar":
+        try:
+            from adapters.guitar_adapter import GuitarAdapter
+            adapter = GuitarAdapter(out_dir=str(outA))
+        except ImportError:
+            print("❌ GuitarAdapter not found. Please check adapters/guitar_adapter.py")
+            sys.exit(1)
+    elif args.instrument == "strings":
+        try:
+            from adapters.strings_adapter import StringsAdapter
+            adapter = StringsAdapter(out_dir=str(outA))
+        except ImportError:
+            print("❌ StringsAdapter not found. Please check adapters/strings_adapter.py")
+            sys.exit(1)
+    elif args.instrument == "piano":
         try:
             from adapters.piano_adapter import PianoAdapter
             adapter = PianoAdapter(out_dir=str(outA))
@@ -135,7 +151,7 @@ def main():
                     }
                     
                     # ---- A ----
-                    if args.instrument in ["bass", "piano"]:
+                    if args.instrument in ["bass", "piano", "guitar", "strings"]:
                         # BaseInstrumentAdapter uses conditions dict + seed
                         adapter.out_dir = outA / tag
                         rA = adapter.generate_one(
@@ -154,7 +170,7 @@ def main():
                         save_pm(pmA, midA)
 
                     # ---- B ----
-                    if args.instrument in ["bass", "piano"]:
+                    if args.instrument in ["bass", "piano", "guitar", "strings"]:
                         adapter.out_dir = outB / tag
                         rB = adapter.generate_one(
                             conditions=condB, seed=seed, apply_humanizer=B_hum, save=True
@@ -185,7 +201,7 @@ def main():
                         "B_style": styleB,
                     })
 
-    man_path = Path(args.out_root) / "drumgen_AB_manifest.json"
+    man_path = Path(args.out_root) / f"{inst_name}gen_AB_manifest.json"
     man_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"✅ Wrote manifest: {man_path} (items={len(manifest['items'])})")
 
