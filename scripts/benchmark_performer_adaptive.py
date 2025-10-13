@@ -336,11 +336,20 @@ def main() -> None:
             model,
             device=args.device,
             seq_len=seq_len,
-            replace_fn=replace_attention_layers,
+            replace_sdpa_fn=replace_attention_layers_sdpa,
+            replace_performer_fn=replace_attention_layers_performer,
             cfg=cfg
         )
+    elif args.attn == "sdpa":
+        num_replaced = replace_attention_layers_sdpa(model, causal=True)
+        logger.info(f"Replaced {num_replaced} attention layers with SDPA")
+        applied_kind = "sdpa"
+        try:
+            setattr(model, "_attn_kind", "sdpa")
+        except Exception:
+            pass
     elif args.attn == "performer":
-        replace_attention_layers(model, num_random_features=args.num_random_features)
+        replace_attention_layers_performer(model, num_random_features=args.num_random_features)
         applied_kind = "performer"
         try:
             setattr(model, "_attn_kind", "performer")
