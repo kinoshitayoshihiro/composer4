@@ -36,14 +36,6 @@ METRICS_BASS = [
     ("kick_align_rate", "Kick Align Rate ↑", True),
 ]
 
-METRICS_PIANO = [
-    ("chord_tone_rate", "Chord Tone Rate ↑", True),
-    ("hand_separation", "Hand Separation ↑", True),
-    ("velocity_std", "Velocity Std ↑", True),
-    ("bar_violation_rate", "Bar Violation ↓", False),
-    ("notes_per_bar", "Notes/Bar (info)", None),
-]
-
 THR_DEFAULT_DRUM = {
     "bar_violation_rate_max": 0.0,
     "hat_grid_conform_min": 0.85,
@@ -58,13 +50,6 @@ THR_DEFAULT_BASS = {
     "velocity_std_min": 7.0,
 }
 
-THR_DEFAULT_PIANO = {
-    "chord_tone_rate_min": 0.70,
-    "hand_separation_min": 0.85,
-    "velocity_std_min": 8.0,
-    "bar_violation_rate_max": 0.0,
-}
-
 
 def check_accept(summary, thr):
     """Check if summary meets acceptance thresholds (instrument-agnostic)."""
@@ -73,23 +58,8 @@ def check_accept(summary, thr):
     
     # Detect instrument type
     is_bass = "downbeat_anchor_rate" in summary
-    is_piano = "chord_tone_rate" in summary
     
-    if is_piano:
-        # Piano acceptance checks
-        if summary.get("chord_tone_rate", 0.0) < thr.get("chord_tone_rate_min", 0.0):
-            ok = False
-            reasons.append(f"chord_tone_rate {summary['chord_tone_rate']} < {thr['chord_tone_rate_min']}")
-        if summary.get("hand_separation", 0.0) < thr.get("hand_separation_min", 0.0):
-            ok = False
-            reasons.append(f"hand_separation {summary['hand_separation']} < {thr['hand_separation_min']}")
-        if summary.get("velocity_std", 0.0) < thr.get("velocity_std_min", 0.0):
-            ok = False
-            reasons.append(f"velocity_std {summary['velocity_std']} < {thr['velocity_std_min']}")
-        if summary.get("bar_violation_rate", 1.0) > thr.get("bar_violation_rate_max", 0.0):
-            ok = False
-            reasons.append(f"bar_violation_rate {summary['bar_violation_rate']} > {thr['bar_violation_rate_max']}")
-    elif is_bass:
+    if is_bass:
         # Bass acceptance checks
         if summary.get("downbeat_anchor_rate", 0.0) < thr.get("downbeat_anchor_rate_min", 0.0):
             ok = False
@@ -167,8 +137,7 @@ def main():
 
     # Detect instrument type
     is_bass = "downbeat_anchor_rate" in overallB
-    is_piano = "chord_tone_rate" in overallB
-    metrics = METRICS_PIANO if is_piano else (METRICS_BASS if is_bass else METRICS_DRUM)
+    metrics = METRICS_BASS if is_bass else METRICS_DRUM
     
     # Overall table
     lines.append("## Overall")
@@ -214,8 +183,7 @@ def main():
 
     # Acceptance (overall B)
     is_bass = "downbeat_anchor_rate" in overallB
-    is_piano = "chord_tone_rate" in overallB
-    thr = THR_DEFAULT_PIANO if is_piano else (THR_DEFAULT_BASS if is_bass else THR_DEFAULT_DRUM)
+    thr = THR_DEFAULT_BASS if is_bass else THR_DEFAULT_DRUM
     ok, reasons = check_accept(overallB, dict(thr))
     lines.append("## Acceptance (overall B)")
     if ok:

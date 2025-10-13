@@ -60,7 +60,7 @@ def main():
     ap.add_argument("--n-per-stratum", type=int, default=3)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out-root", default="output")
-    ap.add_argument("--instrument", default="drum", choices=["drum", "bass"])
+    ap.add_argument("--instrument", default="drum", choices=["drum", "bass", "piano"])
 
     # A/B toggles（必要に応じて増やせます）
     ap.add_argument("--A-humanize", dest="A_humanize", default="true")
@@ -88,7 +88,14 @@ def main():
     B_style_override = getattr(args, "B_style_override", "").strip() or None
 
     # Select adapter based on instrument
-    if args.instrument == "bass":
+    if args.instrument == "piano":
+        try:
+            from adapters.piano_adapter import PianoAdapter
+            adapter = PianoAdapter(out_dir=str(outA))
+        except ImportError:
+            print("❌ PianoAdapter not found. Please check adapters/piano_adapter.py")
+            sys.exit(1)
+    elif args.instrument == "bass":
         try:
             from adapters.bass_adapter import BassAdapter
             adapter = BassAdapter(out_dir=str(outA))
@@ -128,8 +135,8 @@ def main():
                     }
                     
                     # ---- A ----
-                    if args.instrument == "bass":
-                        # BassAdapter uses conditions dict + seed
+                    if args.instrument in ["bass", "piano"]:
+                        # BaseInstrumentAdapter uses conditions dict + seed
                         adapter.out_dir = outA / tag
                         rA = adapter.generate_one(
                             conditions=condA, seed=seed, apply_humanizer=A_hum, save=True
@@ -147,7 +154,7 @@ def main():
                         save_pm(pmA, midA)
 
                     # ---- B ----
-                    if args.instrument == "bass":
+                    if args.instrument in ["bass", "piano"]:
                         adapter.out_dir = outB / tag
                         rB = adapter.generate_one(
                             conditions=condB, seed=seed, apply_humanizer=B_hum, save=True

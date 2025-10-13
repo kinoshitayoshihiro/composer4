@@ -333,6 +333,166 @@ def file_metrics_bass(mid_path: Path, drum_ref_mid: Path = None) -> Dict[str, An
     }
 
 
+# ========== Piano Evaluator ==========
+
+def guess_piano_track(pm: pretty_midi.PrettyMIDI) -> pretty_midi.Instrument:
+    """Guess piano track by program number (0 or 1-7 for acoustic/electric piano)."""
+    for inst in pm.instruments:
+        if not inst.is_drum and 0 <= inst.program <= 7:
+            return inst
+    # Fallback: first non-drum track
+    for inst in pm.instruments:
+        if not inst.is_drum:
+            return inst
+    return pretty_midi.Instrument(program=0, is_drum=False)
+
+
+def file_metrics_piano(mid_path, chord_attrs: List[str] = None) -> Dict[str, Any]:
+    """Compute Piano metrics: chord_tone_rate, hand_separation, velocity_std, bar_violation_rate, notes_per_bar.
+    
+    Args:
+        mid_path: Path to MIDI file (str or Path)
+        chord_attrs: List of [chord:X] strings for chord tone rate calculation
+    
+    Returns:
+        Dict with metrics
+    """
+    pm = pretty_midi.PrettyMIDI(str(mid_path))
+    track = guess_piano_track(pm)
+    notes = track.notes
+    
+    # Metadata
+    tempo = pm.estimate_tempo() if pm.get_tempo_changes()[1] else 120.0
+    tsig = "4/4"
+    if pm.time_signature_changes:
+        ts = pm.time_signature_changes[0]
+        tsig = f"{ts.numerator}/{ts.denominator}"
+    
+    # Bar calculation
+    num, den = parse_time_sig(tsig)
+    bar_len_sec = num * (60.0 / tempo) * (4.0 / den)
+    total_len = pm.get_end_time()
+    bars = math.ceil(total_len / bar_len_sec) if bar_len_sec > 1e-6 else 1
+    
+    if not notes:
+        return {
+            "file": str(mid_path),
+            "tempo": round(tempo, 1), "bars": bars, "time_sig": tsig,
+            "chord_tone_rate": 0.0,
+            "hand_separation": 1.0,
+            "velocity_std": 0.0,
+            "bar_violation_rate": 0.0,
+            "notes_per_bar": 0.0,
+        }
+    
+    # 1) chord_tone_rate: 各小節の和音音に対する一致率
+    chord_tone_rate = 0.0
+    if chord_attrs:
+        # Parse [chord:X] → pitch classes
+        chord_pcs = []
+        for attr in chord_attrs:
+            if attr.startswith("[chord:") and attr.endswith("]"):
+                chord_name = attr[len("[chord:"):-1]
+                chord_pcs.append(_name_to_pitch_classes(chord_name))
+        
+        if chord_pcs:
+            matches = 0
+            for note in notes:
+                bar_idx = int(note.start / bar_len_sec) % len(chord_pcs)
+                expected_pcs = chord_pcs[bar_idx]
+                note_pc = note.pitch % 12
+                if note_pc in expected_pcs:
+                    matches += 1
+            chord_tone_rate = matches / len(notes)
+    else:
+        # Fallback: 甘めの三和音近似 (Major/Minor triad)
+        # 全ノートのピッチクラスの分布を見て、最も多い3つが三和音を形成するか
+        from collections import Counter
+        pc_counts = Counter(n.pitch % 12 for n in notes)
+        top3 = [pc for pc, _ in pc_counts.most_common(3)]
+        if len(top3) == 3:
+            # Check if it's a triad (0-4-7 or 0-3-7 pattern)
+            top3_sorted = sorted(top3)
+            intervals = [(top3_sorted[(i+1)%3] - top3_sorted[i]) % 12 for i in range(3)]
+            if sorted(intervals) in [[3, 4, 5], [3, 5, 4], [4, 3, 5], [4, 5, 3]]:
+                # Likely a triad
+                matches = sum(1 for n in notes if (n.pitch % 12) in top3)
+                chord_tone_rate = matches / len(notes)
+    
+    # 2) hand_separation: 同一タイムスタンプで上下（C4=60境界）が混在していない率
+    # Group notes by timestamp (quantized to 0.01s)
+    from collections import defaultdict
+    ts_groups = defaultdict(list)
+    for note in notes:
+        ts_key = round(note.start, 2)  # 10ms quantization
+        ts_groups[ts_key].append(note.pitch)
+    
+    separated = 0
+    for pitches in ts_groups.values():
+        if len(pitches) == 1:
+            separated += 1
+        else:
+            # Check if all above or all below C4 (60)
+            above = all(p >= 60 for p in pitches)
+            below = all(p < 60 for p in pitches)
+            if above or below:
+                separated += 1
+    
+    hand_separation = separated / len(ts_groups) if ts_groups else 1.0
+    
+    # 3) velocity_std: ヒューマナイザの効き
+    velocities = [n.velocity for n in notes]
+    velocity_std = statistics.stdev(velocities) if len(velocities) > 1 else 0.0
+    
+    # 4) bar_violation_rate: 小節外はみ出し率
+    violations = sum(1 for n in notes if n.end > bars * bar_len_sec)
+    bar_violation_rate = violations / len(notes)
+    
+    # 5) notes_per_bar: 密度
+    notes_per_bar = len(notes) / max(bars, 1)
+    
+    return {
+        "file": str(mid_path),
+        "tempo": round(tempo, 1), "bars": bars, "time_sig": tsig,
+        "chord_tone_rate": round(chord_tone_rate, 4),
+        "hand_separation": round(hand_separation, 4),
+        "velocity_std": round(velocity_std, 3),
+        "bar_violation_rate": round(bar_violation_rate, 4),
+        "notes_per_bar": round(notes_per_bar, 2),
+    }
+
+
+def _name_to_pitch_classes(name: str) -> List[int]:
+    """Chord name → pitch classes (0-11)."""
+    ROOTS = {
+        "C": 0, "C#": 1, "Db": 1,
+        "D": 2, "D#": 3, "Eb": 3,
+        "E": 4,
+        "F": 5, "F#": 6, "Gb": 6,
+        "G": 7, "G#": 8, "Ab": 8,
+        "A": 9, "A#": 10, "Bb": 10,
+        "B": 11,
+    }
+    
+    # Parse root
+    root_str = "".join([c for c in name if c.isalpha() or c in "#b"])
+    if root_str not in ROOTS:
+        return [0, 4, 7]  # C major fallback
+    
+    # Quality
+    minor = ("m" in name and "maj" not in name)
+    ext7 = ("7" in name)
+    
+    root = ROOTS[root_str]
+    tri = [0, 3, 7] if minor else [0, 4, 7]
+    pcs = [(root + i) % 12 for i in tri]
+    
+    if ext7:
+        pcs.append((root + (10 if minor else 11)) % 12)
+    
+    return pcs
+
+
 def avg(rows, k, default=0.0):
     vals = [r[k] for r in rows if k in r]
     return round(sum(vals) / len(vals), 4) if vals else default
@@ -344,10 +504,20 @@ def summarize(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     
     # Detect instrument type from first row
     is_bass = "downbeat_anchor_rate" in rows[0]
+    is_piano = "chord_tone_rate" in rows[0]
     
     summary = {"count": len(rows)}
     
-    if is_bass:
+    if is_piano:
+        # Piano metrics
+        summary.update({
+            "chord_tone_rate": avg(rows, "chord_tone_rate"),
+            "hand_separation": avg(rows, "hand_separation"),
+            "velocity_std": round(sum(r["velocity_std"] for r in rows if "velocity_std" in r) / len(rows), 3),
+            "bar_violation_rate": avg(rows, "bar_violation_rate"),
+            "notes_per_bar": avg(rows, "notes_per_bar"),
+        })
+    elif is_bass:
         # Bass metrics
         summary.update({
             "downbeat_anchor_rate": avg(rows, "downbeat_anchor_rate"),
@@ -397,7 +567,7 @@ def main():
     ap.add_argument("--dir-B", required=True)
     ap.add_argument("--out-json", required=True)
     ap.add_argument("--out-csv", default="")
-    ap.add_argument("--instrument", default="drum", choices=["drum", "bass"])
+    ap.add_argument("--instrument", default="drum", choices=["drum", "bass", "piano"])
     args = ap.parse_args()
 
     A = gather_files(Path(args.dir_A))
@@ -410,7 +580,16 @@ def main():
         rowsA = []
         rowsB = []
         
-        if args.instrument == "bass":
+        if args.instrument == "piano":
+            # Piano metrics (chord progression from tag or fallback)
+            chord_attrs = None  # TODO: extract from .meta.json or tag
+            for mid in A.get(tag, []):
+                rowsA.append(file_metrics_piano(mid, chord_attrs))
+                per_file.append({"group": "A", "tag": tag, **rowsA[-1]})
+            for mid in B.get(tag, []):
+                rowsB.append(file_metrics_piano(mid, chord_attrs))
+                per_file.append({"group": "B", "tag": tag, **rowsB[-1]})
+        elif args.instrument == "bass":
             # Bass metrics
             for mid in A.get(tag, []):
                 rowsA.append(file_metrics_bass(mid))
@@ -444,7 +623,10 @@ def main():
 
     if args.out_csv:
         with open(args.out_csv, "w", newline="", encoding="utf-8") as f:
-            if args.instrument == "bass":
+            if args.instrument == "piano":
+                cols = ["group", "tag", "file", "tempo", "bars", "time_sig",
+                        "chord_tone_rate", "hand_separation", "velocity_std", "bar_violation_rate", "notes_per_bar"]
+            elif args.instrument == "bass":
                 cols = ["group", "tag", "file", "tempo", "bars", "time_sig",
                         "downbeat_anchor_rate", "range_ok_rate", "velocity_std", "notes_per_bar", "kick_align_rate"]
             else:
