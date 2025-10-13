@@ -93,8 +93,16 @@ def measure_inference_time(
     input_ids: torch.Tensor,
     max_new_tokens: int,
     device: str,
+    use_fp16: bool = False,
 ) -> tuple[float, int, float, float]:
     """Measure actual inference time and memory.
+    
+    Args:
+        model: GPT-2 model
+        input_ids: Input token IDs
+        max_new_tokens: Number of tokens to generate
+        device: Device string ("cuda" or "cpu")
+        use_fp16: Use float16 for Flash Attention (SDPA only)
     
     Returns:
         (latency_ms, total_length, peak_memory_mb, avg_memory_mb)
@@ -112,16 +120,29 @@ def measure_inference_time(
     # Measure inference time
     start_time = time.time()
     
-    with torch.no_grad():
-        output = model.generate(
-            input_ids,
-            max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.9,
-            top_p=0.95,
-            pad_token_id=0,
-            use_cache=False,  # Disable KV cache for Performer compatibility
-        )
+    # Use autocast for fp16 if enabled (enables Flash Attention)
+    if use_fp16 and device == "cuda":
+        with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
+            output = model.generate(
+                input_ids,
+                max_new_tokens=max_new_tokens,
+                do_sample=True,
+                temperature=0.9,
+                top_p=0.95,
+                pad_token_id=0,
+                use_cache=False,  # Disable KV cache for Performer compatibility
+            )
+    else:
+        with torch.no_grad():
+            output = model.generate(
+                input_ids,
+                max_new_tokens=max_new_tokens,
+                do_sample=True,
+                temperature=0.9,
+                top_p=0.95,
+                pad_token_id=0,
+                use_cache=False,  # Disable KV cache for Performer compatibility
+            )
     
     # GPU synchronization for accurate timing
     if device == "cuda" and torch.cuda.is_available():
@@ -149,8 +170,17 @@ def run_benchmark(
     prompt_length: int,
     max_new_tokens: int,
     device: str,
+    use_fp16: bool = False,
 ) -> dict:
     """Run inference benchmark on a model.
+    
+    Args:
+        model: GPT-2 model
+        num_samples: Number of benchmark samples
+        prompt_length: Input prompt length
+        max_new_tokens: Number of tokens to generate
+        device: Device string ("cuda" or "cpu")
+        use_fp16: Use float16 with autocast (enables Flash Attention)
     
     Returns:
         Performance statistics dict
@@ -178,6 +208,7 @@ def run_benchmark(
             input_ids=input_ids,
             max_new_tokens=max_new_tokens,
             device=device,
+            use_fp16=use_fp16,
         )
         
         latencies.append(latency_ms)
@@ -232,6 +263,8 @@ def main() -> None:
     parser.add_argument("--attn", choices=["auto", "standard", "sdpa", "performer"], default="auto", 
                         help="Attention selection: auto (SDPA for GPU), standard, sdpa (Flash), performer (slow)")
     parser.add_argument("--attn-threshold", type=int, default=512, help="Threshold for auto mode (unused for SDPA)")
+    parser.add_argument("--use-fp16", action="store_true", 
+                        help="Use float16 with autocast (enables Flash Attention for SDPA)")
     parser.add_argument("--output", required=True, help="Output JSON file")
     args = parser.parse_args()
     
@@ -256,6 +289,7 @@ def main() -> None:
     
     logger.info(f"Sequence length: {seq_len} (prompt: {args.prompt_length}, new: {args.max_new_tokens})")
     logger.info(f"Attention mode: {args.attn}")
+    logger.info(f"Use FP16: {args.use_fp16}" + (" (Flash Attention enabled)" if args.use_fp16 and args.attn in ["auto", "sdpa"] else ""))
     if args.attn == "auto":
         logger.info(f"   Threshold: {args.attn_threshold}")
     
@@ -380,6 +414,7 @@ def main() -> None:
         prompt_length=args.prompt_length,
         max_new_tokens=args.max_new_tokens,
         device=args.device,
+        use_fp16=args.use_fp16,
     )
     
     # Print results
@@ -406,6 +441,7 @@ def main() -> None:
         "num_random_features": args.num_random_features if applied_kind == "performer" else None,
         "threshold": args.attn_threshold,
         "mode": args.attn,
+        "use_fp16": args.use_fp16,
     }
     
     report_data = {
