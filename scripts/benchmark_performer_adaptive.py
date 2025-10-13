@@ -317,10 +317,6 @@ def main() -> None:
                         help="Use float16 with autocast (enables Flash Attention for SDPA)")
     parser.add_argument("--use-bf16", action="store_true",
                         help="Use bfloat16 with autocast (L4-optimized, often faster than fp16)")
-    parser.add_argument("--use-fp16", action="store_true", 
-                        help="Use float16 with autocast (enables Flash Attention for SDPA)")
-    parser.add_argument("--use-bf16", action="store_true",
-                        help="Use bfloat16 with autocast (L4-optimized, often faster than fp16)")
     parser.add_argument("--force-sdp", choices=["flash", "mem", "math"], default=None,
                         help="Force specific SDPA kernel (flash/mem_efficient/math)")
     parser.add_argument("--output", required=True, help="Output JSON file")
