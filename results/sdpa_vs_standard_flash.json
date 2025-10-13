@@ -1,0 +1,28 @@
+{
+  "adaptive_meta": {
+    "attn": "sdpa",
+    "device": "cuda",
+    "seq_len": 576,
+    "num_random_features": null,
+    "threshold": 512,
+    "mode": "sdpa"
+  },
+  "benchmark_config": {
+    "num_samples": 20,
+    "prompt_length": 64,
+    "max_new_tokens": 512,
+    "n_embd": 768,
+    "n_layer": 12
+  },
+  "results": {
+    "total_runs": 20,
+    "latency_mean": 6970.047974586487,
+    "latency_median": 6555.023670196533,
+    "latency_p95": 8713.377344608307,
+    "per_token_mean": 13.613374950364232,
+    "max_sequence_length": 576,
+    "avg_sequence_length": 576,
+    "peak_memory_mean": 432.78427734375,
+    "peak_memory_p95": 433.03662109375
+  }
+}
