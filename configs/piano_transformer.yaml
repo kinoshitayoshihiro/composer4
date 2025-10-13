@@ -1,0 +1,32 @@
+# Piano Transformer Training Configuration
+
+# Data & Tokenization
+seed: 1234
+max_length: 1024        # Max sequence length (context window)
+vocab_size: 8192        # REMI vocabulary size (adjust to your tokenizer)
+pad_token_id: 0
+eos_token_id: 1
+
+# Model Architecture (GPT-2 small variant)
+n_layer: 8              # Number of transformer layers
+n_head: 8               # Number of attention heads
+n_embd: 512             # Embedding dimension
+dropout: 0.1            # Dropout rate
+
+# Training Hyperparameters
+batch_size: 4           # Per-device batch size (adjust based on GPU memory)
+lr: 3.0e-4              # Learning rate (AdamW)
+epochs: 5               # Maximum training epochs
+eval_steps: 200         # Evaluate every N steps
+early_stop_patience: 5  # Early stopping patience (eval steps)
+
+# Performance Optimization
+fp16: false             # Use FP16 mixed precision (requires CUDA)
+bf16: false             # Use BF16 mixed precision (A100+)
+grad_accum: 1           # Gradient accumulation steps
+
+# Notes:
+# - For small datasets (<10k samples), reduce epochs to 3-5
+# - For large datasets (>100k samples), increase batch_size to 8-16
+# - Use fp16=true on NVIDIA GPUs with Compute Capability >= 7.0
+# - Use bf16=true on A100/H100 for better numerical stability

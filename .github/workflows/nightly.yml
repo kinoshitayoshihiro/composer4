@@ -1,0 +1,97 @@
+name: Nightly Stratified QA
+on:
+  schedule:
+    - cron: "0 18 * * *"  # JST 03:00 (GitHub Actions uses UTC)
+  workflow_dispatch:      # Manual trigger for testing
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Drum
+          - instrument: drum
+            styles: "standard"
+            densities: "mid"
+            tempos: "110,130"
+          
+          # Bass
+          - instrument: bass
+            styles: "downbeat"
+            densities: "mid"
+            tempos: "110,130"
+          
+          # Piano
+          - instrument: piano
+            styles: "block,arpeggio"
+            densities: "mid"
+            tempos: "110,130"
+          
+          # Guitar
+          - instrument: guitar
+            styles: "strum,arpeggio"
+            densities: "low,mid,high"
+            tempos: "95,110,130"
+          
+          # Strings
+          - instrument: strings
+            styles: "pad,pizz"
+            densities: "mid"
+            tempos: "90,110"
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Install dependencies
+        run: |
+          pip install -q pretty_midi matplotlib pandas numpy pyyaml torch transformers
+      
+      - name: Generate A/B samples
+        run: |
+          python scripts/gen_ab_stratified.py \
+            --instrument ${{ matrix.instrument }} \
+            --styles ${{ matrix.styles }} \
+            --densities ${{ matrix.densities }} \
+            --tempos ${{ matrix.tempos }} \
+            --length-bars 8 \
+            --n-per-stratum 2 \
+            --A-humanize true \
+            --B-humanize false \
+            --out-root output
+      
+      - name: Evaluate samples
+        run: |
+          python scripts/eval_drum_batch_stratified.py \
+            --instrument ${{ matrix.instrument }} \
+            --dir-A output/${{ matrix.instrument }}gen_A \
+            --dir-B output/${{ matrix.instrument }}gen_B \
+            --out-json output/reports/ab_${{ matrix.instrument }}.json \
+            --out-csv  output/reports/ab_${{ matrix.instrument }}_files.csv
+      
+      - name: Generate report (with acceptance gate)
+        run: |
+          python scripts/ab_report_rich.py \
+            --ab-json output/reports/ab_${{ matrix.instrument }}.json \
+            --out-md  output/reports/ab_${{ matrix.instrument }}_report.md \
+            --plot-dir output/reports/plots_${{ matrix.instrument }} \
+            --instrument ${{ matrix.instrument }} \
+            --strict-exit
+      
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly_${{ matrix.instrument }}_${{ github.run_number }}
+          path: output/reports/
+          retention-days: 7
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::warning::${{ matrix.instrument }} nightly check failed"
