@@ -149,13 +149,44 @@ def sdpa_kernel_availability() -> dict[str, bool]:
     """
     avail = {}
     try:
-        if hasattr(torch.backends.cuda, 'sdp_kernel'):
-            sdp = torch.backends.cuda.sdp_kernel
-            avail["flash"] = sdp.is_flash_sdp_available() if hasattr(sdp, 'is_flash_sdp_available') else False
-            avail["mem_efficient"] = sdp.is_mem_efficient_sdp_available() if hasattr(sdp, 'is_mem_efficient_sdp_available') else False
-            avail["math"] = sdp.is_math_sdp_available() if hasattr(sdp, 'is_math_sdp_available') else False
+        # Test each backend by attempting to use it
+        if torch.cuda.is_available() and hasattr(torch.backends.cuda, 'sdp_kernel'):
+            from torch.backends.cuda import sdp_kernel, SDPBackend
+            
+            # Create test tensors on GPU
+            q = torch.randn(1, 2, 4, 8, device='cuda', dtype=torch.float16)
+            k = q.clone()
+            v = q.clone()
+            
+            # Test Flash Attention
+            try:
+                with sdp_kernel(enable_flash=True, enable_math=False, enable_mem_efficient=False):
+                    _ = F.scaled_dot_product_attention(q, k, v)
+                avail["flash"] = True
+            except Exception:
+                avail["flash"] = False
+            
+            # Test Memory Efficient
+            try:
+                with sdp_kernel(enable_flash=False, enable_math=False, enable_mem_efficient=True):
+                    _ = F.scaled_dot_product_attention(q, k, v)
+                avail["mem_efficient"] = True
+            except Exception:
+                avail["mem_efficient"] = False
+            
+            # Test Math
+            try:
+                with sdp_kernel(enable_flash=False, enable_math=True, enable_mem_efficient=False):
+                    _ = F.scaled_dot_product_attention(q, k, v)
+                avail["math"] = True
+            except Exception:
+                avail["math"] = False
+                
+        elif hasattr(F, 'scaled_dot_product_attention'):
+            # CUDA not available but SDPA exists (CPU only, math backend)
+            avail = {"flash": False, "mem_efficient": False, "math": True}
         else:
-            # PyTorch < 2.0 or not available
+            # PyTorch < 2.0 or SDPA not available
             avail = {"flash": False, "mem_efficient": False, "math": False}
     except Exception as e:
         # Fallback
