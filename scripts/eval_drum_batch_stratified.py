@@ -378,6 +378,10 @@ def file_metrics_piano(mid_path, chord_attrs: List[str] = None) -> Dict[str, Any
     track = guess_piano_track(pm)
     notes = track.notes
     
+    # Load meta.json for style extraction
+    meta_path = Path(mid_path).with_suffix(".meta.json")
+    meta_dict = json.loads(meta_path.read_text("utf-8")) if meta_path.exists() else {}
+    
     # Metadata
     tempo = pm.estimate_tempo() if pm.get_tempo_changes()[1] else 120.0
     tsig = "4/4"
@@ -402,7 +406,7 @@ def file_metrics_piano(mid_path, chord_attrs: List[str] = None) -> Dict[str, Any
             "notes_per_bar": 0.0,
         }
     
-    # 1) chord_tone_rate: 各小節の和音音に対する一致率
+    # 1) chord_tone_rate: 各小節の和音音に対する一致率（beat-wise inference fallback）
     chord_tone_rate = 0.0
     if chord_attrs:
         # Parse [chord:X] → pitch classes
@@ -421,20 +425,18 @@ def file_metrics_piano(mid_path, chord_attrs: List[str] = None) -> Dict[str, Any
                 if note_pc in expected_pcs:
                     matches += 1
             chord_tone_rate = matches / len(notes)
-    else:
-        # Fallback: 甘めの三和音近似 (Major/Minor triad)
-        # 全ノートのピッチクラスの分布を見て、最も多い3つが三和音を形成するか
-        from collections import Counter
-        pc_counts = Counter(n.pitch % 12 for n in notes)
-        top3 = [pc for pc, _ in pc_counts.most_common(3)]
-        if len(top3) == 3:
-            # Check if it's a triad (0-4-7 or 0-3-7 pattern)
-            top3_sorted = sorted(top3)
-            intervals = [(top3_sorted[(i+1)%3] - top3_sorted[i]) % 12 for i in range(3)]
-            if sorted(intervals) in [[3, 4, 5], [3, 5, 4], [4, 3, 5], [4, 5, 3]]:
-                # Likely a triad
-                matches = sum(1 for n in notes if (n.pitch % 12) in top3)
-                chord_tone_rate = matches / len(notes)
+    
+    # Fallback: beat-wise PC histogram inference
+    if chord_tone_rate == 0.0:
+        notes_dict = [{"start": n.start, "pitch": n.pitch, "vel": n.velocity} for n in notes]
+        pcs_seq = _infer_chords_beatwise(notes_dict, bars, bar_len_sec, tsig)
+        if pcs_seq:
+            matches = 0
+            for i, n in enumerate(notes):
+                pcs = pcs_seq[min(i, len(pcs_seq) - 1)]
+                if (n.pitch % 12) in pcs:
+                    matches += 1
+            chord_tone_rate = matches / max(1, len(notes))
     
     # 2) hand_separation: 同一タイムスタンプで上下（C4=60境界）が混在していない率
     # Group notes by timestamp (quantized to 0.01s)
@@ -468,7 +470,11 @@ def file_metrics_piano(mid_path, chord_attrs: List[str] = None) -> Dict[str, Any
     # 5) notes_per_bar: 密度
     notes_per_bar = len(notes) / max(bars, 1)
     
-    return {
+    # Extract style from conditions if available
+    cond = meta_dict.get("conditions", {}) if isinstance(meta_dict, dict) else {}
+    style = cond.get("style")
+    
+    result = {
         "file": str(mid_path),
         "tempo": round(tempo, 1), "bars": bars, "time_sig": tsig,
         "chord_tone_rate": round(chord_tone_rate, 4),
@@ -477,6 +483,9 @@ def file_metrics_piano(mid_path, chord_attrs: List[str] = None) -> Dict[str, Any
         "bar_violation_rate": round(bar_violation_rate, 4),
         "notes_per_bar": round(notes_per_bar, 2),
     }
+    if style:
+        result["style"] = style
+    return result
 
 
 def _name_to_pitch_classes(name: str) -> List[int]:
@@ -552,6 +561,39 @@ def _chord_tone_pcs_from_attrs(meta: dict) -> List[set]:
     return out
 
 
+def _infer_chords_beatwise(notes, bars, barL, tsig) -> List[set]:
+    """Fallback: infer chords per beat using PC histogram (maj/min template matching)."""
+    beats_per_bar = parse_time_sig(tsig)[0]
+    beat = barL / beats_per_bar
+    maj = {0, 4, 7}
+    minh = {0, 3, 7}
+    result = []
+    
+    for b in range(bars):
+        for k in range(beats_per_bar):
+            t0 = b * barL + k * beat
+            t1 = t0 + beat
+            group = [n for n in notes if t0 <= n["start"] < t1]
+            if not group:
+                result.append(set())
+                continue
+            
+            # PC histogram
+            hist = [0] * 12
+            for n in group:
+                hist[n["pitch"] % 12] += 1
+            
+            # Find root (max PC) and mode (maj vs min score)
+            root = max(range(12), key=lambda r: hist[r])
+            score_maj = sum(hist[(root + i) % 12] for i in maj)
+            score_min = sum(hist[(root + i) % 12] for i in minh)
+            tri = maj if score_maj >= score_min else minh
+            pcs = {(root + i) % 12 for i in tri}
+            result.append(pcs)
+    
+    return result
+
+
 # ========== Guitar Evaluator ==========
 
 def file_metrics_guitar(mid_path: Path) -> Dict[str, Any]:
@@ -575,38 +617,49 @@ def file_metrics_guitar(mid_path: Path) -> Dict[str, Any]:
     in_range = sum(1 for n in notes if GUITAR_RANGE_MIN <= n["pitch"] <= GUITAR_RANGE_MAX)
     range_ok = in_range / max(1, len(notes))
     
-    # 2) strum_consistency: Beat-level onset monotonicity + 36ms span check
-    beats_per_bar = parse_time_sig(tsig)[0]
-    beat = barL / beats_per_bar
-    win = 0.012
-    good_beats = 0
-    total_beats = bars * beats_per_bar
+    # 2) strum_consistency: Beat-level onset monotonicity + BPM-relative span check
+    # NOTE: Only meaningful for "strum" style; arpeggio uses wider spacing
+    style = meta.get("conditions", {}).get("style", "strum")
     
-    for bi in range(total_beats):
-        bar_idx = bi // beats_per_bar
-        k = bi % beats_per_bar
-        t0 = bar_idx * barL + k * beat
-        group = [n for n in notes if t0 <= n["start"] < t0 + beat]
-        if len(group) <= 1:
-            continue
-        ons = [n["start"] - t0 for n in sorted(group, key=lambda x: x["start"])]
-        mono_inc = all(ons[i] <= ons[i + 1] for i in range(len(ons) - 1))
-        span_ok = (max(ons) - min(ons)) <= (3 * win)  # 36ms
-        if mono_inc and span_ok:
-            good_beats += 1
+    if style != "strum":
+        # Arpeggio or other styles: strum_consistency is N/A
+        strum_consistency = 1.0
+    else:
+        beats_per_bar = parse_time_sig(tsig)[0]
+        beat = barL / beats_per_bar
+        # Adaptive window: max 36ms or 6% of beat length (shuffle/swing tolerant)
+        win = min(0.036, 0.06 * beat)
+        good_beats = 0
+        total_beats = bars * beats_per_bar
+        
+        for bi in range(total_beats):
+            bar_idx = bi // beats_per_bar
+            k = bi % beats_per_bar
+            t0 = bar_idx * barL + k * beat
+            group = [n for n in notes if t0 <= n["start"] < t0 + beat]
+            if len(group) <= 1:
+                continue
+            # Sort by (start, pitch) to handle simultaneous notes
+            ons = [n["start"] - t0 for n in sorted(group, key=lambda x: (x["start"], x["pitch"]))]
+            mono_inc = all(ons[i] <= ons[i + 1] for i in range(len(ons) - 1))
+            span_ok = (max(ons) - min(ons)) <= (3 * win)
+            if mono_inc and span_ok:
+                good_beats += 1
+        
+        strum_consistency = good_beats / max(1, total_beats)
     
-    strum_consistency = good_beats / max(1, total_beats)
-    
-    # 3) chord_tone_rate
+    # 3) chord_tone_rate (with beat-wise PC inference fallback)
     pcs_seq = _chord_tone_pcs_from_attrs(meta)
     if not pcs_seq:
-        chord_tone = 0.70  # Fallback
-    else:
-        good = 0
-        for i, n in enumerate(notes):
-            if (n["pitch"] % 12) in pcs_seq[i % len(pcs_seq)]:
-                good += 1
-        chord_tone = good / len(notes)
+        # Fallback: infer chords from note content
+        pcs_seq = _infer_chords_beatwise(notes, bars, barL, tsig)
+    
+    good = 0
+    for i, n in enumerate(notes):
+        pcs = pcs_seq[min(i, len(pcs_seq) - 1)] if pcs_seq else set()
+        if (n["pitch"] % 12) in pcs:
+            good += 1
+    chord_tone = good / max(1, len(notes))
     
     # 4) velocity_std
     vels = [n["vel"] for n in notes]
@@ -619,7 +672,10 @@ def file_metrics_guitar(mid_path: Path) -> Dict[str, Any]:
     # Info
     npb = len(notes) / max(1, bars)
     
-    return {
+    # Extract style from meta if available
+    style = meta.get("conditions", {}).get("style")
+    
+    result = {
         "file": str(mid_path),
         "tempo": tempo, "bars": bars, "time_sig": tsig,
         "strum_consistency": round(strum_consistency, 4),
@@ -629,6 +685,9 @@ def file_metrics_guitar(mid_path: Path) -> Dict[str, Any]:
         "bar_violation_rate": round(bar_viol, 6),
         "notes_per_bar": round(npb, 2),
     }
+    if style:
+        result["style"] = style
+    return result
 
 
 # ========== Strings Evaluator ==========
@@ -689,7 +748,10 @@ def file_metrics_strings(mid_path: Path) -> Dict[str, Any]:
     # Info
     npb = len(notes) / max(1, bars)
     
-    return {
+    # Extract style from meta if available
+    style = meta.get("conditions", {}).get("style")
+    
+    result = {
         "file": str(mid_path),
         "tempo": tempo, "bars": bars, "time_sig": tsig,
         "legato_ratio": round(legato_ratio, 4),
@@ -699,6 +761,9 @@ def file_metrics_strings(mid_path: Path) -> Dict[str, Any]:
         "bar_violation_rate": round(bar_viol, 6),
         "notes_per_bar": round(npb, 2),
     }
+    if style:
+        result["style"] = style
+    return result
 
 
 def avg(rows, k, default=0.0):
@@ -773,6 +838,12 @@ def summarize(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
             "crash_on_bar1_rate": avg(rows, "crash_on_bar1_rate"),
             "fill_coverage_rate": avg(rows, "fill_coverage_rate"),
         })
+    
+    # Add most common style if available (for style-aware thresholds)
+    styles = [r.get("style") for r in rows if r.get("style")]
+    if styles:
+        from collections import Counter
+        summary["style"] = Counter(styles).most_common(1)[0][0]
     
     return summary
 

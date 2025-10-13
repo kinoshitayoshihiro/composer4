@@ -68,6 +68,15 @@ THRESHOLDS = {
     },
 }
 
+# Style-specific threshold overrides (instrument, style) -> {metric: value}
+# Applied on top of base instrument thresholds when style is available
+THRESHOLDS_STYLE = {
+    ("guitar", "strum"):     {"strum_consistency_min": 0.78},      # Stricter for strumming
+    ("guitar", "arpeggio"):  {"strum_consistency_min": 0.40},      # Relaxed for arpeggio
+    ("strings", "pad"):      {"legato_ratio_min": 0.70, "sustain_stability_min": 0.85, "velocity_std_min": 4.5},
+    ("strings", "pizz"):     {"legato_ratio_min": 0.20, "sustain_stability_min": 0.40, "velocity_std_min": 6.0},
+}
+
 
 def _select_columns(instrument: str, available_keys):
     """Select metric columns for instrument, filtering out missing keys."""
@@ -76,8 +85,14 @@ def _select_columns(instrument: str, available_keys):
 
 
 def _judge_accept(overall: dict, instrument: str) -> tuple:
-    """Judge acceptance based on instrument-specific thresholds."""
-    thr = THRESHOLDS.get(instrument, {})
+    """Judge acceptance based on instrument-specific thresholds with optional style override."""
+    thr = dict(THRESHOLDS.get(instrument, {}))
+    
+    # Apply style-specific overrides if available
+    style = overall.get("style") or overall.get("style_mode")
+    if style:
+        thr.update(THRESHOLDS_STYLE.get((instrument, style), {}))
+    
     fails = []
     
     # *_min thresholds
