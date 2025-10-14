@@ -12,6 +12,7 @@ Usage:
 
 import argparse
 import json
+import math
 import random
 from pathlib import Path
 
@@ -23,13 +24,15 @@ sys.path.insert(0, str(Path(__file__).parent))
 from token_utils import load_remi_tokenizer, decode_ids_to_pm, sample_model
 
 
-def score_piano_midi(pm) -> float:
+def score_piano_midi(pm) -> tuple:
     """
-    Simple quality scoring for piano MIDI (chord_tone_rate + hand_separation proxy).
-    Higher is better.
+    Quality scoring for piano MIDI with detailed breakdown.
+    
+    Returns:
+        (score, breakdown) where score ∈ [0,1] and breakdown is a dict of components
     """
     if not pm.instruments:
-        return 0.0
+        return 0.0, {"error": "no_instruments"}
     
     # Count notes
     notes = []
@@ -39,28 +42,70 @@ def score_piano_midi(pm) -> float:
                 notes.append({"pitch": n.pitch, "start": n.start, "velocity": n.velocity})
     
     if not notes:
-        return 0.0
+        return 0.0, {"error": "no_notes"}
+    
+    # ---- Metrics (all normalized to [0,1]) ----
     
     # 1) Pitch diversity (proxy for chord tones)
     pitches = set(n["pitch"] for n in notes)
-    diversity = min(1.0, len(pitches) / 12.0)  # Normalized to 12 semitones
+    chord_tone = min(1.0, len(pitches) / 12.0)  # 0: mono, 1: 12+ unique pitches
     
-    # 2) Hand separation proxy (range spread)
+    # 2) Rhythm regularity (IOI entropy)
+    onsets = sorted([n["start"] for n in notes])
+    iois = [max(1e-4, onsets[i+1] - onsets[i]) for i in range(len(onsets) - 1)]
+    if iois:
+        total = sum(iois)
+        probs = [x / total for x in iois]
+        ent = -sum(p * math.log(p + 1e-12) for p in probs) / math.log(len(probs) + 1e-12)
+        rhythm_regular = 1.0 - ent  # 0: random, 1: uniform
+    else:
+        rhythm_regular = 0.5
+    
+    # 3) Density match (assume mid-density target: 2-6 notes/sec)
+    duration = pm.get_end_time()
+    density = len(notes) / max(1.0, duration)
+    if density < 2.0:
+        density_match = max(0.0, 1.0 - (2.0 - density) / 3.0)
+    elif density > 6.0:
+        density_match = max(0.0, 1.0 - (density - 6.0) / 10.0)
+    else:
+        density_match = 1.0
+    
+    # 4) Rest penalty (avoid too much silence)
+    active = sum(n["velocity"] > 0 for n in notes) / max(1.0, len(notes))
+    rest_penalty = 1.0 - max(0.0, 1.0 - active)
+    
+    # 5) Pedal penalty (placeholder, assumes no excessive sustain)
+    pedal_penalty = 0.0  # Future: check CC64 events
+    
+    # 6) Span compact (avoid extreme pitch ranges)
     pitch_values = [n["pitch"] for n in notes]
-    pitch_range = max(pitch_values) - min(pitch_values)
-    separation = min(1.0, pitch_range / 24.0)  # Normalized to 2 octaves
+    span = max(pitch_values) - min(pitch_values)
+    span_compact = 1.0 - min(1.0, span / 64.0)  # 0: >64 semitones, 1: narrow
     
-    # 3) Velocity variation
-    vels = [n["velocity"] for n in notes]
-    vel_std = 0.0
-    if len(vels) > 1:
-        mean_vel = sum(vels) / len(vels)
-        vel_std = (sum((v - mean_vel) ** 2 for v in vels) / len(vels)) ** 0.5
-    vel_score = min(1.0, vel_std / 20.0)  # Normalized to typical std
+    # ---- Weighted composite ----
+    weights = {
+        "chord_tone": 0.25,
+        "rhythm_regular": 0.20,
+        "density_match": 0.20,
+        "rest_penalty": 0.10,
+        "pedal_penalty": 0.05,
+        "span_compact": 0.20
+    }
     
-    # Weighted composite score
-    score = 0.5 * diversity + 0.3 * separation + 0.2 * vel_score
-    return score
+    breakdown = {
+        "chord_tone": round(chord_tone, 4),
+        "rhythm_regular": round(rhythm_regular, 4),
+        "density_match": round(density_match, 4),
+        "rest_penalty": round(rest_penalty, 4),
+        "pedal_penalty": round(1.0 - pedal_penalty, 4),
+        "span_compact": round(span_compact, 4)
+    }
+    
+    score = sum(weights[k] * max(0.0, min(1.0, breakdown[k])) for k in weights)
+    score = max(0.0, min(1.0, score))
+    
+    return round(score, 4), breakdown
 
 
 def main():
@@ -95,13 +140,27 @@ def main():
     bos = getattr(tk, "bos_id", None)
     prompt = [bos] if bos is not None else []
 
-    print(f"[info] Generating {args.n} samples (best-of-{args.best_of})...")
+    # Base seed: try model_card.json > args.seed > 1234
+    base_seed = 1234
+    card_path = Path(args.model_dir) / "model_card.json"
+    if card_path.exists():
+        try:
+            card = json.loads(card_path.read_text("utf-8"))
+            base_seed = int(card.get("train", {}).get("seed", base_seed))
+        except Exception:
+            pass
+    if args.seed:
+        base_seed = args.seed
+
+    print(f"[info] Generating {args.n} samples (best-of-{args.best_of}, base_seed={base_seed})...")
     for i in range(args.n):
         try:
             # Best-of-N: Generate multiple candidates and pick best
             candidates = []
             for c in range(args.best_of):
-                torch.manual_seed(args.seed + i * args.best_of + c)
+                cand_seed = base_seed + i * args.best_of + c
+                torch.manual_seed(cand_seed)
+                random.seed(cand_seed)
                 ids = sample_model(
                     model, prompt,
                     max_new_tokens=args.max_new,
@@ -111,8 +170,8 @@ def main():
                 
                 try:
                     pm = decode_ids_to_pm(tk, ids)
-                    score = score_piano_midi(pm)
-                    candidates.append((pm, ids, score))
+                    score, breakdown = score_piano_midi(pm)
+                    candidates.append((score, breakdown, cand_seed, pm, ids))
                 except Exception as e:
                     print(f"  [warn] Candidate {c} decode failed: {e}")
             
@@ -120,14 +179,15 @@ def main():
                 print(f"[fail] Sample {i}: No valid candidates")
                 continue
             
-            # Select best candidate
-            best_pm, best_ids, best_score = max(candidates, key=lambda x: x[2])
+            # Stable sort: score desc, seed asc for deterministic tie-breaking
+            candidates.sort(key=lambda x: (-x[0], x[2]))
+            best_score, best_breakdown, best_cseed, best_pm, best_ids = candidates[0]
             
             # Save
             mp = out / f"piano_transformer_{i:02d}.mid"
             best_pm.write(str(mp))
             
-            # Sidecar metadata
+            # Sidecar metadata with detailed score breakdown
             side = {
                 "generator": "piano_transformer",
                 "model_dir": str(args.model_dir),
@@ -135,14 +195,19 @@ def main():
                 "temperature": args.temperature,
                 "top_p": args.top_p,
                 "best_of": args.best_of,
-                "best_score": round(best_score, 4),
-                "candidates_scored": len(candidates)
+                "best_score": best_score,
+                "score_breakdown": best_breakdown,
+                "candidates_scored": len(candidates),
+                "candidate_scores": [
+                    {"score": float(s), "seed": int(sd)}
+                    for (s, _br, sd, _pm, _ids) in candidates
+                ]
             }
             (mp.with_suffix(".meta.json")).write_text(
                 json.dumps(side, indent=2, ensure_ascii=False)
             )
             
-            print(f"[ok] {mp.name} (score={best_score:.4f}, {len(candidates)}/{args.best_of} candidates)")
+            print(f"[ok] {mp.name} (score={best_score:.4f}, {len(candidates)}/{args.best_of} candidates, base_seed={base_seed})")
         except Exception as e:
             print(f"[fail] Sample {i}: {e}")
 

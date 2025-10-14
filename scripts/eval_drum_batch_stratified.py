@@ -383,8 +383,9 @@ def file_metrics_piano(mid_path, chord_attrs: List[str] = None) -> Dict[str, Any
     meta_path = Path(mid_path).with_suffix(".meta.json")
     meta_dict = json.loads(meta_path.read_text("utf-8")) if meta_path.exists() else {}
     
-    # Metadata
-    tempo = pm.estimate_tempo() if pm.get_tempo_changes()[1] else 120.0
+    # Metadata: prefer meta tempo if available, else fall back to MIDI
+    tempo = float(meta_dict.get("tempo")) if isinstance(meta_dict, dict) and "tempo" in meta_dict \
+            else (pm.estimate_tempo() if pm.get_tempo_changes()[1] else 120.0)
     tsig = "4/4"
     if pm.time_signature_changes:
         ts = pm.time_signature_changes[0]
@@ -409,6 +410,22 @@ def file_metrics_piano(mid_path, chord_attrs: List[str] = None) -> Dict[str, Any
     
     # 1) chord_tone_rate: 各小節の和音音に対する一致率（beat-wise inference fallback）
     chord_tone_rate = 0.0
+    # Try to auto-extract chord progression from metadata when not provided
+    if chord_attrs is None and isinstance(meta_dict, dict):
+        cond = meta_dict.get("conditions", {}) or {}
+        prog = cond.get("chords")
+        if isinstance(prog, list) and prog:
+            chord_attrs = [f"[chord:{str(x)}]" for x in prog]
+    if chord_attrs is None and isinstance(meta_dict, dict):
+        attrs = (meta_dict.get("attrs") or []) + (meta_dict.get("conditions", {}).get("attrs", []) or [])
+        if isinstance(attrs, list) and attrs:
+            ca = []
+            for a in attrs:
+                if isinstance(a, str) and a.startswith("[chord:") and a.endswith("]"):
+                    ca.append(a)
+            if ca:
+                chord_attrs = ca
+
     if chord_attrs:
         # Parse [chord:X] → pitch classes
         chord_pcs = []
@@ -648,7 +665,8 @@ def file_metrics_guitar(mid_path: Path) -> Dict[str, Any]:
             
             # BPM-relative adaptive window: min(36ms, 6% of beat)
             beat_sec = beat_sec_at(t0)
-            win = min(0.036, 0.06 * beat_sec)
+            # 20–60ms の範囲に軽くクランプ（極端なテンポでの振れを抑える）
+            win = max(0.020, min(0.060, 0.06 * beat_sec))
             span_factor = 3.0
             
             if is_shuffle:
@@ -930,13 +948,12 @@ def main():
                 rowsB.append(file_metrics_strings(mid))
                 per_file.append({"group": "B", "tag": tag, **rowsB[-1]})
         elif args.instrument == "piano":
-            # Piano metrics (chord progression from tag or fallback)
-            chord_attrs = None  # TODO: extract from .meta.json or tag
+            # Piano metrics: try to read chords from .meta.json if present
             for mid in A.get(tag, []):
-                rowsA.append(file_metrics_piano(mid, chord_attrs))
+                rowsA.append(file_metrics_piano(mid))
                 per_file.append({"group": "A", "tag": tag, **rowsA[-1]})
             for mid in B.get(tag, []):
-                rowsB.append(file_metrics_piano(mid, chord_attrs))
+                rowsB.append(file_metrics_piano(mid))
                 per_file.append({"group": "B", "tag": tag, **rowsB[-1]})
         elif args.instrument == "bass":
             # Bass metrics

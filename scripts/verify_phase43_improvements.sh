@@ -1,0 +1,192 @@
+#!/bin/bash
+# Phase 4.3 Improvements Verification Script
+#
+# Verifies the robustness improvements:
+# 1) OUT_DIR creation
+# 2) Deterministic sampling
+# 3) Provenance information
+# 4) Failure reason recording
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+echo "=================================================="
+echo "Phase 4.3 Improvements Verification"
+echo "=================================================="
+echo ""
+
+# Test 1: OUT_DIR creation (simulated)
+echo "[Test 1] OUT_DIR creation"
+TEST_OUT_DIR="/tmp/piano_bench_test_$$"
+export OUT_DIR="$TEST_OUT_DIR"
+export MAESTRO_DIR="data/maestro_subset"
+export N_SAMPLES=5
+
+if [ ! -d "$MAESTRO_DIR" ]; then
+    echo "  [skip] MAESTRO directory not found: $MAESTRO_DIR"
+    echo "  [info] This is expected in environments without MAESTRO data"
+else
+    echo "  Running: bash scripts/run_piano_external_bench.sh"
+    bash "$SCRIPT_DIR/run_piano_external_bench.sh" > /tmp/bench_output.log 2>&1 || true
+    
+    if [ -d "$TEST_OUT_DIR" ]; then
+        echo "  ✅ OUT_DIR created successfully: $TEST_OUT_DIR"
+        
+        # Check symlink
+        if [ -L "$TEST_OUT_DIR/piano_external_bench_latest.json" ]; then
+            LINK_TARGET=$(readlink "$TEST_OUT_DIR/piano_external_bench_latest.json")
+            if [[ "$LINK_TARGET" == /* ]]; then
+                echo "  ✅ Symlink uses absolute path: $LINK_TARGET"
+            else
+                echo "  ⚠️  Symlink uses relative path: $LINK_TARGET"
+            fi
+        fi
+        
+        # Cleanup
+        rm -rf "$TEST_OUT_DIR"
+    else
+        echo "  ⚠️  OUT_DIR not created (might be skipped due to missing MAESTRO)"
+    fi
+fi
+
+echo ""
+
+# Test 2: Deterministic sampling
+echo "[Test 2] Deterministic sampling (simulated)"
+echo "  Creating test MIDI directory..."
+
+TEST_MIDI_DIR="/tmp/test_maestro_$$"
+mkdir -p "$TEST_MIDI_DIR"
+
+# Create 10 dummy MIDI files with different names
+for i in {1..10}; do
+    # Use pretty_midi to create minimal valid MIDI
+    .venv311/bin/python <<EOF
+import pretty_midi
+pm = pretty_midi.PrettyMIDI()
+inst = pretty_midi.Instrument(program=0)
+note = pretty_midi.Note(velocity=100, pitch=60, start=0.0, end=1.0)
+inst.notes.append(note)
+pm.instruments.append(inst)
+pm.write('$TEST_MIDI_DIR/test_${i}.mid')
+EOF
+done
+
+echo "  Created 10 test MIDI files"
+
+# Run evaluation twice with same seed
+TEST_OUT_1="/tmp/test_eval_1_$$.json"
+TEST_OUT_2="/tmp/test_eval_2_$$.json"
+
+.venv311/bin/python "$SCRIPT_DIR/eval_piano_external.py" \
+    --maestro-dir "$TEST_MIDI_DIR" \
+    --out-json "$TEST_OUT_1" \
+    --n-samples 5 \
+    --seed 42 > /dev/null 2>&1
+
+.venv311/bin/python "$SCRIPT_DIR/eval_piano_external.py" \
+    --maestro-dir "$TEST_MIDI_DIR" \
+    --out-json "$TEST_OUT_2" \
+    --n-samples 5 \
+    --seed 42 > /dev/null 2>&1
+
+# Compare file lists
+FILES_1=$(.venv311/bin/python -c "import json; data=json.load(open('$TEST_OUT_1')); print(','.join(sorted([f['file'] for f in data['per_file']])))")
+FILES_2=$(.venv311/bin/python -c "import json; data=json.load(open('$TEST_OUT_2')); print(','.join(sorted([f['file'] for f in data['per_file']])))")
+
+if [ "$FILES_1" == "$FILES_2" ]; then
+    echo "  ✅ Deterministic sampling: File lists match"
+    echo "     Files: $FILES_1"
+else
+    echo "  ❌ Deterministic sampling: File lists differ"
+    echo "     Run 1: $FILES_1"
+    echo "     Run 2: $FILES_2"
+fi
+
+# Cleanup
+rm -rf "$TEST_MIDI_DIR" "$TEST_OUT_1" "$TEST_OUT_2"
+
+echo ""
+
+# Test 3: Provenance information
+echo "[Test 3] Provenance information"
+echo "  Checking JSON schema..."
+
+# Create a test output
+TEST_MIDI_DIR="/tmp/test_maestro_prov_$$"
+mkdir -p "$TEST_MIDI_DIR"
+
+.venv311/bin/python <<EOF
+import pretty_midi
+pm = pretty_midi.PrettyMIDI()
+inst = pretty_midi.Instrument(program=0)
+note = pretty_midi.Note(velocity=100, pitch=60, start=0.0, end=1.0)
+inst.notes.append(note)
+pm.instruments.append(inst)
+pm.write('$TEST_MIDI_DIR/test.mid')
+EOF
+
+TEST_OUT="/tmp/test_prov_$$.json"
+export GIT_COMMIT="test_commit_abc123"
+export GIT_BRANCH="test_branch"
+
+.venv311/bin/python "$SCRIPT_DIR/eval_piano_external.py" \
+    --maestro-dir "$TEST_MIDI_DIR" \
+    --out-json "$TEST_OUT" \
+    --n-samples 1 \
+    --seed 42 > /dev/null 2>&1
+
+# Check provenance fields
+HAS_PROVENANCE=$(.venv311/bin/python -c "import json; data=json.load(open('$TEST_OUT')); print('provenance' in data)")
+GIT_COMMIT_VALUE=$(.venv311/bin/python -c "import json; data=json.load(open('$TEST_OUT')); print(data.get('provenance', {}).get('git_commit', ''))")
+GIT_BRANCH_VALUE=$(.venv311/bin/python -c "import json; data=json.load(open('$TEST_OUT')); print(data.get('provenance', {}).get('git_branch', ''))")
+
+if [ "$HAS_PROVENANCE" == "True" ]; then
+    echo "  ✅ 'provenance' field present"
+    echo "     git_commit: $GIT_COMMIT_VALUE"
+    echo "     git_branch: $GIT_BRANCH_VALUE"
+else
+    echo "  ❌ 'provenance' field missing"
+fi
+
+rm -rf "$TEST_MIDI_DIR" "$TEST_OUT"
+
+echo ""
+
+# Test 4: Failure reason recording
+echo "[Test 4] Failure reason recording"
+echo "  Creating invalid MIDI file..."
+
+TEST_MIDI_DIR="/tmp/test_maestro_fail_$$"
+mkdir -p "$TEST_MIDI_DIR"
+
+# Create invalid MIDI file
+echo "Not a valid MIDI file" > "$TEST_MIDI_DIR/invalid.mid"
+
+TEST_OUT="/tmp/test_fail_$$.json"
+
+.venv311/bin/python "$SCRIPT_DIR/eval_piano_external.py" \
+    --maestro-dir "$TEST_MIDI_DIR" \
+    --out-json "$TEST_OUT" \
+    --n-samples 1 \
+    --seed 42 > /dev/null 2>&1 || true
+
+# Check for 'reason' field in failed entries
+HAS_REASON=$(.venv311/bin/python -c "import json; data=json.load(open('$TEST_OUT')); failed=[f for f in data['per_file'] if not f.get('valid', True)]; print(any('reason' in f for f in failed))")
+
+if [ "$HAS_REASON" == "True" ]; then
+    REASON=$(.venv311/bin/python -c "import json; data=json.load(open('$TEST_OUT')); failed=[f for f in data['per_file'] if not f.get('valid', True)]; print(failed[0].get('reason', 'N/A') if failed else 'N/A')")
+    echo "  ✅ 'reason' field present in failed entries"
+    echo "     reason: $REASON"
+else
+    echo "  ❌ 'reason' field missing in failed entries"
+fi
+
+rm -rf "$TEST_MIDI_DIR" "$TEST_OUT"
+
+echo ""
+echo "=================================================="
+echo "Verification Complete"
+echo "=================================================="

@@ -103,6 +103,8 @@ def main():
     seed = int(cfg.get("seed", 1234))
     torch.manual_seed(seed)
     random.seed(seed)
+    from transformers import set_seed
+    set_seed(seed)
     
     # Optimization knobs (with sensible defaults)
     use_fp16 = bool(cfg.get("fp16", False))

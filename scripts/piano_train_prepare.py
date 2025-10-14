@@ -15,6 +15,7 @@ import argparse
 import json
 import hashlib
 import random
+from collections import defaultdict
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -72,6 +73,23 @@ def extract_metadata(midi_path: Path) -> Dict[str, Any]:
     return {"style": style, "tempo": tempo, "density": density, "key": key}
 
 
+def _tempo_bucket(bpm: int) -> str:
+    """Bucket tempo into slow/mid/fast."""
+    return "slow" if bpm < 100 else ("mid" if bpm <= 140 else "fast")
+
+
+def _stable_key(p: Path, base_dir: Path) -> str:
+    """Deterministic key independent of glob order."""
+    rel = str(p.relative_to(base_dir)).encode("utf-8")
+    return hashlib.sha1(rel).hexdigest()
+
+
+def _nearest_bucket(src: str) -> str:
+    """Merge extreme tempo buckets into mid for stability."""
+    # slow -> mid, fast -> mid, mid stays mid
+    return "mid" if src in ("slow", "fast") else "mid"
+
+
 def crop_midi_by_bars(pm: pretty_midi.PrettyMIDI, max_bars: int, tempo: float = 120.0) -> pretty_midi.PrettyMIDI:
     """
     Crop MIDI to max_bars length.
@@ -93,7 +111,7 @@ def crop_midi_by_bars(pm: pretty_midi.PrettyMIDI, max_bars: int, tempo: float = 
     return pm
 
 
-def stratified_split(toks: List[Dict], val_ratio: float, test_ratio: float, seed: int) -> tuple:
+def stratified_split(toks: List[Dict], val_ratio: float, test_ratio: float, seed: int, midi_dir: Path = None) -> tuple:
     """
     Stratified split by style/tempo/density/key to ensure balanced representation.
     
@@ -102,33 +120,56 @@ def stratified_split(toks: List[Dict], val_ratio: float, test_ratio: float, seed
         val_ratio: Validation split ratio
         test_ratio: Test split ratio
         seed: Random seed
+        midi_dir: Base directory for stable sorting (optional)
     
     Returns:
-        (train, val, test) lists
+        (train, val, test, audit_info) tuple
     """
-    from collections import defaultdict
+    rng = random.Random(seed)
     
-    # Group by strata (style, tempo_bucket, density)
+    # 1) Deterministic sort (remove glob order dependency)
+    if midi_dir:
+        toks = sorted(toks, key=lambda t: _stable_key(Path(t["midi_path"]), midi_dir))
+    
+    # 2) Group by strata (style, tempo_bucket, density)
     strata = defaultdict(list)
     for tok in toks:
         meta = tok.get("metadata", {})
         style = meta.get("style", "unknown")
-        tempo = meta.get("tempo", 120)
+        tempo = int(meta.get("tempo", 120))
         density = meta.get("density", "mid")
         
-        # Bucket tempo: slow(<100), mid(100-140), fast(>140)
-        tempo_bucket = "slow" if tempo < 100 else ("fast" if tempo > 140 else "mid")
+        tempo_bucket = _tempo_bucket(tempo)
         
-        stratum_key = f"{style}_{tempo_bucket}_{density}"
+        stratum_key = (style, tempo_bucket, density)
         strata[stratum_key].append(tok)
+    
+    # 3) Absorb micro-strata (len < 3) into nearest tempo bucket
+    moved = []
+    for (sty, tb, den), lst in list(strata.items()):
+        if len(lst) < 3 and len(lst) > 0:
+            nb = _nearest_bucket(tb)
+            if nb != tb:
+                strata[(sty, nb, den)].extend(lst)
+                moved.append({
+                    "from": f"{sty}/{tb}/{den}",
+                    "to": f"{sty}/{nb}/{den}",
+                    "count": len(lst)
+                })
+                strata[(sty, tb, den)] = []
+    
+    # Clean up empty strata
+    strata = {k: v for k, v in strata.items() if v}
     
     print(f"[info] Stratified split: {len(strata)} strata found")
     for k, v in sorted(strata.items()):
-        print(f"  - {k}: {len(v)} samples")
+        print(f"  - {k[0]}/{k[1]}/{k[2]}: {len(v)} samples")
     
-    # Split each stratum proportionally
+    if moved:
+        print(f"[info] Absorbed {len(moved)} micro-strata into nearest buckets")
+    
+    # 4) Split each stratum proportionally
     train_all, val_all, test_all = [], [], []
-    rng = random.Random(seed)
     
     for stratum_key, stratum_toks in strata.items():
         rng.shuffle(stratum_toks)
@@ -145,7 +186,17 @@ def stratified_split(toks: List[Dict], val_ratio: float, test_ratio: float, seed
     rng.shuffle(val_all)
     rng.shuffle(test_all)
     
-    return train_all, val_all, test_all
+    # 5) Audit info for reproducibility checking
+    dist = {}
+    for (sty, tb, den), lst in strata.items():
+        dist[f"{sty}/{tb}/{den}"] = len(lst)
+    
+    audit_info = {
+        "moved_micro_strata": moved,
+        "distribution": dist
+    }
+    
+    return train_all, val_all, test_all, audit_info
 
 
 def main():
@@ -211,7 +262,7 @@ def main():
     print(f"[info] Tokenized: {len(toks)}, Skipped: {skipped}")
 
     # Stratified split (maintains style/tempo/density distribution)
-    train, val, test = stratified_split(toks, args.val_ratio, args.test_ratio, args.seed)
+    train, val, test, audit_info = stratified_split(toks, args.val_ratio, args.test_ratio, args.seed, midi_dir)
     N = len(toks)
 
     # Write JSONL
@@ -224,6 +275,12 @@ def main():
     dump_jsonl(val, out / "val.jsonl")
     dump_jsonl(test, out / "test.jsonl")
     print(f"[saved] train={len(train)}, val={len(val)}, test={len(test)}")
+
+    # Save strata distribution audit info
+    (out / "strata_distribution.json").write_text(
+        json.dumps(audit_info, indent=2, ensure_ascii=False)
+    )
+    print(f"[saved] Strata distribution audit: {len(audit_info['distribution'])} strata")
 
     # Dataset hash (reproducibility)
     h = hashlib.sha256()
