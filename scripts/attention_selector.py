@@ -8,6 +8,11 @@ Automatically selects the optimal attention mechanism based on:
 - Precision (FP32/FP16/BF16)
 - Device (CPU/CUDA/MPS)
 
+Environment Override:
+    export ATTENTION_MECHANISM=flash  # Force flash attention
+    export ATTENTION_MECHANISM=sdpa   # Force SDPA
+    export ATTENTION_MECHANISM=standard  # Force standard
+
 Usage:
     from attention_selector import AttentionSelector
     
@@ -16,6 +21,7 @@ Usage:
     print(f"Selected: {mechanism}")  # 'flash', 'sdpa', or 'standard'
 """
 
+import os
 import torch
 from typing import Optional, Literal
 import logging
@@ -47,9 +53,21 @@ class AttentionSelector:
             threshold: Sequence length threshold (N < threshold uses standard attention)
             force_mechanism: Force specific mechanism ('standard', 'sdpa', 'flash', or None)
             verbose: Enable logging
+        
+        Environment Override:
+            ATTENTION_MECHANISM=flash|sdpa|standard will override force_mechanism
         """
         self.threshold = threshold
-        self.force_mechanism = force_mechanism
+        
+        # Environment variable override (highest priority)
+        env_override = os.getenv('ATTENTION_MECHANISM', '').lower()
+        if env_override in ('flash', 'sdpa', 'standard'):
+            self.force_mechanism = env_override  # type: ignore
+            if verbose:
+                logger.info(f"[attention] Environment override: ATTENTION_MECHANISM={env_override}")
+        else:
+            self.force_mechanism = force_mechanism
+        
         self.verbose = verbose
         
         # Check availability
@@ -80,7 +98,7 @@ class AttentionSelector:
         device: torch.device
     ) -> AttentionType:
         """
-        Select optimal attention mechanism.
+        Select optimal attention mechanism with safety fallback.
         
         Args:
             seq_len: Sequence length
@@ -89,12 +107,34 @@ class AttentionSelector:
         
         Returns:
             'standard', 'sdpa', or 'flash'
+        
+        Safety Features:
+            - Environment override (ATTENTION_MECHANISM env var)
+            - Compatibility checks (device/precision)
+            - Automatic fallback to standard if unavailable
         """
-        # Manual override
+        # Manual override (includes env var override)
         if self.force_mechanism is not None:
+            requested = self.force_mechanism
+            # Safety check: verify compatibility
+            if requested == 'flash':
+                if not self._flash_available:
+                    logger.warning(f"[attention] Flash requested but unavailable, fallback to standard")
+                    return 'standard'
+                if device.type not in ('cuda',):
+                    logger.warning(f"[attention] Flash requires CUDA, got {device.type}, fallback to standard")
+                    return 'standard'
+            elif requested == 'sdpa':
+                if not self._sdpa_available:
+                    logger.warning(f"[attention] SDPA requested but unavailable, fallback to standard")
+                    return 'standard'
+                if device.type == 'cpu':
+                    logger.warning(f"[attention] SDPA inefficient on CPU, fallback to standard")
+                    return 'standard'
+            
             if self.verbose:
-                logger.info(f"[attention] Force override: {self.force_mechanism}")
-            return self.force_mechanism
+                logger.info(f"[attention] Force override: {requested}")
+            return requested  # type: ignore
         
         # Short sequences: always use standard (most efficient for small N)
         if seq_len < self.threshold:
@@ -108,7 +148,18 @@ class AttentionSelector:
                 logger.info(f"[attention] CPU device, using standard")
             return 'standard'
         
-        # Long sequences on GPU
+        # MPS (Apple Silicon): use SDPA if available
+        if device.type == 'mps':
+            if self._sdpa_available:
+                if self.verbose:
+                    logger.info(f"[attention] MPS device, using sdpa (seq_len={seq_len})")
+                return 'sdpa'
+            else:
+                if self.verbose:
+                    logger.info(f"[attention] MPS device, SDPA unavailable, using standard")
+                return 'standard'
+        
+        # Long sequences on CUDA GPU
         if device.type == 'cuda':
             # Flash Attention (best for BF16 + long sequences)
             if precision == torch.bfloat16 and self._flash_available:
@@ -122,9 +173,9 @@ class AttentionSelector:
                     logger.info(f"[attention] CUDA, using sdpa (seq_len={seq_len})")
                 return 'sdpa'
         
-        # Fallback
+        # Safe fallback
         if self.verbose:
-            logger.warning(f"[attention] No efficient attention available, using standard")
+            logger.warning(f"[attention] No efficient attention available for device={device.type}, using standard")
         return 'standard'
     
     def configure_model(
