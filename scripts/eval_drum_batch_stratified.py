@@ -30,6 +30,21 @@ from typing import Tuple
 
 import pretty_midi
 
+# Schema version for output JSON (Phase 4.6)
+SCHEMA_VERSION = "1.1"
+
+# Threshold definitions for drums (aligned with config/quality_gates.yaml)
+THRESHOLDS = {
+    "grid_off_std_ms": {"max": 20, "direction": "lower_is_better"},
+    "kick_on_beat_rate": {"min": 0.65, "direction": "higher_is_better"},
+    "snare_backbeat_rate": {"min": 0.60, "direction": "higher_is_better"},
+    "hihat_density_per_bar": {"min": 8, "max": 24, "direction": "within_range"},
+    "velocity_std_kick": {"min": 6, "max": 14, "direction": "within_range"},
+    "velocity_std_snare": {"min": 8, "max": 18, "direction": "within_range"},
+    "velocity_std_hihat": {"min": 4, "max": 12, "direction": "within_range"},
+    "bar_violation_rate": {"max": 0.02, "direction": "lower_is_better"},
+}
+
 GM_ROLE = {
     35: "KICK", 36: "KICK",
     38: "SNARE", 40: "SNARE",
@@ -59,6 +74,29 @@ _ROOTS = {
     "A": 9, "A#": 10, "Bb": 10,
     "B": 11,
 }
+
+
+def _flag_metric(name: str, val: Any) -> str | None:
+    """Check if metric value violates threshold (Phase 4.6)."""
+    t = THRESHOLDS.get(name)
+    if t is None or val is None:
+        return None
+    
+    direction = t.get("direction")
+    
+    if direction == "higher_is_better" and val < t.get("min", float('-inf')):
+        return f"{name}:low"
+    
+    if direction == "lower_is_better" and val > t.get("max", float('inf')):
+        return f"{name}:high"
+    
+    if direction == "within_range":
+        if val < t.get("min", float('-inf')):
+            return f"{name}:low"
+        if val > t.get("max", float('inf')):
+            return f"{name}:high"
+    
+    return None
 
 
 def parse_time_sig(s: str) -> Tuple[int, int]:
@@ -980,9 +1018,54 @@ def main():
     overallA = summarize([r for r in per_file if r["group"] == "A"])
     overallB = summarize([r for r in per_file if r["group"] == "B"])
 
-    out = {"overall": {"A": overallA, "B": overallB},
-           "strata": strata,
-           "counts": {"A": overallA.get("count", 0), "B": overallB.get("count", 0)}}
+    # Phase 4.6: Quality gate checks for drums
+    threshold_flags = []
+    if args.instrument == "drum":
+        # Check overall metrics against thresholds
+        for name in THRESHOLDS.keys():
+            # Try to get metric from overallA summary
+            val = overallA.get(name)
+            if val is not None:
+                flag = _flag_metric(name, val)
+                if flag:
+                    threshold_flags.append(f"A:{flag}")
+            
+            # Try to get metric from overallB summary
+            val = overallB.get(name)
+            if val is not None:
+                flag = _flag_metric(name, val)
+                if flag:
+                    threshold_flags.append(f"B:{flag}")
+    
+    # Phase 4.6: Add provenance and quality gate info
+    import subprocess
+    try:
+        git_commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception:
+        git_commit = "unknown"
+    
+    try:
+        git_branch = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception:
+        git_branch = "unknown"
+
+    out = {
+        "schema_version": SCHEMA_VERSION,
+        "instrument": args.instrument,
+        "provenance": {
+            "git_commit": git_commit,
+            "git_branch": git_branch,
+        },
+        "thresholds": THRESHOLDS if args.instrument == "drum" else {},
+        "threshold_flags": threshold_flags,
+        "overall": {"A": overallA, "B": overallB},
+        "strata": strata,
+        "counts": {"A": overallA.get("count", 0), "B": overallB.get("count", 0)}
+    }
 
     Path(args.out_json).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out_json).write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")

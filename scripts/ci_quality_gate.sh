@@ -78,6 +78,20 @@ if [ -f "output/reports/drum_eval_latest.json" ]; then
         "output/reports/drum_eval_latest.json"
 fi
 
+# Check Bass (Phase 4.6 - NEW)
+if [ -f "output/reports/bass_eval_latest.json" ]; then
+    check_instrument_gate "bass" \
+        "scripts/eval_bass.py" \
+        "output/reports/bass_eval_latest.json"
+fi
+
+# Check Strings (Phase 4.6 - NEW)
+if [ -f "output/reports/strings_eval_latest.json" ]; then
+    check_instrument_gate "strings" \
+        "scripts/eval_strings.py" \
+        "output/reports/strings_eval_latest.json"
+fi
+
 # Check Bass (if eval exists)
 if [ -f "output/reports/bass_eval_latest.json" ]; then
     check_instrument_gate "bass" \
