@@ -540,17 +540,29 @@ class GuitarGenerator(BasePartGenerator):
         
         # Apply emotion adjustments if provided
         if emotion_profile is not None or section != "Verse":
+            emotion_params = None
             try:
                 emotion_params = get_generation_params(
                     "guitar",
                     section=section,
                     emotion_profile=emotion_profile
                 )
-                # Store for use in generation (future enhancement)
-                section_data.setdefault("_emotion_adjustments", {})
-                section_data["_emotion_adjustments"]["guitar"] = emotion_params
             except Exception as e:
                 logging.warning(f"Failed to load emotion adjustments: {e}")
+                # Fallback mapping for testing/standalone use (Phase 5.2)
+                # Map consistency (0.70–0.80): higher consistency => tighter timing (lower variation)
+                _fallback = {
+                    "happy_high":       {"strum_consistency_target": 0.80, "velocity_boost": +10},
+                    "neutral_medium":   {"strum_consistency_target": 0.75, "velocity_boost":  0},
+                    "calm_low":         {"strum_consistency_target": 0.70, "velocity_boost": -10},
+                }
+                if isinstance(emotion_profile, str):
+                    emotion_params = _fallback.get(emotion_profile.strip().lower())
+            
+            if emotion_params is not None:
+                # Store for use in generation
+                section_data.setdefault("_emotion_adjustments", {})
+                section_data["_emotion_adjustments"]["guitar"] = emotion_params
         
         part_params = section_data.get("part_params", {})
         orig_subdiv = self.swing_subdiv

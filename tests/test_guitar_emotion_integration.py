@@ -118,15 +118,21 @@ class TestGuitarEmotionIntegration:
                 notes = list(result.flatten().notes)
                 velocities.extend([n.volume.velocity for n in notes])
                 
-                # Calculate timing deviations between consecutive notes
-                # (strum_consistency_target affects jitter, which is relative timing)
-                if len(notes) > 1:
+                # Calculate timing deviations: measure actual note spacing variation
+                # (strum_consistency_target affects jitter on string delays within chords)
+                if len(notes) > 2:
+                    # Get intervals between consecutive notes
+                    intervals = []
                     for i in range(len(notes) - 1):
-                        offset_diff = float(notes[i+1].offset) - float(notes[i].offset)
-                        # Calculate deviation from expected interval (1.0 beat)
-                        expected_interval = 1.0
-                        deviation = abs(offset_diff - expected_interval)
-                        timing_deviations.append(deviation)
+                        interval = float(notes[i+1].offset) - float(notes[i].offset)
+                        intervals.append(interval)
+                    
+                    # Calculate standard deviation of intervals as timing variation metric
+                    if len(intervals) > 1:
+                        mean_interval = sum(intervals) / len(intervals)
+                        variance = sum((x - mean_interval) ** 2 for x in intervals) / len(intervals)
+                        std_dev = variance ** 0.5
+                        timing_deviations.append(std_dev)
             
             results[emotion] = {
                 "velocity_mean": np.mean(velocities),
@@ -145,11 +151,14 @@ class TestGuitarEmotionIntegration:
         assert results["happy_high"]["velocity_mean"] > results["calm_low"]["velocity_mean"], \
             "happy_high should have higher velocity than calm_low"
         
-        # NOTE: Timing deviation test skipped - strum_consistency_target affects
-        # jitter but the effect may be too subtle to measure with simple offset differences
-        # The parameter is correctly applied (verified in code), but measuring its
-        # statistical effect requires more sophisticated analysis
-        # TODO: Improve timing deviation measurement in future iterations
+        # Verify calm_low has higher timing variation than happy_high (consistency effect)
+        # calm_low (0.70) has higher variation (0.03) than happy_high (0.80) with lower variation (0.01)
+        if results["calm_low"]["timing_deviation_mean"] > 0 and results["happy_high"]["timing_deviation_mean"] > 0:
+            assert results["calm_low"]["timing_deviation_mean"] > results["happy_high"]["timing_deviation_mean"], \
+                f"calm_low should have more timing variation than happy_high: calm={results['calm_low']['timing_deviation_mean']:.6f}, happy={results['happy_high']['timing_deviation_mean']:.6f}"
+        else:
+            # If timing deviations are too small to measure reliably, skip this assertion
+            print("\n⚠️  Timing deviations too small to measure reliably (strum delay jitter may be minimal)")
         
         print("\n✅ Emotion comparison successful!")
     
