@@ -43,6 +43,35 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def extract_metadata(midi_path: Path) -> Dict[str, Any]:
+    """
+    Extract metadata from MIDI sidecar (.meta.json) if available.
+    Returns: {"style": str, "tempo": int, "density": str, "key": str}
+    """
+    meta_path = midi_path.with_suffix(".meta.json")
+    if meta_path.exists():
+        try:
+            meta = json.loads(meta_path.read_text("utf-8"))
+            conditions = meta.get("conditions", {})
+            return {
+                "style": conditions.get("style", "unknown"),
+                "tempo": int(conditions.get("tempo", 120)),
+                "density": conditions.get("density", "mid"),
+                "key": conditions.get("key", "C")
+            }
+        except Exception:
+            pass
+    
+    # Fallback: infer from filename or defaults
+    name = midi_path.stem.lower()
+    style = "block" if "block" in name else ("arpeggio" if "arpeggio" in name else "unknown")
+    tempo = 120
+    density = "mid"
+    key = "C"
+    
+    return {"style": style, "tempo": tempo, "density": density, "key": key}
+
+
 def crop_midi_by_bars(pm: pretty_midi.PrettyMIDI, max_bars: int, tempo: float = 120.0) -> pretty_midi.PrettyMIDI:
     """
     Crop MIDI to max_bars length.
@@ -62,6 +91,61 @@ def crop_midi_by_bars(pm: pretty_midi.PrettyMIDI, max_bars: int, tempo: float = 
         inst.notes = [n for n in inst.notes if n.start < limit]
     
     return pm
+
+
+def stratified_split(toks: List[Dict], val_ratio: float, test_ratio: float, seed: int) -> tuple:
+    """
+    Stratified split by style/tempo/density/key to ensure balanced representation.
+    
+    Args:
+        toks: List of tokenized samples with metadata
+        val_ratio: Validation split ratio
+        test_ratio: Test split ratio
+        seed: Random seed
+    
+    Returns:
+        (train, val, test) lists
+    """
+    from collections import defaultdict
+    
+    # Group by strata (style, tempo_bucket, density)
+    strata = defaultdict(list)
+    for tok in toks:
+        meta = tok.get("metadata", {})
+        style = meta.get("style", "unknown")
+        tempo = meta.get("tempo", 120)
+        density = meta.get("density", "mid")
+        
+        # Bucket tempo: slow(<100), mid(100-140), fast(>140)
+        tempo_bucket = "slow" if tempo < 100 else ("fast" if tempo > 140 else "mid")
+        
+        stratum_key = f"{style}_{tempo_bucket}_{density}"
+        strata[stratum_key].append(tok)
+    
+    print(f"[info] Stratified split: {len(strata)} strata found")
+    for k, v in sorted(strata.items()):
+        print(f"  - {k}: {len(v)} samples")
+    
+    # Split each stratum proportionally
+    train_all, val_all, test_all = [], [], []
+    rng = random.Random(seed)
+    
+    for stratum_key, stratum_toks in strata.items():
+        rng.shuffle(stratum_toks)
+        n = len(stratum_toks)
+        n_test = max(1, int(n * test_ratio))
+        n_val = max(1, int(n * val_ratio))
+        
+        test_all.extend(stratum_toks[:n_test])
+        val_all.extend(stratum_toks[n_test:n_test + n_val])
+        train_all.extend(stratum_toks[n_test + n_val:])
+    
+    # Final shuffle
+    rng.shuffle(train_all)
+    rng.shuffle(val_all)
+    rng.shuffle(test_all)
+    
+    return train_all, val_all, test_all
 
 
 def main():
@@ -90,7 +174,7 @@ def main():
         raise SystemExit(f"No MIDI files found under: {midi_dir}")
     print(f"[info] Found {len(mids)} MIDI files")
 
-    # Tokenize
+    # Tokenize with metadata extraction
     toks = []
     skipped = 0
     for i, mp in enumerate(mids):
@@ -110,11 +194,15 @@ def main():
             if not isinstance(ids, (list, tuple)) or len(ids) < args.min_length:
                 skipped += 1
                 continue
+            
+            # Extract metadata for stratification
+            metadata = extract_metadata(mp)
 
             toks.append({
                 "midi_path": str(mp.relative_to(midi_dir)),
                 "length": len(ids),
-                "ids": ids
+                "ids": ids,
+                "metadata": metadata
             })
         except Exception as e:
             print(f"[skip] {mp.name}: {e}")
@@ -122,15 +210,9 @@ def main():
 
     print(f"[info] Tokenized: {len(toks)}, Skipped: {skipped}")
 
-    # Shuffle and split
-    random.shuffle(toks)
+    # Stratified split (maintains style/tempo/density distribution)
+    train, val, test = stratified_split(toks, args.val_ratio, args.test_ratio, args.seed)
     N = len(toks)
-    n_test = int(N * args.test_ratio)
-    n_val = int(N * args.val_ratio)
-    
-    test = toks[:n_test]
-    val = toks[n_test:n_test + n_val]
-    train = toks[n_test + n_val:]
 
     # Write JSONL
     def dump_jsonl(rows: List[Dict], path: Path):

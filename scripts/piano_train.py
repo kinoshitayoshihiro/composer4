@@ -228,33 +228,83 @@ def main():
     trainer.save_model(str(best_dir))
     print(f"[saved] Best model: {best_dir}")
 
-    # Model card (versioning)
+    # Model card (comprehensive versioning)
     meta_path = splits_dir / "dataset_meta.json"
     meta = json.loads(meta_path.read_text("utf-8")) if meta_path.exists() else {}
     
+    # Compute tokenizer hash (for reproducibility tracking)
+    import hashlib
+    tokenizer_hash = hashlib.sha256(str(tok).encode()).hexdigest()[:16]
+    
+    # Get actual vocab size from model
+    vocab_actual = model.config.vocab_size if hasattr(model.config, 'vocab_size') else cfg["vocab_size"]
+    
+    # Training metrics from trainer
+    train_metrics = {}
+    if hasattr(trainer.state, 'log_history') and trainer.state.log_history:
+        last_log = trainer.state.log_history[-1]
+        train_metrics = {
+            "final_loss": last_log.get("loss"),
+            "final_eval_loss": last_log.get("eval_loss"),
+            "total_steps": trainer.state.global_step,
+            "best_eval_loss": trainer.state.best_metric
+        }
+    
     card = {
+        "version": "1.0",
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "model_commit": get_model_commit(),
         "dataset_hash": meta.get("dataset_hash"),
-        "tokenizer_version": meta.get("tokenizer"),
-        "max_length": cfg["max_length"],
-        "vocab_size": cfg["vocab_size"],
-        "arch": {
+        "tokenizer": {
+            "version": meta.get("tokenizer", "REMI v1.1"),
+            "hash": tokenizer_hash,
+            "vocab_size_config": cfg["vocab_size"],
+            "vocab_size_actual": vocab_actual
+        },
+        "architecture": {
+            "type": "GPT-2",
             "n_layer": cfg["n_layer"],
             "n_head": cfg["n_head"],
-            "n_embd": cfg["n_embd"]
+            "n_embd": cfg["n_embd"],
+            "max_length": cfg["max_length"],
+            "dropout": cfg["dropout"],
+            "total_params": total_params
         },
-        "train_samples": meta.get("splits", {}).get("train"),
-        "val_samples": meta.get("splits", {}).get("val"),
-        "test_samples": meta.get("splits", {}).get("test"),
-        "total_params": total_params,
-        "training_config": {
+        "dataset": {
+            "train_samples": meta.get("splits", {}).get("train"),
+            "val_samples": meta.get("splits", {}).get("val"),
+            "test_samples": meta.get("splits", {}).get("test"),
+            "max_bars": meta.get("max_bars"),
+            "min_length": meta.get("min_length"),
+            "seed": meta.get("seed")
+        },
+        "training": {
             "lr": cfg["lr"],
             "batch_size": cfg["batch_size"],
-            "epochs": cfg["epochs"]
+            "epochs": cfg["epochs"],
+            "weight_decay": weight_decay,
+            "max_grad_norm": max_grad_norm,
+            "warmup_ratio": warmup_ratio,
+            "lr_scheduler": "cosine",
+            "optimizer": "AdamW",
+            "mixed_precision": "bf16" if use_bf16 else ("fp16" if use_fp16 else "fp32"),
+            "metrics": train_metrics
+        },
+        "evaluation": {
+            "thresholds": {
+                "chord_tone_rate_min": 0.70,
+                "hand_separation_min": 0.85,
+                "velocity_std_min": 8.0,
+                "bar_violation_rate_max": 0.0
+            },
+            "note": "Run piano_eval_generate.py with --best-of 4 for quality-gated outputs"
         }
     }
     (best_dir / "model_card.json").write_text(json.dumps(card, indent=2, ensure_ascii=False))
     print(f"[done] Model card: {best_dir / 'model_card.json'}")
+    print(f"       - Tokenizer: {card['tokenizer']['version']} (hash: {tokenizer_hash})")
+    print(f"       - Vocab: {vocab_actual} tokens")
+    print(f"       - Params: {total_params:,}")
 
 
 if __name__ == "__main__":
