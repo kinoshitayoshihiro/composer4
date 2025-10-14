@@ -100,3 +100,4 @@ share/
 # 追加の大容量生成物
 output/
 data/*.db
+Icon?
