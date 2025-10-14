@@ -32,6 +32,7 @@ from utilities.cc_tools import (
 )
 from utilities.tone_shaper import ToneShaper
 from utilities.velocity_curve import interpolate_7pt, resolve_velocity_curve
+from utils.emotion_loader import get_generation_params
 
 logger = logging.getLogger(__name__)
 
@@ -526,10 +527,32 @@ class GuitarGenerator(BasePartGenerator):
         """Return current fingering cost configuration."""
         return self._fingering_costs
 
-    def compose(self, *, vocal_metrics: dict | None = None, **kwargs):
+    def compose(
+        self, 
+        *, 
+        vocal_metrics: dict | None = None, 
+        section: str = "Verse",
+        emotion_profile: str | None = None,
+        **kwargs
+    ):
         self._prev_note_pitch = None
-        section = kwargs.get("section_data", {}) if kwargs else {}
-        part_params = section.get("part_params", {})
+        section_data = kwargs.get("section_data", {}) if kwargs else {}
+        
+        # Apply emotion adjustments if provided
+        if emotion_profile is not None or section != "Verse":
+            try:
+                emotion_params = get_generation_params(
+                    "guitar",
+                    section=section,
+                    emotion_profile=emotion_profile
+                )
+                # Store for use in generation (future enhancement)
+                section_data.setdefault("_emotion_adjustments", {})
+                section_data["_emotion_adjustments"]["guitar"] = emotion_params
+            except Exception as e:
+                logging.warning(f"Failed to load emotion adjustments: {e}")
+        
+        part_params = section_data.get("part_params", {})
         orig_subdiv = self.swing_subdiv
         if isinstance(part_params, dict) and "swing_subdiv" in part_params:
             try:
@@ -539,8 +562,8 @@ class GuitarGenerator(BasePartGenerator):
         ratio_to_apply = None
         if isinstance(part_params, dict):
             ratio_to_apply = part_params.pop("swing_ratio", None)
-            section["part_params"] = part_params
-            kwargs["section_data"] = section
+            section_data["part_params"] = part_params
+            kwargs["section_data"] = section_data
         if ratio_to_apply is None:
             ratio_to_apply = self.swing_ratio
 

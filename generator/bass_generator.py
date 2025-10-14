@@ -21,6 +21,7 @@ from utilities.bass_transformer import BassTransformer
 from utilities.cc_tools import finalize_cc_events, merge_cc_events
 from utilities.rest_utils import get_rest_windows
 from utilities.tone_shaper import ToneShaper
+from utils.emotion_loader import get_generation_params
 
 try:
     from cyext import postprocess_kick_lock as cy_postprocess_kick_lock
@@ -361,7 +362,23 @@ class BassGenerator(BasePartGenerator):
         part_specific_humanize_params: dict[str, Any] | None = None,
         shared_tracks: dict[str, Any] | None = None,
         vocal_metrics: dict | None = None,
+        section: str = "Verse",
+        emotion_profile: str | None = None,
     ) -> stream.Part:
+        # Apply emotion adjustments if provided
+        if emotion_profile is not None or section != "Verse":
+            try:
+                emotion_params = get_generation_params(
+                    "bass",
+                    section=section,
+                    emotion_profile=emotion_profile
+                )
+                # Store for use in generation (future enhancement)
+                section_data.setdefault("_emotion_adjustments", {})
+                section_data["_emotion_adjustments"]["bass"] = emotion_params
+            except Exception as e:
+                logging.warning(f"Failed to load emotion adjustments: {e}")
+        
         if shared_tracks and "kick_offsets" in shared_tracks:
             self.kick_offsets = list(shared_tracks["kick_offsets"])
         else:

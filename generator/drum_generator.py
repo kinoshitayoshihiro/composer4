@@ -36,6 +36,7 @@ from utilities.drum_map_registry import (
     get_drum_map,
 )
 from utilities.groove_sampler_ngram import Event as GrooveEvent
+from utils.emotion_loader import get_generation_params
 from utilities.humanizer import apply_humanization_to_element
 from utilities.onset_heatmap import RESOLUTION, load_heatmap
 from utilities.safe_get import safe_get
@@ -1074,12 +1075,28 @@ class DrumGenerator(BasePartGenerator):
         part_specific_humanize_params: dict[str, Any] | None = None,
         shared_tracks: dict[str, Any] | None = None,
         vocal_metrics: dict | None = None,
+        section: str = "Verse",
+        emotion_profile: str | None = None,
     ) -> stream.Part:
         """
         mode == "independent" : ボーカル熱マップ主導で全曲を一括生成
         mode == "chord"      : chordmap のセクション単位で生成
         共通APIを維持しつつ、必要なときだけ独自処理を挟む。
         """
+        # Apply emotion adjustments if provided
+        if section_data is not None and (emotion_profile is not None or section != "Verse"):
+            try:
+                emotion_params = get_generation_params(
+                    "drums",
+                    section=section,
+                    emotion_profile=emotion_profile
+                )
+                # Store for use in generation (future enhancement)
+                section_data.setdefault("_emotion_adjustments", {})
+                section_data["_emotion_adjustments"]["drums"] = emotion_params
+            except Exception:
+                pass  # Fail silently, not critical
+        
         # Reset stateful tracking of fills each time compose is called so
         # consecutive invocations don't accumulate offsets.
         self.fill_offsets.clear()

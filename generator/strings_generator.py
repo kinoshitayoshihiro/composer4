@@ -61,6 +61,7 @@ from utilities.harmonic_utils import apply_harmonic_notation, apply_harmonic_to_
 from utilities.midi_utils import safe_end_time
 from utilities.velocity_curve import interpolate_7pt, resolve_velocity_curve
 from utilities.velocity_utils import scale_velocity  # noqa: E402
+from utils.emotion_loader import get_generation_params
 
 from .base_part_generator import BasePartGenerator
 
@@ -339,8 +340,24 @@ class StringsGenerator(BasePartGenerator):
         *,
         section_data: dict[str, Any],
         vocal_metrics: dict | None = None,
+        section: str = "Verse",
+        emotion_profile: str | None = None,
         **kwargs: Any,
     ) -> dict[str, stream.Part]:
+        # Apply emotion adjustments if provided
+        if emotion_profile is not None or section != "Verse":
+            try:
+                emotion_params = get_generation_params(
+                    "strings",
+                    section=section,
+                    emotion_profile=emotion_profile
+                )
+                # Store for use in generation (future enhancement)
+                section_data.setdefault("_emotion_adjustments", {})
+                section_data["_emotion_adjustments"]["strings"] = emotion_params
+            except Exception:
+                pass  # Fail silently, not critical
+        
         q_len = float(section_data.get("q_length", self.bar_length))
         mapping = self._select_expression_map(section_data)
         prev_curve = self._apply_expression_map_pre(section_data, mapping)

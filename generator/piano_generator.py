@@ -16,6 +16,7 @@ from music21 import volume as m21volume
 from utilities.rest_utils import get_rest_windows
 from utilities.velocity_curve import resolve_velocity_curve
 from utilities.velocity_utils import scale_velocity
+from utils.emotion_loader import get_generation_params
 
 # Pedalクラスはexpressionsから個別にインポート
 try:
@@ -857,7 +858,23 @@ class PianoGenerator(BasePartGenerator):
         part_specific_humanize_params: dict[str, Any] | None = None,
         shared_tracks: dict[str, Any] | None = None,
         vocal_metrics: dict | None = None,
+        section: str = "Verse",
+        emotion_profile: str | None = None,
     ) -> stream.Part | dict[str, stream.Part]:
+        # Apply emotion adjustments if provided
+        if emotion_profile is not None or section != "Verse":
+            try:
+                emotion_params = get_generation_params(
+                    "piano",
+                    section=section,
+                    emotion_profile=emotion_profile
+                )
+                # Store for use in generation (future enhancement)
+                section_data.setdefault("_emotion_adjustments", {})
+                section_data["_emotion_adjustments"]["piano"] = emotion_params
+            except Exception as e:
+                logging.warning(f"Failed to load emotion adjustments: {e}")
+        
         result = super().compose(
             section_data=section_data,
             overrides_root=overrides_root,
