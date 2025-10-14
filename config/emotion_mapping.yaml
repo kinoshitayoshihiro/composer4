@@ -1,0 +1,312 @@
+# Emotion Profile Mapping Configuration
+# Phase 4.7: Section-to-Emotion Mapping for All Instruments
+#
+# この設定ファイルは、sections.yaml と mood.yaml を統合し、
+# 各楽器ジェネレーターがセクション境界で適切な emotion_profile を
+# 選択できるようにします。
+
+schema_version: "1.0"
+
+# ============================================================
+# Emotion Profile Definition
+# ============================================================
+# emotion_profile は以下の属性を持つ:
+#   - intensity: low/medium/high
+#   - mood: happy/sad/neutral/melancholic/energetic/calm
+#   - tension: low/medium/high (optional)
+#   - dynamics: soft/moderate/loud (optional)
+
+emotion_profiles:
+  # Happy profiles
+  happy_low:
+    intensity: low
+    mood: happy
+    tension: low
+    dynamics: soft
+    
+  happy_medium:
+    intensity: medium
+    mood: happy
+    tension: medium
+    dynamics: moderate
+    
+  happy_high:
+    intensity: high
+    mood: happy
+    tension: high
+    dynamics: loud
+  
+  # Sad/Melancholic profiles
+  sad_low:
+    intensity: low
+    mood: sad
+    tension: low
+    dynamics: soft
+    
+  melancholic_medium:
+    intensity: medium
+    mood: melancholic
+    tension: medium
+    dynamics: moderate
+    
+  sad_high:
+    intensity: high
+    mood: sad
+    tension: high
+    dynamics: loud
+  
+  # Energetic profiles
+  energetic_medium:
+    intensity: medium
+    mood: energetic
+    tension: medium
+    dynamics: moderate
+    
+  energetic_high:
+    intensity: high
+    mood: energetic
+    tension: high
+    dynamics: loud
+  
+  # Calm profiles
+  calm_low:
+    intensity: low
+    mood: calm
+    tension: low
+    dynamics: soft
+    
+  neutral_medium:
+    intensity: medium
+    mood: neutral
+    tension: medium
+    dynamics: moderate
+
+# ============================================================
+# Section-to-Emotion Mapping
+# ============================================================
+# 各セクションタイプに推奨される emotion_profile のリスト
+
+section_emotion_mapping:
+  # Intro: 控えめな導入
+  Intro:
+    default: calm_low
+    alternatives:
+      - neutral_medium
+      - happy_low
+    description: "控えめな導入、リスナーを引き込む"
+  
+  # Verse: ストーリーを語る
+  Verse:
+    default: neutral_medium
+    alternatives:
+      - melancholic_medium
+      - happy_medium
+      - calm_low
+    description: "ストーリーを語る、安定した雰囲気"
+  
+  # Pre-Chorus: 盛り上がりへの準備
+  Pre-Chorus:
+    default: energetic_medium
+    alternatives:
+      - happy_medium
+      - melancholic_medium
+    description: "コーラスへの橋渡し、緊張感を高める"
+  
+  # Chorus: 曲の核心
+  Chorus:
+    default: happy_high
+    alternatives:
+      - energetic_high
+      - sad_high
+      - happy_medium
+    description: "曲の核心、最も印象的な部分"
+  
+  # Bridge: 変化と対比
+  Bridge:
+    default: melancholic_medium
+    alternatives:
+      - neutral_medium
+      - calm_low
+      - energetic_medium
+    description: "変化と対比、新しい視点"
+  
+  # Outro: 終わりに向けて
+  Outro:
+    default: calm_low
+    alternatives:
+      - melancholic_medium
+      - happy_low
+    description: "終わりに向けて、余韻を残す"
+  
+  # Fill: ドラムフィル
+  Fill:
+    default: energetic_medium
+    alternatives:
+      - energetic_high
+      - neutral_medium
+    description: "セクション間の移行、緊張感を高める"
+
+# ============================================================
+# Instrument-Specific Emotion Adjustments
+# ============================================================
+# 各楽器が emotion_profile をどう解釈するか
+
+instrument_adjustments:
+  piano:
+    # Pianoは velocity_std と notes_per_bar で表現
+    happy_high:
+      velocity_std_multiplier: 1.2  # 通常より振れ幅大きく
+      notes_per_bar_multiplier: 1.1  # やや密度高め
+    
+    melancholic_medium:
+      velocity_std_multiplier: 0.9  # 控えめな振れ幅
+      notes_per_bar_multiplier: 0.9  # やや疎め
+    
+    calm_low:
+      velocity_std_multiplier: 0.7  # 穏やかな振れ幅
+      notes_per_bar_multiplier: 0.8  # 疎め
+  
+  guitar:
+    # Guitarは strum_consistency と velocity で表現
+    happy_high:
+      strum_consistency_target: 0.80  # 高い一貫性
+      velocity_boost: 10  # ベロシティ増加
+    
+    melancholic_medium:
+      strum_consistency_target: 0.75  # 標準的
+      velocity_boost: 0
+    
+    calm_low:
+      strum_consistency_target: 0.70  # やや低め（アルペジオ的）
+      velocity_boost: -10  # 抑えめ
+  
+  bass:
+    # Bassは notes_per_bar と root_emphasis で表現
+    energetic_high:
+      notes_per_bar_multiplier: 1.2  # 密度高め（walking bass的）
+      root_emphasis: 0.75  # ルート音強調
+    
+    melancholic_medium:
+      notes_per_bar_multiplier: 0.9  # 疎め
+      root_emphasis: 0.80  # ルート音やや強調
+    
+    calm_low:
+      notes_per_bar_multiplier: 0.7  # 非常に疎め
+      root_emphasis: 0.85  # ルート音中心
+  
+  strings:
+    # Stringsは legato_rate と chord_spread で表現
+    happy_high:
+      legato_rate_target: 0.65  # やや高めのレガート
+      chord_spread_multiplier: 1.1  # 広めの和声
+    
+    melancholic_medium:
+      legato_rate_target: 0.70  # 高めのレガート
+      chord_spread_multiplier: 0.9  # 狭めの和声
+    
+    calm_low:
+      legato_rate_target: 0.75  # 非常に高いレガート
+      chord_spread_multiplier: 0.8  # 狭い和声
+  
+  drums:
+    # Drumsは hihat_density と velocity で表現
+    energetic_high:
+      hihat_density_multiplier: 1.2  # 密度高め
+      kick_emphasis: 1.1  # キック強調
+      velocity_boost: 10
+    
+    melancholic_medium:
+      hihat_density_multiplier: 0.9  # 疎め
+      kick_emphasis: 1.0
+      velocity_boost: 0
+    
+    calm_low:
+      hihat_density_multiplier: 0.7  # 非常に疎め
+      kick_emphasis: 0.9
+      velocity_boost: -10
+
+# ============================================================
+# Section Transition Rules
+# ============================================================
+# セクション境界での移行ルール
+
+transition_rules:
+  # 基本ルール: 前のセクションの最後の音符は次のセクションの
+  # 開始時刻を侵さない
+  basic:
+    max_overlap_ms: 50  # 最大50msまでの重複を許容
+    min_gap_ms: 0  # 最小ギャップ（0=直接接続OK）
+  
+  # セクション間の特別なルール
+  special_transitions:
+    Verse_to_PreChorus:
+      min_gap_ms: 100  # 100msの間を開ける
+      description: "Verseの余韻を残してPre-Chorusへ"
+    
+    PreChorus_to_Chorus:
+      max_overlap_ms: 100  # 100msまで重複OK（繋がりを重視）
+      description: "Pre-ChorusからChorusへのシームレスな移行"
+    
+    Chorus_to_Verse:
+      min_gap_ms: 200  # 200msの間を開ける
+      description: "Chorusの余韻を残してVerseへ戻る"
+    
+    Bridge_to_Chorus:
+      min_gap_ms: 150  # 150msの間を開ける
+      description: "Bridgeの対比を保ってChorusへ"
+
+# ============================================================
+# Validation Rules
+# ============================================================
+# セクション境界の検証ルール
+
+validation_rules:
+  # セクションラベルの許可リスト
+  allowed_section_labels:
+    - Intro
+    - Verse
+    - Pre-Chorus
+    - Chorus
+    - Bridge
+    - Outro
+    - Fill
+  
+  # セクション長の制限
+  section_length_constraints:
+    Intro:
+      min_bars: 2
+      max_bars: 8
+    
+    Verse:
+      min_bars: 4
+      max_bars: 16
+    
+    Pre-Chorus:
+      min_bars: 2
+      max_bars: 8
+    
+    Chorus:
+      min_bars: 4
+      max_bars: 16
+    
+    Bridge:
+      min_bars: 4
+      max_bars: 16
+    
+    Outro:
+      min_bars: 2
+      max_bars: 8
+    
+    Fill:
+      min_bars: 1
+      max_bars: 2
+
+# ============================================================
+# Metadata
+# ============================================================
+metadata:
+  created: "2025-10-14"
+  author: "Composer2-3 Team"
+  description: "Emotion profile mapping for section-aware generation (Phase 4.7)"
+  version: "1.0"
+  reference: "Based on sections.yaml and mood.yaml structure"
