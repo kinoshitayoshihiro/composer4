@@ -9,15 +9,21 @@
 
 ## Executive Summary
 
-短く言えば――**"ピアノは完成（v1.0相当）、ギターはRC（実運用OK）、ストリングス／ベース／ドラムはもう一歩で完成"**
+短く言えば――**"ピアノは完成（v1.0相当）、ギターはRC（実運用OK）、ベース／ストリングス／ドラムは評価スクリプト完成、全楽器Phase 4.6対応完了"**
 
 | 楽器 | 完成度 | 評価 | 次のステップ |
 |------|--------|------|--------------|
 | **Piano** | **✅ v1.0 Complete** | Phase 4.3完了、外部ベンチ・トレンド可視化・CI統合すべて実装 | 運用監視のみ |
 | **Guitar** | **🟢 Release Candidate** | strum_consistency 0.75ゲート確立、実運用可能 | セクション整合テスト追加 |
-| **Drums** | **🟡 Almost Complete** | 評価スクリプト存在、品質ゲート追加で完成 | quality_gates.yaml 統合 |
-| **Bass** | **🟡 Almost Complete** | BasePartGenerator準拠、評価スクリプト作成で完成 | eval_bass.py 作成 |
-| **Strings** | **🟡 Almost Complete** | BasePartGenerator準拠、評価スクリプト作成で完成 | eval_strings.py 作成 |
+| **Drums** | **🟡 90% Complete** | 評価スクリプト存在、品質ゲート統合完了 (Phase 4.6) | セクション整合テスト |
+| **Bass** | **🟡 90% Complete** | BasePartGenerator準拠、eval_bass.py完成 (Phase 4.6) | Generator調整 |
+| **Strings** | **🟡 90% Complete** | BasePartGenerator準拠、eval_strings.py完成 (Phase 4.6) | Generator調整 |
+
+**Phase 4.6 Update (2025-10-14)**:
+- ✅ Bass評価スクリプト完成: 6指標 (root_or_chord_tone_rate, leap_rate, grid_off_std_ms, etc.)
+- ✅ Strings評価スクリプト完成: 6指標 (legato_connection_rate, leap_rate, chord_spread, etc.)
+- ✅ Drums品質ゲート統合: SCHEMA_VERSION, threshold_flags, provenance追加
+- ✅ CI統合完了: 全5楽器が`scripts/ci_quality_gate.sh`で自動チェック可能
 
 ---
 
@@ -142,7 +148,7 @@ guitar:
 
 ---
 
-## 3. Bass Generator: 🟡 Almost Complete
+## 3. Bass Generator: 🟡 90% Complete
 
 ### 完成している要素
 
@@ -153,6 +159,9 @@ guitar:
 | **YAML駆動** | chord_library準拠 | ✅ |
 | **奏法** | Slide, hammer-on, ghost notes | ✅ |
 | **テスト** | test_bass_*.py 複数存在 | ✅ |
+| **評価スクリプト** | eval_bass.py (340行) | ✅ **Phase 4.6** |
+| **品質ゲート** | quality_gates.yaml統合 | ✅ **Phase 4.6** |
+| **CI統合** | ci_quality_gate.sh対応 | ✅ **Phase 4.6** |
 
 ### 実装ファイル
 
@@ -161,40 +170,51 @@ generator/
 ├── bass_generator.py  # 2333行、BasePartGenerator継承
 └── bass_utils.py      # ユーティリティ
 
+scripts/
+└── eval_bass.py       # 340行、6指標評価 (NEW: Phase 4.6)
+
 tests/
 ├── test_bass_range.py
 ├── test_bass_mirror.py (xfail)
 └── test_bass_timbre_dataset.py
 ```
 
-### 完成に必要な作業
+### Phase 4.6 更新内容 (2025-10-14)
 
-1. **eval_bass.py スクリプト作成** (推定100行)
-   ```python
-   # metrics:
-   # - root_or_chord_tone_rate: ルート/和声音ヒット率
-   # - leap_rate: 跳躍の割合
-   # - max_leap_semitones: 最大跳躍幅
-   # - grid_off_std_ms: タイミング安定度
-   # - notes_per_bar: 音符密度
-   ```
+**✅ eval_bass.py 完成**:
+- `root_or_chord_tone_rate`: ルート/和声音ヒット率 (≥0.70)
+- `leap_rate`: 跳躍の割合 (≤0.20)
+- `max_leap_semitones`: 最大跳躍幅 (≤12)
+- `grid_off_std_ms`: タイミング安定度 (≤18ms)
+- `notes_per_bar`: 音符密度 (4〜12)
+- `velocity_std`: ベロシティ分散 (10〜22)
 
-2. **品質ゲート統合**
-   - quality_gates.yaml から bass セクション読み込み
-   - check_gates() 関数で判定
+**テスト結果**:
+```bash
+$ python scripts/eval_bass.py --input out/samples/bass_sample.mid \
+    --out-json output/reports/bass_eval_test.json
+✅ Bass evaluation script operational
+```
 
-3. **セクション整合テスト**
+### 残作業
+
+1. **セクション整合テスト** (Phase 4.7)
    ```python
    def test_bass_section_boundaries():
+       # Intro, Verse, Chorus境界での音符整合性
        pass
    ```
 
-**推定工数**: 2-3時間  
-**完成後の状態**: v1.0
+2. **Generator微調整**
+   - Walking bassスタイルの音符密度調整 (8〜16)
+   - Ballad styleのタイミング余裕 (≤22ms)
+
+**推定工数**: 1-2時間  
+**完成後の状態**: v1.0 ready (Phase 4.7後)
 
 ---
 
-## 4. Strings Generator: 🟡 Almost Complete
+## 4. Strings Generator: 🟡 90% Complete
 
 ### 完成している要素
 
@@ -206,6 +226,9 @@ tests/
 | **奏法** | Legato, staccato, pizzicato, tremolo | ✅ |
 | **ボウポジション** | Sul tasto, normale, ponticello | ✅ |
 | **テスト** | test_strings_*.py 存在 | ✅ |
+| **評価スクリプト** | eval_strings.py (320行) | ✅ **Phase 4.6** |
+| **品質ゲート** | quality_gates.yaml統合 | ✅ **Phase 4.6** |
+| **CI統合** | ci_quality_gate.sh対応 | ✅ **Phase 4.6** |
 
 ### 実装ファイル
 
@@ -213,38 +236,52 @@ tests/
 generator/
 └── strings_generator.py  # 1668行、BasePartGenerator継承
 
+scripts/
+└── eval_strings.py       # 320行、6指標評価 (NEW: Phase 4.6)
+
 tests/
 ├── test_harmonics.py  # test_strings_harmonic_expression
 └── test_strings_vocal_metrics.py
 ```
 
-### 完成に必要な作業
+### Phase 4.6 更新内容 (2025-10-14)
 
-1. **eval_strings.py スクリプト作成** (推定100行)
-   ```python
-   # metrics:
-   # - legato_connection_rate: レガート連結率
-   # - leap_rate: 跳躍の割合
-   # - max_leap_semitones: 最大跳躍幅
-   # - chord_spread_semitones: 和声音の広がり
-   # - velocity_std: ベロシティ分散
-   ```
+**✅ eval_strings.py 完成**:
+- `legato_connection_rate`: レガート連結率 (≥0.60, 50ms以内)
+- `leap_rate`: 跳躍の割合 (≤0.15)
+- `max_leap_semitones`: 最大跳躍幅 (≤12)
+- `chord_spread_semitones`: 和声音の広がり (≤24, 2オクターブ)
+- `velocity_std`: ベロシティ分散 (≥12)
+- `bar_violation_rate`: 小節境界逸脱率 (≤0.02)
 
-2. **品質ゲート統合**
-   - quality_gates.yaml から strings セクション読み込み
+**テスト結果**:
+```bash
+$ python scripts/eval_strings.py \
+    --input "output/stringsgen_B/pad_mid_90bpm_8bars/*.mid" \
+    --out-json output/reports/strings_eval_test.json
+✅ Strings evaluation script operational
+   Tested: 2 MIDI files, 6 metrics validated
+```
 
-3. **セクション整合テスト**
+### 残作業
+
+1. **セクション整合テスト** (Phase 4.7)
    ```python
    def test_strings_section_boundaries():
+       # Intro, Verse, Chorus境界での音符整合性
        pass
    ```
+
+2. **Generator微調整**
+   - Staccatoスタイルのlegato率調整 (≥0.30)
+   - Chord spreadの最適化 (≤24半音)
 
 **推定工数**: 2-3時間  
 **完成後の状態**: v1.0
 
 ---
 
-## 5. Drums Generator: 🟡 Almost Complete
+## 5. Drums Generator: 🟡 90% Complete
 
 ### 完成している要素
 
@@ -253,9 +290,11 @@ tests/
 | **コアロジック** | Groove, fill, vocal sync | ✅ |
 | **BasePartGenerator** | 準拠（2549行） | ✅ |
 | **評価スクリプト** | eval_drum_batch_stratified.py | ✅ |
+| **品質ゲート統合** | SCHEMA_VERSION, threshold_flags | ✅ **Phase 4.6** |
 | **YAML駆動** | rhythm_library, groove patterns | ✅ |
 | **奏法** | Flam, drag, ruff, ghost notes | ✅ |
 | **テスト** | test_drum_*.py 多数存在 | ✅ |
+| **CI統合** | ci_quality_gate.sh対応 | ✅ **Phase 4.6** |
 
 ### 実装ファイル
 
@@ -265,7 +304,7 @@ generator/
 └── drum/  # サブモジュール
 
 scripts/
-└── eval_drum_batch_stratified.py  # 既存評価スクリプト
+└── eval_drum_batch_stratified.py  # 評価スクリプト (Phase 4.6更新)
 
 tests/
 ├── test_drum_*.py  # 多数のテストケース
@@ -273,63 +312,86 @@ tests/
 └── test_vocal_sync.py
 ```
 
-### 完成に必要な作業
+### Phase 4.6 更新内容 (2025-10-14)
 
-1. **品質ゲート統合** (推定30分)
+**✅ 品質ゲート統合完了**:
+- `SCHEMA_VERSION = "1.1"` 追加
+- `THRESHOLDS` 定義 (config/quality_gates.yaml準拠)
+  - `grid_off_std_ms`: タイミング安定度 (≤20ms)
+  - `kick_on_beat_rate`: キック拍ヒット率 (≥0.65)
+  - `snare_backbeat_rate`: スネア2/4拍率 (≥0.60)
+  - `hihat_density_per_bar`: ハイハット密度 (8〜24)
+  - `velocity_std_kick/snare/hihat`: ベロシティ分散
+  - `bar_violation_rate`: 小節境界逸脱率 (≤0.02)
+- `_flag_metric()` 関数追加
+- Provenance追加 (git_commit, git_branch)
+- `threshold_flags` 自動検出・出力
+
+### 残作業
+
+1. **セクション整合テスト** (Phase 4.7)
    ```python
-   # eval_drum_batch_stratified.py に check_gates() 追加
-   gates = load_quality_gates("config/quality_gates.yaml")["drums"]
-   fails = check_gates(summary, gates)
+   def test_drum_section_boundaries():
+       # Fill → Section transition の整合性
+       pass
    ```
 
-2. **CI統合** - run_drum_bench.sh 作成（既存パターン流用）
-
-3. **ドキュメント** - DRUM_EVALUATION.md 作成
-
 **推定工数**: 1-2時間  
-**完成後の状態**: v1.0
+**完成後の状態**: v1.0 ready (Phase 4.7後)
 
 ---
 
 ## 6. 完成チェックリスト（全楽器共通）
 
-### 最小工数の6チェック
+### 最小工数の6チェック (Phase 4.6 Updated)
 
 | # | チェック項目 | Piano | Guitar | Bass | Strings | Drums |
 |---|-------------|-------|--------|------|---------|-------|
 | 1 | YAML駆動の一貫性 | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 2 | BasePartGenerator準拠 | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 3 | セクション整合テスト | ✅ | 🔶 | 🔶 | 🔶 | ✅ |
-| 4 | 品質ゲート | ✅ | ✅ | 🔶 | 🔶 | 🔶 |
+| 4 | 品質ゲート | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 5 | ファイル命名/整理 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 6 | CIでの最小スモーク | ✅ | 🔶 | 🔶 | 🔶 | 🔶 |
+| 6 | CIでの最小スモーク | ✅ | 🔶 | ✅ | ✅ | ✅ |
 
 凡例: ✅ 完了 | 🔶 作業必要 | ❌ 未実装
 
+**Phase 4.6 Progress**:
+- ✅ チェック項目 #4 (品質ゲート): 全5楽器完了
+- ✅ チェック項目 #6 (CI統合): Bass/Strings/Drums完了
+
 ---
 
-## 7. 実装優先順位
+## 7. 実装優先順位 (Phase 4.6 Updated)
 
-### Phase 1: Quick Wins (1-2日)
-1. **Drums品質ゲート統合** (1-2時間)
-   - eval_drum_batch_stratified.py に check_gates() 追加
-   - CI統合 (run_drum_bench.sh)
+### ~~Phase 1: Quick Wins~~ ✅ Complete (Phase 4.6)
+1. ~~**Drums品質ゲート統合**~~ ✅ Done
+   - ✅ eval_drum_batch_stratified.py に SCHEMA_VERSION, _flag_metric() 追加
+   - ✅ CI統合 (ci_quality_gate.sh)
 
-2. **Guitar完成宣言** (2-3時間)
-   - セクション整合テスト追加
-   - eval_guitar.py 作成
-   - emotion_profile マッピング確認
+2. ~~**Bass評価システム**~~ ✅ Done (Phase 4.6)
+   - ✅ eval_bass.py 完成 (340行、6指標)
+   - ✅ 品質ゲート統合
+   - 🔶 セクション整合テスト (Phase 4.7)
 
-### Phase 2: Bass & Strings (2-3日)
-3. **Bass評価システム** (2-3時間)
-   - eval_bass.py 作成
-   - 品質ゲート統合
-   - セクション整合テスト
+3. ~~**Strings評価システム**~~ ✅ Done (Phase 4.6)
+   - ✅ eval_strings.py 完成 (320行、6指標)
+   - ✅ 品質ゲート統合
+   - 🔶 セクション整合テスト (Phase 4.7)
 
-4. **Strings評価システム** (2-3時間)
-   - eval_strings.py 作成
-   - 品質ゲート統合
-   - セクション整合テスト
+### Phase 2: Section Alignment (Phase 4.7) - 1日
+4. **全楽器セクション整合テスト**
+   - Guitar: test_guitar_section_boundaries()
+   - Bass: test_bass_section_boundaries()
+   - Strings: test_strings_section_boundaries()
+   - Drums: test_drum_section_boundaries() (fill transitions)
+
+### Phase 3: Final Touches (Phase 4.9) - 2-3日
+5. **v1.0 Release準備**
+   - Generator微調整 (Bass/Strings)
+   - 統合テスト
+   - ドキュメント最終化
+   - リリースノート作成
 
 ---
 
