@@ -62,11 +62,18 @@ def main():
     ap.add_argument("--out-root", default="output")
     ap.add_argument("--instrument", default="drum", choices=["drum", "bass", "piano", "guitar", "strings"])
 
-    # A/B toggles（必要に応じて増やせます）
+    # A/B toggles
     ap.add_argument("--A-humanize", dest="A_humanize", default="true")
     ap.add_argument("--B-humanize", dest="B_humanize", default="true")
     ap.add_argument("--A-style-override", dest="A_style_override", default="")
     ap.add_argument("--B-style-override", dest="B_style_override", default="")
+    
+    # Engine selection (for Piano/future instruments)
+    ap.add_argument("--A-engine", dest="A_engine", default="template", help="Engine for group A (template|ml|transformer)")
+    ap.add_argument("--B-engine", dest="B_engine", default="template", help="Engine for group B (template|ml|transformer)")
+    ap.add_argument("--A-model-dir", dest="A_model_dir", default=None, help="Model directory for A (if using ml/transformer)")
+    ap.add_argument("--B-model-dir", dest="B_model_dir", default=None, help="Model directory for B (if using ml/transformer)")
+    
     args = ap.parse_args()
 
     styles = parse_csv(args.styles)
@@ -107,7 +114,16 @@ def main():
     elif args.instrument == "piano":
         try:
             from adapters.piano_adapter import PianoAdapter
-            adapter = PianoAdapter(out_dir=str(outA))
+            adapterA = PianoAdapter(
+                engine=args.A_engine if args.A_engine else "template",
+                model_dir=args.A_model_dir,
+                out_dir=str(outA)
+            )
+            adapterB = PianoAdapter(
+                engine=args.B_engine if args.B_engine else "template",
+                model_dir=args.B_model_dir,
+                out_dir=str(outB)
+            )
         except ImportError:
             print("❌ PianoAdapter not found. Please check adapters/piano_adapter.py")
             sys.exit(1)
@@ -153,10 +169,16 @@ def main():
                     # ---- A ----
                     if args.instrument in ["bass", "piano", "guitar", "strings"]:
                         # BaseInstrumentAdapter uses conditions dict + seed
-                        adapter.out_dir = outA / tag
-                        rA = adapter.generate_one(
-                            conditions=condA, seed=seed, apply_humanizer=A_hum, save=True
-                        )
+                        if args.instrument == "piano":
+                            adapterA.out_dir = outA / tag
+                            rA = adapterA.generate_one(
+                                conditions=condA, seed=seed, apply_humanizer=A_hum, save=True
+                            )
+                        else:
+                            adapter.out_dir = outA / tag
+                            rA = adapter.generate_one(
+                                conditions=condA, seed=seed, apply_humanizer=A_hum, save=True
+                            )
                         midA = Path(rA["midi_path"])
                     else:
                         # DrumAdapter uses keyword args
@@ -171,10 +193,16 @@ def main():
 
                     # ---- B ----
                     if args.instrument in ["bass", "piano", "guitar", "strings"]:
-                        adapter.out_dir = outB / tag
-                        rB = adapter.generate_one(
-                            conditions=condB, seed=seed, apply_humanizer=B_hum, save=True
-                        )
+                        if args.instrument == "piano":
+                            adapterB.out_dir = outB / tag
+                            rB = adapterB.generate_one(
+                                conditions=condB, seed=seed, apply_humanizer=B_hum, save=True
+                            )
+                        else:
+                            adapter.out_dir = outB / tag
+                            rB = adapter.generate_one(
+                                conditions=condB, seed=seed, apply_humanizer=B_hum, save=True
+                            )
                         midB = Path(rB["midi_path"])
                     else:
                         rB = adapter.generate_one(

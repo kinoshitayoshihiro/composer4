@@ -42,13 +42,50 @@ class PianoAdapter(BaseInstrumentAdapter):
     part_name = "piano"
     default_time_sig = "4/4"
     
-    def __init__(self, *, out_dir: str = "output/gen_piano", **kw):
+    def __init__(self, *, engine: str = "template", model_dir: Optional[str] = None, out_dir: str = "output/gen_piano", **kw):
         super().__init__(out_dir=out_dir, **kw)
+        self.engine = engine
+        self.model_dir = model_dir
         # Piano-specific REMI roles
         self.remi_roles = ["MELODY", "CHORD", "BASS"]
     
     def _build_pretty_midi(self, conditions: Dict[str, Any], seed: int) -> pretty_midi.PrettyMIDI:
-        """Build PrettyMIDI from conditions (template/ml/transformer engines)."""
+        if self.engine == "template":
+            return self._build_template(conditions, seed)
+        elif self.engine == "transformer":
+            return self._build_transformer(conditions, seed)
+        elif self.engine == "ml":
+            return self._build_ml(conditions, seed)
+        else:
+            raise ValueError(f"Unknown engine: {self.engine}")
+    
+    def _build_transformer(self, conditions: Dict[str, Any], seed: int) -> pretty_midi.PrettyMIDI:
+        """Generate using Transformer model."""
+        import torch
+        from transformers import AutoModelForCausalLM
+        import sys
+        sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+        from token_utils import load_remi_tokenizer, decode_ids_to_pm, sample_model, build_prefix_ids_from_conditions
+        
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model = AutoModelForCausalLM.from_pretrained(self.model_dir).to(device)
+        model.eval()
+        
+        tk = load_remi_tokenizer()
+        prompt_ids = build_prefix_ids_from_conditions(tk, conditions)
+        
+        torch.manual_seed(seed)
+        ids = sample_model(model, prompt_ids, max_new_tokens=256, temperature=1.0, top_p=0.9)
+        pm = decode_ids_to_pm(tk, ids)
+        return pm
+    
+    def _build_ml(self, conditions: Dict[str, Any], seed: int) -> pretty_midi.PrettyMIDI:
+        """Generate using ML model (placeholder)."""
+        # TODO: Implement piano_ml_generator integration
+        raise NotImplementedError("ML engine not yet implemented for Piano")
+    
+    def _build_template(self, conditions: Dict[str, Any], seed: int) -> pretty_midi.PrettyMIDI:
+        """Build PrettyMIDI from conditions using template engine."""
         rng = random.Random(seed)
         
         # Extract conditions
@@ -57,18 +94,12 @@ class PianoAdapter(BaseInstrumentAdapter):
         bars: int = int(conditions.get("length_bars", 16))
         style: str = conditions.get("style", "block")  # "block" | "arpeggio"
         density: str = conditions.get("density", "mid")  # "low" | "mid" | "high"
-        engine: str = conditions.get("engine", "template")  # "template" | "ml" | "transformer"
         
         # 1) コード進行 (attrs の [chord:...] 優先 → フォールバック)
         prog = self._attrs_to_progression(conditions) or _FALLBACK_PROG
         
-        # 2) エンジン分岐
-        if engine == "template":
-            pm = self._render_template(prog, tempo, tsig, bars, style, density, rng)
-        elif engine == "ml":
-            pm = self._render_ml(prog, tempo, tsig, bars, style, density, rng)
-        else:  # "transformer"
-            pm = self._render_transformer(prog, tempo, tsig, bars, style, density, rng)
+        # 2) Template rendering
+        pm = self._render_template(prog, tempo, tsig, bars, style, density, rng)
         
         # 3) ペダル (任意): 4分音符単位で薄く
         self._inject_pedal(pm, tempo, tsig, bars, strength=0.6)
@@ -167,39 +198,7 @@ class PianoAdapter(BaseInstrumentAdapter):
         
         return pm
     
-    def _render_ml(
-        self,
-        prog: List[str],
-        tempo: float,
-        tsig: str,
-        bars: int,
-        style: str,
-        density: str,
-        rng: random.Random,
-    ) -> pretty_midi.PrettyMIDI:
-        """ML engine: 学習モデル（小型モデルやLoRA）で右手メロ＋左手伴奏.
-        
-        TODO: piano_ml_generator.py / melody_generator.py を呼び出す
-        いったんは template で同値にしてCIを緑に
-        """
-        return self._render_template(prog, tempo, tsig, bars, style, density, rng)
-    
-    def _render_transformer(
-        self,
-        prog: List[str],
-        tempo: float,
-        tsig: str,
-        bars: int,
-        style: str,
-        density: str,
-        rng: random.Random,
-    ) -> pretty_midi.PrettyMIDI:
-        """Transformer engine: piano_transformer.py でTransformer推論.
-        
-        TODO: piano_transformer.py を呼び出す（SDPA/Standard推奨）
-        いったんは template で同値にしてCIを緑に
-        """
-        return self._render_template(prog, tempo, tsig, bars, style, density, rng)
+
     
     # ========== Helpers ==========
     
