@@ -590,7 +590,7 @@ class DrumGenerator(BasePartGenerator):
         self.vel_smoother = EMASmoother(window=16)
 
         sync_cfg = global_cfg.get(
-            "consonant_sync", self.main_cfg.get("consonant_sync", {})
+            "consonant_sync", (self.main_cfg.get("consonant_sync", {}) if self.main_cfg else {})
         )
         defaults = {
             "lag_ms": 10.0,
@@ -1083,19 +1083,38 @@ class DrumGenerator(BasePartGenerator):
         mode == "chord"      : chordmap のセクション単位で生成
         共通APIを維持しつつ、必要なときだけ独自処理を挟む。
         """
-        # Apply emotion adjustments if provided
+        # Apply emotion adjustments if provided (Phase 5.5)
         if section_data is not None and (emotion_profile is not None or section != "Verse"):
+            # Fallback mapping for Phase 5.5 parameters
+            _fallback = {
+                "happy_high":     {"velocity_boost": +10, "attack_sharpness": 1.15, "groove_tightness": 0.85, "velocity_std_multiplier": 1.10},
+                "neutral_medium": {"velocity_boost":  +0, "attack_sharpness": 1.00, "groove_tightness": 1.00, "velocity_std_multiplier": 1.00},
+                "calm_low":       {"velocity_boost": -10, "attack_sharpness": 0.90, "groove_tightness": 1.20, "velocity_std_multiplier": 0.90},
+            }
+            
+            key = str(emotion_profile).strip().lower().replace("-", "_") if emotion_profile else ""
+            
             try:
                 emotion_params = get_generation_params(
                     "drums",
                     section=section,
                     emotion_profile=emotion_profile
                 )
-                # Store for use in generation (future enhancement)
-                section_data.setdefault("_emotion_adjustments", {})
-                section_data["_emotion_adjustments"]["drums"] = emotion_params
-            except Exception:
-                pass  # Fail silently, not critical
+            except Exception as e:
+                logger.warning(f"[Drums compose] emotion loader failed: {e}")
+                emotion_params = None
+            
+            # Check if params has required Phase 5.5 keys
+            # Check for all required keys, not just velocity_boost
+            required_keys = {'velocity_boost', 'attack_sharpness', 'groove_tightness', 'velocity_std_multiplier'}
+            if not emotion_params or not required_keys.issubset(emotion_params.keys()):
+                emotion_params = _fallback.get(key, _fallback["neutral_medium"])
+            
+            # Store in both locations for consistency
+            self._emotion_adjustments = getattr(self, "_emotion_adjustments", {})
+            self._emotion_adjustments["drums"] = dict(emotion_params)
+            section_data.setdefault("_emotion_adjustments", {})
+            section_data["_emotion_adjustments"]["drums"] = dict(emotion_params)
         
         # Reset stateful tracking of fills each time compose is called so
         # consecutive invocations don't accumulate offsets.
@@ -1912,6 +1931,9 @@ class DrumGenerator(BasePartGenerator):
             if brush_active and inst_name == "snare":
                 inst_name = "snare_brush"
                 final_event_velocity = max(1, int(final_event_velocity * 0.6))
+            
+            # Apply emotion parameters via unified helper (Phase 5.5)
+            final_event_velocity = self._apply_emotion_to_velocity(final_event_velocity)
 
             ev_type = ev_def.get("type")
             if ev_type in {"drag", "ruff"}:
@@ -2469,6 +2491,40 @@ class DrumGenerator(BasePartGenerator):
 
         return self._choose_pattern_key(emotion, intensity, musical_intent)
 
+    def _apply_emotion_to_velocity(self, base_velocity: int) -> int:
+        """
+        Apply emotion parameters to drum velocity (Phase 5.5).
+        
+        Unified application point for all drum hits.
+        
+        Args:
+            base_velocity: Base velocity before emotion adjustments
+            
+        Returns:
+            Adjusted velocity clamped to MIDI range [1, 127]
+        """
+        # Get emotion parameters
+        velocity_boost = int(getattr(self, '_current_velocity_boost', 0))
+        velocity_std_multiplier = float(getattr(self, '_current_velocity_std_multiplier', 1.0))
+        attack_sharpness = float(getattr(self, '_current_attack_sharpness', 1.0))
+        
+        # Apply attack sharpness (multiplier for intensity)
+        adjusted_velocity = int(round(base_velocity * attack_sharpness))
+        
+        # Apply velocity boost (additive)
+        adjusted_velocity += velocity_boost
+        
+        # Apply velocity randomization
+        if velocity_std_multiplier != 1.0:
+            base_std = 5
+            actual_std = max(1.0, base_std * velocity_std_multiplier)
+            adjusted_velocity = int(round(random.gauss(adjusted_velocity, actual_std)))
+        
+        # Clamp to valid MIDI range
+        adjusted_velocity = max(1, min(127, adjusted_velocity))
+        
+        return adjusted_velocity
+
     def _render_part(
         self,
         section_data: dict[str, Any],
@@ -2476,6 +2532,19 @@ class DrumGenerator(BasePartGenerator):
         vocal_metrics: dict | None = None,
     ) -> stream.Part:
         """Generate a drum part for a single section."""
+        # Extract emotion adjustments (Phase 5.5)
+        emotion_adj = {}
+        if hasattr(self, '_emotion_adjustments') and 'drums' in self._emotion_adjustments:
+            emotion_adj = self._emotion_adjustments.get('drums', {})
+        elif section_data is not None:
+            emotion_adj = section_data.get('_emotion_adjustments', {}).get('drums', {})
+
+        # Set instance variables for emotion parameters
+        self._current_velocity_boost = emotion_adj.get('velocity_boost', 0)
+        self._current_velocity_std_multiplier = emotion_adj.get('velocity_std_multiplier', 1.0)
+        self._current_attack_sharpness = emotion_adj.get('attack_sharpness', 1.0)
+        self._current_groove_tightness = emotion_adj.get('groove_tightness', 1.0)
+        
         part = stream.Part(id=self.part_name)
         part.insert(0, self.default_instrument)
 
