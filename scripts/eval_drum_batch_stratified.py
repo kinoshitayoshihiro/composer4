@@ -21,6 +21,7 @@ import csv
 import json
 import math
 import statistics
+from bisect import bisect_right
 from pathlib import Path
 from typing import Any
 from typing import Dict
@@ -597,7 +598,7 @@ def _infer_chords_beatwise(notes, bars, barL, tsig) -> List[set]:
 # ========== Guitar Evaluator ==========
 
 def file_metrics_guitar(mid_path: Path) -> Dict[str, Any]:
-    """Evaluate guitar-specific metrics."""
+    """Evaluate guitar-specific metrics with BPM-relative strum window."""
     meta, tempo, tsig, bars, barL, pm = _read_meta(mid_path)
     notes = _collect_notes(pm, is_drum=False)
     
@@ -617,36 +618,67 @@ def file_metrics_guitar(mid_path: Path) -> Dict[str, Any]:
     in_range = sum(1 for n in notes if GUITAR_RANGE_MIN <= n["pitch"] <= GUITAR_RANGE_MAX)
     range_ok = in_range / max(1, len(notes))
     
-    # 2) strum_consistency: Beat-level onset monotonicity + BPM-relative span check
-    # NOTE: Only meaningful for "strum" style; arpeggio uses wider spacing
-    style = meta.get("conditions", {}).get("style", "strum")
+    # 2) strum_consistency: BPM-relative window with shuffle/swing tolerance
+    style = meta.get("conditions", {}).get("style") or meta.get("style") or ""
     
-    if style != "strum":
-        # Arpeggio or other styles: strum_consistency is N/A
-        strum_consistency = 1.0
-    else:
-        beats_per_bar = parse_time_sig(tsig)[0]
-        beat = barL / beats_per_bar
-        # Adaptive window: max 36ms or 6% of beat length (shuffle/swing tolerant)
-        win = min(0.036, 0.06 * beat)
-        good_beats = 0
-        total_beats = bars * beats_per_bar
-        
-        for bi in range(total_beats):
-            bar_idx = bi // beats_per_bar
-            k = bi % beats_per_bar
-            t0 = bar_idx * barL + k * beat
-            group = [n for n in notes if t0 <= n["start"] < t0 + beat]
-            if len(group) <= 1:
+    # --- Tempo curve: get beat duration (quarter note in seconds) at time t ---
+    t_times, t_bpms = pm.get_tempo_changes()
+    if len(t_times) == 0:
+        t_times = [0.0]
+        t_bpms = [120.0]
+    
+    def beat_sec_at(t: float) -> float:
+        """Return quarter note duration at time t based on tempo changes."""
+        idx = bisect_right(t_times, t) - 1
+        idx = max(0, min(idx, len(t_bpms) - 1))
+        bpm = float(t_bpms[idx])
+        return 60.0 / max(bpm, 1e-6)
+    
+    # Detect shuffle/swing from style string
+    is_shuffle = ("shuffle" in style.lower()) or ("swing" in style.lower())
+    
+    beats_per_bar = parse_time_sig(tsig)[0]
+    ok = 0
+    total = 0
+    
+    for b in range(bars):
+        for k in range(beats_per_bar):
+            t0 = b * barL + (k / float(beats_per_bar)) * barL
+            t1 = b * barL + ((k + 1) / float(beats_per_bar)) * barL
+            
+            # BPM-relative adaptive window: min(36ms, 6% of beat)
+            beat_sec = beat_sec_at(t0)
+            win = min(0.036, 0.06 * beat_sec)
+            span_factor = 3.0
+            
+            if is_shuffle:
+                win *= 1.5          # Wider tolerance for shuffle/swing
+                span_factor = 4.0   # Relaxed span constraint
+            
+            group = [n for n in notes if t0 <= n["start"] < t1]
+            if not group:
                 continue
-            # Sort by (start, pitch) to handle simultaneous notes
-            ons = [n["start"] - t0 for n in sorted(group, key=lambda x: (x["start"], x["pitch"]))]
-            mono_inc = all(ons[i] <= ons[i + 1] for i in range(len(ons) - 1))
-            span_ok = (max(ons) - min(ons)) <= (3 * win)
+            
+            total += 1
+            
+            # Single-note beats are considered OK (avoid false negatives)
+            if len(group) <= 1:
+                ok += 1
+                continue
+            
+            # Sort by (start, pitch) for stable ordering
+            group_sorted = sorted(group, key=lambda x: (x["start"], x["pitch"]))
+            ons = [n["start"] - t0 for n in group_sorted]
+            
+            # Micro-reversals tolerated within window
+            tol = win
+            mono_inc = all(ons[i + 1] + tol >= ons[i] for i in range(len(ons) - 1))
+            span_ok = (max(ons) - min(ons)) <= (span_factor * win)
+            
             if mono_inc and span_ok:
-                good_beats += 1
-        
-        strum_consistency = good_beats / max(1, total_beats)
+                ok += 1
+    
+    strum_consistency = ok / max(1, total)
     
     # 3) chord_tone_rate (with beat-wise PC inference fallback)
     pcs_seq = _chord_tone_pcs_from_attrs(meta)
