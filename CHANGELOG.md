@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- **Phase 4.3 External Benchmark Polish**: Schema versioning (1.1), fileset hash, threshold flags, provenance propagation to history, and PNG threshold visualization for long-term operational excellence (100% backward compatible)
 - Lightweight module stubs for tests in `tests/_stubs.py`
 - Instrument filtering for duration CSV via `--instrument` flag
 - Phrase training visualizations (PR curve & confusion matrix), tag-wise metrics,

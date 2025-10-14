@@ -55,11 +55,25 @@ else
     echo "    ❌ Missing: PNG chart generation"
 fi
 
-echo "  1.7) Chord Tone Rate documentation"
-if grep -q "将来計画.*music21" docs/PIANO_EXTERNAL_BENCHMARK.md; then
-    echo "    ✅ Found: Chord Tone Rate future plan in docs"
+echo "  1.7) CHANGELOG.md entry"
+if grep -q "Phase 4.3.*External Benchmark" CHANGELOG.md; then
+    echo "    ✅ Found: Phase 4.3 entry in CHANGELOG"
 else
-    echo "    ❌ Missing: Future plan documentation"
+    echo "    ❌ Missing: Phase 4.3 entry in CHANGELOG"
+fi
+
+echo "  1.8) Schema versioning (SCHEMA_VERSION)"
+if grep -q 'SCHEMA_VERSION = "1.1"' scripts/eval_piano_external.py; then
+    echo "    ✅ Found: SCHEMA_VERSION = \"1.1\""
+else
+    echo "    ❌ Missing: SCHEMA_VERSION definition"
+fi
+
+echo "  1.9) Threshold flags"
+if grep -q "threshold_flags" scripts/eval_piano_external.py; then
+    echo "    ✅ Found: threshold_flags in output"
+else
+    echo "    ❌ Missing: threshold_flags"
 fi
 
 echo ""

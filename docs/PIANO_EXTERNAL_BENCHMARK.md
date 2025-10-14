@@ -208,6 +208,57 @@ THRESHOLDS = {
 }
 ```
 
+## Schema Versioning
+
+### Schema 1.1 (Current)
+
+**Added fields for operational excellence:**
+- `schema_version`: Machine-readable version string (e.g., "1.1")
+- `fileset_hash`: SHA1 hash of sampled file paths (evaluation target consistency)
+- `threshold_flags`: Array of threshold violations (e.g., `["velocity_std:low", "bar_violation_rate:high"]`)
+
+**JSON Example:**
+```json
+{
+  "schema_version": "1.1",
+  "fileset_hash": "a3f5c8b2e1d9f7e8c6a4b0d5e2f1a7c9b3e0d8f6",
+  "threshold_flags": ["velocity_std:low"],
+  "summary": { ... },
+  "per_file": [ ... ],
+  "provenance": { ... }
+}
+```
+
+**History Entry Format (JSONL):**
+```jsonl
+{"date": "2025-01-14", "schema_version": "1.1", "fileset_hash": "...", "threshold_flags": [...], "provenance": {...}, "summary": {...}}
+```
+
+### Threshold Flags
+
+自動検出される閾値逸脱のフラグ:
+
+| Flag | Condition | Meaning |
+|------|-----------|---------|
+| `velocity_std:low` | velocity_std < 15.0 | ダイナミクス表現が不足 |
+| `velocity_std:high` | velocity_std > 25.0 | ダイナミクスが過剰 |
+| `chord_tone_rate:low` | chord_tone_rate < 0.70 | 和音構成が単調 |
+| `hand_separation:low` | hand_separation < 0.60 | 音域が狭い |
+| `bar_violation_rate:high` | bar_violation_rate > 0.02 | 小節境界の逸脱が多い |
+| `notes_per_bar:low` | notes_per_bar < 8.0 | 音符密度が低い |
+| `notes_per_bar:high` | notes_per_bar > 16.0 | 音符密度が高い |
+
+**Usage:**
+- CI で `threshold_flags` が空でない場合は warning 表示
+- トレンドグラフで閾値ラインを可視化（緑=min, 赤=max）
+- 長期運用でのリグレッション検出に活用
+
+### Schema Evolution Strategy
+
+- **Additive-only changes**: 新規フィールドは常に末尾追加、既存フィールドは変更しない
+- **Backward compatibility**: 古いスキーマ（1.0）のJSONも引き続き処理可能
+- **Version detection**: `schema_version` フィールドの有無で判定、なければ 1.0 扱い
+
 ## Design Principles
 
 1. **最小依存**: `pretty_midi` のみ使用、外部ツール不要
@@ -218,6 +269,7 @@ THRESHOLDS = {
 4. **軽量**: サブセット (10-20 samples) で高速実行
 5. **拡張性**: JSONL 形式で時系列データ蓄積
 6. **監査性**: Provenance情報（git commit, branch, maestro_dir）をJSON出力に記録
+7. **自己記述性**: Schema versioning + fileset hash でJSON単体で完全なコンテキスト保持
 
 ## Troubleshooting
 
@@ -250,8 +302,6 @@ ls -la data/maestro_subset/
   - Roman numeral analysis での和音推定
   - 各音符が和音構成音かを判定
   - コード進行の妥当性評価
-- [ ] **PNG チャート生成**: matplotlib による可視化（Markdown 埋め込み対応）
-- [ ] **Threshold Flags**: 逸脱方向の記録（例: `["velocity_std:low", "bar_violation_rate:high"]`）
 
 ### Medium Priority
 - [ ] ペダル利用率の評価

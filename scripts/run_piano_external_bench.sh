@@ -87,6 +87,10 @@ entry = {
     'date': datetime.now().strftime('%Y-%m-%d'),
     'summary': data.get('summary', {}),
     'n_samples': data.get('n_samples', 0),
+    'provenance': data.get('provenance', {}),
+    'schema_version': data.get('schema_version', ''),
+    'fileset_hash': data.get('fileset_hash', ''),
+    'threshold_flags': data.get('threshold_flags', []),
 }
 
 with open(history_file, 'a', encoding='utf-8') as f:

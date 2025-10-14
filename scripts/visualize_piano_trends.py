@@ -26,6 +26,15 @@ try:
 except ImportError:
     HAS_MATPLOTLIB = False
 
+# Threshold definitions (aligned with eval_piano_external.py)
+THRESHOLDS = {
+    "chord_tone_rate": {"min": 0.70},
+    "hand_separation": {"min": 0.60},
+    "velocity_std": {"min": 15.0, "max": 25.0},
+    "bar_violation_rate": {"max": 0.02},
+    "notes_per_bar": {"min": 8.0, "max": 16.0},
+}
+
 
 def load_history(history_file: Path) -> List[Dict[str, Any]]:
     """Load history JSONL file."""
@@ -156,16 +165,16 @@ def generate_png_charts(entries: List[Dict], out_dir: Path) -> List[Path]:
         return []
     
     metrics = [
-        ("chord_tone_rate", "Chord Tone Rate", 0.70),
-        ("hand_separation", "Hand Separation", 0.60),
-        ("velocity_std", "Velocity Std", None),
-        ("bar_violation_rate", "Bar Violation Rate", 0.02),
-        ("notes_per_bar", "Notes Per Bar", None),
+        ("chord_tone_rate", "Chord Tone Rate"),
+        ("hand_separation", "Hand Separation"),
+        ("velocity_std", "Velocity Std"),
+        ("bar_violation_rate", "Bar Violation Rate"),
+        ("notes_per_bar", "Notes Per Bar"),
     ]
     
     png_paths = []
     
-    for metric_key, metric_name, threshold in metrics:
+    for metric_key, metric_name in metrics:
         # Extract values
         dates = [e.get('date', f"#{i+1}") for i, e in enumerate(entries)]
         values = [e.get('summary', {}).get(metric_key, {}).get('mean', 0.0) for e in entries]
@@ -177,9 +186,13 @@ def generate_png_charts(entries: List[Dict], out_dir: Path) -> List[Path]:
         fig, ax = plt.subplots(figsize=(10, 4))
         ax.plot(range(len(values)), values, marker='o', linewidth=2, markersize=6, label=metric_name)
         
-        # Add threshold line if specified
-        if threshold is not None:
-            ax.axhline(y=threshold, color='r', linestyle='--', linewidth=1, alpha=0.7, label=f'Target: {threshold}')
+        # Draw threshold lines (if defined)
+        th = THRESHOLDS.get(metric_key)
+        if th:
+            if "min" in th:
+                ax.axhline(y=th["min"], color='g', linestyle='--', linewidth=1, alpha=0.6, label=f'Min: {th["min"]}')
+            if "max" in th:
+                ax.axhline(y=th["max"], color='r', linestyle='--', linewidth=1, alpha=0.6, label=f'Max: {th["max"]}')
         
         ax.set_xlabel('Evaluation #')
         ax.set_ylabel(metric_name)

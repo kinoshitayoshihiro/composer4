@@ -25,9 +25,63 @@ import os
 import random
 from hashlib import sha1
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 import pretty_midi
+
+# Schema version for output JSON
+SCHEMA_VERSION = "1.1"
+
+# Threshold definitions (aligned with docs/PIANO_EXTERNAL_BENCHMARK.md)
+THRESHOLDS = {
+    "chord_tone_rate": {"min": 0.70, "direction": "higher_is_better"},
+    "hand_separation": {"min": 0.60, "direction": "higher_is_better"},
+    "velocity_std": {"min": 15.0, "max": 25.0, "direction": "within_range"},
+    "bar_violation_rate": {"max": 0.02, "direction": "lower_is_better"},
+    "notes_per_bar": {"min": 8.0, "max": 16.0, "direction": "within_range"},
+}
+
+
+def _fileset_hash(paths: List[Path]) -> str:
+    """
+    Calculate SHA1 hash of the sampled file set.
+    Ensures consistent evaluation target across runs.
+    """
+    rels = [str(p) for p in paths]
+    blob = "\n".join(sorted(rels)).encode("utf-8")
+    return sha1(blob).hexdigest()
+
+
+def _flag_metric(name: str, val: Optional[float]) -> Optional[str]:
+    """
+    Check if metric value violates threshold.
+    
+    Args:
+        name: Metric name
+        val: Metric value (or None)
+    
+    Returns:
+        Flag string like "metric_name:low" or "metric_name:high", or None
+    """
+    t = THRESHOLDS.get(name)
+    if t is None or val is None:
+        return None
+    
+    direction = t.get("direction")
+    
+    if direction == "higher_is_better" and val < t.get("min", float('-inf')):
+        return f"{name}:low"
+    
+    if direction == "lower_is_better" and val > t.get("max", float('inf')):
+        return f"{name}:high"
+    
+    if direction == "within_range":
+        if val < t.get("min", float('-inf')):
+            return f"{name}:low"
+        if val > t.get("max", float('inf')):
+            return f"{name}:high"
+    
+    return None
 
 
 def parse_time_sig(tsig: str) -> tuple:
@@ -123,7 +177,7 @@ def file_metrics_piano_simple(mid_path: Path) -> Dict[str, Any]:
     }
 
 
-def evaluate_maestro_subset(maestro_dir: Path, n_samples: int = 10, seed: int = 42) -> List[Dict]:
+def evaluate_maestro_subset(maestro_dir: Path, n_samples: int = 10, seed: int = 42) -> tuple:
     """
     Evaluate MAESTRO subset with deterministic sampling.
     
@@ -133,7 +187,7 @@ def evaluate_maestro_subset(maestro_dir: Path, n_samples: int = 10, seed: int = 
         seed: Random seed for sampling
     
     Returns:
-        List of metrics dicts
+        Tuple of (metrics list, sampled paths list)
     """
     midi_files = list(maestro_dir.glob("**/*.mid"))
     midi_files.extend(maestro_dir.glob("**/*.midi"))
@@ -155,7 +209,7 @@ def evaluate_maestro_subset(maestro_dir: Path, n_samples: int = 10, seed: int = 
         metrics = file_metrics_piano_simple(mf)
         results.append(metrics)
     
-    return results
+    return results, sampled
 
 
 def aggregate_metrics(results: List[Dict]) -> Dict[str, Any]:
@@ -219,18 +273,30 @@ def main():
     print("[info] Evaluating Piano Transformer on MAESTRO subset...")
     
     # Evaluate
-    results = evaluate_maestro_subset(maestro_dir, args.n_samples, args.seed)
+    results, sampled_paths = evaluate_maestro_subset(maestro_dir, args.n_samples, args.seed)
     
     # Aggregate
     summary = aggregate_metrics(results)
     
+    # Generate threshold flags (check which metrics violate thresholds)
+    threshold_flags = []
+    for metric_name in ("chord_tone_rate", "hand_separation", "velocity_std", 
+                        "bar_violation_rate", "notes_per_bar"):
+        mean_val = summary.get(metric_name, {}).get("mean")
+        flag = _flag_metric(metric_name, mean_val)
+        if flag:
+            threshold_flags.append(flag)
+    
     # Output with provenance information
     output = {
+        "schema_version": SCHEMA_VERSION,
         "benchmark": "maestro_subset",
         "n_samples": args.n_samples,
         "seed": args.seed,
+        "fileset_hash": _fileset_hash(sampled_paths),
         "summary": summary,
         "per_file": results,
+        "threshold_flags": threshold_flags,
         "provenance": {
             "maestro_dir": str(maestro_dir),
             "git_commit": os.getenv("GIT_COMMIT", ""),
