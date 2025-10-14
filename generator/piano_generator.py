@@ -224,6 +224,7 @@ class PianoGenerator(BasePartGenerator):
         voicing_style: str | None = None,
         mode: str | None = None,
         velocity_shift: int | None = None,
+        section_data: dict[str, Any] | None = None,
     ) -> stream.Part:
         part = stream.Part(id=f"Piano_{hand}")
         pattern_data = self.part_parameters.get(rhythm_key) or {}
@@ -292,6 +293,13 @@ class PianoGenerator(BasePartGenerator):
         ref_duration = float(pattern_data.get("length_beats", self.measure_duration))
         scale_factor = duration_ql / ref_duration if ref_duration > 0 else 1.0
 
+        # Get emotion adjustments for velocity variation (Phase 5.1)
+        emotion_adj = {}
+        if section_data is not None:
+            emotion_adj = section_data.get('_emotion_adjustments', {}).get('piano', {})
+        velocity_std_multiplier = emotion_adj.get('velocity_std_multiplier', 1.0)
+        base_velocity_std = 15.0  # Base standard deviation for velocity variation
+
         for p_event in pattern_events:
             offset = float(p_event.get("offset", 0.0)) * scale_factor
             duration = float(p_event.get("duration", 1.0)) * scale_factor
@@ -312,6 +320,13 @@ class PianoGenerator(BasePartGenerator):
                         velocity = scale_velocity(velocity, velocity_curve_list[idx])
                 except (TypeError, ValueError):
                     pass
+            
+            # Apply emotion-based velocity variation (Phase 5.1)
+            adjusted_std = base_velocity_std * velocity_std_multiplier
+            # Use self.rng for consistency, applying Gaussian-like variation
+            velocity_noise = self.rng.gauss(0, adjusted_std)
+            velocity = int(velocity + velocity_noise)
+            
             velocity = max(1, min(127, velocity))
             event_type = p_event.get("type", "chord")
             element_to_add = self._create_music_element(
@@ -728,6 +743,7 @@ class PianoGenerator(BasePartGenerator):
             voicing_style=rh_style,
             mode=mode,
             velocity_shift=ov.get("velocity_shift_rh"),
+            section_data=section_data,
         )
         lh_part = self._render_hand_part(
             "LH",
@@ -738,6 +754,7 @@ class PianoGenerator(BasePartGenerator):
             voicing_style=lh_style,
             mode=mode,
             velocity_shift=ov.get("velocity_shift_lh"),
+            section_data=section_data,
         )
 
         rest_windows = get_rest_windows(vocal_metrics)
