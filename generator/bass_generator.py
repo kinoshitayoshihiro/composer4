@@ -352,6 +352,43 @@ class BassGenerator(BasePartGenerator):
         else:
             self.emotion_profile = {}
 
+    def _apply_emotion_to_note(self, base_velocity: int, base_duration: float) -> tuple[int, float]:
+        """
+        Apply emotion parameters to note velocity and duration (Phase 5.3).
+        
+        Args:
+            base_velocity: Base velocity value
+            base_duration: Base duration in quarter lengths
+            
+        Returns:
+            Tuple of (adjusted_velocity, adjusted_duration)
+        """
+        # Get emotion parameters
+        velocity_boost = int(getattr(self, '_current_velocity_boost', 0))
+        velocity_std_multiplier = float(getattr(self, '_current_velocity_std_multiplier', 1.0))
+        sustain_multiplier = float(getattr(self, '_current_sustain_multiplier', 1.0))
+        
+        # Apply velocity boost (additive)
+        adjusted_velocity = base_velocity + velocity_boost
+        
+        # Apply velocity randomization if std_multiplier != 1.0
+        if velocity_std_multiplier != 1.0:
+            base_std = 5  # Base standard deviation for velocity variation
+            actual_std = max(1.0, base_std * velocity_std_multiplier)
+            # Use gauss instead of normal (rng is random.Random, not numpy)
+            adjusted_velocity = int(round(self.rng.gauss(adjusted_velocity, actual_std)))
+        
+        # Clamp velocity to valid MIDI range
+        adjusted_velocity = max(1, min(127, adjusted_velocity))
+        
+        # Apply sustain multiplier to duration
+        adjusted_duration = base_duration * sustain_multiplier
+        
+        # Ensure minimum duration
+        adjusted_duration = max(MIN_NOTE_DURATION_QL, adjusted_duration)
+        
+        return adjusted_velocity, adjusted_duration
+
     def compose(
         self,
         *,
@@ -367,17 +404,41 @@ class BassGenerator(BasePartGenerator):
     ) -> stream.Part:
         # Apply emotion adjustments if provided
         if emotion_profile is not None or section != "Verse":
+            # Fallback mapping for testing/standalone use (Phase 5.3)
+            # sustain_control: 0.70 (short/staccato) ~ 1.20 (long/legato)
+            # velocity_boost: -10 to +10
+            # velocity_std_multiplier: affects velocity randomization
+            _fallback = {
+                "happy_high":     {"velocity_boost": +10, "sustain_control": 0.70, "velocity_std_multiplier": 1.10},
+                "neutral_medium": {"velocity_boost":  +0, "sustain_control": 1.00, "velocity_std_multiplier": 1.00},
+                "calm_low":       {"velocity_boost": -10, "sustain_control": 1.20, "velocity_std_multiplier": 0.90},
+            }
+            
+            # Normalize emotion_profile key (handle case and delimiter variations)
+            key = str(emotion_profile).strip().lower().replace("-", "_") if emotion_profile else "neutral_medium"
+            
+            emotion_params = None
             try:
                 emotion_params = get_generation_params(
                     "bass",
                     section=section,
                     emotion_profile=emotion_profile
                 )
-                # Store for use in generation (future enhancement)
-                section_data.setdefault("_emotion_adjustments", {})
-                section_data["_emotion_adjustments"]["bass"] = emotion_params
             except Exception as e:
-                logging.warning(f"Failed to load emotion adjustments: {e}")
+                logging.warning(f"[Bass compose] emotion loader failed: {e}")
+            
+            # Always apply fallback if loader failed or returned incomplete params
+            # Check if emotion_params has the required keys for Phase 5.3
+            if not emotion_params or 'velocity_boost' not in emotion_params:
+                emotion_params = _fallback.get(key, _fallback["neutral_medium"])
+            
+            # Store in instance variable for generation (unified location)
+            self._emotion_adjustments = getattr(self, "_emotion_adjustments", {})
+            self._emotion_adjustments["bass"] = dict(emotion_params)  # shallow copy
+            
+            # Also store in section_data for compatibility
+            section_data.setdefault("_emotion_adjustments", {})
+            section_data["_emotion_adjustments"]["bass"] = dict(emotion_params)
         
         if shared_tracks and "kick_offsets" in shared_tracks:
             self.kick_offsets = list(shared_tracks["kick_offsets"])
@@ -1286,11 +1347,18 @@ class BassGenerator(BasePartGenerator):
                         midi_val = self._get_bass_pitch_in_octave(
                             chosen_pitch_base, target_octave
                         )
+                        
+                        # Apply emotion parameters to velocity and duration (Phase 5.3)
+                        final_velocity, final_duration = self._apply_emotion_to_note(
+                            current_note_velocity, actual_note_duration
+                        )
+                        
                         n_obj = note.Note(
                             pitch.Pitch(midi=midi_val),
-                            quarterLength=actual_note_duration,
+                            quarterLength=final_duration,
                         )
-                        n_obj.volume.velocity = current_note_velocity
+                        n_obj.volume.velocity = final_velocity
+                        
                         measure_notes_raw.append((current_rel_offset_in_measure, n_obj))
                 processed_measure_notes = self._apply_weak_beat(
                     measure_notes_raw, weak_beat_style_final
@@ -1330,7 +1398,15 @@ class BassGenerator(BasePartGenerator):
                     continue
                 midi_val = self._get_bass_pitch_in_octave(root_note_obj, target_octave)
                 n_obj = note.Note(pitch.Pitch(midi=midi_val), quarterLength=actual_dur)
-                n_obj.volume.velocity = final_base_velocity_for_algo
+                
+                # Apply emotion adjustments (Phase 5.3) - unified application
+                adjusted_vel, adjusted_dur = self._apply_emotion_to_note(
+                    final_base_velocity_for_algo,
+                    n_obj.duration.quarterLength
+                )
+                n_obj.volume.velocity = adjusted_vel
+                n_obj.duration.quarterLength = adjusted_dur
+                
                 notes_tuples.append((current_rel_offset, n_obj))
         elif pattern_type == "algorithmic_root_fifth":
             self.logger.info(
@@ -1375,7 +1451,14 @@ class BassGenerator(BasePartGenerator):
                     n_obj = note.Note(
                         pitch.Pitch(midi=midi_val), quarterLength=actual_dur
                     )
-                    n_obj.volume.velocity = final_base_velocity_for_algo
+                    # Apply emotion adjustments (Phase 5.3) - unified application
+                    adjusted_vel, adjusted_dur = self._apply_emotion_to_note(
+                        final_base_velocity_for_algo,
+                        n_obj.duration.quarterLength
+                    )
+                    n_obj.volume.velocity = adjusted_vel
+                    n_obj.duration.quarterLength = adjusted_dur
+                    
                     notes_tuples.append((current_block_pos_ql, n_obj))
                 current_block_pos_ql += beat_q_len
                 arrangement_idx += 1
@@ -1386,7 +1469,14 @@ class BassGenerator(BasePartGenerator):
                 n_obj = note.Note(
                     pitch.Pitch(midi=midi_val), quarterLength=block_duration
                 )
-                n_obj.volume.velocity = final_base_velocity_for_algo
+                # Apply emotion adjustments (Phase 5.3) - unified application
+                adjusted_vel, adjusted_dur = self._apply_emotion_to_note(
+                    final_base_velocity_for_algo,
+                    n_obj.duration.quarterLength
+                )
+                n_obj.volume.velocity = adjusted_vel
+                n_obj.duration.quarterLength = adjusted_dur
+                
                 notes_tuples.append((0.0, n_obj))
         elif pattern_type in [
             "algorithmic_walking",
@@ -1495,7 +1585,14 @@ class BassGenerator(BasePartGenerator):
                     n_obj = note.Note(
                         pitch.Pitch(midi=midi_val), quarterLength=actual_dur
                     )
-                    n_obj.volume.velocity = final_base_velocity_for_algo
+                    # Apply emotion adjustments (Phase 5.3) - unified application
+                    adjusted_vel, adjusted_dur = self._apply_emotion_to_note(
+                        final_base_velocity_for_algo,
+                        n_obj.duration.quarterLength
+                    )
+                    n_obj.volume.velocity = adjusted_vel
+                    n_obj.duration.quarterLength = adjusted_dur
+                    
                     notes_tuples.append((current_rel_offset, n_obj))
         elif pattern_type == "walking_quarters":
             self.logger.info(
@@ -1513,13 +1610,26 @@ class BassGenerator(BasePartGenerator):
                 root_pitch = m21_cs.root() if m21_cs.root() else root_note_obj
                 midi_root = self._get_bass_pitch_in_octave(root_pitch, target_octave)
                 n_root = note.Note(pitch.Pitch(midi=midi_root), quarterLength=half)
-                n_root.volume.velocity = final_base_velocity_for_algo
+                # Apply emotion adjustments (Phase 5.3) - unified application
+                adjusted_vel, adjusted_dur = self._apply_emotion_to_note(
+                    final_base_velocity_for_algo,
+                    n_root.duration.quarterLength
+                )
+                n_root.volume.velocity = adjusted_vel
+                n_root.duration.quarterLength = adjusted_dur
+                
                 notes_tuples.append((off, n_root))
                 target = next_root_pitch if i == beats - 1 else root_pitch
                 walk_p = bass_utils.get_walking_note(n_root.pitch, target, scale_tones)
                 midi_walk = self._get_bass_pitch_in_octave(walk_p, target_octave)
                 n_walk = note.Note(pitch.Pitch(midi=midi_walk), quarterLength=half)
-                n_walk.volume.velocity = final_base_velocity_for_algo
+                # Apply velocity with emotion boost (Phase 5.3)
+                n_walk.volume.velocity = max(1, min(127, velocity_with_boost))
+                
+                # Apply sustain control (Phase 5.3)
+                if hasattr(self, '_current_sustain_multiplier') and self._current_sustain_multiplier != 1.0:
+                    n_walk.duration.quarterLength *= self._current_sustain_multiplier
+                
                 notes_tuples.append((off + half, n_walk))
         elif pattern_type == "algorithmic_pedal":
             self.logger.info(
@@ -1575,7 +1685,14 @@ class BassGenerator(BasePartGenerator):
                     n_obj = note.Note(
                         pitch.Pitch(midi=midi_val), quarterLength=actual_sub_duration
                     )
-                    n_obj.volume.velocity = final_base_velocity_for_algo
+                    # Apply emotion adjustments (Phase 5.3) - unified application
+                    adjusted_vel, adjusted_dur = self._apply_emotion_to_note(
+                        final_base_velocity_for_algo,
+                        n_obj.duration.quarterLength
+                    )
+                    n_obj.volume.velocity = adjusted_vel
+                    n_obj.duration.quarterLength = adjusted_dur
+                    
                     notes_tuples.append((current_rel_offset, n_obj))
                 current_block_pos_ql += note_duration_ql
                 if note_duration_ql <= 0:
@@ -1781,6 +1898,26 @@ class BassGenerator(BasePartGenerator):
         bass_part.insert(0, actual_instrument)
 
         log_blk_prefix = f"BassGen._render_part (Section: {section_data.get('section_name', 'Unknown')})"
+
+        # Extract emotion adjustments (Phase 5.3)
+        # Try both instance variable and section_data for compatibility
+        emotion_adj = {}
+        if hasattr(self, '_emotion_adjustments') and 'bass' in self._emotion_adjustments:
+            emotion_adj = self._emotion_adjustments.get('bass', {})
+        elif section_data is not None:
+            emotion_adj = section_data.get('_emotion_adjustments', {}).get('bass', {})
+        
+        sustain_control = emotion_adj.get('sustain_control', None)
+        velocity_boost = emotion_adj.get('velocity_boost', 0)
+        velocity_std_multiplier = emotion_adj.get('velocity_std_multiplier', 1.0)
+        
+        # Store parameters as instance variables for use in note generation
+        self._current_velocity_boost = velocity_boost
+        self._current_velocity_std_multiplier = velocity_std_multiplier
+        
+        # sustain_control: 0.60 (short) ~ 0.90 (long)
+        # We'll apply this as a multiplier to note durations
+        self._current_sustain_multiplier = sustain_control if sustain_control is not None else 1.0
 
         bass_params_from_chordmap = section_data.get("part_params", {}).get("bass", {})
         final_bass_params = bass_params_from_chordmap.copy()
