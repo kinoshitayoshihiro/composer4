@@ -103,6 +103,21 @@ def main():
     seed = int(cfg.get("seed", 1234))
     torch.manual_seed(seed)
     random.seed(seed)
+    
+    # Optimization knobs (with sensible defaults)
+    use_fp16 = bool(cfg.get("fp16", False))
+    use_bf16 = bool(cfg.get("bf16", False))
+    grad_accum = int(cfg.get("grad_accum", 1))
+    weight_decay = float(cfg.get("weight_decay", 0.01))
+    max_grad_norm = float(cfg.get("max_grad_norm", 1.0))
+    warmup_ratio = float(cfg.get("warmup_ratio", 0.03))
+    save_total_limit = int(cfg.get("save_total_limit", 3))
+    
+    # Enable TF32 for Ampere+ GPUs (A100, L4, etc.)
+    if torch.cuda.is_available():
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        print("[info] TF32 acceleration enabled (Ampere+ GPUs)")
 
     # Load datasets
     splits_dir = Path(args.splits_dir)
@@ -151,25 +166,45 @@ def main():
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    # Training arguments
+    # Training arguments (with optimization improvements)
     targs = TrainingArguments(
         output_dir=str(out / "runs"),
         per_device_train_batch_size=cfg["batch_size"],
         per_device_eval_batch_size=cfg["batch_size"],
         learning_rate=cfg["lr"],
         num_train_epochs=cfg["epochs"],
+        
+        # Evaluation & checkpointing
         evaluation_strategy="steps",
         eval_steps=cfg["eval_steps"],
+        save_strategy="steps",
         save_steps=cfg["eval_steps"],
-        save_total_limit=2,
-        logging_steps=cfg["eval_steps"] // 2 or 10,
-        bf16=cfg.get("bf16", False),
-        fp16=cfg.get("fp16", False),
-        gradient_accumulation_steps=cfg.get("grad_accum", 1),
-        report_to=["none"],
+        save_total_limit=save_total_limit,
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
-        greater_is_better=False
+        greater_is_better=False,
+        
+        # Optimization
+        weight_decay=weight_decay,
+        max_grad_norm=max_grad_norm,
+        warmup_ratio=warmup_ratio,
+        lr_scheduler_type="cosine",  # Cosine annealing with warmup
+        gradient_accumulation_steps=grad_accum,
+        
+        # Mixed precision
+        bf16=use_bf16,
+        fp16=use_fp16,
+        
+        # DataLoader optimization
+        dataloader_num_workers=2,
+        dataloader_pin_memory=True,
+        
+        # Logging
+        logging_steps=cfg["eval_steps"] // 2 or 10,
+        report_to=["none"],
+        
+        # Reproducibility
+        seed=seed
     )
 
     # Trainer

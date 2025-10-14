@@ -42,8 +42,13 @@ python scripts/piano_train.py \
   --config-yaml configs/piano_transformer.yaml \
   --out-dir models/piano_transformer_v1
 
-# 3) A/B Generation
+# 3) A/B Generation (with fixed parameters for reproducibility)
 echo "[3/5] Generating A/B samples..."
+# Fixed generation parameters ensure A/B differences are due to model capability only
+# - seed: 42 (reproducible outputs)
+# - temperature: 1.0 (default sampling temperature)
+# - top_p: 0.9 (nucleus sampling)
+# - humanize: true for both (fair comparison)
 python scripts/gen_ab_stratified.py \
   --instrument piano \
   --styles block,arpeggio \
@@ -51,6 +56,7 @@ python scripts/gen_ab_stratified.py \
   --tempos 110,130 \
   --length-bars 8 \
   --n-per-stratum 2 \
+  --seed 42 \
   --A-humanize true \
   --B-humanize true \
   --A-engine template \

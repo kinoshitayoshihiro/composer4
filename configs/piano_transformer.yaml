@@ -25,8 +25,17 @@ fp16: false             # Use FP16 mixed precision (requires CUDA)
 bf16: false             # Use BF16 mixed precision (A100+)
 grad_accum: 1           # Gradient accumulation steps
 
+# Training Optimization (AdamW + Cosine Schedule)
+weight_decay: 0.01      # Weight decay for AdamW optimizer
+max_grad_norm: 1.0      # Gradient clipping threshold
+warmup_ratio: 0.03      # Warmup steps as ratio of total steps (3%)
+save_total_limit: 3     # Keep only N best checkpoints
+
 # Notes:
 # - For small datasets (<10k samples), reduce epochs to 3-5
 # - For large datasets (>100k samples), increase batch_size to 8-16
 # - Use fp16=true on NVIDIA GPUs with Compute Capability >= 7.0
 # - Use bf16=true on A100/H100 for better numerical stability
+# - weight_decay: 0.01-0.1 helps prevent overfitting
+# - warmup_ratio: 0.03-0.1 stabilizes early training
+# - TF32 acceleration is auto-enabled for Ampere+ GPUs (A100, L4)
