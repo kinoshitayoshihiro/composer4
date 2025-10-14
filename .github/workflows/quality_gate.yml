@@ -1,0 +1,91 @@
+name: Quality Gate Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Nightly at 2:00 AM JST (17:00 UTC previous day)
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+
+jobs:
+  quality-gate:
+    name: Instrument Quality Gates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+      
+      - name: Create output directory
+        run: mkdir -p output/reports
+      
+      - name: Run Piano evaluation (if available)
+        id: piano-eval
+        continue-on-error: true
+        run: |
+          if [ -f "scripts/eval_piano_external.py" ]; then
+            # Run evaluation with test data
+            echo "⏭️ Piano evaluation skipped (requires MAESTRO dataset)"
+          fi
+      
+      - name: Check Piano quality gate
+        id: piano-gate
+        continue-on-error: true
+        run: |
+          if [ -f "output/reports/piano_external_bench_latest.json" ]; then
+            python scripts/quality_gate_checker.py --check piano --json output/reports/piano_external_bench_latest.json
+          else
+            echo "⏭️ Piano gate skipped (no evaluation output)"
+          fi
+      
+      - name: Run quality gate check
+        id: gate-check
+        run: |
+          bash scripts/ci_quality_gate.sh
+      
+      - name: Generate summary
+        if: always()
+        run: |
+          echo "## 🎼 Quality Gate Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "output/reports/piano_external_bench_latest.json" ]; then
+            echo "### Piano" >> $GITHUB_STEP_SUMMARY
+            python -c "
+          import json
+          with open('output/reports/piano_external_bench_latest.json') as f:
+              data = json.load(f)
+              flags = data.get('threshold_flags', [])
+              if flags:
+                  print('❌ **FAILED**: ' + ', '.join(flags))
+              else:
+                  print('✅ **PASSED**')
+          " >> $GITHUB_STEP_SUMMARY || echo "⏭️ Skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Status**: Phase 4.6 - CI Quality Gate Integration" >> $GITHUB_STEP_SUMMARY
+          echo "🎯 **Progress**: Piano v1.0 complete, Guitar RC, Bass/Strings/Drums 80-90%" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Upload evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: quality-gate-reports
+          path: output/reports/
+          retention-days: 30

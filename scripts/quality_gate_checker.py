@@ -194,10 +194,42 @@ def check_quality_gate(
     return (len(fails) == 0, fails)
 
 
+def cli_check(instrument: str, json_path: str) -> int:
+    """CLI interface for CI integration."""
+    import json
+    
+    with open(json_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    # Extract summary metrics
+    metrics = data.get('summary', {})
+    
+    # Check quality gate
+    passed, fails = check_quality_gate(
+        instrument,
+        metrics,
+        verbose=True
+    )
+    
+    return 0 if passed else 1
+
+
 def main():
     """Example usage and smoke test."""
     import sys
+    import argparse
     
+    # Check if CLI mode
+    if len(sys.argv) > 1 and sys.argv[1] == '--check':
+        parser = argparse.ArgumentParser(description="Quality gate checker (CI mode)")
+        parser.add_argument('--check', action='store_true', help='Enable CI check mode')
+        parser.add_argument('instrument', help='Instrument name (piano, guitar, bass, strings, drums)')
+        parser.add_argument('--json', required=True, help='Path to evaluation JSON')
+        args = parser.parse_args()
+        
+        sys.exit(cli_check(args.instrument, args.json))
+    
+    # Smoke test mode
     print("=" * 60)
     print("Quality Gate Checker - Smoke Test")
     print("=" * 60)
