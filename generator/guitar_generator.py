@@ -580,7 +580,7 @@ class GuitarGenerator(BasePartGenerator):
                 self._apply_swing_internal(p, float(ratio_to_apply), self.swing_subdiv)
 
             pp_val = (
-                section.get("part_params", {})
+                section_data.get("part_params", {})
                 .get(self.part_name, {})
                 .get("pick_position")
             )
@@ -589,7 +589,7 @@ class GuitarGenerator(BasePartGenerator):
                     self._apply_pick_position(p, float(pp_val))
                 except Exception:
                     pass
-            fx_pp = section.get("fx_params", {}).get("pick_position")
+            fx_pp = section_data.get("fx_params", {}).get("pick_position")
             if fx_pp is not None:
                 try:
                     self._apply_pick_position(p, float(fx_pp))
@@ -597,22 +597,22 @@ class GuitarGenerator(BasePartGenerator):
                     pass
 
             # ── ToneShaper （平均 Velocity × intensity で CC31 挿入） ──
-            self._auto_tone_shape(p, section.get("musical_intent", {}).get("intensity"))
+            self._auto_tone_shape(p, section_data.get("musical_intent", {}).get("intensity"))
 
             # ── フレーズ・エンベロープ／ダイナミクス ────────────────
-            marks = section.get("phrase_marks")
-            env = section.get("envelope_map")
+            marks = section_data.get("phrase_marks")
+            env = section_data.get("envelope_map")
             if marks:
                 self._apply_phrase_dynamics(p, marks)
             if env:
                 self._apply_envelope(p, env)
 
             # ── スタイルカーブ & ランダムウォーク CC ───────────────
-            hint = section.get("style_hint")
+            hint = section_data.get("style_hint")
             if hint:
                 self._apply_style_curve(p, hint)
 
-            rw = section.get("random_walk_cc")
+            rw = section_data.get("random_walk_cc")
             if rw:
                 if isinstance(rw, dict):
                     rng = random.Random(int(rw.get("seed"))) if "seed" in rw else None
@@ -625,7 +625,7 @@ class GuitarGenerator(BasePartGenerator):
                 else:
                     self._apply_random_walk_cc(p)
 
-            eff_env = section.get("fx_envelope") or section.get("effect_envelope")
+            eff_env = section_data.get("fx_envelope") or section_data.get("effect_envelope")
             if eff_env:
                 self._apply_effect_envelope(p, eff_env)
 
@@ -636,18 +636,18 @@ class GuitarGenerator(BasePartGenerator):
                 if notes
                 else 64.0
             )
-            part_cfg = section.get("part_params", {}).get(self.part_name, {})
+            part_cfg = section_data.get("part_params", {}).get(self.part_name, {})
             chosen = self.tone_shaper.choose_preset(
                 amp_hint=part_cfg.get("amp_preset"),
                 intensity=part_cfg.get("fx_preset_intensity")
-                or section.get("intensity"),
+                or section_data.get("intensity"),
                 avg_velocity=avg_vel,
             )
             if chosen not in self.tone_shaper.preset_map:
                 logger.error(
                     "Preset '%s' not found for section %s",
                     chosen,
-                    section.get("section_name"),
+                    section_data.get("section_name"),
                 )
 
             events = self.tone_shaper.to_cc_events(
@@ -658,7 +658,7 @@ class GuitarGenerator(BasePartGenerator):
             _add_cc_events(p, events)
             self.tone_shaper.fx_envelope = to_sorted_dicts(events)
 
-            fx_env = section.get("fx_envelope")
+            fx_env = section_data.get("fx_envelope")
             if fx_env:
                 for off, spec in fx_env.items():
                     try:
@@ -684,9 +684,9 @@ class GuitarGenerator(BasePartGenerator):
                     ]
                     p.extra_cc = merge_cc_events(set(existing), shifted)
                     self.tone_shaper.fx_envelope = to_sorted_dicts(p.extra_cc)
-            fx_params = section.get("fx_params")
+            fx_params = section_data.get("fx_params")
             if fx_params:
-                self._apply_fx_cc(p, fx_params, section.get("musical_intent", {}))
+                self._apply_fx_cc(p, fx_params, section_data.get("musical_intent", {}))
             from music21 import metadata as m21metadata
 
             if p.metadata is None:
@@ -1103,6 +1103,7 @@ class GuitarGenerator(BasePartGenerator):
         event_final_velocity: int,
         event_offset_ql: float = 0.0,
         cc_list: list[CCEvent] | None = None,
+        velocity_boost: int = 0,  # Phase 5.2: Add velocity_boost parameter
     ) -> list[note.Note | m21chord.Chord]:
         notes_for_event: list[note.Note | m21chord.Chord] = []
         pick_pos = guitar_block_params.get("pick_position")
@@ -1260,7 +1261,9 @@ class GuitarGenerator(BasePartGenerator):
         else:
             base_velocity = event_final_velocity
         accent_adj = int(self.accent_map.get(int(math.floor(event_offset_ql)), 0))
-        event_final_velocity = _clamp_velocity(base_velocity + accent_adj)
+        
+        # Apply velocity_boost (Phase 5.2) before clamping
+        event_final_velocity = _clamp_velocity(base_velocity + accent_adj + velocity_boost)
 
         stroke_dir = guitar_block_params.get(
             "current_event_stroke"
@@ -1644,6 +1647,9 @@ class GuitarGenerator(BasePartGenerator):
         strum_consistency_target = emotion_adj.get('strum_consistency_target', None)
         velocity_boost = emotion_adj.get('velocity_boost', 0)
         
+        # Store velocity_boost as instance variable for use in _render_part()
+        self._current_velocity_boost = velocity_boost
+        
         # Apply strum_consistency_target to timing_variation
         # consistency_target: 0.70 (low) ~ 0.80 (high)
         # timing_variation inversely proportional: high consistency = low variation
@@ -1721,6 +1727,9 @@ class GuitarGenerator(BasePartGenerator):
             # Restore timing_variation before early return (Phase 5.2)
             if strum_consistency_target is not None:
                 self.timing_variation = original_timing_variation
+            # Clear velocity_boost before early return (Phase 5.2)
+            if hasattr(self, '_current_velocity_boost'):
+                del self._current_velocity_boost
             return guitar_part  # 空のパートを返す
 
         sanitized_label = sanitize_chord_label(chord_label_str)
@@ -1747,6 +1756,9 @@ class GuitarGenerator(BasePartGenerator):
             # Restore timing_variation before early return (Phase 5.2)
             if strum_consistency_target is not None:
                 self.timing_variation = original_timing_variation
+            # Clear velocity_boost before early return (Phase 5.2)
+            if hasattr(self, '_current_velocity_boost'):
+                del self._current_velocity_boost
             return guitar_part
 
         # リズムキーの選択
@@ -1950,9 +1962,7 @@ class GuitarGenerator(BasePartGenerator):
             if beat_idx in self.accent_map:
                 final_event_velocity += int(self.accent_map[beat_idx])
             
-            # Apply emotion velocity_boost (Phase 5.2)
-            final_event_velocity += int(velocity_boost)
-            
+            # Note: velocity_boost is now applied in _create_notes_from_event() (Phase 5.2)
             final_event_velocity = _clamp_velocity(final_event_velocity)
 
             # Palm Mute 判定 (パッチ参考)
@@ -1979,6 +1989,8 @@ class GuitarGenerator(BasePartGenerator):
             if this_ptype == "arpeggio":
                 event_rhythm.setdefault("execution_style", EXEC_STYLE_ARPEGGIO_PATTERN)
             gen_cc: list[CCEvent] = []
+            # Pass velocity_boost to _create_notes_from_event (Phase 5.2)
+            velocity_boost_value = int(getattr(self, '_current_velocity_boost', 0))
             generated_elements = self._create_notes_from_event(
                 cs_object,
                 event_rhythm,
@@ -1987,6 +1999,7 @@ class GuitarGenerator(BasePartGenerator):
                 final_event_velocity,
                 current_event_start_offset_in_block,
                 gen_cc,
+                velocity_boost=velocity_boost_value,
             )
 
             exec_style = event_rhythm.get("execution_style", EXEC_STYLE_BLOCK_CHORD)
@@ -2064,6 +2077,10 @@ class GuitarGenerator(BasePartGenerator):
         # Restore original timing_variation (Phase 5.2)
         if strum_consistency_target is not None:
             self.timing_variation = original_timing_variation
+        
+        # Clear velocity_boost instance variable (Phase 5.2)
+        if hasattr(self, '_current_velocity_boost'):
+            del self._current_velocity_boost
 
         return guitar_part
 
