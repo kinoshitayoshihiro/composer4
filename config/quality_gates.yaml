@@ -1,0 +1,132 @@
+# Quality Gates Definition v1.0
+# ============================================================
+# 品質ゲート定義: 各楽器の品質基準値（しきい値）
+# 
+# 使い方:
+# 1) defaults の値で全体適用
+# 2) style_overrides / tempo_overrides / section_overrides で必要箇所だけ上書き
+# 判定ロジック: 「最初にマッチしたものを適用 → NGが1つでもあれば FAIL」
+#
+# 判定演算子:
+#   min: metric >= min
+#   max: metric <= max
+#   range: [lo, hi]: lo <= metric <= hi
+# ============================================================
+
+schema_version: "1.0"
+
+# ============================================================
+# Piano: 完成度 v1.0 (Phase 4.3 Complete)
+# ============================================================
+piano:
+  defaults:
+    chord_tone_rate:       { min: 0.70 }   # 和音構成音の一致率（ピッチクラス多様性近似）
+    hand_separation:       { min: 0.60 }   # 左右手の分離（音域の広がり）
+    velocity_std:          { range: [15, 25] } # ダイナミクス表現の振れ幅
+    bar_violation_rate:    { max: 0.02 }   # 小節境界の逸脱率
+    notes_per_bar:         { range: [8, 16] } # 音符密度
+  
+  style_overrides:
+    ballad:
+      velocity_std:        { range: [10, 22] } # バラードは控えめ
+      notes_per_bar:       { range: [6, 14] }
+    
+    ostinato:
+      hand_separation:     { min: 0.50 }   # オスティナートは音域狭めOK
+      notes_per_bar:       { range: [10, 20] } # 密度高め
+  
+  tempo_overrides:
+    slow:                  # <100 BPM
+      bar_violation_rate:  { max: 0.03 }   # スロー曲は小節逸脱やや許容
+    
+    fast:                  # >140 BPM
+      bar_violation_rate:  { max: 0.03 }   # 高速曲も同様
+  
+  section_overrides:
+    Chorus:
+      velocity_std:        { range: [18, 28] } # コーラスは強弱幅大きめ
+
+# ============================================================
+# Guitar: Release Candidate (Phase 4.5 Complete)
+# ============================================================
+guitar:
+  defaults:
+    strum_consistency:     { min: 0.75 }   # ストローク一貫性（Phase 4.5で確定）
+    bar_violation_rate:    { max: 0.03 }   # 小節境界逸脱率
+    notes_per_bar:         { range: [8, 20] } # 音符密度
+    velocity_std:          { range: [12, 28] } # ベロシティ分散
+  
+  style_overrides:
+    shuffle:
+      strum_consistency:   { min: 0.72 }   # シャッフルはやや低め許容
+    
+    arpeggio:
+      notes_per_bar:       { range: [10, 28] } # アルペジオは密度高め
+
+# ============================================================
+# Bass: Almost Complete (評価スクリプト必要)
+# ============================================================
+bass:
+  defaults:
+    root_or_chord_tone_rate: { min: 0.70 } # ルート/和声音ヒット率
+    leap_rate:               { max: 0.20 }  # 跳躍の割合
+    max_leap_semitones:      { max: 12 }    # 12度超の跳躍は避ける
+    grid_off_std_ms:         { max: 18 }    # タイミングのブレ（標準偏差）
+    notes_per_bar:           { range: [4, 12] } # 音符密度
+    velocity_std:            { range: [10, 22] } # ベロシティ分散
+  
+  style_overrides:
+    walking:
+      notes_per_bar:         { range: [8, 16] } # ウォーキングベースは密度高め
+      root_or_chord_tone_rate: { min: 0.60 }  # パッシング多めを許容
+    
+    ballad:
+      grid_off_std_ms:       { max: 22 }    # バラードはタイミング余裕
+
+# ============================================================
+# Strings: Almost Complete (評価スクリプト必要)
+# ============================================================
+strings:
+  defaults:
+    legato_connection_rate: { min: 0.60 }  # レガート連結率
+    leap_rate:               { max: 0.15 }  # 跳躍の割合
+    max_leap_semitones:      { max: 12 }    # 12度超の跳躍は避ける
+    chord_spread_semitones:  { max: 24 }   # 和声音の広がり（2オクターブ以内）
+    velocity_std:            { min: 12 }   # 強弱が平坦すぎないこと
+    bar_violation_rate:      { max: 0.02 } # 小節境界逸脱率
+  
+  style_overrides:
+    staccato:
+      legato_connection_rate: { min: 0.30 } # スタッカート主体では低めでOK
+      velocity_std:           { min: 8 }
+
+# ============================================================
+# Drums: Almost Complete (評価スクリプト存在、ゲート追加必要)
+# ============================================================
+drums:
+  defaults:
+    grid_off_std_ms:        { max: 20 }     # 全体のタイミング安定度
+    kick_on_beat_rate:      { min: 0.65 }   # キックの拍ヒット率
+    snare_backbeat_rate:    { min: 0.60 }   # 2拍/4拍のスネア率（4/4想定）
+    hihat_density_per_bar:  { range: [8, 24] } # ハイハット密度
+    velocity_std_kick:      { range: [6, 14] } # キックのベロシティ分散
+    velocity_std_snare:     { range: [8, 18] } # スネアのベロシティ分散
+    velocity_std_hihat:     { range: [4, 12] } # ハイハットのベロシティ分散
+    bar_violation_rate:     { max: 0.02 }   # 小節境界逸脱率
+  
+  style_overrides:
+    shuffle:
+      grid_off_std_ms:      { max: 24 }     # シャッフルはタイミング余裕
+      hihat_density_per_bar: { range: [6, 20] }
+    
+    half_time:
+      snare_backbeat_rate:  { min: 0.45 }   # ハーフタイムは裏拍スネア減
+
+# ============================================================
+# Metadata
+# ============================================================
+metadata:
+  created: "2025-10-14"
+  author: "Composer2-3 Team"
+  description: "Quality gates for instrument generators (v1.0)"
+  reference: "Based on Phase 4.3 external benchmark and Phase 4.5 guitar validation"
