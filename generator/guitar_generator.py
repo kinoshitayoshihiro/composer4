@@ -1636,6 +1636,35 @@ class GuitarGenerator(BasePartGenerator):
 
         log_blk_prefix = f"GuitarGen._render_part (Section: {section_data.get('section_name', 'Unknown')}, Chord: {section_data.get('original_chord_label', 'N/A')})"
 
+        # Extract emotion adjustments (Phase 5.2)
+        emotion_adj = {}
+        if section_data is not None:
+            emotion_adj = section_data.get('_emotion_adjustments', {}).get('guitar', {})
+        
+        strum_consistency_target = emotion_adj.get('strum_consistency_target', None)
+        velocity_boost = emotion_adj.get('velocity_boost', 0)
+        
+        # Apply strum_consistency_target to timing_variation
+        # consistency_target: 0.70 (low) ~ 0.80 (high)
+        # timing_variation inversely proportional: high consistency = low variation
+        # Base timing_variation is typically 0.0-0.05
+        original_timing_variation = self.timing_variation
+        if strum_consistency_target is not None:
+            # Map consistency (0.70-0.80) to variation (0.03-0.01)
+            # Higher consistency → Lower variation
+            # consistency 0.70 → variation ~0.03 (looser)
+            # consistency 0.80 → variation ~0.01 (tighter)
+            max_variation = 0.03
+            min_variation = 0.01
+            consistency_range = 0.80 - 0.70  # 0.10
+            if consistency_range > 0:
+                # Inverse mapping: higher consistency = lower variation
+                normalized = (strum_consistency_target - 0.70) / consistency_range
+                self.timing_variation = max_variation - (normalized * (max_variation - min_variation))
+            else:
+                self.timing_variation = (max_variation + min_variation) / 2.0
+            self.timing_variation = max(min_variation, min(max_variation, self.timing_variation))
+
         # パラメータのマージ (chordmapのpart_params と arrangement_overrides)
         # self.overrides は BasePartGenerator.compose() で設定される PartOverride オブジェクト
         guitar_params_from_chordmap = section_data.get("part_params", {}).get(
@@ -1689,6 +1718,9 @@ class GuitarGenerator(BasePartGenerator):
             logger.info(
                 f"{log_blk_prefix}: Block is a Rest. Skipping guitar part for this block."
             )
+            # Restore timing_variation before early return (Phase 5.2)
+            if strum_consistency_target is not None:
+                self.timing_variation = original_timing_variation
             return guitar_part  # 空のパートを返す
 
         sanitized_label = sanitize_chord_label(chord_label_str)
@@ -1712,6 +1744,9 @@ class GuitarGenerator(BasePartGenerator):
             logger.warning(
                 f"{log_blk_prefix}: Could not create ChordSymbol for '{chord_label_str}'. Skipping block."
             )
+            # Restore timing_variation before early return (Phase 5.2)
+            if strum_consistency_target is not None:
+                self.timing_variation = original_timing_variation
             return guitar_part
 
         # リズムキーの選択
@@ -1914,6 +1949,10 @@ class GuitarGenerator(BasePartGenerator):
             beat_idx = int(math.floor(current_event_start_offset_in_block))
             if beat_idx in self.accent_map:
                 final_event_velocity += int(self.accent_map[beat_idx])
+            
+            # Apply emotion velocity_boost (Phase 5.2)
+            final_event_velocity += int(velocity_boost)
+            
             final_event_velocity = _clamp_velocity(final_event_velocity)
 
             # Palm Mute 判定 (パッチ参考)
@@ -2021,6 +2060,10 @@ class GuitarGenerator(BasePartGenerator):
                 profile_name,
                 global_settings=self.global_settings,
             )
+
+        # Restore original timing_variation (Phase 5.2)
+        if strum_consistency_target is not None:
+            self.timing_variation = original_timing_variation
 
         return guitar_part
 
