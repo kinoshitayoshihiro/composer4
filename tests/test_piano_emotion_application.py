@@ -204,6 +204,121 @@ class TestPianoEmotionApplication:
                 assert all(1 <= v <= 127 for v in velocities), "All velocities must be in range 1-127"
 
 
+    def test_notes_per_bar_multiplier_reduce(self):
+        """notes_per_bar_multiplier < 1.0で音符数が減少することを確認"""
+        gen = PianoGenerator(
+            default_instrument="Piano",
+            global_tempo=120,
+            part_parameters={
+                "piano_rh_block_chords_quarters": {
+                    "pattern": [
+                        {"offset": 0.0, "duration": 1.0, "type": "chord", "velocity_factor": 1.0},
+                        {"offset": 1.0, "duration": 1.0, "type": "chord", "velocity_factor": 1.0},
+                        {"offset": 2.0, "duration": 1.0, "type": "chord", "velocity_factor": 1.0},
+                        {"offset": 3.0, "duration": 1.0, "type": "chord", "velocity_factor": 1.0},
+                    ],
+                    "length_beats": 4.0
+                }
+            }
+        )
+        
+        # Test calm_low (notes_per_bar_multiplier = 0.6)
+        section_data_calm = {
+            "chord_symbol_for_voicing": "C",
+            "q_length": 4.0,
+            "part_params": {"piano": {"velocity": 70}},
+            "_emotion_adjustments": {
+                "piano": {
+                    "notes_per_bar_multiplier": 0.6  # 60% of notes
+                }
+            }
+        }
+        
+        # Test neutral (notes_per_bar_multiplier = 1.0)
+        section_data_neutral = {
+            "chord_symbol_for_voicing": "C",
+            "q_length": 4.0,
+            "part_params": {"piano": {"velocity": 70}},
+            "_emotion_adjustments": {
+                "piano": {
+                    "notes_per_bar_multiplier": 1.0
+                }
+            }
+        }
+        
+        cs = harmony.ChordSymbol("C")
+        
+        # Generate multiple samples
+        calm_note_counts = []
+        neutral_note_counts = []
+        
+        for _ in range(20):
+            result_calm = gen._render_hand_part(
+                "RH", cs, 4.0, "piano_rh_block_chords_quarters",
+                section_data_calm.get("part_params", {}).get("piano", {}),
+                section_data=section_data_calm
+            )
+            
+            result_neutral = gen._render_hand_part(
+                "RH", cs, 4.0, "piano_rh_block_chords_quarters",
+                section_data_neutral.get("part_params", {}).get("piano", {}),
+                section_data=section_data_neutral
+            )
+            
+            calm_note_counts.append(len(list(result_calm.flatten().notes)))
+            neutral_note_counts.append(len(list(result_neutral.flatten().notes)))
+        
+        # Calculate averages
+        calm_avg = np.mean(calm_note_counts)
+        neutral_avg = np.mean(neutral_note_counts)
+        
+        print(f"\nNote counts - Neutral: {neutral_avg:.2f}, Calm: {calm_avg:.2f}")
+        print(f"Ratio: {calm_avg/neutral_avg:.2f} (expected: ~0.6)")
+        
+        # Verify: calm_low should have fewer notes
+        assert calm_avg < neutral_avg, "calm_low should have fewer notes"
+        assert 0.4 < calm_avg / neutral_avg < 0.8, f"Ratio should be ~0.6, got {calm_avg/neutral_avg:.2f}"
+    
+    def test_notes_per_bar_no_mult(self):
+        """notes_per_bar_multiplier=1.0または指定なしで音符数が変わらないことを確認"""
+        gen = PianoGenerator(
+            default_instrument="Piano",
+            global_tempo=120,
+            part_parameters={
+                "piano_rh_block_chords_quarters": {
+                    "pattern": [
+                        {"offset": 0.0, "duration": 1.0, "type": "chord"},
+                        {"offset": 1.0, "duration": 1.0, "type": "chord"},
+                        {"offset": 2.0, "duration": 1.0, "type": "chord"},
+                        {"offset": 3.0, "duration": 1.0, "type": "chord"},
+                    ],
+                    "length_beats": 4.0
+                }
+            }
+        )
+        
+        section_data = {
+            "chord_symbol_for_voicing": "C",
+            "q_length": 4.0,
+            "part_params": {"piano": {"velocity": 70}}
+        }
+        
+        cs = harmony.ChordSymbol("C")
+        
+        # Generate multiple times
+        note_counts = []
+        for _ in range(10):
+            result = gen._render_hand_part(
+                "RH", cs, 4.0, "piano_rh_block_chords_quarters",
+                section_data.get("part_params", {}).get("piano", {}),
+                section_data=section_data
+            )
+            note_counts.append(len(list(result.flatten().notes)))
+        
+        # All should be the same (4 notes)
+        assert all(c == 4 for c in note_counts), f"Note counts should all be 4, got {note_counts}"
+
+
 if __name__ == "__main__":
     # Run tests
     pytest.main([__file__, "-v", "-s"])

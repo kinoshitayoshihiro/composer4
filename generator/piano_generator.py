@@ -293,12 +293,30 @@ class PianoGenerator(BasePartGenerator):
         ref_duration = float(pattern_data.get("length_beats", self.measure_duration))
         scale_factor = duration_ql / ref_duration if ref_duration > 0 else 1.0
 
-        # Get emotion adjustments for velocity variation (Phase 5.1)
+        # Get emotion adjustments (Phase 5.1)
         emotion_adj = {}
         if section_data is not None:
             emotion_adj = section_data.get('_emotion_adjustments', {}).get('piano', {})
         velocity_std_multiplier = emotion_adj.get('velocity_std_multiplier', 1.0)
+        notes_per_bar_multiplier = emotion_adj.get('notes_per_bar_multiplier', 1.0)
         base_velocity_std = 15.0  # Base standard deviation for velocity variation
+
+        # Apply notes_per_bar_multiplier by filtering pattern events (Phase 5.1)
+        if notes_per_bar_multiplier < 1.0 and len(pattern_events) > 1:
+            # Reduce note density by randomly removing events
+            target_count = max(1, int(len(pattern_events) * notes_per_bar_multiplier))
+            if target_count < len(pattern_events):
+                # Keep important events (e.g., downbeats) and randomly sample others
+                pattern_events_sorted = sorted(pattern_events, key=lambda e: e.get('offset', 0.0))
+                # Always keep first event (downbeat)
+                kept_events = [pattern_events_sorted[0]]
+                # Sample from remaining events
+                remaining = pattern_events_sorted[1:]
+                if len(remaining) > 0:
+                    sample_count = min(target_count - 1, len(remaining))
+                    if sample_count > 0:
+                        kept_events.extend(self.rng.sample(remaining, sample_count))
+                pattern_events = sorted(kept_events, key=lambda e: e.get('offset', 0.0))
 
         for p_event in pattern_events:
             offset = float(p_event.get("offset", 0.0)) * scale_factor
