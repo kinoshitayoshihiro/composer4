@@ -333,6 +333,45 @@ class StringsGenerator(BasePartGenerator):
         part.extra_cc = merge_cc_events(base, new_events)
 
     # ------------------------------------------------------------------
+    # Emotion Parameter Application (Phase 5.4)
+    # ------------------------------------------------------------------
+    def _apply_emotion_to_note(
+        self, base_velocity: int, velocity_factor: float = 1.0
+    ) -> int:
+        """
+        Apply emotion parameters to note velocity (Phase 5.4).
+        
+        Unified application point for all note generation patterns.
+        
+        Args:
+            base_velocity: Base velocity before emotion adjustments
+            velocity_factor: Additional velocity factor (e.g., for articulations)
+            
+        Returns:
+            Adjusted velocity clamped to MIDI range [1, 127]
+        """
+        # Get emotion parameters
+        velocity_boost = int(getattr(self, '_current_velocity_boost', 0))
+        velocity_std_multiplier = float(getattr(self, '_current_velocity_std_multiplier', 1.0))
+        
+        # Apply velocity factor first
+        adjusted_velocity = int(round(base_velocity * velocity_factor))
+        
+        # Apply velocity boost (additive)
+        adjusted_velocity += velocity_boost
+        
+        # Apply velocity randomization
+        if velocity_std_multiplier != 1.0:
+            base_std = 5
+            actual_std = max(1.0, base_std * velocity_std_multiplier)
+            adjusted_velocity = int(round(self.rng.gauss(adjusted_velocity, actual_std)))
+        
+        # Clamp to valid MIDI range
+        adjusted_velocity = max(1, min(127, adjusted_velocity))
+        
+        return adjusted_velocity
+
+    # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
     def compose(
@@ -344,19 +383,37 @@ class StringsGenerator(BasePartGenerator):
         emotion_profile: str | None = None,
         **kwargs: Any,
     ) -> dict[str, stream.Part]:
-        # Apply emotion adjustments if provided
+        # Apply emotion adjustments if provided (Phase 5.4)
         if emotion_profile is not None or section != "Verse":
+            # Fallback mapping for Phase 5.4 parameters
+            _fallback = {
+                "happy_high":     {"velocity_boost": +10, "articulation_legato_bias": 0.30, "bow_pressure_factor": 1.15, "velocity_std_multiplier": 1.10},
+                "neutral_medium": {"velocity_boost":  +0, "articulation_legato_bias": 0.50, "bow_pressure_factor": 1.00, "velocity_std_multiplier": 1.00},
+                "calm_low":       {"velocity_boost": -10, "articulation_legato_bias": 0.80, "bow_pressure_factor": 0.90, "velocity_std_multiplier": 0.90},
+            }
+            
+            key = str(emotion_profile).strip().lower().replace("-", "_") if emotion_profile else ""
+            
             try:
                 emotion_params = get_generation_params(
                     "strings",
                     section=section,
                     emotion_profile=emotion_profile
                 )
-                # Store for use in generation (future enhancement)
-                section_data.setdefault("_emotion_adjustments", {})
-                section_data["_emotion_adjustments"]["strings"] = emotion_params
-            except Exception:
-                pass  # Fail silently, not critical
+            except Exception as e:
+                import logging
+                logging.warning(f"[Strings compose] emotion loader failed: {e}")
+                emotion_params = None
+            
+            # Check if params has required Phase 5.4 keys
+            if not emotion_params or 'velocity_boost' not in emotion_params:
+                emotion_params = _fallback.get(key, _fallback["neutral_medium"])
+            
+            # Store in both locations for consistency
+            self._emotion_adjustments = getattr(self, "_emotion_adjustments", {})
+            self._emotion_adjustments["strings"] = dict(emotion_params)
+            section_data.setdefault("_emotion_adjustments", {})
+            section_data["_emotion_adjustments"]["strings"] = dict(emotion_params)
         
         q_len = float(section_data.get("q_length", self.bar_length))
         mapping = self._select_expression_map(section_data)
@@ -961,6 +1018,11 @@ class StringsGenerator(BasePartGenerator):
                 if pattern == EXEC_STYLE_TRILL
                 else p_base
             )
+            # Pre-calculate velocity with emotion parameters for trill/tremolo notes (Phase 5.4)
+            bow_factor = getattr(self, '_current_bow_pressure_factor', 1.0) if velocity is not None else 1.0
+            combined_factor = velocity_factor * bow_factor if velocity is not None else 1.0
+            final_vel = self._apply_emotion_to_note(velocity, combined_factor) if velocity is not None else None
+            
             t = 0.0
             toggle = False
             while t < duration_ql - 1e-6:
@@ -973,6 +1035,14 @@ class StringsGenerator(BasePartGenerator):
                     if pattern == EXEC_STYLE_TRILL
                     else articulations.Tremolo(3)
                 )
+                # Apply velocity to each trill/tremolo note
+                if final_vel is not None:
+                    vol = volume.Volume(velocity=final_vel)
+                    try:
+                        vol.velocityScalar = final_vel / 127.0
+                    except Exception:
+                        pass
+                    n.volume = vol
                 result.append(n)
                 t += spacing
                 toggle = not toggle
@@ -982,8 +1052,16 @@ class StringsGenerator(BasePartGenerator):
             else:
                 n = note.Note(base_pitch, quarterLength=duration_ql)
             result.append(n)
-        if velocity is not None:
-            final_vel = max(1, min(127, int(round(velocity * velocity_factor))))
+        
+        # Apply velocity to non-trill/tremolo notes (Phase 5.4)
+        if velocity is not None and pattern not in {EXEC_STYLE_TRILL, EXEC_STYLE_TREMOLO}:
+            # Apply emotion parameters via unified helper
+            bow_factor = getattr(self, '_current_bow_pressure_factor', 1.0)
+            combined_factor = velocity_factor * bow_factor
+            
+            # Use unified helper to apply velocity_boost and velocity_std_multiplier
+            final_vel = self._apply_emotion_to_note(velocity, combined_factor)
+            
             vol = volume.Volume(velocity=final_vel)
             try:
                 vol.velocityScalar = final_vel / 127.0
@@ -1116,6 +1194,19 @@ class StringsGenerator(BasePartGenerator):
         next_section_data: dict[str, Any] | None = None,
         vocal_metrics: dict | None = None,
     ) -> dict[str, stream.Part]:
+        # Extract emotion adjustments (Phase 5.4)
+        emotion_adj = {}
+        if hasattr(self, '_emotion_adjustments') and 'strings' in self._emotion_adjustments:
+            emotion_adj = self._emotion_adjustments.get('strings', {})
+        elif section_data is not None:
+            emotion_adj = section_data.get('_emotion_adjustments', {}).get('strings', {})
+
+        # Set instance variables for emotion parameters
+        self._current_velocity_boost = emotion_adj.get('velocity_boost', 0)
+        self._current_velocity_std_multiplier = emotion_adj.get('velocity_std_multiplier', 1.0)
+        self._current_articulation_legato_bias = emotion_adj.get('articulation_legato_bias', 0.5)
+        self._current_bow_pressure_factor = emotion_adj.get('bow_pressure_factor', 1.0)
+        
         chord_label = (
             section_data.get("chord_symbol_for_voicing")
             or section_data.get("original_chord_label")
