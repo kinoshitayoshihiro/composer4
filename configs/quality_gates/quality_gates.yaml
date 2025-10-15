@@ -1,0 +1,119 @@
+# Quality Gates Configuration
+# 楽器別の品質基準設定
+# Severity: critical (強制隔離) | warning (3つ以上で隔離)
+
+# 共通ゲート (全楽器)
+common:
+  min_duration_sec: 2.0
+  max_duration_sec: 600.0
+  min_notes: 8
+  max_notes: 50000
+  min_density: 0.5  # notes/sec
+  max_density: 50.0
+  
+  # Pitch範囲
+  min_pitch: 21  # A0
+  max_pitch: 108  # C8
+  
+  # Velocity範囲
+  min_velocity_mean: 20
+  max_velocity_mean: 120
+  min_velocity_std: 5  # 単調すぎる演奏を除外
+  
+  # テンポ
+  min_tempo: 30
+  max_tempo: 300
+  max_tempo_changes: 100
+
+# Piano
+piano:
+  min_notes: 20
+  min_bars: 2
+  max_pedal_sustain_ratio: 0.85  # ペダル使用率
+  min_hand_separation: 6  # 半音単位
+  max_hand_separation: 60
+  
+  # Program範囲
+  allowed_programs: [0, 1, 2, 3, 4, 5, 6, 7]  # Pianoのみ
+
+# Guitar
+guitar:
+  min_notes: 10
+  min_bars: 1
+  min_strum_consistency: 0.75  # ストラム一貫性
+  max_arpeggio_glitch_ratio: 0.3  # IOI<15msの割合
+  
+  # Pitch範囲 (E2 - C7)
+  min_pitch: 40
+  max_pitch: 84
+  
+  # Program範囲
+  allowed_programs: [24, 25, 26, 27, 28, 29, 30, 31]  # Guitar
+
+# Bass
+bass:
+  min_notes: 8
+  min_bars: 1
+  min_root_or_chord_tone_rate: 0.70  # ルート/コードトーン率
+  max_leap_excess_ratio: 0.4  # 大跳躍の割合
+  max_grid_off_ratio: 0.4  # グリッド外れ許容
+  max_grid_off_std_ms: 50
+  
+  # Pitch範囲 (E1 - C4)
+  min_pitch: 28
+  max_pitch: 60
+  
+  # Program範囲
+  allowed_programs: [32, 33, 34, 35, 36, 37, 38, 39]  # Bass
+
+# Strings
+strings:
+  min_notes: 15
+  min_bars: 2
+  min_legato_connection_rate: 0.60  # レガート接続率
+  max_staccato_flood_ratio: 0.8
+  max_chord_spread_semitones: 30
+  
+  # Pitch範囲
+  min_pitch: 38  # D2 (Cello)
+  max_pitch: 105  # A7 (Violin)
+  
+  # Program範囲
+  allowed_programs: [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55]
+
+# Drums
+drums:
+  min_notes: 16
+  min_bars: 1
+  min_kick_on_beat_rate: 0.55  # キックが拍頭にある最低割合
+  max_grid_off_std_ms: 30
+  
+  # Drumは is_drum=True が必須
+  must_be_drum: true
+
+# 危険コード (これがあれば強制隔離) - severity: critical
+critical_reason_codes:
+  - hard_fail
+  - parse_error
+  - tempo_change_excess
+  - pitch_outlier
+  - pitch_range_excessive
+  - note_count_low
+  - strum_inconsistent
+  - nonharmonic_excess
+
+# 警告コード (3つ以上で隔離) - severity: warning
+warning_reason_codes:
+  - too_short
+  - too_few_notes
+  - pedal_excessive
+  - arpeggio_glitch
+  - leap_excess
+  - grid_off_outlier
+  - staccato_flood
+  - chord_spread_excess
+  - drum_program_mismatch
+  - velocity_variation_low
+  - kick_offbeat
+  - legato_insufficient
+

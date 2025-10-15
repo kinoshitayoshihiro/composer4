@@ -1,0 +1,156 @@
+name: MIDI Cleaning Pipeline CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'scripts/clean_midi.py'
+      - 'scripts/validate_and_gate.py'
+      - 'scripts/prepare_splits.py'
+      - 'scripts/cleaners/**'
+      - 'configs/quality_gates/**'
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-determinism:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pretty_midi
+    
+    - name: Prepare test data
+      run: |
+        mkdir -p data/test_ci
+        # ダミーMIDIファイル生成 (実環境ではGit LFSや別ストレージから取得)
+        python -c "
+        import pretty_midi
+        import os
+        os.makedirs('data/test_ci', exist_ok=True)
+        for i in range(10):
+            pm = pretty_midi.PrettyMIDI(initial_tempo=120)
+            inst = pretty_midi.Instrument(program=0)
+            note = pretty_midi.Note(velocity=100, pitch=60, start=0, end=1)
+            inst.notes.append(note)
+            pm.instruments.append(inst)
+            pm.write(f'data/test_ci/test_{i}.midi')
+        "
+    
+    - name: Run cleaning (1st pass)
+      run: |
+        python scripts/clean_midi.py \
+          --in data/test_ci \
+          --out data/cleaned_ci_1 \
+          --instrument piano \
+          --quarantine data/quarantine_ci_1 \
+          --seed "ci-test-seed-42" \
+          --jobs 1
+    
+    - name: Run cleaning (2nd pass)
+      run: |
+        python scripts/clean_midi.py \
+          --in data/test_ci \
+          --out data/cleaned_ci_2 \
+          --instrument piano \
+          --quarantine data/quarantine_ci_2 \
+          --seed "ci-test-seed-42" \
+          --jobs 1
+    
+    - name: Verify determinism
+      run: |
+        diff -r data/cleaned_ci_1 data/cleaned_ci_2
+        echo "✅ Determinism verified!"
+    
+    - name: Validate quality gates
+      run: |
+        python scripts/validate_and_gate.py \
+          --in data/cleaned_ci_1 \
+          --gates configs/quality_gates/quality_gates.yaml \
+          --instrument piano \
+          --report data/validation_report_ci.json \
+          --summary data/validation_summary_ci.txt
+        echo "✅ Quality gates passed!"
+    
+    - name: Run stratified split (1st)
+      run: |
+        python scripts/prepare_splits.py \
+          --in data/cleaned_ci_1 \
+          --out data/splits_ci_1 \
+          --seed 99999 \
+          --train-ratio 0.7 \
+          --val-ratio 0.15
+    
+    - name: Run stratified split (2nd)
+      run: |
+        python scripts/prepare_splits.py \
+          --in data/cleaned_ci_1 \
+          --out data/splits_ci_2 \
+          --seed 99999 \
+          --train-ratio 0.7 \
+          --val-ratio 0.15
+    
+    - name: Verify split determinism
+      run: |
+        diff -r data/splits_ci_1 data/splits_ci_2
+        echo "✅ Split determinism verified!"
+    
+    - name: Check metadata schema
+      run: |
+        python -c "
+        import json
+        import glob
+        for f in glob.glob('data/cleaned_ci_1/**/*.meta.json', recursive=True):
+            with open(f) as fp:
+                meta = json.load(fp)
+                assert 'tempo' in meta
+                assert 'notes' in meta
+                assert 'bars' in meta
+                assert 'density' in meta
+                print(f'✅ {f}: Schema valid')
+        "
+    
+    - name: Archive results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: ci-cleaning-results
+        path: |
+          data/cleaned_ci_1/
+          data/validation_report_ci.json
+          data/validation_summary_ci.txt
+          data/splits_ci_1/split_summary.json
+
+  dry-run-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+    
+    - name: Test dry-run mode
+      run: |
+        # 大規模データセットのドライラン (実環境では実データパス使用)
+        python scripts/clean_midi.py \
+          --in data/loops \
+          --out /tmp/dummy_out \
+          --instrument drums \
+          --dry-run \
+          --seed "dry-run-test"
+        echo "✅ Dry-run completed without errors!"
