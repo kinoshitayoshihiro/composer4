@@ -12,6 +12,8 @@ import sys
 import hashlib
 import subprocess
 import re
+import io
+import datetime as _dt
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
@@ -36,6 +38,13 @@ import yaml
 from tqdm import tqdm
 import numpy as np
 from numpy.typing import NDArray
+
+try:
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+except Exception:
+    pa = None
+    pq = None
 
 from lamda_tools import MetricConfig, compute_loop_metrics
 from lamda_tools.metadata_io import iter_loop_records, load_metadata_index
@@ -1625,13 +1634,19 @@ class RetryPresetRule:
 @dataclass
 class Stage2Settings:
     pipeline_version: str
-    threshold: float
+    threshold: float  # 後方互換用（通常はthreshold_hardと同じ）
     axis_weights: Dict[str, float]
     retry_presets: Dict[str, List[RetryPresetRule]]
     metrics: MetricConfig
     paths: Stage2Paths
     limit: Optional[int]
     offset: int = 0
+    threshold_soft: float = 70.0  # 学習候補用の緩い閾値
+    threshold_hard: float = 70.0  # 公開用の厳しい閾値
+    streaming: bool = False  # ストリーミング出力モード
+    resume: bool = False  # 冪等実行モード
+    parquet_row_group: int = 4096  # Parquet行グループサイズ
+    manifest_flush_n: int = 200  # マニフェストフラッシュ間隔
     print_summary: bool = False
     articulation_thresholds: Optional[ArticulationThresholds] = None
     velocity_scoring: Optional[VelocityScoringConfig] = None
@@ -1766,6 +1781,159 @@ def _select_retry_rule(
     return None
 
 
+def _sha1_file(path: Path) -> str:
+    """ファイルのSHA1ハッシュを計算"""
+    h = hashlib.sha1()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+class _StreamingSinks:
+    """
+    JSONL（metrics）と Parquet（events）を逐次書き出しする薄いラッパ。
+    メモリ蓄積を回避して、ストリーミングで出力する。
+    """
+    def __init__(self, out_dir: Path, parquet_schema: Optional[Dict[str, Any]] = None, row_group: int = 4096):
+        self.out_dir = Path(out_dir)
+        self.out_dir.mkdir(parents=True, exist_ok=True)
+        
+        # metrics: JSONL
+        self.metrics_fp = io.open(self.out_dir / "metrics_score.jsonl", "a", encoding="utf-8")
+        
+        # loop summary: CSV (ヘッダー付き)
+        self.loop_csv_fp = io.open(self.out_dir / "loop_summary.csv", "a", encoding="utf-8")
+        self._loop_csv_header_written = False
+        
+        # events: Parquet（オプション）
+        self.pq_writer = None
+        self.row_group = row_group
+        self._pq_buffer: List[Dict[str, Any]] = []
+        self._pq_path = self.out_dir / "canonical_events.parquet"
+        
+        if pq is not None and parquet_schema is not None:
+            self._schema_fields = list(parquet_schema.keys())
+        else:
+            self._schema_fields = None
+
+    def write_metric(self, rec: Dict[str, Any]):
+        """メトリクスレコードをJSONL形式で書き出し"""
+        self.metrics_fp.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        self.metrics_fp.flush()
+
+    def write_loop_summary(self, rec: Dict[str, Any]):
+        """ループサマリーをCSV形式で書き出し"""
+        if not self._loop_csv_header_written:
+            # ヘッダー行を書き出し
+            headers = list(rec.keys())
+            self.loop_csv_fp.write(",".join(headers) + "\n")
+            self._loop_csv_header_written = True
+        # データ行を書き出し
+        values = [str(rec.get(k, "")) for k in rec.keys()]
+        self.loop_csv_fp.write(",".join(values) + "\n")
+        self.loop_csv_fp.flush()
+
+    def write_events_batch(self, rows: List[Dict[str, Any]]):
+        """イベントバッチをParquet形式で書き出し"""
+        if self._schema_fields is None or pq is None or not rows:
+            return  # Parquet書き出しを無効化
+        
+        self._pq_buffer.extend(rows)
+        if len(self._pq_buffer) >= self.row_group:
+            self._flush_parquet()
+
+    def _flush_parquet(self):
+        """Parquetバッファをディスクにフラッシュ"""
+        if not self._pq_buffer:
+            return
+        
+        try:
+            table = pa.Table.from_pylist(self._pq_buffer)
+            if self.pq_writer is None:
+                self.pq_writer = pq.ParquetWriter(
+                    self._pq_path,
+                    table.schema,
+                    compression="zstd"
+                )
+            self.pq_writer.write_table(table)
+            self._pq_buffer.clear()
+        except Exception as e:
+            print(f"Warning: Parquet write failed: {e}")
+
+    def close(self):
+        """全バッファをフラッシュしてファイルをクローズ"""
+        try:
+            self._flush_parquet()
+        finally:
+            if self.pq_writer is not None:
+                self.pq_writer.close()
+            self.metrics_fp.close()
+            self.loop_csv_fp.close()
+
+
+class _BatchManifest:
+    """
+    冪等実行のための処理済みトラッカー。
+    BATCH_MANIFEST.json に処理済みファイルリストを保存。
+    """
+    def __init__(self, out_dir: Path, meta_index_path: Path, resume: bool = False):
+        self.path = Path(out_dir) / "BATCH_MANIFEST.json"
+        self.resume = resume
+        self.data = {
+            "created_at": _dt.datetime.utcnow().isoformat() + "Z",
+            "meta_index_sha1": _sha1_file(meta_index_path) if meta_index_path.exists() else "",
+            "processed": []  # cleaned_file の相対パス
+        }
+        
+        if resume and self.path.exists():
+            try:
+                loaded = json.loads(self.path.read_text(encoding="utf-8"))
+                # SHA1が一致する場合のみ再開
+                if loaded.get("meta_index_sha1") == self.data["meta_index_sha1"]:
+                    self.data["processed"] = loaded.get("processed", [])
+                    print(f"[Resume] Loaded {len(self.data['processed'])} processed records from manifest")
+                else:
+                    print("[Resume] Index SHA1 mismatch, starting fresh")
+            except Exception as e:
+                print(f"[Resume] Failed to load manifest: {e}")
+        
+        self._processed_set = set(self.data["processed"])
+        self._dirty = False
+
+    def mark_done(self, cleaned_file: str):
+        """ファイルを処理済みとしてマーク"""
+        if cleaned_file not in self._processed_set:
+            self.data["processed"].append(cleaned_file)
+            self._processed_set.add(cleaned_file)
+            self._dirty = True
+
+    def is_done(self, cleaned_file: str) -> bool:
+        """ファイルが処理済みかチェック"""
+        return cleaned_file in self._processed_set
+
+    def flush_if_needed(self, n_since_flush: int, flush_every: int):
+        """定期的にマニフェストをディスクに保存"""
+        if n_since_flush % flush_every == 0 and self._dirty:
+            self._save()
+
+    def _save(self):
+        """マニフェストをJSONファイルに保存"""
+        try:
+            self.path.write_text(
+                json.dumps(self.data, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
+            self._dirty = False
+        except Exception as e:
+            print(f"Warning: Failed to save manifest: {e}")
+
+    def close(self):
+        """最終的にマニフェストを保存"""
+        if self._dirty:
+            self._save()
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Generate Stage 2 artefacts for LAMDa loops.",
@@ -1777,11 +1945,25 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--limit", type=int, help="Maximum number of loops to process")
     parser.add_argument("--offset", type=int, default=0, help="Starting position (0-based index)")
-    parser.add_argument("--threshold", type=float)
+    
+    # しきい値の二段運用
+    parser.add_argument("--threshold", type=float, help="後方互換: soft/hard両方に適用")
+    parser.add_argument("--threshold-soft", type=float, help="学習候補用の緩い閾値")
+    parser.add_argument("--threshold-hard", type=float, help="公開用の厳しい閾値")
+    
     parser.add_argument("--summary-out", type=Path)
     parser.add_argument("--print-summary", action="store_true")
     parser.add_argument("--sample-events", type=int)
     parser.add_argument("--articulation-thresholds", type=Path)
+    
+    # ストリーミング I/O
+    parser.add_argument("--streaming", action="store_true", help="メモリ蓄積せず逐次書き出し")
+    parser.add_argument("--parquet-row-group", type=int, default=4096, help="Parquet行グループサイズ")
+    
+    # 冪等化メタ
+    parser.add_argument("--resume", action="store_true", help="BATCH_MANIFEST.json に基づいて再開")
+    parser.add_argument("--manifest-flush-n", type=int, default=200, help="何件ごとにメタをフラッシュするか")
+    
     return parser.parse_args()
 
 
@@ -2513,6 +2695,18 @@ def _build_settings(
     threshold = float(pipeline_cfg.get("threshold", 70.0))
     if args.threshold is not None:
         threshold = args.threshold
+    
+    # しきい値の二段運用（後方互換性あり）
+    if args.threshold_soft is None and args.threshold_hard is None:
+        # 旧形式: --threshold のみ指定
+        threshold_soft = threshold_hard = threshold
+    else:
+        # 新形式: soft/hard 個別指定
+        threshold_soft = float(args.threshold_soft if args.threshold_soft is not None else threshold)
+        threshold_hard = float(args.threshold_hard if args.threshold_hard is not None else threshold)
+    
+    if threshold_soft > threshold_hard:
+        raise ValueError(f"--threshold-soft({threshold_soft}) must be <= --threshold-hard({threshold_hard})")
 
     score_cfg = cast(Dict[str, Any], config.get("score", {}))
     axis_cfg_raw = cast(Dict[str, Any], score_cfg.get("axes", {}))
@@ -2576,16 +2770,28 @@ def _build_settings(
     paths = _resolve_paths(config, args)
 
     offset = getattr(args, 'offset', 0) or 0
+    
+    # ストリーミングと冪等化のオプション
+    streaming = getattr(args, 'streaming', False)
+    resume = getattr(args, 'resume', False)
+    parquet_row_group = getattr(args, 'parquet_row_group', 4096)
+    manifest_flush_n = getattr(args, 'manifest_flush_n', 200)
 
     return Stage2Settings(
         pipeline_version=version,
         threshold=threshold,
+        threshold_soft=threshold_soft,
+        threshold_hard=threshold_hard,
         axis_weights=axis_weights,
         retry_presets=retry_map,
         metrics=metrics_cfg,
         paths=paths,
         limit=args.limit,
         offset=offset,
+        streaming=streaming,
+        resume=resume,
+        parquet_row_group=parquet_row_group,
+        manifest_flush_n=manifest_flush_n,
         print_summary=args.print_summary,
         articulation_thresholds=articulation_thresholds,
         velocity_scoring=velocity_scoring,
@@ -4043,6 +4249,36 @@ class Stage2Extractor:
             index_path=self.metadata_index,
         )
 
+        # ストリーミング出力とバッチ冪等化の初期化
+        sinks: Optional[_StreamingSinks] = None
+        manifest: Optional[_BatchManifest] = None
+        
+        if self.settings.streaming:
+            # Parquetスキーマ（events_rowsの構造に合わせる）
+            parquet_schema = {
+                "loop_id": "",
+                "onset": 0.0,
+                "duration": 0.0,
+                "pitch": 0,
+                "velocity": 0,
+                "channel": 0,
+                "program": 0,
+                "role": "",
+                "role_confidence": 0.0,
+            }
+            sinks = _StreamingSinks(
+                self.settings.paths.metrics_jsonl.parent,
+                parquet_schema=parquet_schema,
+                row_group=self.settings.parquet_row_group
+            )
+        
+        if self.settings.resume:
+            manifest = _BatchManifest(
+                self.settings.paths.metrics_jsonl.parent,
+                self.metadata_index,
+                resume=True
+            )
+
         events_rows: List[Dict[str, Any]] = []
         loop_rows: List[Dict[str, Any]] = []
         score_rows: List[Dict[str, Any]] = []
@@ -4057,6 +4293,7 @@ class Stage2Extractor:
         exclusions: Counter[str] = Counter()
         total_seen = 0
         processed = 0
+        processed_since_flush = 0
         ghost_threshold = self.settings.metrics.ghost_velocity_threshold
         articulation_labeler = ArticulationLabeler(
             self.settings.articulation_thresholds,
@@ -4125,6 +4362,11 @@ class Stage2Extractor:
             output_path = loop.get("cleaned_file") or loop.get("output_path")
             if not output_path:
                 exclusions["missing_output_path"] += 1
+                continue
+            
+            # 冪等チェック: 既に処理済みならスキップ
+            if manifest is not None and manifest.is_done(str(output_path)):
+                exclusions["already_processed"] += 1
                 continue
             raw_midi_path = Path(output_path)
             candidate_paths: Tuple[Path, ...]
@@ -4322,7 +4564,10 @@ class Stage2Extractor:
                 pipeline_version=self.settings.pipeline_version,
                 file_digest=file_digest,
             )
-            events_rows.extend(event_rows)
+            
+            # 従来モードのみevents_rowsに蓄積（ストリーミングは後で書き出す）
+            if sinks is None:
+                events_rows.extend(event_rows)
 
             axes_raw = _score_axes(
                 loop_metrics,
@@ -4494,27 +4739,29 @@ class Stage2Extractor:
                     retry_path.write_text(retry_text, encoding="utf-8")
                     retry_count += 1
 
-            score_rows.append(
-                {
-                    "loop_id": loop_id,
-                    "score": score_total,
-                    "axes": score_breakdown,
-                    "axes_raw": axes_raw,
-                    "axis_weights_effective": effective_axis_weights,
-                    "threshold": self.settings.threshold,
-                    "retry_preset_id": retry_preset_id,
-                    "seed": retry_seed,
-                    "metrics_used": sorted(metrics_dict.keys()),
-                    "created_at": timestamp_now,
-                    "articulation_score": articulation_result.score,
-                    "articulation_labels": articulation_result.labels,
-                    "articulation_presence": articulation_result.presence,
-                    "articulation_axis": articulation_result.axis_value,
-                    "audio_adaptive_rule": metrics_dict["audio.adaptive_rule"],
-                    "audio_adaptive_pivot": adaptive_pivot,
-                    "audio": dict(audio_summary),
-                }
-            )
+            # 従来モードのみscore_rowsに蓄積（ストリーミングモードでは既に書き出し済み）
+            if sinks is None:
+                score_rows.append(
+                    {
+                        "loop_id": loop_id,
+                        "score": score_total,
+                        "axes": score_breakdown,
+                        "axes_raw": axes_raw,
+                        "axis_weights_effective": effective_axis_weights,
+                        "threshold": self.settings.threshold,
+                        "retry_preset_id": retry_preset_id,
+                        "seed": retry_seed,
+                        "metrics_used": sorted(metrics_dict.keys()),
+                        "created_at": timestamp_now,
+                        "articulation_score": articulation_result.score,
+                        "articulation_labels": articulation_result.labels,
+                        "articulation_presence": articulation_result.presence,
+                        "articulation_axis": articulation_result.axis_value,
+                        "audio_adaptive_rule": metrics_dict["audio.adaptive_rule"],
+                        "audio_adaptive_pivot": adaptive_pivot,
+                        "audio": dict(audio_summary),
+                    }
+                )
 
             if bar_ticks > 0:
                 duration_ticks = loop.get("duration_ticks", 0)
@@ -4608,50 +4855,91 @@ class Stage2Extractor:
                 loop_row["audio_adaptive_total_delta"] = None
                 loop_row["audio_adaptive_total_delta_limited"] = None
                 loop_row["audio_adaptive_total_delta_ratio"] = None
-            loop_rows.append(loop_row)
+            # ストリーミング書き出し or 従来のメモリ蓄積
+            if sinks is not None:
+                # ストリーミングモード: 逐次書き出し
+                pass_soft = score_total >= self.settings.threshold_soft
+                pass_hard = score_total >= self.settings.threshold_hard
+                
+                metric_rec = {
+                    "loop_id": loop_id,
+                    "score": score_total,
+                    "axes": score_breakdown,
+                    "axes_raw": axes_raw,
+                    "axis_weights_effective": effective_axis_weights,
+                    "threshold": self.settings.threshold,
+                    "threshold_soft": self.settings.threshold_soft,
+                    "threshold_hard": self.settings.threshold_hard,
+                    "pass_soft": pass_soft,
+                    "pass_hard": pass_hard,
+                    "retry_preset_id": retry_preset_id,
+                    "seed": retry_seed,
+                }
+                sinks.write_metric(metric_rec)
+                sinks.write_loop_summary(loop_row)
+                sinks.write_events_batch(event_rows)
+            else:
+                # 従来モード: メモリに蓄積
+                loop_rows.append(loop_row)
+            
             loop_ids.append(loop_id)
+            
+            # 冪等メタ更新
+            if manifest is not None:
+                manifest.mark_done(str(output_path))
+                processed_since_flush += 1
+                manifest.flush_if_needed(processed_since_flush, self.settings.manifest_flush_n)
 
             processed += 1
 
         articulation_summary = articulation_labeler.summary()
 
-        # Write artefacts
+        # ストリーミング終了処理
+        if sinks is not None:
+            sinks.close()
+        
+        if manifest is not None:
+            manifest.close()
+
+        # Data digest計算（両モード共通）
         data_digest = _compute_data_digest(
             loop_ids,
             self.settings.pipeline_version,
         )
 
-        if data_digest:
-            for item in loop_rows:
-                item["data_digest"] = data_digest
+        # Write artefacts（ストリーミングモードではスキップ）
+        if sinks is None:
+            if data_digest:
+                for item in loop_rows:
+                    item["data_digest"] = data_digest
 
-        if events_rows:
-            events_df = pd.DataFrame(events_rows)
-            events_df.to_parquet(
-                self.settings.paths.events_parquet,
-                index=False,
-            )
+            if events_rows:
+                events_df = pd.DataFrame(events_rows)
+                events_df.to_parquet(
+                    self.settings.paths.events_parquet,
+                    index=False,
+                )
 
-            sample_path = self.settings.paths.events_csv_sample
-            sample_rows = self.settings.paths.sample_event_rows
-            if sample_path and sample_rows > 0:
-                events_df.head(sample_rows).to_csv(sample_path, index=False)
+                sample_path = self.settings.paths.events_csv_sample
+                sample_rows = self.settings.paths.sample_event_rows
+                if sample_path and sample_rows > 0:
+                    events_df.head(sample_rows).to_csv(sample_path, index=False)
 
-        if loop_rows:
-            loop_df = pd.DataFrame(loop_rows)
-            loop_df.to_csv(self.settings.paths.loop_summary_csv, index=False)
+            if loop_rows:
+                loop_df = pd.DataFrame(loop_rows)
+                loop_df.to_csv(self.settings.paths.loop_summary_csv, index=False)
 
-        if audio_embedding_rows and self.settings.paths.audio_embeddings_parquet is not None:
-            _write_audio_embeddings(
-                audio_embedding_rows,
-                self.settings.paths.audio_embeddings_parquet,
-            )
+            if audio_embedding_rows and self.settings.paths.audio_embeddings_parquet is not None:
+                _write_audio_embeddings(
+                    audio_embedding_rows,
+                    self.settings.paths.audio_embeddings_parquet,
+                )
 
-        if score_rows:
-            metrics_path = self.settings.paths.metrics_jsonl
-            with metrics_path.open("w", encoding="utf-8") as stream:
-                for row in score_rows:
-                    stream.write(json.dumps(row, ensure_ascii=False) + "\n")
+            if score_rows:
+                metrics_path = self.settings.paths.metrics_jsonl
+                with metrics_path.open("w", encoding="utf-8") as stream:
+                    for row in score_rows:
+                        stream.write(json.dumps(row, ensure_ascii=False) + "\n")
 
         audio_adaptive_summary: Optional[Dict[str, Any]] = None
         if (
@@ -4771,6 +5059,18 @@ def _build_summary(
         "axes": axis_stats,
     }
 
+    # しきい値の二段運用サポート
+    passed_count_soft = 0
+    passed_count_hard = 0
+    for score in passed_scores:
+        if score >= settings.threshold_soft:
+            passed_count_soft += 1
+        if score >= settings.threshold_hard:
+            passed_count_hard += 1
+    
+    pass_rate_soft = passed_count_soft / processed if processed > 0 else 0.0
+    pass_rate_hard = passed_count_hard / processed if processed > 0 else 0.0
+    
     summary: Dict[str, Any] = {
         "pipeline_version": settings.pipeline_version,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -4783,6 +5083,12 @@ def _build_summary(
         "outputs": {
             "passed_loops": passed_count,
             "pass_rate": pass_rate,
+            "threshold_soft": settings.threshold_soft,
+            "threshold_hard": settings.threshold_hard,
+            "passed_loops_soft": passed_count_soft,
+            "passed_loops_hard": passed_count_hard,
+            "pass_rate_soft": pass_rate_soft,
+            "pass_rate_hard": pass_rate_hard,
         },
         "exclusions": dict(exclusion_counts),
         "score_distribution": distribution,
@@ -4808,8 +5114,21 @@ def _print_summary(summary: Dict[str, Any]) -> None:
     outputs = cast(Dict[str, Any], summary.get("outputs", {}))
     print(f"Total loops      : {inputs.get('total_loops')}")
     print(f"Processed loops  : {inputs.get('processed_loops')}")
-    if "passed_loops" in outputs:
-        print(f"Passed loops     : {outputs.get('passed_loops')}")
+    
+    # しきい値の二段表示
+    threshold_soft = outputs.get("threshold_soft")
+    threshold_hard = outputs.get("threshold_hard")
+    if threshold_soft is not None and threshold_hard is not None and threshold_soft != threshold_hard:
+        print(f"Threshold (soft) : {threshold_soft:.1f} (学習候補)")
+        print(f"Threshold (hard) : {threshold_hard:.1f} (公開用)")
+        if "passed_loops_soft" in outputs:
+            print(f"Passed (soft)    : {outputs.get('passed_loops_soft')}")
+        if "passed_loops_hard" in outputs:
+            print(f"Passed (hard)    : {outputs.get('passed_loops_hard')}")
+    else:
+        if "passed_loops" in outputs:
+            print(f"Passed loops     : {outputs.get('passed_loops')}")
+    
     pass_rate = outputs.get("pass_rate")
     if isinstance(pass_rate, (int, float)):
         print(f"Pass rate        : {pass_rate:.3f}")

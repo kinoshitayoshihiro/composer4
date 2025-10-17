@@ -13,14 +13,21 @@ METADATA_INDEX="output/drums_metadata/drums_index.pkl"
 METADATA_DIR="output/drums_metadata"
 INPUT_DIR="output/drumloops_v3"
 CONFIG="configs/lamda/drums_stage2.yaml"
-THRESHOLD=70.0
+THRESHOLD_SOFT="${THRESHOLD_SOFT:-65.0}"
+THRESHOLD_HARD="${THRESHOLD_HARD:-70.0}"
 BATCH_SIZE=5000
+STREAMING="${STREAMING:-true}"
+RESUME="${RESUME:-true}"
 
 echo "========================================="
 echo "Stage2 バッチ処理開始"
 echo "========================================="
 echo "開始時刻: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "バッチサイズ: $BATCH_SIZE"
+echo "しきい値 (soft): $THRESHOLD_SOFT"
+echo "しきい値 (hard): $THRESHOLD_HARD"
+echo "ストリーミング: $STREAMING"
+echo "冪等再開: $RESUME"
 echo "予想バッチ数: 11"
 echo "========================================="
 echo ""
@@ -39,6 +46,15 @@ for i in {0..10}; do
   echo "開始時刻: $(date '+%Y-%m-%d %H:%M:%S')"
   echo ""
   
+  # ストリーミングと冪等化のオプション構築
+  EXTRA_OPTS=""
+  if [ "$STREAMING" = "true" ]; then
+    EXTRA_OPTS="$EXTRA_OPTS --streaming --parquet-row-group 8192"
+  fi
+  if [ "$RESUME" = "true" ]; then
+    EXTRA_OPTS="$EXTRA_OPTS --resume --manifest-flush-n 200"
+  fi
+  
   # バッチ実行
   PYTHONPATH=. $PYTHON_BIN $SCRIPT \
     --metadata-index "$METADATA_INDEX" \
@@ -46,9 +62,11 @@ for i in {0..10}; do
     --input-dir "$INPUT_DIR" \
     --output-dir "$output_dir" \
     --config "$CONFIG" \
-    --threshold $THRESHOLD \
+    --threshold-soft $THRESHOLD_SOFT \
+    --threshold-hard $THRESHOLD_HARD \
     --offset $offset \
     --limit $BATCH_SIZE \
+    $EXTRA_OPTS \
     --print-summary
   
   echo ""
