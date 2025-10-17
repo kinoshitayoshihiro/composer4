@@ -148,6 +148,8 @@ data/slakh2100_midi/
 | SLAKH   | guitar    | `output/slakh/clean/guitar` | `output/slakh/stage2/guitar` | `configs/lamda/guitar_stage2.yaml` | 🧪 **Test OK (68% pass)** |
 | SLAKH   | bass      | `output/slakh/clean/bass` | `output/slakh/stage2/bass` | `configs/lamda/bass_stage2.yaml` | 🧪 **Test OK (100% pass)** |
 | SLAKH   | strings   | `output/slakh/clean/strings` | `output/slakh/stage2/strings` | `configs/lamda/strings_stage2.yaml` | 🧪 **Test OK (70% pass)** |
+| POP909  | piano (melody) | `output/pop909/clean/melody` | `output/pop909/stage2/melody` | `configs/lamda/piano_stage2.yaml` | 🧪 **Test OK (100% pass)** |
+| POP909  | piano (chords) | `output/pop909/clean/chords` | `output/pop909/stage2/chords` | `configs/lamda/piano_stage2.yaml` | 🧪 **Test OK (100% pass)** |
 
 **SLAKH Drums Stage2 結果:**
 - Processed: 412 loops (99.3% from 557 Stage1 clean files)
@@ -161,12 +163,20 @@ data/slakh2100_midi/
 - 🧪 **テスト完了**: 各100ファイルで動作確認済み
 - 📊 **詳細結果**: docs/STAGE2_INSTRUMENT_TEST_RESULTS.md
 
+**Piano Stage2 実装:**
+- ✅ **設定ファイル**: configs/lamda/piano_stage2.yaml
+- ✅ **メトリクス**: scripts/stage2_instrument_metrics.py (5 metrics)
+- 🧪 **テスト完了**: Melody(v1) + Chords(v2) 各100ファイル
+- 📊 **詳細結果**: docs/STAGE2_INSTRUMENT_TEST_RESULTS.md
+
 **テスト結果サマリー (100ファイル/楽器):**
 | 楽器 | 平均スコア | 合格率 | 閾値 | 主要メトリクス |
 |------|-----------|--------|------|---------------|
 | Guitar | 43.6% | 68% | 40.0 | アルペジオ品質、コード協和度、ストラムパターン |
 | Bass | 76.7% | 100% 🏆 | 40.0 | ルート音正確性、グルーヴ品質、音域適合性 |
 | Strings | 50.9% | 70% | 45.0 | ボウイング表現、ハーモニー品質、レガート品質 |
+| Piano (Melody) | 64.0% | 100% 🏆 | 45.0 | メロディー表現、リズム多様性、ダイナミクスレンジ |
+| Piano (Chords) | 64.2% | 100% 🏆 | 45.0 | ハーモニー進行、リズム多様性、ダイナミクスレンジ |
 
 ## 使用方法
 
