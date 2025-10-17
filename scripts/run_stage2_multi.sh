@@ -39,10 +39,16 @@ echo ""
 
 # ▼データセット定義（TSV形式）
 # カラム: name instrument input_dir out_dir meta_dir meta_index_pkl config_yaml
-# 注意: Stage2は現在 drums専用です。Guitar/Bass/Strings用のStage2メトリクスは別途実装予定。
+# 
+# 注意事項:
+# - Stage2は現在 drums専用です。Guitar/Bass/Strings用のメトリクスは別途実装予定。
+# - LAMDA drums: 既に output/drumloops_v3_stage2/ として処理済み（個別スクリプト使用済み）
+# 
+# 現時点では個別スクリプトを使用することを推奨します。
+# このマルチランナーは将来のデータセット追加用のテンプレートとして保持。
 DATASETS="$(cat <<'EOF'
-SLAKH	drums	output/slakh/clean/drums	output/slakh/stage2/drums	output/slakh_metadata	output/slakh_metadata/drums_index.pkl	configs/lamda/drums_stage2.yaml
-LAMDA	drums	output/lamda/clean/drumloops	output/lamda/stage2/drumloops	output/drums_metadata	output/drums_metadata/drums_index.pkl	configs/lamda/drums_stage2.yaml
+# 以下は例示用（実行する場合はコメントを外してください）
+# SLAKH	drums	output/slakh/clean/drums	output/slakh/stage2/drums	output/slakh_metadata	output/slakh_metadata/drums_index.pkl	configs/lamda/drums_stage2.yaml
 EOF
 )"
 # 例：Guitar/Bass/Strings用を将来追加予定

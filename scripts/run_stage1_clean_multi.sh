@@ -32,14 +32,22 @@ echo "  RESUME_FLAG      = ${RESUME_FLAG}"
 echo ""
 
 # ▼データセット定義（TSV形式）
+# ▼データセット定義（TSV形式）
 # カラム: name instrument raw_in clean_out quarantine_out pickle_out
+# 
+# 注意事項:
+# - POP909: 3パート混在（melody/chords/drums）のため別途処理が必要
+# - LAMDA drums: 既に output/drumloops_v3/ として処理済み（個別スクリプト使用済み）
+# - SLAKH: データセットのディレクトリ構造を確認中
+#
+# 現時点では個別スクリプトを使用することを推奨します。
+# このマルチランナーは将来のデータセット追加用のテンプレートとして保持。
 DATASETS="$(cat <<'EOF'
-POP909	melody	data/POP909	output/pop909/clean/melody	output/pop909/quarantine/melody	output/pop909/shards/melody
-SLAKH	drums	data/slakh2100_midi/drums	output/slakh/clean/drums	output/slakh/quarantine/drums	output/slakh/shards/drums
-SLAKH	guitar	data/slakh2100_midi/guitar	output/slakh/clean/guitar	output/slakh/quarantine/guitar	output/slakh/shards/guitar
-SLAKH	bass	data/slakh2100_midi/bass	output/slakh/clean/bass	output/slakh/quarantine/bass	output/slakh/shards/bass
-SLAKH	strings	data/slakh2100_midi/strings	output/slakh/clean/strings	output/slakh/quarantine/strings	output/slakh/shards/strings
-LAMDA	drums	data/loops	output/lamda/clean/drumloops	output/lamda/quarantine/drumloops	output/lamda/shards/drumloops
+# 以下は例示用（実行する場合はコメントを外してください）
+# SLAKH	drums	data/slakh2100_midi/drums	output/slakh/clean/drums	output/slakh/quarantine/drums	output/slakh/shards/drums
+# SLAKH	guitar	data/slakh2100_midi/guitar	output/slakh/clean/guitar	output/slakh/quarantine/guitar	output/slakh/shards/guitar
+# SLAKH	bass	data/slakh2100_midi/bass	output/slakh/clean/bass	output/slakh/quarantine/bass	output/slakh/shards/bass
+# SLAKH	strings	data/slakh2100_midi/strings	output/slakh/clean/strings	output/slakh/quarantine/strings	output/slakh/shards/strings
 EOF
 )"
 
@@ -59,8 +67,8 @@ while IFS=$'\t' read -r NAME INSTR IN_DIR OUT_DIR Q_DIR PKL_OUT || [[ -n "${NAME
   # ディレクトリ作成
   mkdir -p "${OUT_DIR}" "${Q_DIR}" "${PKL_OUT}"
 
-  # clean_midi.py 実行
-  PYTHONPATH=. python3 scripts/clean_midi.py \
+  # clean_midi.py 実行（仮想環境のPythonを使用）
+  PYTHONPATH=. .venv311/bin/python scripts/clean_midi.py \
     --in "${IN_DIR}" \
     --out "${OUT_DIR}" \
     --quarantine "${Q_DIR}" \
