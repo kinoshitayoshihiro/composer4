@@ -549,6 +549,367 @@ def calculate_legato_quality(notes: List[Dict], config: Dict) -> float:
 
 
 # ============================================================================
+# Piano Metrics
+# ============================================================================
+
+def calculate_melody_expression(notes: List[Dict], config: Dict) -> float:
+    """
+    メロディー表現力評価
+    
+    Args:
+        notes: List of note dicts
+        config: melody_expression config from YAML
+    
+    Returns:
+        Score 0.0-1.0
+    """
+    if len(notes) < config.get('min_notes', 8):
+        return 0.0
+    
+    sorted_notes = sorted(notes, key=lambda n: n['start'])
+    pitches = [n['pitch'] for n in sorted_notes]
+    
+    # Contour quality: メロディーラインの品質
+    pitch_diffs = np.diff(pitches)
+    
+    # Direction changes (輪郭の変化)
+    direction_changes = 0
+    for i in range(len(pitch_diffs) - 1):
+        if (pitch_diffs[i] > 0 and pitch_diffs[i+1] < 0) or \
+           (pitch_diffs[i] < 0 and pitch_diffs[i+1] > 0):
+            direction_changes += 1
+    
+    # Moderate direction changes indicate good phrasing
+    contour_quality = min(1.0, direction_changes / (len(pitches) * 0.3))
+    
+    # Interval diversity: 音程多様性
+    intervals = [abs(d) for d in pitch_diffs if d != 0]
+    if intervals:
+        interval_categories = config.get('interval_categories', {})
+        stepwise = sum(1 for i in intervals if i in interval_categories.get('stepwise', [1, 2]))
+        skip = sum(1 for i in intervals if i in interval_categories.get('skip', [3, 4, 5]))
+        leap = sum(1 for i in intervals if i >= 6)
+        
+        total = stepwise + skip + leap
+        if total > 0:
+            # Balanced mix is ideal
+            stepwise_ratio = stepwise / total
+            skip_ratio = skip / total
+            leap_ratio = leap / total
+            
+            # Ideal: 60% stepwise, 30% skip, 10% leap
+            interval_diversity = 1.0 - abs(stepwise_ratio - 0.6) - abs(skip_ratio - 0.3) - abs(leap_ratio - 0.1)
+            interval_diversity = max(0, interval_diversity)
+        else:
+            interval_diversity = 0
+    else:
+        interval_diversity = 0
+    
+    # Phrase structure: フレーズ構造
+    # Detect phrases by rests or large intervals
+    phrases = []
+    current_phrase = [sorted_notes[0]]
+    
+    for i in range(1, len(sorted_notes)):
+        gap = sorted_notes[i]['start'] - (current_phrase[-1]['start'] + current_phrase[-1].get('duration', 0.5))
+        pitch_jump = abs(sorted_notes[i]['pitch'] - current_phrase[-1]['pitch'])
+        
+        if gap > 0.5 or pitch_jump > 12:  # New phrase
+            if len(current_phrase) >= config.get('phrase_length_range', {}).get('min', 4):
+                phrases.append(current_phrase)
+            current_phrase = [sorted_notes[i]]
+        else:
+            current_phrase.append(sorted_notes[i])
+    
+    if len(current_phrase) >= config.get('phrase_length_range', {}).get('min', 4):
+        phrases.append(current_phrase)
+    
+    if phrases:
+        avg_phrase_len = np.mean([len(p) for p in phrases])
+        optimal_len = config.get('phrase_length_range', {}).get('optimal', 8)
+        phrase_structure = max(0, 1.0 - abs(avg_phrase_len - optimal_len) / optimal_len)
+    else:
+        phrase_structure = 0.0
+    
+    # Tessitura balance: 音域バランス
+    pitch_range = max(pitches) - min(pitches)
+    tessitura_balance = min(1.0, pitch_range / 24.0)  # 2オクターブで正規化
+    
+    # Weighted combination
+    weights = config.get('weights', {})
+    score = (
+        contour_quality * weights.get('contour_quality', 0.30) +
+        interval_diversity * weights.get('interval_diversity', 0.25) +
+        phrase_structure * weights.get('phrase_structure', 0.25) +
+        tessitura_balance * weights.get('tessitura_balance', 0.20)
+    )
+    
+    return min(1.0, max(0.0, score))
+
+
+def calculate_harmony_progression(notes: List[Dict], config: Dict) -> float:
+    """
+    ハーモニー進行品質評価
+    
+    Args:
+        notes: List of note dicts
+        config: harmony_progression config from YAML
+    
+    Returns:
+        Score 0.0-1.0
+    """
+    if len(notes) < config.get('min_simultaneous_notes', 2):
+        return 0.0
+    
+    # Group simultaneous notes (chords)
+    TIME_WINDOW = 0.05
+    sorted_notes = sorted(notes, key=lambda n: n['start'])
+    
+    chords = []
+    current_chord = [sorted_notes[0]]
+    
+    for note in sorted_notes[1:]:
+        if note['start'] - current_chord[0]['start'] < TIME_WINDOW:
+            current_chord.append(note)
+        else:
+            if len(current_chord) >= config.get('min_simultaneous_notes', 2):
+                chords.append(current_chord)
+            current_chord = [note]
+    
+    if len(current_chord) >= config.get('min_simultaneous_notes', 2):
+        chords.append(current_chord)
+    
+    if not chords:
+        return 0.5  # Single notes, neutral score
+    
+    # Chord quality: コード品質
+    chord_qualities = []
+    chord_types = config.get('chord_types', {})
+    quality_weights = config.get('quality_weights', {})
+    
+    for chord in chords:
+        pitches = sorted([n['pitch'] % 12 for n in chord])
+        intervals = sorted([(p - pitches[0]) % 12 for p in pitches])
+        
+        # Match chord type
+        best_quality = 0.5
+        for chord_type, chord_intervals in chord_types.items():
+            if intervals[:len(chord_intervals)] == sorted(chord_intervals):
+                best_quality = quality_weights.get(chord_type, 0.7)
+                break
+        
+        chord_qualities.append(best_quality)
+    
+    chord_quality = np.mean(chord_qualities) if chord_qualities else 0.5
+    
+    # Voice leading: 声部進行
+    voice_leading_score = 0.7  # Placeholder (requires more complex analysis)
+    
+    # Harmonic rhythm: ハーモニックリズム
+    if len(chords) > 1:
+        chord_durations = []
+        for i in range(len(chords) - 1):
+            duration = chords[i+1][0]['start'] - chords[i][0]['start']
+            chord_durations.append(duration)
+        
+        # Consistent harmonic rhythm is good
+        harmonic_rhythm = max(0, 1.0 - np.std(chord_durations) / np.mean(chord_durations)) if chord_durations else 0.5
+    else:
+        harmonic_rhythm = 0.5
+    
+    # Dissonance resolution: 不協和音解決
+    dissonance_resolution = 0.7  # Placeholder
+    
+    # Weighted combination
+    weights = config.get('weights', {})
+    score = (
+        chord_quality * weights.get('chord_quality', 0.35) +
+        voice_leading_score * weights.get('voice_leading', 0.30) +
+        harmonic_rhythm * weights.get('harmonic_rhythm', 0.20) +
+        dissonance_resolution * weights.get('dissonance_resolution', 0.15)
+    )
+    
+    return min(1.0, max(0.0, score))
+
+
+def calculate_rhythm_diversity(notes: List[Dict], config: Dict) -> float:
+    """
+    リズム多様性評価
+    
+    Args:
+        notes: List of note dicts
+        config: rhythm_diversity config from YAML
+    
+    Returns:
+        Score 0.0-1.0
+    """
+    if len(notes) < 4:
+        return 0.0
+    
+    # Duration variety: 音価の多様性
+    if 'duration' in notes[0]:
+        durations = [n['duration'] for n in notes]
+        unique_durations = len(set([round(d, 2) for d in durations]))
+        min_unique = config.get('min_unique_durations', 3)
+        duration_variety = min(1.0, unique_durations / min_unique)
+    else:
+        # Estimate from inter-onset intervals
+        sorted_notes = sorted(notes, key=lambda n: n['start'])
+        iois = [sorted_notes[i+1]['start'] - sorted_notes[i]['start'] 
+                for i in range(len(sorted_notes)-1)]
+        unique_iois = len(set([round(ioi, 2) for ioi in iois]))
+        duration_variety = min(1.0, unique_iois / 3)
+    
+    # Syncopation: シンコペーション
+    sorted_notes = sorted(notes, key=lambda n: n['start'])
+    syncopated = 0
+    for note in sorted_notes:
+        beat_position = note['start'] % 1.0
+        off_beat_threshold = config.get('syncopation_detection', {}).get('off_beat_threshold', 0.25)
+        
+        # Off-beat notes (not on strong beats)
+        if off_beat_threshold < beat_position < (1.0 - off_beat_threshold):
+            syncopated += 1
+    
+    syncopation = min(1.0, syncopated / (len(notes) * 0.3))  # 30% syncopation is good
+    
+    # Rest usage: 休符の使用
+    if 'duration' in sorted_notes[0]:
+        gaps = []
+        for i in range(len(sorted_notes) - 1):
+            gap = sorted_notes[i+1]['start'] - (sorted_notes[i]['start'] + sorted_notes[i]['duration'])
+            if gap > 0.1:  # Significant rest
+                gaps.append(gap)
+        
+        rest_usage = min(1.0, len(gaps) / (len(notes) * 0.2))  # 20% rests is good
+    else:
+        rest_usage = 0.5
+    
+    # Pattern complexity: パターン複雑性
+    pattern_complexity = 0.6  # Placeholder
+    
+    # Weighted combination
+    weights = config.get('weights', {})
+    score = (
+        duration_variety * weights.get('duration_variety', 0.40) +
+        syncopation * weights.get('syncopation', 0.30) +
+        rest_usage * weights.get('rest_usage', 0.20) +
+        pattern_complexity * weights.get('pattern_complexity', 0.10)
+    )
+    
+    return min(1.0, max(0.0, score))
+
+
+def calculate_pedaling_quality(notes: List[Dict], config: Dict) -> float:
+    """
+    ペダリング品質評価（音価から推定）
+    
+    Args:
+        notes: List of note dicts
+        config: pedaling_quality config from YAML
+    
+    Returns:
+        Score 0.0-1.0
+    """
+    if len(notes) < 2:
+        return 0.5
+    
+    if not config.get('estimate_from_duration', True):
+        return 0.5  # CC64データがない場合
+    
+    # Estimate sustain from overlapping notes
+    sorted_notes = sorted(notes, key=lambda n: n['start'])
+    
+    if 'duration' not in sorted_notes[0]:
+        return 0.5
+    
+    # Sustain coherence: サステイン一貫性
+    overlaps = []
+    for i in range(len(sorted_notes) - 1):
+        note1_end = sorted_notes[i]['start'] + sorted_notes[i]['duration']
+        note2_start = sorted_notes[i+1]['start']
+        
+        overlap = note1_end - note2_start
+        if overlap > 0:
+            overlaps.append(overlap)
+    
+    if overlaps:
+        # Consistent overlaps indicate good pedaling
+        sustain_coherence = max(0, 1.0 - np.std(overlaps) / (np.mean(overlaps) + 0.1))
+    else:
+        sustain_coherence = 0.5
+    
+    # Pedal timing: ペダルタイミング
+    # Check if sustain durations are musical (aligned with beats)
+    min_sustain = config.get('min_sustain_duration', 1.0)
+    long_sustains = sum(1 for n in sorted_notes if n['duration'] >= min_sustain)
+    pedal_timing = min(1.0, long_sustains / (len(notes) * 0.3))
+    
+    # Clarity: クラリティ（同時発音数制限）
+    max_overlap_notes = config.get('max_overlap_notes', 6)
+    max_simultaneous = 0
+    
+    for i, note in enumerate(sorted_notes):
+        note_end = note['start'] + note['duration']
+        simultaneous = 1
+        
+        for other in sorted_notes[i+1:]:
+            if other['start'] < note_end:
+                simultaneous += 1
+            else:
+                break
+        
+        max_simultaneous = max(max_simultaneous, simultaneous)
+    
+    clarity = max(0, 1.0 - (max_simultaneous - max_overlap_notes) / max_overlap_notes) if max_simultaneous > max_overlap_notes else 1.0
+    
+    # Weighted combination
+    weights = config.get('weights', {})
+    score = (
+        sustain_coherence * weights.get('sustain_coherence', 0.50) +
+        pedal_timing * weights.get('pedal_timing', 0.30) +
+        clarity * weights.get('clarity', 0.20)
+    )
+    
+    return min(1.0, max(0.0, score))
+
+
+def calculate_dynamics_range(notes: List[Dict], config: Dict) -> float:
+    """
+    ダイナミクスレンジ評価
+    
+    Args:
+        notes: List of note dicts
+        config: Not used, included for consistency
+    
+    Returns:
+        Score 0.0-1.0
+    """
+    if not notes:
+        return 0.0
+    
+    velocities = [n['velocity'] for n in notes]
+    
+    # Dynamic range
+    vel_min = min(velocities)
+    vel_max = max(velocities)
+    dynamic_range = vel_max - vel_min
+    
+    # Optimal range: 30-115 (85 range)
+    optimal_range = 85
+    range_score = min(1.0, dynamic_range / optimal_range)
+    
+    # Velocity distribution (avoid too flat or too extreme)
+    vel_std = np.std(velocities)
+    distribution_score = min(1.0, vel_std / 25.0)  # Std of 25 is good
+    
+    # Weighted combination
+    score = range_score * 0.6 + distribution_score * 0.4
+    
+    return min(1.0, max(0.0, score))
+
+
+# ============================================================================
 # Main Interface
 # ============================================================================
 
@@ -561,7 +922,7 @@ def calculate_instrument_metrics(
     楽器別メトリクス計算のメインインターフェース
     
     Args:
-        instrument: 'guitar', 'bass', or 'strings'
+        instrument: 'guitar', 'bass', 'strings', or 'piano'
         notes: List of note dicts
         config: Instrument-specific config from YAML
     
@@ -611,6 +972,26 @@ def calculate_instrument_metrics(
             scores['legato_quality'] = calculate_legato_quality(
                 notes, config['legato_quality']
             )
+    
+    elif instrument == 'piano':
+        if 'melody_expression' in config:
+            scores['melody_expression'] = calculate_melody_expression(
+                notes, config['melody_expression']
+            )
+        if 'harmony_progression' in config:
+            scores['harmony_progression'] = calculate_harmony_progression(
+                notes, config['harmony_progression']
+            )
+        if 'rhythm_diversity' in config:
+            scores['rhythm_diversity'] = calculate_rhythm_diversity(
+                notes, config['rhythm_diversity']
+            )
+        if 'pedaling_quality' in config:
+            scores['pedaling_quality'] = calculate_pedaling_quality(
+                notes, config['pedaling_quality']
+            )
+        # dynamics_range is calculated from velocity data (always available)
+        scores['dynamics_range'] = calculate_dynamics_range(notes, {})
     
     else:
         logger.warning(f"Unknown instrument: {instrument}")

@@ -285,7 +285,7 @@ def test_instrument_metrics(
 
 def main():
     parser = argparse.ArgumentParser(description='Test instrument-specific metrics')
-    parser.add_argument('--instrument', required=True, choices=['guitar', 'bass', 'strings'],
+    parser.add_argument('--instrument', required=True, choices=['guitar', 'bass', 'strings', 'piano'],
                         help='Instrument to test')
     parser.add_argument('--input-dir', required=True, type=Path,
                         help='Input directory with clean MIDI files')

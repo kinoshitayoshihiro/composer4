@@ -1,0 +1,203 @@
+pipeline:
+  version: "stage2.piano.v2025.10"
+  threshold: 45.0
+
+score:
+  axes:
+    timing: 1.0
+    velocity: 1.5
+    melody_expression: 2.0      # メロディー表現力
+    harmony_progression: 2.0    # ハーモニー進行品質
+    rhythm_diversity: 1.0       # リズム多様性
+    pedaling_quality: 0.5       # ペダリング品質
+    articulation: 0.5
+  aliases_path: "../aliases/axes.yaml"
+  
+  velocity:
+    target_histograms_path: "configs/thresholds/velocity_piano.yaml"
+    nbins: 16
+    prefill_window_beats: 0.5
+    normalize_dynamic_range: true
+    phase_compensation: true
+    weights:
+      global: 0.35
+      downbeat: 0.25
+      offbeat: 0.25
+      prefill: 0.15
+    metric_weights:
+      js: 0.6
+      cos: 0.4
+    tempo_adaptive:
+      bins:
+        - max_bpm: 80
+          alpha: 0.80
+          downbeat_boost: 0.0
+        - max_bpm: 120
+          alpha: 1.0
+          downbeat_boost: 0.02
+        - max_bpm: null
+          alpha: 1.15
+          downbeat_boost: 0.04
+  
+  melody_expression:
+    # メロディー表現力評価
+    min_notes: 8
+    analysis_window_beats: 8.0
+    weights:
+      contour_quality: 0.30      # メロディーライン品質
+      interval_diversity: 0.25   # 音程多様性
+      phrase_structure: 0.25     # フレーズ構造
+      tessitura_balance: 0.20    # 音域バランス
+    contour_types:
+      - ascending                # 上昇
+      - descending               # 下降
+      - arch                     # アーチ型
+      - inverted_arch            # 逆アーチ型
+      - wave                     # 波型
+    interval_categories:
+      stepwise: [1, 2]           # 順次進行
+      skip: [3, 4, 5]            # 跳躍
+      leap: [6, 7, 8, 9, 10, 11, 12]  # 大跳躍
+    phrase_length_range:
+      min: 4
+      max: 16
+      optimal: 8
+  
+  harmony_progression:
+    # ハーモニー進行評価
+    min_simultaneous_notes: 2
+    max_note_spread_semitones: 24
+    weights:
+      chord_quality: 0.35        # コード品質
+      voice_leading: 0.30        # 声部進行
+      harmonic_rhythm: 0.20      # ハーモニックリズム
+      dissonance_resolution: 0.15  # 不協和音解決
+    chord_types:
+      major: [0, 4, 7]           # 長三和音
+      minor: [0, 3, 7]           # 短三和音
+      diminished: [0, 3, 6]      # 減三和音
+      augmented: [0, 4, 8]       # 増三和音
+      dominant7: [0, 4, 7, 10]   # 属七
+      major7: [0, 4, 7, 11]      # 長七
+      minor7: [0, 3, 7, 10]      # 短七
+    quality_weights:
+      major: 1.0
+      minor: 0.95
+      dominant7: 0.9
+      major7: 0.85
+      minor7: 0.85
+      diminished: 0.7
+      augmented: 0.6
+    voice_leading:
+      prefer_stepwise: true
+      max_leap_semitones: 7
+      parallel_fifths_penalty: 0.3
+      parallel_octaves_penalty: 0.2
+      voice_crossing_penalty: 0.1
+  
+  rhythm_diversity:
+    # リズム多様性評価
+    grid_divisions: 16
+    min_unique_durations: 3
+    weights:
+      duration_variety: 0.40     # 音価の多様性
+      syncopation: 0.30          # シンコペーション
+      rest_usage: 0.20           # 休符の使用
+      pattern_complexity: 0.10   # パターン複雑性
+    duration_categories:
+      whole: [3.5, 4.5]          # 全音符
+      half: [1.75, 2.25]         # 2分音符
+      quarter: [0.875, 1.125]    # 4分音符
+      eighth: [0.4375, 0.5625]   # 8分音符
+      sixteenth: [0.21875, 0.28125]  # 16分音符
+    syncopation_detection:
+      off_beat_threshold: 0.25   # オフビート判定閾値
+      min_syncopated_notes: 2
+  
+  pedaling_quality:
+    # ペダリング品質評価（CC64から推定）
+    # 注: MIDIにペダル情報がない場合は音価から推定
+    weights:
+      sustain_coherence: 0.50    # サステイン一貫性
+      pedal_timing: 0.30         # ペダルタイミング
+      clarity: 0.20              # クラリティ（濁り防止）
+    estimate_from_duration: true  # 音価からペダル推定
+    min_sustain_duration: 1.0    # 最小サステイン時間
+    max_overlap_notes: 6         # 最大同時発音数
+  
+  articulation:
+    thresholds_path: "configs/thresholds/articulation_piano.yaml"
+    techniques:
+      - legato                   # レガート
+      - staccato                 # スタッカート
+      - portato                  # ポルタート
+      - tenuto                   # テヌート
+      - marcato                  # マルカート
+
+  audio_adaptive_weights:
+    enabled: false               # Piano用は後で調整
+    min_confidence: 0.10
+    missing_policy: "noop"
+
+paths:
+  input_dir: "."
+  metadata_dir: "output/piano_metadata"
+  metadata_index: "output/piano_metadata/piano_index.pkl"
+  output_dir: "output/pop909/stage2/piano"
+  events_parquet: "canonical_events.parquet"
+  events_csv_sample: "canonical_events_sample.csv"
+  loop_summary_csv: "loop_summary.csv"
+  metrics_jsonl: "metrics_score.jsonl"
+  retry_dir: "retries"
+  summary_out: "stage2_summary.json"
+  sample_event_rows: 5000
+
+metrics:
+  ghost_velocity_threshold: 30   # Pianoはピアニッシモあり
+  accent_velocity_threshold: 100
+  microtiming_tolerance_ratio: 0.20
+  swing_min_pairs: 2
+  min_base_step: 1
+  max_breakpoints: 3
+  round_digits: 4
+  pitch_range:
+    min: 21   # A0
+    max: 108  # C8
+
+retry_presets:
+  - reason: melody_expression
+    when:
+      axes_raw.melody_expression: "< 0.30"
+    action:
+      preset: melody_enhance
+      params:
+        smooth_contour: true
+        enhance_phrases: 0.6
+  
+  - reason: harmony_progression
+    when:
+      axes_raw.harmony_progression: "< 0.35"
+    action:
+      preset: harmony_fix
+      params:
+        voice_leading_strength: 0.7
+        chord_quality_boost: 1.15
+  
+  - reason: rhythm_diversity
+    when:
+      axes_raw.rhythm_diversity: "< 0.30"
+    action:
+      preset: rhythm_vary
+      params:
+        add_syncopation: 0.2
+        vary_durations: 0.3
+  
+  - reason: velocity
+    when:
+      axes_raw.velocity: "< 0.35"
+    action:
+      preset: vel_smooth
+      params:
+        vmin: 30
+        vmax: 115
+        compress: 0.70
