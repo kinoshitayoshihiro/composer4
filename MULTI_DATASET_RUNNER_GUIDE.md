@@ -97,11 +97,16 @@ data/slakh2100_midi/
 | Dataset | Instrument | Input | Output | Status |
 |---------|-----------|-------|--------|--------|
 | POP909  | melody    | `data/POP909` | `output/pop909/clean/melody` | ⏸️ Pending |
-| SLAKH   | drums     | `data/slakh_by_instrument/drums/{train,validation,test}` | `output/slakh/clean/drums` | ✅ **Complete (557/561)** |
-| SLAKH   | guitar    | `data/slakh_by_instrument/guitar/{train,validation,test}` | `output/slakh/clean/guitar` | ✅ **Complete (1422/1471)** |
-| SLAKH   | bass      | `data/slakh_by_instrument/bass/{train,validation,test}` | `output/slakh/clean/bass` | ⏸️ Pending |
-| SLAKH   | strings   | `data/slakh_by_instrument/strings/{train,validation,test}` | `output/slakh/clean/strings` | ⏸️ Pending |
+| SLAKH   | drums     | `data/slakh_by_instrument/drums/{train,validation,test}` | `output/slakh/clean/drums` | ✅ **Complete (557/561 = 99.3%)** |
+| SLAKH   | guitar    | `data/slakh_by_instrument/guitar/{train,validation,test}` | `output/slakh/clean/guitar` | ✅ **Complete (1422/1471 = 96.7%)** |
+| SLAKH   | bass      | `data/slakh_by_instrument/bass/{train,validation,test}` | `output/slakh/clean/bass` | ✅ **Complete (584/599 = 97.5%)** |
+| SLAKH   | strings   | `data/slakh_by_instrument/strings/{train,validation,test}` | `output/slakh/clean/strings` | ✅ **Complete (999/1045 = 95.6%)** |
 | LAMDA   | drums     | `data/loops` | `output/lamda/clean/drumloops` | ✅ Complete (51,248) |
+
+**SLAKH Stage1 総括:**
+- **Total:** 3,676 files → 3,562 clean (96.9% overall success)
+- **Quarantine:** 114 files (3.1%)
+- 楽器別Generator開発に必要な高品質MIDIデータを確保
 
 ### Stage2: スコアリング & 選抜
 
