@@ -28,9 +28,11 @@ from tqdm import tqdm
 # クリーナーをインポート
 sys.path.append(str(Path(__file__).parent))
 from cleaners.common import (
+    ShardWriter,
     atomic_write_json,
     common_clean,
     compute_fileset_hash,
+    extract_lamda_metadata,
     make_provenance,
     seeded_rng,
     stable_list_midis,
@@ -53,29 +55,96 @@ REGISTRY = {
 
 def process_one_file(
     midi_path: Path,
-    output_dir: Path,
-    quarantine_dir: Path,
+    input_dir: Path | str,
+    output_dir: Path | str,
+    quarantine_dir: Path | str,
     instrument: str,
     force: bool,
+    emit_meta_json: str = "off",
 ) -> Tuple[bool, Dict]:
     """
     単一MIDIファイルを処理
     
     Returns:
-        (success, metadata)
+        (success, result_dict)
+        result_dict = {
+            "skipped": bool,
+            "quarantined": bool,
+            "lamda": dict (成功時のみ),
+            "reason_codes": list,
+            "meta": dict (デバッグ用),
+        }
     """
+    # Path型に変換
+    input_dir = Path(input_dir) if isinstance(input_dir, str) else input_dir
+    output_dir = Path(output_dir) if isinstance(output_dir, str) else output_dir
+    quarantine_dir = Path(quarantine_dir) if isinstance(quarantine_dir, str) else quarantine_dir
+    
+    result: Dict = {}
+    
+    # 再入可能性: 相対パスを解決
+    try:
+        relative_path = midi_path.relative_to(input_dir)
+    except ValueError:
+        # input_dir外のファイルの場合は名前のみ
+        relative_path = Path(midi_path.name)
+    
+    meta_path = output_dir / relative_path.parent / (midi_path.stem + ".meta.json")
+    quarantine_meta_path = quarantine_dir / relative_path.parent / (midi_path.stem + ".meta.json")
+    cleaned_out = output_dir / relative_path
+    
+    # 再入可能性: emit_meta_json=off のときは .meta.json ではなく
+    # 「クリーニング済み .mid の存在」でスキップ判定する
+    if not force:
+        already_processed = False
+        already_quarantined = False
+        
+        if emit_meta_json == "off":
+            # pickle直書き運用: .midの存在で判定
+            already_processed = cleaned_out.exists()
+            already_quarantined = (quarantine_dir / relative_path).exists()
+        else:
+            # 従来運用: .meta.jsonの存在で判定
+            already_processed = meta_path.exists()
+            already_quarantined = quarantine_meta_path.exists()
+        
+        if already_processed:
+            # スキップ時も shard に LAMDA エントリを追加できるよう、
+            # cleaned_out を再パースして lamda を作る（失敗したら None）
+            lamda_entry = None
+            try:
+                pm2 = pretty_midi.PrettyMIDI(str(cleaned_out))
+                lamda_entry = extract_lamda_metadata(
+                    pm2,
+                    input_path=str(midi_path),
+                    output_path=str(cleaned_out),
+                    base_dir=str(input_dir),
+                    genre=instrument,  # 楽器名をgenreとして使用
+                )
+            except Exception:
+                lamda_entry = None
+            
+            return (True, {
+                "skipped": True,
+                "reason": "already_processed",
+                "input": str(midi_path),
+                "cleaned_file": str(cleaned_out),
+                "lamda": lamda_entry,  # ★ メイン側で shard に詰められる
+            })
+        
+        if already_quarantined:
+            return (False, {"skipped": True, "reason": "already_quarantined"})
+    
     meta: Dict = {}
     
-    # 再入可能性: 既存 .meta.json があり --force でなければスキップ
-    relative_path = midi_path.relative_to(midi_path.parents[len(list(output_dir.parents))])
-    meta_path = output_dir / relative_path.parent / (midi_path.stem + ".meta.json")
-    
-    if meta_path.exists() and not force:
-        return (True, {"skipped": True, "reason": "already_processed"})
-    
     try:
+        # シンボリックリンクを実パスに解決
+        resolved_path = midi_path.resolve()
+        if not resolved_path.exists():
+            raise FileNotFoundError(f"Symlink target not found: {resolved_path}")
+        
         # 1. 読み込み
-        pm = pretty_midi.PrettyMIDI(str(midi_path))
+        pm = pretty_midi.PrettyMIDI(str(resolved_path))
         
         # 2. 共通クリーニング
         pm, meta_common = common_clean(pm)
@@ -88,44 +157,137 @@ def process_one_file(
         meta["reason_codes"] = meta.get("reason_codes", []) + reason_codes
         
         # 4. 判定: 隔離 or 保存
-        should_quarantine = _should_quarantine(meta["reason_codes"])
+        should_quarantine = _should_quarantine(meta["reason_codes"], meta)
         
         # 5. 保存先決定 (階層構造を維持)
         if should_quarantine:
             output_path = quarantine_dir / relative_path
             meta_save_path = quarantine_dir / relative_path.parent / (midi_path.stem + ".meta.json")
+            meta["quarantined"] = True
         else:
             output_path = output_dir / relative_path
             meta_save_path = meta_path
+            meta["quarantined"] = False
+            
+            # 6. LAMDA互換メタデータを抽出 (成功ファイルのみ)
+            lamda_meta = extract_lamda_metadata(
+                pm,
+                input_path=resolved_path,
+                output_path=output_path,
+                base_dir=output_dir,  # 出力ディレクトリを基準に相対パス計算
+                genre=instrument,  # 楽器名をgenreとして使用
+            )
+            meta["lamda"] = lamda_meta
         
         # ディレクトリ作成
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # 6. MIDI保存
+        # 7. MIDI保存
         pm.write(str(output_path))
         
-        # 7. メタデータ保存 (原子的)
-        atomic_write_json(meta, meta_save_path)
+        # 8. LAMDAメタデータを結果に格納（常に）
+        result["quarantined"] = should_quarantine
+        result["reason_codes"] = meta.get("reason_codes", [])
+        result["meta"] = meta
         
-        return (not should_quarantine, meta)
+        if not should_quarantine:
+            result["lamda"] = lamda_meta
+        
+        # 9. メタデータJSON保存（emit_meta_jsonモードに応じて）
+        should_write_meta = (
+            emit_meta_json == "on" or
+            (emit_meta_json == "auto" and (should_quarantine or len(meta.get("reason_codes", [])) > 0))
+        )
+        
+        if should_write_meta:
+            atomic_write_json(meta, meta_save_path)
+        
+        return (not should_quarantine, result)
     
     except Exception as e:
         # パースエラー
         meta["reason_codes"] = ["parse_error"]
         meta["error_message"] = str(e)
         
+        # シンボリックリンクを実パスに解決してコピー
+        resolved_path = midi_path.resolve() if midi_path.is_symlink() else midi_path
+        
         # 元ファイルをコピー (階層維持)
         output_path = quarantine_dir / relative_path
         meta_save_path = quarantine_dir / relative_path.parent / (midi_path.stem + ".meta.json")
         
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_bytes(midi_path.read_bytes())
-        atomic_write_json(meta, meta_save_path)
+        if resolved_path.exists():
+            output_path.write_bytes(resolved_path.read_bytes())
         
-        return (False, meta)
+        # JSON出力（エラーは常に記録）
+        if emit_meta_json != "off":
+            atomic_write_json(meta, meta_save_path)
+        
+        result["quarantined"] = True
+        result["reason_codes"] = meta.get("reason_codes", [])
+        result["meta"] = meta
+        
+        return (False, result)
 
 
-def _should_quarantine(reason_codes: list) -> bool:
+# グローバル変数 (並列処理用)
+_global_input_dir = None
+_global_output_dir = None
+_global_quarantine_dir = None
+_global_instrument = None
+_global_force = None
+_global_fileset_hash = None
+_global_provenance = None
+_global_index_path = None
+_global_emit_meta_json = None  # 新規: .meta.json 出力モード
+
+
+def _work_wrapper(p: Path) -> Tuple[bool, Dict]:
+    """並列処理用のワーカー関数（トップレベルでpickle可能）"""
+    # グローバル変数がNoneの場合のエラーハンドリング
+    if _global_input_dir is None or _global_output_dir is None or _global_quarantine_dir is None:
+        return (False, {
+            "skipped": False,
+            "quarantined": True,
+            "reason_codes": ["GLOBAL_VAR_ERROR"],
+            "meta": {"error": "Global variables not initialized in worker process"}
+        })
+    
+    success, result = process_one_file(
+        p, _global_input_dir, _global_output_dir, _global_quarantine_dir, 
+        _global_instrument, _global_force, _global_emit_meta_json
+    )
+    
+    # スキップされた場合
+    if result.get("skipped"):
+        return (success, result)
+    
+    # Provenance追加
+    if "meta" in result:
+        result["meta"].setdefault("schema_version", _global_provenance["schema_version"])
+        result["meta"].setdefault("fileset_hash", _global_fileset_hash)
+        result["meta"].setdefault("provenance", _global_provenance)
+    
+    # メタインデックスに追記
+    meta = result.get("meta", {})
+    idx_line = {
+        "path": str(p),
+        "fileset_hash": _global_fileset_hash,
+        "reason_codes": result.get("reason_codes", []),
+        "tempo": meta.get("tempo"),
+        "bars": meta.get("bars"),
+        "notes": meta.get("notes"),
+        "density": meta.get("density"),
+    }
+    
+    with open(_global_index_path, "a", encoding="utf-8") as w:
+        w.write(json.dumps(idx_line, ensure_ascii=False) + "\n")
+    
+    return (success, result)
+
+
+def _should_quarantine(reason_codes: list, meta: Dict) -> bool:
     """隔離判定"""
     # ハードエラー
     if "hard_fail" in reason_codes:
@@ -176,6 +338,11 @@ def main():
         help="隔離ディレクトリ (エラー/警告ファイル)",
     )
     parser.add_argument(
+        "--pickle-out",
+        required=True,
+        help="Pickle出力ディレクトリ（シャード＋インデックス）",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="ドライラン: 件数のみ表示",
@@ -190,6 +357,23 @@ def main():
         "--force",
         action="store_true",
         help="既存 .meta.json があっても再生成",
+    )
+    parser.add_argument(
+        "--emit-meta-json",
+        choices=["off", "auto", "on"],
+        default="off",
+        help=".meta.json 出力モード: off=出さない(推奨), auto=隔離/警告のみ, on=全ファイル",
+    )
+    parser.add_argument(
+        "--shard-size",
+        type=int,
+        default=5000,
+        help="Shardあたりのファイル数 (デフォルト: 5000、推奨)",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="既存シャードから再開（途中停止対応）",
     )
     parser.add_argument(
         "--seed",
@@ -251,46 +435,52 @@ def main():
         # 既存インデックスを退避
         index_path.rename(output_dir / "meta_index.jsonl.bak")
     
-    def _work(p: Path) -> Tuple[bool, Dict]:
-        success, meta = process_one_file(
-            p, output_dir, quarantine_dir, args.instrument, args.force
+    # グローバル変数設定（並列処理用）
+    global _global_input_dir, _global_output_dir, _global_quarantine_dir, _global_instrument, _global_force
+    global _global_fileset_hash, _global_provenance, _global_index_path, _global_emit_meta_json
+    
+    _global_input_dir = input_dir
+    _global_output_dir = output_dir
+    _global_quarantine_dir = quarantine_dir
+    _global_instrument = args.instrument
+    _global_force = args.force
+    _global_fileset_hash = fileset_hash
+    _global_provenance = provenance
+    _global_index_path = index_path
+    _global_emit_meta_json = args.emit_meta_json
+    
+    # ShardWriter初期化（pickle-outが指定されている場合のみ）
+    shard_writer = None
+    if args.pickle_out:
+        pickle_out_dir = Path(args.pickle_out)
+        pickle_out_dir.mkdir(parents=True, exist_ok=True)
+        shard_writer = ShardWriter(
+            out_dir=pickle_out_dir,
+            instrument=args.instrument,
+            shard_size=args.shard_size,
+            resume=args.resume,
         )
-        
-        # スキップされた場合
-        if meta.get("skipped"):
-            return (True, meta)
-        
-        # Provenance追加
-        meta.setdefault("schema_version", provenance["schema_version"])
-        meta.setdefault("fileset_hash", fileset_hash)
-        meta.setdefault("provenance", provenance)
-        
-        # メタインデックスに追記
-        idx_line = {
-            "path": str(p),
-            "fileset_hash": fileset_hash,
-            "reason_codes": meta.get("reason_codes", []),
-            "tempo": meta.get("tempo"),
-            "bars": meta.get("bars"),
-            "notes": meta.get("notes"),
-            "density": meta.get("density"),
-        }
-        
-        with open(index_path, "a", encoding="utf-8") as w:
-            w.write(json.dumps(idx_line, ensure_ascii=False) + "\n")
-        
-        return (success, meta)
+        print(f"📦 ShardWriter initialized: {pickle_out_dir}")
+        print(f"   Shard size: {args.shard_size}")
+        print(f"   Resume mode: {args.resume}")
+        print()
     
     # 並列/直列の切り替え
     if args.jobs == 1:
         # 直列 (既存互換)
         for midi_path in tqdm(midi_files, desc="Cleaning"):
-            success, meta = _work(midi_path)
+            success, meta = _work_wrapper(midi_path)
             
             if meta.get("skipped"):
                 stats["skipped"] += 1
+                # スキップされた場合でもLAMDAエントリがあればshardに追加
+                if shard_writer and "lamda" in meta and meta["lamda"] is not None:
+                    shard_writer.add(meta["lamda"])
             elif success:
                 stats["success"] += 1
+                # ShardWriterにLAMDAメタデータを追加
+                if shard_writer and "lamda" in meta:
+                    shard_writer.add(meta["lamda"])
             else:
                 stats["quarantine"] += 1
             
@@ -300,20 +490,54 @@ def main():
     else:
         # 並列
         with ProcessPoolExecutor(max_workers=args.jobs) as executor:
-            futures = {executor.submit(_work, p): p for p in midi_files}
+            futures = {executor.submit(_work_wrapper, p): p for p in midi_files}
             
             for future in tqdm(as_completed(futures), total=len(futures), desc="Cleaning"):
                 success, meta = future.result()
                 
                 if meta.get("skipped"):
                     stats["skipped"] += 1
+                    # スキップされた場合でもLAMDAエントリがあればshardに追加
+                    if shard_writer and "lamda" in meta and meta["lamda"] is not None:
+                        shard_writer.add(meta["lamda"])
                 elif success:
                     stats["success"] += 1
+                    # ShardWriterにLAMDAメタデータを追加
+                    if shard_writer and "lamda" in meta:
+                        shard_writer.add(meta["lamda"])
                 else:
                     stats["quarantine"] += 1
                 
                 for code in meta.get("reason_codes", []):
                     stats["reason_codes"][code] = stats["reason_codes"].get(code, 0) + 1
+    
+    # ShardWriter の最終処理（flush & index生成）
+    index_pickle_path = None
+    if shard_writer:
+        print()
+        print("=" * 70)
+        print("🔨 Finalizing LAMDA sharded pickles...")
+        print("=" * 70)
+        
+        # 残りのバッファをflush
+        if shard_writer.buffer:
+            shard_writer.flush()
+        
+        # インデックス生成
+        index_pickle_path = shard_writer.write_index()
+        
+        total_shards = shard_writer.shard_idx + (1 if shard_writer.buffer else 0)
+        print()
+        print(f"📚 Index pickle saved: {index_pickle_path}")
+        print(f"   Format: LAMDA Stage2 compatible")
+        print(f"   Total shards: {total_shards}")
+        print(f"   Shard size:   {args.shard_size}")
+        print()
+        print("✅ Ready for Stage2 processing:")
+        print(f"   python scripts/lamda_stage2_extractor.py \\")
+        print(f"       --metadata-index {index_pickle_path} \\")
+        print(f"       --input-dir {output_dir.parent}")
+        print("=" * 70)
     
     # 結果レポート
     print()
@@ -348,6 +572,9 @@ def main():
     print()
     print(f"📊 Report saved: {report_path}")
     print(f"📊 Index saved:  {index_path}")
+    if index_pickle_path:
+        print(f"📦 Pickle index: {index_pickle_path}")
+    print("=" * 70)
     
     return 0
 
