@@ -94,14 +94,14 @@ data/slakh2100_midi/
 - Sharded pickle 生成（メタデータ用）
 
 **対象データセット:**
-| Dataset | Instrument | Input | Output |
-|---------|-----------|-------|--------|
-| POP909  | melody    | `data/POP909` | `output/pop909/clean/melody` |
-| SLAKH   | drums     | `data/slakh2100_midi/drums` | `output/slakh/clean/drums` |
-| SLAKH   | guitar    | `data/slakh2100_midi/guitar` | `output/slakh/clean/guitar` |
-| SLAKH   | bass      | `data/slakh2100_midi/bass` | `output/slakh/clean/bass` |
-| SLAKH   | strings   | `data/slakh2100_midi/strings` | `output/slakh/clean/strings` |
-| LAMDA   | drums     | `data/loops` | `output/lamda/clean/drumloops` |
+| Dataset | Instrument | Input | Output | Status |
+|---------|-----------|-------|--------|--------|
+| POP909  | melody    | `data/POP909` | `output/pop909/clean/melody` | ⏸️ Pending |
+| SLAKH   | drums     | `data/slakh_by_instrument/drums/{train,validation,test}` | `output/slakh/clean/drums` | ✅ **Complete (557/561)** |
+| SLAKH   | guitar    | `data/slakh_by_instrument/guitar/{train,validation,test}` | `output/slakh/clean/guitar` | ⏸️ Pending |
+| SLAKH   | bass      | `data/slakh_by_instrument/bass/{train,validation,test}` | `output/slakh/clean/bass` | ⏸️ Pending |
+| SLAKH   | strings   | `data/slakh_by_instrument/strings/{train,validation,test}` | `output/slakh/clean/strings` | ⏸️ Pending |
+| LAMDA   | drums     | `data/loops` | `output/lamda/clean/drumloops` | ✅ Complete (51,248) |
 
 ### Stage2: スコアリング & 選抜
 
@@ -114,10 +114,16 @@ data/slakh2100_midi/
 - Batch manifest による冪等実行
 
 **対象データセット:**
-| Dataset | Instrument | Input | Output | Config |
-|---------|-----------|-------|--------|--------|
-| SLAKH   | drums     | `output/slakh/clean/drums` | `output/slakh/stage2/drums` | `configs/lamda/drums_stage2.yaml` |
-| LAMDA   | drums     | `output/lamda/clean/drumloops` | `output/lamda/stage2/drumloops` | `configs/lamda/drums_stage2.yaml` |
+| Dataset | Instrument | Input | Output | Config | Status |
+|---------|-----------|-------|--------|--------|--------|
+| SLAKH   | drums     | `output/slakh/clean/drums` | `output/slakh/stage2/drums` | `configs/lamda/drums_stage2.yaml` | ✅ **Complete (412 loops)** |
+| LAMDA   | drums     | `output/lamda/clean/drumloops` | `output/lamda/stage2/drumloops` | `configs/lamda/drums_stage2.yaml` | ✅ Complete (461 loops) |
+
+**SLAKH Drums Stage2 結果:**
+- Processed: 412 loops (99.3% from 557 Stage1 clean files)
+- Soft threshold (≥65.0): 36 loops (8.7%)
+- Hard threshold (≥70.0): 7 loops (1.7%)
+- Mean score: 55.66 (Min: 35.06, Max: 74.79)
 
 **注意:** Stage2 (LAMDAスコアリング) は現在 drums 専用です。Guitar/Bass/Strings等は将来実装予定。
 
