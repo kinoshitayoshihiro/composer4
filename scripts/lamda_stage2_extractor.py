@@ -1631,10 +1631,11 @@ class Stage2Settings:
     metrics: MetricConfig
     paths: Stage2Paths
     limit: Optional[int]
-    print_summary: bool
-    articulation_thresholds: Optional[ArticulationThresholds]
-    velocity_scoring: Optional[VelocityScoringConfig]
-    structure_scoring: Optional[StructureScoringConfig]
+    offset: int = 0
+    print_summary: bool = False
+    articulation_thresholds: Optional[ArticulationThresholds] = None
+    velocity_scoring: Optional[VelocityScoringConfig] = None
+    structure_scoring: Optional[StructureScoringConfig] = None
     audio_adaptive_weights: Optional[AudioAdaptiveWeights] = None
     audio_guidance: Optional[AudioGuidanceStore] = None
 
@@ -1774,7 +1775,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--metadata-dir", type=Path)
     parser.add_argument("--input-dir", type=Path)
     parser.add_argument("--output-dir", type=Path)
-    parser.add_argument("--limit", type=int)
+    parser.add_argument("--limit", type=int, help="Maximum number of loops to process")
+    parser.add_argument("--offset", type=int, default=0, help="Starting position (0-based index)")
     parser.add_argument("--threshold", type=float)
     parser.add_argument("--summary-out", type=Path)
     parser.add_argument("--print-summary", action="store_true")
@@ -2573,6 +2575,8 @@ def _build_settings(
 
     paths = _resolve_paths(config, args)
 
+    offset = getattr(args, 'offset', 0) or 0
+
     return Stage2Settings(
         pipeline_version=version,
         threshold=threshold,
@@ -2581,6 +2585,7 @@ def _build_settings(
         metrics=metrics_cfg,
         paths=paths,
         limit=args.limit,
+        offset=offset,
         print_summary=args.print_summary,
         articulation_thresholds=articulation_thresholds,
         velocity_scoring=velocity_scoring,
@@ -4082,9 +4087,32 @@ class Stage2Extractor:
             adaptive_total_delta_limited = None
 
         limit = self.settings.limit
+        offset = getattr(self.settings, 'offset', 0) or 0
+        
+        # Apply offset and limit to iterator
         iterator: Iterator[Dict[str, Any]] = iter(records)
+        
+        # Skip offset records
+        if offset > 0:
+            print(f"[Stage2] Skipping first {offset} records...")
+            for _ in range(offset):
+                try:
+                    next(iterator)
+                    total_seen += 1
+                except StopIteration:
+                    break
+        
+        # Calculate effective limit
+        effective_limit = limit
+        if offset > 0 and limit is not None:
+            print(f"[Stage2] Processing records {offset} to {offset + limit - 1} (limit={limit})")
+        elif offset > 0:
+            print(f"[Stage2] Processing records from {offset} onwards")
+        elif limit is not None:
+            print(f"[Stage2] Processing first {limit} records")
+        
         for record in tqdm(iterator, desc="stage2", unit="loop"):
-            if limit is not None and processed >= limit:
+            if effective_limit is not None and processed >= effective_limit:
                 break
             total_seen += 1
 
@@ -4093,7 +4121,8 @@ class Stage2Extractor:
             if not loop_id:
                 exclusions["missing_md5"] += 1
                 continue
-            output_path = loop.get("output_path")
+            # Use cleaned_file (filename only) instead of output_path (relative path)
+            output_path = loop.get("cleaned_file") or loop.get("output_path")
             if not output_path:
                 exclusions["missing_output_path"] += 1
                 continue
