@@ -34,10 +34,12 @@ echo ""
 # ▼データセット定義（TSV形式）
 # カラム: name instrument raw_in clean_out quarantine_out pickle_out
 DATASETS="$(cat <<'EOF'
-POP909	drums	data/pop909/raw/drums	output/pop909/clean/drums	output/pop909/quarantine/drums	output/pop909/shards/drums
-POP909	strings	data/pop909/raw/strings	output/pop909/clean/strings	output/pop909/quarantine/strings	output/pop909/shards/strings
-SLAKH	drums	data/slakh2100_midi/raw/drums	output/slakh/clean/drums	output/slakh/quarantine/drums	output/slakh/shards/drums
-LAMDA	drums	data/lamda/raw/drumloops	output/lamda/clean/drumloops	output/lamda/quarantine/drumloops	output/lamda/shards/drumloops
+POP909	melody	data/POP909	output/pop909/clean/melody	output/pop909/quarantine/melody	output/pop909/shards/melody
+SLAKH	drums	data/slakh2100_midi/drums	output/slakh/clean/drums	output/slakh/quarantine/drums	output/slakh/shards/drums
+SLAKH	guitar	data/slakh2100_midi/guitar	output/slakh/clean/guitar	output/slakh/quarantine/guitar	output/slakh/shards/guitar
+SLAKH	bass	data/slakh2100_midi/bass	output/slakh/clean/bass	output/slakh/quarantine/bass	output/slakh/shards/bass
+SLAKH	strings	data/slakh2100_midi/strings	output/slakh/clean/strings	output/slakh/quarantine/strings	output/slakh/shards/strings
+LAMDA	drums	data/loops	output/lamda/clean/drumloops	output/lamda/quarantine/drumloops	output/lamda/shards/drumloops
 EOF
 )"
 

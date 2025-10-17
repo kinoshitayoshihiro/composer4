@@ -1,6 +1,6 @@
 # Multi-Dataset Runner Guide
 
-複数データセット（POP909/SLAKH/LAMDA/Strings等）を統一的に処理する共通ランナーの使用ガイド
+複数データセット（POP909/SLAKH/LAMDA Drums等）を統一的に処理する共通ランナーの使用ガイド
 
 ## 概要
 
@@ -9,6 +9,77 @@
 - **1つのスクリプトで全データセットを処理**
 - **ブラッシュアップフラグ（streaming/resume/dual-threshold）を全面採用**
 - **データセット追加が容易**（表に1行追加するだけ）
+
+## ⚠️ データセット適性ガイド
+
+### 楽器別Generator開発に適したデータセット
+
+**重要:** 楽器別パターン学習には **Stem分離済み** データセットのみ使用できます。
+
+| 楽器 | 推奨データセット | ファイル数 | 備考 |
+|------|----------------|-----------|------|
+| **Drums** | LAMDA (loops) | ~51,000 | ✅ Drum専用ループ、LAMDA Stage2対応 |
+| | SLAKH drums | ~8,000 | ✅ Stem分離済み |
+| | POP909 drums | ~800 | ❌ Stem分離なし（melody/chords混在） |
+| **Piano** | POP909 melody | ~900 | ✅ Piano/Melody専用 |
+| **Guitar** | SLAKH guitar | ~8,000 | ✅ Stem分離済み（acoustic/electric） |
+| **Bass** | SLAKH bass | ~8,000 | ✅ Stem分離済み（acoustic/electric/synth） |
+| **Strings** | SLAKH strings | ~8,000 | ✅ Stem分離済み（violin/viola/cello） |
+| **その他** | SLAKH (35トラック) | ~8,000 | ✅ Brass/Woodwinds/Synth等 |
+
+### ❌ 使用を推奨しないデータセット
+
+| Dataset | ファイル数 | 理由 | 代替用途 |
+|---------|-----------|------|---------|
+| **Los-Angeles-MIDI** | ~400,000 | ❌ Stem分離なし（全楽器混在） | コード進行分析、楽曲構造研究には有用 |
+| **POP909 (フルMIDI)** | ~900 | ❌ 3パート混在（melody/chords/drums） | Melody専用として使用可能 |
+
+### 📊 データセット構成の詳細
+
+#### POP909構成
+```
+POP909/001/
+├── 001.mid              # 3パート混在（melody/chords/drums）
+├── beat_audio.txt       # ビート情報
+├── chord_audio.txt      # コード進行
+└── versions/
+    ├── 001-v1.mid       # バージョン1
+    ├── 001-v2.mid       # バージョン2
+    └── 001-v3.mid       # バージョン3
+```
+- **Part 0**: Melody (Piano)
+- **Part 1**: Chords (伴奏)
+- **Part 2**: Drums（ただしStem分離が不完全）
+
+**推奨:** Piano/Melodyパートのみ抽出して使用
+
+#### LAMDA Drums構成
+```
+data/loops/               # ✅ 正しいパス
+└── drums/
+    ├── groove/
+    │   ├── drummer1/
+    │   ├── drummer2/
+    │   └── ...
+    └── e-gmd/
+        ├── drummer1/
+        └── ...
+```
+- **約51,000ループ** のDrum専用MIDI
+- LAMDA Stage2スコアリング対応
+
+#### SLAKH2100構成
+```
+data/slakh2100_midi/
+├── drums/               # ✅ Stem分離済み
+├── guitar/              # ✅ Stem分離済み
+├── bass/                # ✅ Stem分離済み
+├── strings/             # ✅ Stem分離済み
+└── ... (全35トラック)
+```
+- **約8,000曲** × 35トラック
+- 完全なStem分離
+- 楽器別Generator開発に最適
 
 ## アーキテクチャ
 
@@ -25,10 +96,12 @@
 **対象データセット:**
 | Dataset | Instrument | Input | Output |
 |---------|-----------|-------|--------|
-| POP909  | drums     | `data/pop909/raw/drums` | `output/pop909/clean/drums` |
-| POP909  | strings   | `data/pop909/raw/strings` | `output/pop909/clean/strings` |
-| SLAKH   | drums     | `data/slakh2100_midi/raw/drums` | `output/slakh/clean/drums` |
-| LAMDA   | drums     | `data/lamda/raw/drumloops` | `output/lamda/clean/drumloops` |
+| POP909  | melody    | `data/POP909` | `output/pop909/clean/melody` |
+| SLAKH   | drums     | `data/slakh2100_midi/drums` | `output/slakh/clean/drums` |
+| SLAKH   | guitar    | `data/slakh2100_midi/guitar` | `output/slakh/clean/guitar` |
+| SLAKH   | bass      | `data/slakh2100_midi/bass` | `output/slakh/clean/bass` |
+| SLAKH   | strings   | `data/slakh2100_midi/strings` | `output/slakh/clean/strings` |
+| LAMDA   | drums     | `data/loops` | `output/lamda/clean/drumloops` |
 
 ### Stage2: スコアリング & 選抜
 
@@ -43,9 +116,10 @@
 **対象データセット:**
 | Dataset | Instrument | Input | Output | Config |
 |---------|-----------|-------|--------|--------|
-| POP909  | drums     | `output/pop909/clean/drums` | `output/pop909/stage2/drums` | `configs/lamda/drums_stage2.yaml` |
 | SLAKH   | drums     | `output/slakh/clean/drums` | `output/slakh/stage2/drums` | `configs/lamda/drums_stage2.yaml` |
 | LAMDA   | drums     | `output/lamda/clean/drumloops` | `output/lamda/stage2/drumloops` | `configs/lamda/drums_stage2.yaml` |
+
+**注意:** Stage2 (LAMDAスコアリング) は現在 drums 専用です。Guitar/Bass/Strings等は将来実装予定。
 
 ## 使用方法
 
@@ -112,10 +186,12 @@ STREAMING_FLAG="" RESUME_FLAG="" bash scripts/run_stage2_multi.sh
 
 ```bash
 DATASETS="$(cat <<'EOF'
-POP909   drums       data/pop909/raw/drums           output/pop909/clean/drums        ...
-POP909   strings     data/pop909/raw/strings         output/pop909/clean/strings      ...
-SLAKH    drums       data/slakh2100_midi/raw/drums   output/slakh/clean/drums         ...
-LAMDA    drums       data/lamda/raw/drumloops        output/lamda/clean/drumloops     ...
+POP909   melody      data/POP909                     output/pop909/clean/melody       output/pop909/quarantine/melody  output/pop909/shards/melody
+SLAKH    drums       data/slakh2100_midi/drums       output/slakh/clean/drums         output/slakh/quarantine/drums    output/slakh/shards/drums
+SLAKH    guitar      data/slakh2100_midi/guitar      output/slakh/clean/guitar        output/slakh/quarantine/guitar   output/slakh/shards/guitar
+SLAKH    bass        data/slakh2100_midi/bass        output/slakh/clean/bass          output/slakh/quarantine/bass     output/slakh/shards/bass
+SLAKH    strings     data/slakh2100_midi/strings     output/slakh/clean/strings       output/slakh/quarantine/strings  output/slakh/shards/strings
+LAMDA    drums       data/loops                      output/lamda/clean/drumloops     output/lamda/quarantine/drumloops output/lamda/shards/drumloops
 # ↓ 新しいデータセットを追加
 MYDATA   piano       data/mydata/raw/piano           output/mydata/clean/piano        output/mydata/quarantine/piano  output/mydata/shards/piano
 EOF
@@ -136,11 +212,10 @@ EOF
 
 ```bash
 DATASETS="$(cat <<'EOF'
-POP909   drums       output/pop909/clean/drums      output/pop909/stage2/drums        ...
-SLAKH    drums       output/slakh/clean/drums       output/slakh/stage2/drums         ...
-LAMDA    drums       output/lamda/clean/drumloops   output/lamda/stage2/drumloops     ...
-# ↓ 新しいデータセットを追加（Strings用設定ファイルも用意）
-POP909   strings     output/pop909/clean/strings    output/pop909/stage2/strings      output/strings_metadata  output/strings_metadata/index.pkl  configs/lamda/strings_stage2.yaml
+SLAKH    drums       output/slakh/clean/drums       output/slakh/stage2/drums         output/slakh_drums_metadata  output/slakh_drums_metadata/index.pkl  configs/lamda/drums_stage2.yaml
+LAMDA    drums       output/lamda/clean/drumloops   output/lamda/stage2/drumloops     output/drums_metadata        output/drums_metadata/drums_index.pkl  configs/lamda/drums_stage2.yaml
+# ↓ 将来: Guitar/Bass/Strings用のStage2設定を追加（現在はdrums専用）
+# SLAKH guitar     output/slakh/clean/guitar      output/slakh/stage2/guitar        output/guitar_metadata       output/guitar_metadata/index.pkl       configs/lamda/guitar_stage2.yaml
 EOF
 )"
 ```
@@ -162,30 +237,42 @@ EOF
 output/
 ├── pop909/
 │   ├── clean/
-│   │   ├── drums/          # クリーンMIDI
-│   │   └── strings/
+│   │   └── melody/         # クリーンMIDI (Piano/Melody)
 │   ├── quarantine/
-│   │   ├── drums/          # 不適格MIDI
-│   │   └── strings/
+│   │   └── melody/         # 不適格MIDI
 │   └── shards/
-│       ├── drums/          # Pickleシャード
-│       │   ├── shard_0000.pkl
-│       │   ├── shard_0001.pkl
-│       │   └── ...
-│       └── strings/
+│       └── melody/         # Pickleシャード
+│           ├── shard_0000.pkl
+│           ├── shard_0001.pkl
+│           └── ...
 ├── slakh/
-│   └── ...
+│   ├── clean/
+│   │   ├── drums/          # ✅ Stem分離済み
+│   │   ├── guitar/         # ✅ Stem分離済み
+│   │   ├── bass/           # ✅ Stem分離済み
+│   │   └── strings/        # ✅ Stem分離済み
+│   ├── quarantine/
+│   │   └── ...
+│   └── shards/
+│       └── ...
 └── lamda/
-    └── ...
+    ├── clean/
+    │   └── drumloops/      # ✅ Drum専用ループ
+    ├── quarantine/
+    │   └── drumloops/
+    └── shards/
+        └── drumloops/
 ```
 
 ### Stage2 出力
 
+**注意:** Stage2は現在 **drums専用** です。
+
 ```
 output/
-├── pop909/
+├── slakh/
 │   └── stage2/
-│       └── drums/
+│       └── drums/              # ✅ LAMDA Stage2対応
 │           ├── batch_0/
 │           │   ├── BATCH_MANIFEST.json        # 冪等性メタ
 │           │   ├── metrics_score.jsonl        # スコア結果
@@ -197,11 +284,15 @@ output/
 │           │   └── ...
 │           ├── metrics_score.ALL.jsonl        # 全バッチ結合
 │           └── loop_summary.ALL.csv           # 全バッチ結合
-├── slakh/
-│   └── ...
 └── lamda/
-    └── ...
+    └── stage2/
+        └── drumloops/          # ✅ LAMDA Stage2対応（51,000ループ）
+            ├── batch_0/
+            │   └── ...
+            └── ...
 ```
+
+**将来拡張:** Guitar/Bass/Strings用のStage2メトリクスは別途実装予定。
 
 ## 利点
 
@@ -320,15 +411,15 @@ rm -rf output/*/stage2/*/batch_*/BATCH_MANIFEST.json
 
 | Dataset | Files | Time | Throughput |
 |---------|-------|------|-----------|
-| POP909 drums | ~800 | ~2分 | 400 files/min |
+| POP909 melody | ~900 | ~2分 | 450 files/min |
 | SLAKH drums | ~8,000 | ~15分 | 530 files/min |
+| SLAKH guitar | ~8,000 | ~15分 | 530 files/min |
 | LAMDA drums | ~51,000 | ~90分 | 560 files/min |
 
 ### Stage2（LIMIT=5000, streaming有効）
 
 | Dataset | Loops | Time | Throughput |
 |---------|-------|------|-----------|
-| POP909 drums | ~800 | ~3分 | 250 loops/min |
 | SLAKH drums | ~8,000 | ~30分 | 260 loops/min |
 | LAMDA drums | ~51,000 | ~180分 | 280 loops/min |
 
