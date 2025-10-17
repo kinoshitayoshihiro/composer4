@@ -98,7 +98,7 @@ data/slakh2100_midi/
 |---------|-----------|-------|--------|--------|
 | POP909  | melody    | `data/POP909` | `output/pop909/clean/melody` | ⏸️ Pending |
 | SLAKH   | drums     | `data/slakh_by_instrument/drums/{train,validation,test}` | `output/slakh/clean/drums` | ✅ **Complete (557/561)** |
-| SLAKH   | guitar    | `data/slakh_by_instrument/guitar/{train,validation,test}` | `output/slakh/clean/guitar` | ⏸️ Pending |
+| SLAKH   | guitar    | `data/slakh_by_instrument/guitar/{train,validation,test}` | `output/slakh/clean/guitar` | ✅ **Complete (1422/1471)** |
 | SLAKH   | bass      | `data/slakh_by_instrument/bass/{train,validation,test}` | `output/slakh/clean/bass` | ⏸️ Pending |
 | SLAKH   | strings   | `data/slakh_by_instrument/strings/{train,validation,test}` | `output/slakh/clean/strings` | ⏸️ Pending |
 | LAMDA   | drums     | `data/loops` | `output/lamda/clean/drumloops` | ✅ Complete (51,248) |
