@@ -39,19 +39,33 @@
 #### POP909構成
 ```
 POP909/001/
-├── 001.mid              # 3パート混在（melody/chords/drums）
+├── 001.mid              # ❌ 3パート混在（使用しない）
 ├── beat_audio.txt       # ビート情報
 ├── chord_audio.txt      # コード進行
-└── versions/
-    ├── 001-v1.mid       # バージョン1
-    ├── 001-v2.mid       # バージョン2
-    └── 001-v3.mid       # バージョン3
+└── versions/            # ✅ Stem分離版（これを使用）
+    ├── 001-v1.mid       # Melody (Piano) - 909曲
+    ├── 001-v2.mid       # Chords (Piano) - 566曲
+    └── 001-v3.mid       # Bass - 279曲
 ```
-- **Part 0**: Melody (Piano)
-- **Part 1**: Chords (伴奏)
-- **Part 2**: Drums（ただしStem分離が不完全）
+- **Part v1**: Melody (Piano) - 高域・単旋律中心
+- **Part v2**: Chords (Piano) - 和音中心・伴奏
+- **Part v3**: Bass - 低域・モノフォニック
 
-**推奨:** Piano/Melodyパートのみ抽出して使用
+**重要な発見:**
+- **Complete stems (v1+v2+v3)**: 279曲 (30.7%)
+- **Partial stems (v1+v2のみ)**: 287曲 (31.6%)
+- **v1のみ**: 343曲 (37.7%)
+
+**採用戦略:**
+- ✅ **v1+v2+v3が揃っている279曲のみ使用** (計837 MIDIファイル)
+- ❌ 混在版(001.mid)は重複として除外
+- ⚠️ v1単体343曲はmelody専用として別途活用可能
+
+**処理済み (Stage1 Complete):**
+- Melody (v1): 277/279 (99.3%)
+- Chords (v2): 277/279 (99.3%)
+- Bass (v3): 276/279 (98.9%)
+- Total: 830/837 MIDI files (99.2% success)
 
 #### LAMDA Drums構成
 ```
@@ -96,12 +110,20 @@ data/slakh2100_midi/
 **対象データセット:**
 | Dataset | Instrument | Input | Output | Status |
 |---------|-----------|-------|--------|--------|
-| POP909  | melody    | `data/POP909` | `output/pop909/clean/melody` | ⏸️ Pending |
+| POP909  | melody (v1) | `data/POP909/*/versions/*-v1.mid` | `output/pop909/clean/melody` | ✅ **Complete (277/279 = 99.3%)** |
+| POP909  | chords (v2) | `data/POP909/*/versions/*-v2.mid` | `output/pop909/clean/chords` | ✅ **Complete (277/279 = 99.3%)** |
+| POP909  | bass (v3)   | `data/POP909/*/versions/*-v3.mid` | `output/pop909/clean/bass` | ✅ **Complete (276/279 = 98.9%)** |
 | SLAKH   | drums     | `data/slakh_by_instrument/drums/{train,validation,test}` | `output/slakh/clean/drums` | ✅ **Complete (557/561 = 99.3%)** |
 | SLAKH   | guitar    | `data/slakh_by_instrument/guitar/{train,validation,test}` | `output/slakh/clean/guitar` | ✅ **Complete (1422/1471 = 96.7%)** |
 | SLAKH   | bass      | `data/slakh_by_instrument/bass/{train,validation,test}` | `output/slakh/clean/bass` | ✅ **Complete (584/599 = 97.5%)** |
 | SLAKH   | strings   | `data/slakh_by_instrument/strings/{train,validation,test}` | `output/slakh/clean/strings` | ✅ **Complete (999/1045 = 95.6%)** |
 | LAMDA   | drums     | `data/loops` | `output/lamda/clean/drumloops` | ✅ Complete (51,248) |
+
+**POP909 Stage1 特記事項:**
+- Stem分離版 (versions/*-v1/v2/v3.mid) のみ使用
+- v1+v2+v3完全セット: 279曲
+- 混在版 (*.mid) は重複として除外
+- 高品質な楽器別MIDIデータを確保
 
 **SLAKH Stage1 総括:**
 - **Total:** 3,676 files → 3,562 clean (96.9% overall success)
