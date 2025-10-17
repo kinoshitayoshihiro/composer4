@@ -1,0 +1,189 @@
+# configs/targets_hybrid.yaml
+#
+# Hybrid Learning Strategy - Data Composition Targets
+# 実データ + 合成データの目標構成（楽器×テンポ帯×奏法）
+#
+# 現状分布（2025-10-17）:
+#   Guitar: 1,422 files (mid: chord_block 419, strum 266, mixed 704, arpeggio 33)
+#   Bass: 584 files (mid: walking 148, slight_swing 423, on_grid 13)
+#   Strings: 999 files (slow: staccato 182, mixed 734, legato 83)
+#   Piano: 277 files (mid: standard 127, expressive 150)
+#
+# 戦略:
+#   - Real:Synthetic = 80:20 (instrument-specific adjustments)
+#   - Guitar: 70:30 (strum-deficient)
+#   - Bass: 85:15 (needs minimal synthesis, more augmentation)
+#   - Strings: 70:30 (legato-deficient)
+#   - Piano: 90:10 (POP909 high-quality, minimal synthesis needed)
+
+# POP909 trio completion target
+pop909_trio_target: 500  # v1+v2+v3完全セット目標
+
+instruments:
+  guitar:
+    slow:
+      total: 800
+      technique:
+        strum: 320           # Real: 0 → Need: 320 synthetic
+        arpeggio: 240        # Real: 0 → Need: 240 synthetic
+        fingerpicking: 160   # Real: 0 → Need: 160 synthetic
+        mixed: 80
+
+    mid:
+      total: 2000
+      technique:
+        # 現状: chord_block 419, strum 266, mixed 704, arpeggio 33 (計1,422)
+        # 目標比率: strum:arpeggio:chord_block = 6:3:1
+        strum: 1200          # Real: 266 → Need: 934 synthetic (priority!)
+        arpeggio: 600        # Real: 33 + chord_block 419 as arpeggio → Need: ~150
+        chord_block: 200     # Real: 704 (mixed includes chord) → Sufficient (oversample)
+
+    fast:
+      total: 600
+      technique:
+        strum: 300           # Real: 0 → Need: 300 synthetic
+        arpeggio: 200        # Real: 0 → Need: 200 synthetic
+        power_chords: 100    # Real: 0 → Need: 100 synthetic
+
+  bass:
+    slow:
+      total: 400
+      technique:
+        walking: 200         # Real: 0 → Need: 200 synthetic
+        sustained: 150       # Real: 0 → Need: 150 synthetic
+        pick: 50             # Real: 0 → Need: 50 synthetic
+
+    mid:
+      total: 1000
+      technique:
+        # 現状: walking 148, slight_swing 423, on_grid 13 (計584)
+        # 目標比率: on_grid:slight_swing:walking = 6:3:1
+        pick: 600            # Real: 423 (slight_swing as pick) → Need: ~180
+        slap: 100            # Real: 0 → Need: 100 synthetic
+        walking: 300         # Real: 148 → Need: 152 synthetic
+
+    fast:
+      total: 400
+      technique:
+        pick: 250            # Real: 0 → Need: 250 synthetic
+        slap: 100            # Real: 0 → Need: 100 synthetic
+        gallop: 50           # Real: 0 → Need: 50 synthetic
+
+  strings:
+    slow:
+      total: 1400
+      technique:
+        # 現状: staccato 182, mixed 734, legato 83 (計999)
+        # 目標比率: legato:staccato:spiccato = 6:2:2
+        legato: 840          # Real: 83 → Need: 757 synthetic (priority! highest gap)
+        staccato: 280        # Real: 182 + 367 (from mixed) → Sufficient
+        spiccato: 280        # Real: 0 → Need: 280 synthetic
+
+    mid:
+      total: 600
+      technique:
+        legato: 360          # Real: 0 → Need: 360 synthetic
+        staccato: 120        # Real: 0 → Need: 120 synthetic
+        spiccato: 120        # Real: 0 → Need: 120 synthetic
+
+    fast:
+      total: 400
+      technique:
+        spiccato: 200        # Real: 0 → Need: 200 synthetic
+        staccato: 150        # Real: 0 → Need: 150 synthetic
+        tremolo: 50          # Real: 0 → Need: 50 synthetic
+
+  piano:
+    slow:
+      total: 300
+      technique:
+        ballad: 200          # Real: 0 → Need: 200 synthetic
+        arpeggio: 100        # Real: 0 → Need: 100 synthetic
+
+    mid:
+      total: 600
+      technique:
+        # 現状: standard 127, expressive 150 (計277)
+        # 目標: 90% real + 10% synthetic
+        pop_comping: 400     # Real: 277 (standard + expressive) → Need: 123 synthetic
+        jazz_voicing: 100    # Real: 0 → Need: 100 synthetic
+        classical: 100       # Real: 0 → Need: 100 synthetic
+
+    fast:
+      total: 300
+      technique:
+        energetic: 200       # Real: 0 → Need: 200 synthetic
+        rhythmic: 100        # Real: 0 → Need: 100 synthetic
+
+# Synthetic quality gates (+5% stricter than real data)
+synthetic_quality:
+  guitar:
+    threshold: 45.0        # Real: 40.0
+    min_pass_rate: 0.75
+  bass:
+    threshold: 45.0        # Real: 40.0
+    min_pass_rate: 0.80
+  strings:
+    threshold: 50.0        # Real: 45.0
+    min_pass_rate: 0.75
+  piano:
+    threshold: 50.0        # Real: 45.0
+    min_pass_rate: 0.95
+
+# Data source priority (instrument-specific)
+data_source_priority:
+  guitar:
+    - source: "slakh_real"
+      ratio: 0.70
+    - source: "emotion_synthetic"
+      ratio: 0.25
+    - source: "suno_improved"
+      ratio: 0.05
+      max_count: 100        # Strict limit
+
+  bass:
+    - source: "slakh_real"
+      ratio: 0.85
+    - source: "augmentation"
+      ratio: 0.10
+    - source: "emotion_synthetic"
+      ratio: 0.05
+
+  strings:
+    - source: "slakh_real"
+      ratio: 0.70
+    - source: "emotion_synthetic"
+      ratio: 0.25
+    - source: "suno_improved"
+      ratio: 0.05
+      max_count: 100
+
+  piano:
+    - source: "pop909_real"
+      ratio: 0.90
+    - source: "emotion_synthetic"
+      ratio: 0.10
+    - source: "suno_improved"
+      ratio: 0.00          # Not used for piano
+
+# Augmentation settings (humanization for bass, etc.)
+augmentation:
+  bass:
+    timing_jitter_ms: 15
+    velocity_variance: 5
+    count_multiplier: 2    # Each real file → 2 augmented versions
+
+  guitar:
+    timing_jitter_ms: 10
+    velocity_variance: 8
+    count_multiplier: 1.5
+
+  strings:
+    timing_jitter_ms: 12
+    velocity_variance: 6
+    count_multiplier: 1.5
+
+  piano:
+    timing_jitter_ms: 8
+    velocity_variance: 10
+    count_multiplier: 1.2
