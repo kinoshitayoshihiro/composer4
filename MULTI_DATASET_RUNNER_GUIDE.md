@@ -145,6 +145,9 @@ data/slakh2100_midi/
 |---------|-----------|-------|--------|--------|--------|
 | SLAKH   | drums     | `output/slakh/clean/drums` | `output/slakh/stage2/drums` | `configs/lamda/drums_stage2.yaml` | ✅ **Complete (412 loops)** |
 | LAMDA   | drums     | `output/lamda/clean/drumloops` | `output/lamda/stage2/drumloops` | `configs/lamda/drums_stage2.yaml` | ✅ Complete (461 loops) |
+| SLAKH   | guitar    | `output/slakh/clean/guitar` | `output/slakh/stage2/guitar` | `configs/lamda/guitar_stage2.yaml` | 🧪 **Test OK (68% pass)** |
+| SLAKH   | bass      | `output/slakh/clean/bass` | `output/slakh/stage2/bass` | `configs/lamda/bass_stage2.yaml` | 🧪 **Test OK (100% pass)** |
+| SLAKH   | strings   | `output/slakh/clean/strings` | `output/slakh/stage2/strings` | `configs/lamda/strings_stage2.yaml` | 🧪 **Test OK (70% pass)** |
 
 **SLAKH Drums Stage2 結果:**
 - Processed: 412 loops (99.3% from 557 Stage1 clean files)
@@ -152,7 +155,18 @@ data/slakh2100_midi/
 - Hard threshold (≥70.0): 7 loops (1.7%)
 - Mean score: 55.66 (Min: 35.06, Max: 74.79)
 
-**注意:** Stage2 (LAMDAスコアリング) は現在 drums 専用です。Guitar/Bass/Strings等は将来実装予定。
+**Guitar/Bass/Strings Stage2 実装:**
+- ✅ **設定ファイル**: configs/lamda/{guitar,bass,strings}_stage2.yaml
+- ✅ **メトリクス**: scripts/stage2_instrument_metrics.py
+- 🧪 **テスト完了**: 各100ファイルで動作確認済み
+- 📊 **詳細結果**: docs/STAGE2_INSTRUMENT_TEST_RESULTS.md
+
+**テスト結果サマリー (100ファイル/楽器):**
+| 楽器 | 平均スコア | 合格率 | 閾値 | 主要メトリクス |
+|------|-----------|--------|------|---------------|
+| Guitar | 43.6% | 68% | 40.0 | アルペジオ品質、コード協和度、ストラムパターン |
+| Bass | 76.7% | 100% 🏆 | 40.0 | ルート音正確性、グルーヴ品質、音域適合性 |
+| Strings | 50.9% | 70% | 45.0 | ボウイング表現、ハーモニー品質、レガート品質 |
 
 ## 使用方法
 
@@ -325,7 +339,19 @@ output/
             └── ...
 ```
 
-**将来拡張:** Guitar/Bass/Strings用のStage2メトリクスは別途実装予定。
+**将来拡張:** Guitar/Bass/Strings用のStage2メトリクスは実装済み（簡易版）。
+
+**Guitar/Bass/Strings Stage2について:**
+
+現在実装されているのは**簡易版メトリクス**です:
+- ✅ 楽器別評価軸を実装 (arpeggio/groove/bowing等)
+- ✅ 設定ファイル完備 (configs/lamda/{guitar,bass,strings}_stage2.yaml)
+- ✅ テスト済み (100ファイル/楽器で動作確認)
+- ⚠️ 完全なLAMDA統合は未実装 (将来のタスク)
+
+詳細: docs/STAGE2_INSTRUMENT_TEST_RESULTS.md
+
+```
 
 ## 利点
 

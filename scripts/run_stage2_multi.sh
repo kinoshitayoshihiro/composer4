@@ -41,18 +41,29 @@ echo ""
 # カラム: name instrument input_dir out_dir meta_dir meta_index_pkl config_yaml
 # 
 # 注意事項:
-# - Stage2は現在 drums専用です。Guitar/Bass/Strings用のメトリクスは別途実装予定。
-# - LAMDA drums: 既に output/drumloops_v3_stage2/ として処理済み（個別スクリプト使用済み）
+# - Drums: LAMDAメトリクス完全対応
+# - Guitar/Bass/Strings: 簡易メトリクス実装(stage2_instrument_metrics.py)
+#   ※完全なLAMDA統合は将来のタスク
 # 
-# 現時点では個別スクリプトを使用することを推奨します。
-# このマルチランナーは将来のデータセット追加用のテンプレートとして保持。
+# 実行順序:
+# 1. Stage1完了後に実行
+# 2. Drumsは完全なLAMDAスコアリング
+# 3. Guitar/Bass/Stringsは楽器別簡易評価
 DATASETS="$(cat <<'EOF'
-# 以下は例示用（実行する場合はコメントを外してください）
-# SLAKH	drums	output/slakh/clean/drums	output/slakh/stage2/drums	output/slakh_metadata	output/slakh_metadata/drums_index.pkl	configs/lamda/drums_stage2.yaml
+# === Drums (完全LAMDAスコアリング) ===
+SLAKH	drums	output/slakh/clean/drums	output/slakh/stage2/drums	output/slakh/shards/drums	output/slakh/shards/drums/drums_index.pkl	configs/lamda/drums_stage2.yaml
+# LAMDA	drums	output/lamda/clean/drumloops	output/lamda/stage2/drumloops	output/lamda/shards/drumloops	output/lamda/shards/drumloops/drumloops_index.pkl	configs/lamda/drums_stage2.yaml
+
+# === Guitar (簡易メトリクス) ===
+SLAKH	guitar	output/slakh/clean/guitar	output/slakh/stage2/guitar	output/slakh/shards/guitar	output/slakh/shards/guitar/guitar_index.pkl	configs/lamda/guitar_stage2.yaml
+
+# === Bass (簡易メトリクス) ===
+SLAKH	bass	output/slakh/clean/bass	output/slakh/stage2/bass	output/slakh/shards/bass	output/slakh/shards/bass/bass_index.pkl	configs/lamda/bass_stage2.yaml
+
+# === Strings (簡易メトリクス) ===
+SLAKH	strings	output/slakh/clean/strings	output/slakh/stage2/strings	output/slakh/shards/strings	output/slakh/shards/strings/strings_index.pkl	configs/lamda/strings_stage2.yaml
 EOF
 )"
-# 例：Guitar/Bass/Strings用を将来追加予定
-# SLAKH	guitar	output/slakh/clean/guitar	output/slakh/stage2/guitar	output/guitar_metadata	output/guitar_metadata/index.pkl	configs/lamda/guitar_stage2.yaml
 
 # macOSの古いbash対応のため find で総数算出
 count_mid() {

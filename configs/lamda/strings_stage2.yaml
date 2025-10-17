@@ -1,0 +1,190 @@
+pipeline:
+  version: "stage2.strings.v2025.10"
+  threshold: 45.0
+
+score:
+  axes:
+    timing: 1.0
+    velocity: 1.5
+    bowing_expression: 2.0      # ボウイング表現(velocity変化)
+    harmony_quality: 2.0        # ハーモニー評価(和音の美しさ)
+    legato_quality: 1.0         # レガート品質
+    articulation: 1.0
+  aliases_path: "../aliases/axes.yaml"
+  
+  velocity:
+    target_histograms_path: "configs/thresholds/velocity_strings.yaml"
+    nbins: 16
+    prefill_window_beats: 0.5
+    normalize_dynamic_range: true
+    phase_compensation: true
+    weights:
+      global: 0.35
+      downbeat: 0.25
+      offbeat: 0.25
+      prefill: 0.15
+    metric_weights:
+      js: 0.6
+      cos: 0.4
+    tempo_adaptive:
+      bins:
+        - max_bpm: 80
+          alpha: 0.80           # 遅いテンポで表現力重視
+          downbeat_boost: 0.0
+        - max_bpm: 120
+          alpha: 1.0
+          downbeat_boost: 0.02
+        - max_bpm: null
+          alpha: 1.15
+          downbeat_boost: 0.04
+  
+  bowing_expression:
+    # ボウイング表現評価(velocity変化・アタック)
+    min_notes: 4
+    analysis_window_beats: 8.0
+    weights:
+      dynamic_range: 0.35       # ダイナミックレンジ
+      crescendo_decrescendo: 0.30  # クレッシェンド/デクレッシェンド
+      attack_variation: 0.20    # アタックの多様性
+      smoothness: 0.15          # 滑らかさ
+    dynamic_range:
+      optimal_min: 40
+      optimal_max: 110
+      penalty_below: 30
+      penalty_above: 120
+    transition_types:
+      - crescendo               # 徐々に強く
+      - decrescendo             # 徐々に弱く
+      - swell                   # 膨らみ(< >)
+      - terraced                # 段階的
+    smoothness_threshold_ms: 50  # 滑らかさ判定閾値
+  
+  harmony_quality:
+    # ハーモニー評価(和音の美しさ)
+    min_simultaneous_notes: 2
+    max_note_spread_semitones: 36  # Stringsは広い音域可
+    weights:
+      consonance: 0.40          # 協和度
+      voice_leading: 0.30       # 声部進行
+      chord_spacing: 0.30       # 和音配置
+    consonance_intervals:
+      perfect: [0, 7, 12]       # 完全協和音程
+      major: [4, 9, 16]         # 長3度、長6度、長10度
+      minor: [3, 8, 15]         # 短3度、短6度、短10度
+      perfect_extended: [19, 24]  # 完全12度、2オクターブ
+      dissonant: [1, 2, 6, 10, 11, 13, 14, 18]
+    weights_by_interval:
+      perfect: 1.0
+      major: 0.85
+      minor: 0.80
+      perfect_extended: 0.90
+      dissonant: 0.15
+    voice_leading:
+      max_leap_semitones: 7     # 最大跳躍幅
+      prefer_stepwise: true     # 順次進行優先
+      parallel_fifths_penalty: 0.3  # 平行5度ペナルティ
+      parallel_octaves_penalty: 0.2  # 平行8度ペナルティ
+  
+  legato_quality:
+    # レガート品質(音のつながり)
+    max_gap_ms: 50              # レガート判定最大間隔
+    min_overlap_ms: 10          # 最小オーバーラップ
+    weights:
+      connection_rate: 0.40     # 接続率
+      overlap_consistency: 0.30  # オーバーラップ一貫性
+      duration_balance: 0.30    # 音価バランス
+    detect_portamento: true     # ポルタメント検出
+    detect_slur: true           # スラー検出
+  
+  articulation:
+    thresholds_path: "configs/thresholds/articulation_strings.yaml"
+    techniques:
+      - legato                  # レガート
+      - staccato                # スタッカート
+      - spiccato                # スピッカート
+      - pizzicato               # ピッツィカート
+      - tremolo                 # トレモロ
+      - vibrato                 # ビブラート
+      - sul_ponticello          # スル・ポンティチェロ
+      - sul_tasto               # スル・タスト
+
+  audio_adaptive_weights:
+    enabled: false              # Strings用は後で調整
+    min_confidence: 0.10
+    missing_policy: "noop"
+
+paths:
+  input_dir: "."
+  metadata_dir: "output/strings_metadata"
+  metadata_index: "output/strings_metadata/strings_index.pkl"
+  output_dir: "output/slakh/stage2/strings"
+  events_parquet: "canonical_events.parquet"
+  events_csv_sample: "canonical_events_sample.csv"
+  loop_summary_csv: "loop_summary.csv"
+  metrics_jsonl: "metrics_score.jsonl"
+  retry_dir: "retries"
+  summary_out: "stage2_summary.json"
+  sample_event_rows: 5000
+
+metrics:
+  ghost_velocity_threshold: 30  # Stringsはピアニッシモあり
+  accent_velocity_threshold: 105
+  microtiming_tolerance_ratio: 0.20
+  swing_min_pairs: 2
+  min_base_step: 1
+  max_breakpoints: 3
+  round_digits: 4
+  pitch_range:
+    violin:
+      min: 55   # G3
+      max: 103  # G7
+    viola:
+      min: 48   # C3
+      max: 91   # G6
+    cello:
+      min: 36   # C2
+      max: 79   # G5
+    double_bass:
+      min: 28   # E1
+      max: 60   # C4
+
+retry_presets:
+  - reason: bowing_expression
+    when:
+      axes_raw.bowing_expression: "< 0.30"
+    action:
+      preset: dynamic_enhance
+      params:
+        target_range_min: 40
+        target_range_max: 110
+        smooth_transitions: true
+  
+  - reason: harmony_quality
+    when:
+      axes_raw.harmony_quality: "< 0.35"
+    action:
+      preset: harmony_fix
+      params:
+        voice_leading_strength: 0.6
+        consonance_boost: 1.15
+        max_spacing: 30
+  
+  - reason: legato_quality
+    when:
+      axes_raw.legato_quality: "< 0.40"
+    action:
+      preset: legato_fix
+      params:
+        extend_durations: true
+        min_overlap_ms: 15
+        max_gap_ms: 40
+  
+  - reason: velocity
+    when:
+      axes_raw.velocity: "< 0.35"
+    action:
+      preset: vel_smooth
+      params:
+        vmin: 30
+        vmax: 115
+        compress: 0.70          # Stringsは広いダイナミックレンジ
