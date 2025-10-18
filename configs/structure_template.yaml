@@ -1,0 +1,359 @@
+# structure.yaml - 完全テンプレート（奏法オーバーライド対応）
+# Suno AI構造抽出 or 手書き編曲の両方に対応
+
+# ============================================================
+# メタ情報
+# ============================================================
+meta:
+  title: "My New Song"
+  artist: "Artist Name"
+  seed: 42                    # 再現性のための乱数シード（全処理で共通化）
+  faithfulness: 0.8           # 原曲忠実度: 0.0=完全自由編曲 / 1.0=原曲に超忠実
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "midi"       # midi / audio / both
+  
+  # Todo #8: Suno構造抽出の信頼性ログ
+  extraction_confidence:
+    tempo_confidence: 0.92    # Tempoトラッキング信頼度 (0.0-1.0)
+    section_confidence: 0.85  # セクション境界検出信頼度
+    chord_confidence: 0.78    # コード進行推定信頼度
+  
+  quality_indicators:
+    signal_quality: "high"    # 音源品質: high / medium / low
+    beat_sync_loss: 0.03      # Beat deviation (0.0-1.0, 小さいほど良い)
+    tempo_variance: 0.08      # Tempo変動 (0.0-1.0, 小さいほど安定)
+    section_clarity: 0.85     # セクション境界明瞭度 (0.0-1.0)
+
+# ============================================================
+# グローバル設定
+# ============================================================
+global:
+  tempo_bpm: 120
+  time_signature: "4/4"
+  key_signature:
+    tonic: "C"                # C, D, E, F, G, A, B
+    mode: "major"             # major / minor / dorian / mixolydian etc.
+  
+  # デフォルトの密度・ダイナミクス（セクションで上書き可能）
+  default_density: "medium"   # low / medium / high
+  default_velocity: 80        # 0-127
+
+# ============================================================
+# Suno AI stems（オプション - 構造抽出に使用）
+# ============================================================
+stems:
+  vocal: "stems/vocal.wav"
+  accomp: "stems/accompaniment.wav"
+  
+  # Vocal Sync Guard設定
+  sync_guard:
+    enabled: true
+    warn_ms: 50.0             # 警告しきい値（ミリ秒）
+    error_ms: 100.0           # エラーしきい値（ミリ秒）
+    auto_stretch: false       # 自動タイムストレッチ（慎重に）
+
+# ============================================================
+# テンポカーブ（オプション - テンポ変化がある場合）
+# ============================================================
+tempo_map:
+  - { beat: 0.0, bpm: 120 }
+  # - { beat: 64.0, bpm: 124 }   # 64拍目から124BPMに変化
+  # - { beat: 96.0, bpm: 120 }   # 96拍目で元に戻る
+
+# ============================================================
+# 使用する楽器（enable=falseで無効化）
+# ============================================================
+instruments:
+  piano:
+    enable: true
+    technique_default: "arpeggio"     # arpeggio / block_chords / comping
+    midi_program: 0                   # GM: 0=Acoustic Grand Piano
+    
+  guitar:
+    enable: true
+    technique_default: "strum"        # strum / fingerpicking / arpeggio
+    midi_program: 24                  # GM: 24=Acoustic Guitar (nylon)
+    
+  bass:
+    enable: true
+    technique_default: "root_eighths" # root_quarters / root_eighths / walking
+    midi_program: 32                  # GM: 32=Acoustic Bass
+    
+  strings:
+    enable: true
+    technique_default: "legato"       # legato / pizzicato / tremolo / staccato
+    midi_program: 48                  # GM: 48=String Ensemble 1
+    
+  drums:
+    enable: false                     # 将来実装予定
+    technique_default: "basic_rock"
+    midi_channel: 9                   # GM: Channel 10 (1-indexed)
+
+# ============================================================
+# セクション構造（Suno抽出 or 手書き）
+# ============================================================
+sections:
+  # ──────────────────────────────────────────────────────────
+  # Intro - 静かな導入
+  # ──────────────────────────────────────────────────────────
+  - name: "Intro"
+    bars: 4
+    emotion: "calm_low"               # calm_low / neutral_medium / happy_high etc.
+    chords: ["C", "Am", "F", "G"]
+    
+    # 奏法オーバーライド（このセクション専用の設定）
+    overrides:
+      guitar:
+        technique: "fingerpicking"
+        density: "medium"
+        velocity_boost: 0             # ±N (MIDIベロシティ調整)
+        arpeggio_shape: "PIMA"        # PIMA / rolling / random
+        
+      strings:
+        technique: "legato"
+        bow_pressure: 1.0             # 0.8-1.2 (疑似パラメータ)
+        sustain_control: 0.9          # 0.0-1.0 (音の長さ)
+        
+      bass:
+        technique: "root_quarters"
+        max_leap_semitones: 5         # 跳躍制限
+  
+  # ──────────────────────────────────────────────────────────
+  # Verse - 中庸な展開
+  # ──────────────────────────────────────────────────────────
+  - name: "Verse"
+    bars: 8
+    emotion: "neutral_medium"
+    chords: ["C", "G", "Am", "F", "C", "G", "Am", "F"]
+    
+    overrides:
+      guitar:
+        technique: "strum"
+        strum_pattern: "down8th"      # down8th / alt16th / custom
+        velocity_boost: +2
+        palm_mute_ratio: 0.2          # 0.0-1.0 (ミュートの割合)
+        
+      strings:
+        technique: "tremolo"
+        bow_pressure: 1.05
+        
+      piano:
+        technique: "comping"
+        density: "low"
+        voicing: "shell"              # shell / rootless / full
+
+  # ──────────────────────────────────────────────────────────
+  # Chorus - 盛り上がり（奏法差し替え例: arpeggio→strum）
+  # ──────────────────────────────────────────────────────────
+  - name: "Chorus"
+    bars: 8
+    emotion: "happy_high"
+    chords: ["C", "G", "Am", "F", "C", "G", "Am", "F"]
+    
+    overrides:
+      guitar:
+        technique: "strum"            # ← 原曲arpeggioでもstrumに変更
+        strum_pattern: "alt16th"
+        velocity_boost: +8
+        palm_mute_ratio: 0.0
+        strum_spread_ms: 12           # ストラムの時間差（ms）
+        strum_direction_bias: 0.6     # 0.0=up優先 / 1.0=down優先
+        
+      strings:
+        technique: "legato"
+        bow_pressure: 1.15            # 力強く
+        
+      bass:
+        technique: "root_eighths"
+        sustain_control: 0.8
+        
+      piano:
+        technique: "block_chords"
+        density: "high"
+
+  # ──────────────────────────────────────────────────────────
+  # Bridge - 転調・雰囲気変化
+  # ──────────────────────────────────────────────────────────
+  - name: "Bridge"
+    bars: 8
+    emotion: "neutral_medium"
+    chords: ["Dm", "G", "C", "Am", "Dm", "G", "C", "G"]
+    
+    overrides:
+      guitar:
+        technique: "fingerpicking"
+        arpeggio_shape: "PIMA"
+        velocity_boost: -2            # 少し抑えめ
+        
+      strings:
+        technique: "pizzicato"        # ← legatoからpizzicatoへ
+        
+      bass:
+        technique: "walking"          # ← ウォーキングベース風
+        density: "high"
+        max_leap_semitones: 7
+
+  # ──────────────────────────────────────────────────────────
+  # Outro - フェードアウト
+  # ──────────────────────────────────────────────────────────
+  - name: "Outro"
+    bars: 4
+    emotion: "calm_low"
+    chords: ["C", "Am", "F", "G"]
+    
+    overrides:
+      guitar:
+        technique: "fingerpicking"
+        density: "low"
+        velocity_boost: -5
+        
+      strings:
+        technique: "legato"
+        bow_pressure: 0.9
+        sustain_control: 1.0          # 長めの音符
+        
+      bass:
+        technique: "root_quarters"
+
+# ============================================================
+# エクスポート設定
+# ============================================================
+export:
+  midi_dir: "out/midi"
+  audio_dir: "out/wav"
+  
+  # ファイル名規約: {section}_{instrument}_{technique}_{bpm}.mid
+  filename_format: "{section}_{instrument}_{technique}_{bpm}"
+  
+  # Provenance記録（系譜情報）
+  provenance:
+    enabled: true                     # 各ファイルに.provenance.json生成
+    include_git_sha: true
+    include_pattern_id: true
+
+# ============================================================
+# パターン推薦設定
+# ============================================================
+recommender:
+  top_k: 5                            # 候補数
+  diversity_penalty: 0.2              # 類似候補の出過ぎを抑制 (0.0-1.0)
+  allow_fallback: true                # パターンが見つからない時の代替策
+  
+  # 奏法比率ガード（目標配分）
+  technique_targets:
+    guitar:
+      strum: 0.4
+      fingerpicking: 0.3
+      arpeggio: 0.3
+    strings:
+      legato: 0.35
+      pizzicato: 0.25
+      tremolo: 0.25
+      staccato: 0.15
+
+# ============================================================
+# 品質ゲート（ChatGPT提案の閾値）
+# ============================================================
+quality_gates:
+  drums:
+    # Phase 2強化版メトリクス（extract_drum_patterns.pyと連携）
+    # 実データに基づき調整済み（100パターンテスト結果を反映）
+    kick_onbeat_ratio_min: 0.0        # キックの拍頭率（0.0=無効化、実測0-0.03が多い）
+    ghost_note_ratio_max: 0.5         # ゴーストノート率（最大50%、実測0-0.2）
+    notes_per_bar_range: [1.0, 40.0]  # 1小節あたりヒット数（実測2-4が多い）
+    complexity_range: [0.0, 1.0]      # パターン複雑度（実測0.17-0.33）
+    syncopation_rate_max: 1.0         # シンコペーション率（実測0.97-1.0が多い）
+    density_range: [0.0, 50.0]        # 密度（hits/bar、実測4-8）
+    quality_score_min: 0.4            # 総合品質スコア（実測0.44-0.92）
+    
+    # Hi-Hat開閉整合性（Todo #7）
+    hihat_open_close_exclusive: true  # Open/Closed相互排他
+    crash_choke_max_duration_ms: 500  # クラッシュチョーク最大長
+    
+  guitar:
+    strum_consistency_min: 0.75       # ストラム一貫性
+    bar_violation_rate_max: 0.02      # 小節境界逸脱率
+    velocity_std_range: [12, 35]      # ベロシティ標準偏差の範囲
+    notes_per_bar_range: [4, 32]      # 1小節あたり音符数
+    
+  strings:
+    legato_connection_rate_min: 0.65  # レガート連結率
+    chord_spread_semitones_max: 24    # コード音域（半音）
+    bar_violation_rate_max: 0.02
+    velocity_std_range: [10, 40]
+    
+    # Todo #6: Strings多様化ペナルティ
+    diversity_penalty:
+      enabled: true
+      # 奏法ごとの多様性要求度（0.0=多様性不要, 1.0=高多様性必須）
+      techniques:
+        legato: 0.7               # レガート: 中〜高多様性
+        pizzicato: 0.5            # ピチカート: 中多様性
+        tremolo: 0.4              # トレモロ: 低〜中多様性（反復的）
+        staccato: 0.6             # スタッカート: 中〜高多様性
+        pad: 0.3                  # パッド: 低多様性（持続音）
+      
+      # 多様性計算パラメータ
+      ngram_size: 3               # n-gram分析の窓サイズ
+      window_bars: 4              # 多様性評価の窓（小節数）
+      similarity_threshold: 0.8   # 類似判定閾値（0.8以上で同質と判定）
+      
+      # ペナルティ適用方法
+      penalty_mode: "score_multiplier"  # score_multiplier / additive
+      penalty_weight: 0.15        # ペナルティの重み（品質スコアへの影響度）
+    
+  bass:
+    leap_semitones_max: 12            # 最大跳躍幅
+    root_note_ratio_min: 0.6          # ルート音の割合
+    
+  common:
+    max_drift_ms: 30.0                # Vocal同期ドリフト許容値
+    grid_off_std_ms_max: 12.0         # グリッドずれ標準偏差
+    clipping_rate_max: 0.001          # クリッピング率（0.1%）
+
+# ============================================================
+# 高度なオプション
+# ============================================================
+advanced:
+  # タイムストレッチ（実験的）
+  time_stretch:
+    enabled: false
+    factor: 1.0                       # 1.0=等速 / 0.99=遅く / 1.01=速く
+    
+  # スウィング・ヒューマナイゼーション
+  swing_ratio: 0.0                    # 0.0=ストレート / 0.5=三連符スウィング
+  timing_variance_ms: 5.0             # タイミングのばらつき（ms）
+  velocity_humanization: 0.1          # ベロシティのばらつき（0.0-1.0）
+  
+  # セクション間クロスフェード
+  crossfade_bars: 0.5                 # セクション境界でのクロスフェード長（小節）
+  
+  # レンダリング設定
+  rendering:
+    sample_rate: 44100
+    bit_depth: 16
+    normalize_db: -1.0                # ピーク正規化レベル
+    parallel_jobs: 4                  # 並列レンダリング数
+
+# ============================================================
+# 使用方法
+# ============================================================
+# 1. このファイルをコピーして編集:
+#    cp configs/structure_template.yaml project/my_song.yaml
+#
+# 2. MIDI生成:
+#    python scripts/arrange_from_yaml.py \
+#      --structure project/my_song.yaml \
+#      --out-midi out/midi \
+#      --seed 42
+#
+# 3. WAV変換:
+#    python scripts/dawdreamer_batch.py \
+#      --midi-dir out/midi \
+#      --sf2 assets/FluidR3_GM.sf2 \
+#      --out-audio out/wav
+#
+# 4. Vocal同期チェック:
+#    python scripts/vocal_sync_guard.py \
+#      --structure project/my_song.yaml \
+#      --vocal stems/vocal.wav

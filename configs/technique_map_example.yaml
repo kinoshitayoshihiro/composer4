@@ -1,0 +1,135 @@
+# Technique Mapping Configuration
+#
+# セクションごとに奏法を指定
+# ChatGPT提案: "原曲アルペジオ → アレンジでストラム" 等の差し替え対応
+#
+# Usage:
+#   python scripts/full_pipeline.py \
+#     --vocal stems/vocal.wav \
+#     --accompaniment stems/accompaniment.wav \
+#     --output output/song01 \
+#     --technique-map configs/technique_map_example.yaml
+
+# Global defaults (全セクション共通のデフォルト)
+global:
+  tempo_multiplier: 1.0
+  seed: 42
+  emotion_base: "neutral"
+
+# Section-specific technique mappings
+# セクション名 → 楽器 → 奏法パラメータ
+sections:
+  Intro:
+    guitar:
+      technique: "fingerpicking"
+      rhythm_key: "arp_8ths_even"
+      notes_per_bar_multiplier: 0.8
+      velocity_std_multiplier: 0.9
+      emotion: "calm"
+    
+    strings:
+      technique: "legato"
+      rhythm_key: "legato_whole"
+      notes_per_bar_multiplier: 0.6
+      velocity_std_multiplier: 0.8
+      emotion: "calm"
+  
+  Verse:
+    guitar:
+      technique: "fingerpicking"
+      rhythm_key: "arp_16ths_pattern"
+      notes_per_bar_multiplier: 1.0
+      velocity_std_multiplier: 1.0
+      emotion: "neutral"
+    
+    strings:
+      technique: "pizzicato"
+      rhythm_key: "pizz_8ths"
+      notes_per_bar_multiplier: 0.7
+      velocity_std_multiplier: 1.1
+      emotion: "playful"
+  
+  Chorus:
+    guitar:
+      technique: "strum"  # ← 原曲がarpeggioでもstrumに差し替え
+      rhythm_key: "strum_8ths_updown"
+      notes_per_bar_multiplier: 0.8
+      velocity_std_multiplier: 1.2
+      strum_spread_ms: 12
+      strum_direction_bias: 0.6  # down多め
+      palm_mute_ratio: 0.15
+      emotion: "energetic"
+    
+    strings:
+      technique: "tremolo"
+      rhythm_key: "tremolo_fast"
+      notes_per_bar_multiplier: 1.5
+      velocity_std_multiplier: 1.3
+      emotion: "dramatic"
+  
+  Bridge:
+    guitar:
+      technique: "arpeggio"
+      rhythm_key: "arp_triplets"
+      notes_per_bar_multiplier: 1.2
+      velocity_std_multiplier: 1.1
+      emotion: "tense"
+    
+    strings:
+      technique: "staccato"
+      rhythm_key: "staccato_16ths"
+      notes_per_bar_multiplier: 0.9
+      velocity_std_multiplier: 1.2
+      emotion: "urgent"
+  
+  Outro:
+    guitar:
+      technique: "fingerpicking"
+      rhythm_key: "arp_8ths_slow"
+      notes_per_bar_multiplier: 0.6
+      velocity_std_multiplier: 0.7
+      emotion: "calm"
+    
+    strings:
+      technique: "legato"
+      rhythm_key: "legato_half"
+      notes_per_bar_multiplier: 0.5
+      velocity_std_multiplier: 0.7
+      emotion: "peaceful"
+
+# Quality gates (品質しきい値)
+# ChatGPT提案の品質ゲートを実装
+quality_gates:
+  guitar:
+    strum_consistency_min: 0.75
+    bar_violation_rate_max: 0.02
+    velocity_std_range: [12, 35]
+    notes_per_bar_range: [4, 32]
+  
+  strings:
+    legato_connection_rate_min: 0.65
+    chord_spread_semitones_max: 24
+    bar_violation_rate_max: 0.02
+    velocity_std_range: [10, 40]
+  
+  common:
+    max_drift_ms: 30.0
+    grid_off_std_ms_max: 12.0
+
+# Advanced options
+advanced:
+  # Time stretch (必要に応じて微調整)
+  time_stretch_enabled: false
+  time_stretch_factor: 1.0
+  
+  # Swing/humanization
+  swing_ratio: 0.0  # 0.0 = straight, 0.5 = triplet swing
+  timing_variance_ms: 5.0
+  velocity_humanization: 0.1
+  
+  # Section transitions
+  crossfade_bars: 0.5
+  
+  # Rendering
+  sample_rate: 44100
+  bit_depth: 16

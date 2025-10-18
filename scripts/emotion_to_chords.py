@@ -18,6 +18,19 @@ from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 import random
 
+# Todo #6: diversity_analyzer を import
+try:
+    from scripts.diversity_analyzer import (
+        calculate_chord_similarity,
+        calculate_homogeneity_score,
+        filter_diverse_progressions,
+        DiversityConfig
+    )
+    DIVERSITY_AVAILABLE = True
+except ImportError:
+    DIVERSITY_AVAILABLE = False
+    print("⚠️  diversity_analyzer not available, diversity filtering disabled")
+
 
 @dataclass
 class EmotionContext:
@@ -90,7 +103,11 @@ class EmotionChordMapper:
             print("⚠️  LAMDa database not found, using templates only")
 
     def generate_progression(
-        self, emotion: EmotionContext, num_alternatives: int = 5
+        self, 
+        emotion: EmotionContext, 
+        num_alternatives: int = 5,
+        enable_diversity_filter: bool = True,
+        diversity_threshold: float = 0.8
     ) -> List[ChordProgression]:
         """
         感情からコード進行生成
@@ -98,6 +115,8 @@ class EmotionChordMapper:
         Args:
             emotion: 感情コンテキスト
             num_alternatives: 候補数
+            enable_diversity_filter: 多様性フィルタリングを有効化
+            diversity_threshold: 類似度閾値（0.8以上で同質と判定）
 
         Returns:
             コード進行候補リスト（quality_scoreでソート済み）
@@ -116,6 +135,31 @@ class EmotionChordMapper:
         # 3. 品質スコアでソート
         candidates.sort(key=lambda x: x.quality_score, reverse=True)
 
+        # 4. 多様性フィルタリング（Todo #6）
+        if enable_diversity_filter and DIVERSITY_AVAILABLE and len(candidates) > num_alternatives:
+            config = DiversityConfig(similarity_threshold=diversity_threshold)
+            
+            # (コード進行, 品質スコア) のリストに変換
+            prog_tuples = [(prog.chords, prog.quality_score) for prog in candidates]
+            
+            # 多様性フィルタ適用
+            filtered_tuples = filter_diverse_progressions(
+                prog_tuples,
+                top_k=num_alternatives,
+                config=config
+            )
+            
+            # ChordProgression に戻す
+            filtered_candidates = []
+            for chords, _ in filtered_tuples:
+                # 元の ChordProgression を探す
+                for candidate in candidates:
+                    if candidate.chords == chords:
+                        filtered_candidates.append(candidate)
+                        break
+            
+            return filtered_candidates
+        
         return candidates[:num_alternatives]
 
     def _get_template_progressions(self, emotion: EmotionContext) -> List[ChordProgression]:

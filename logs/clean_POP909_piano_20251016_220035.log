@@ -1,0 +1,24 @@
+🎵 Processing 2898 MIDI files (piano)
+   Input:        data/POP909
+   Output:       data/cleaned/pop909
+   Quarantine:   data/quarantine/pop909
+   Jobs:         8
+   Fileset Hash: bc54aad4dbc2
+
+📦 ShardWriter initialized: data/piano_metadata
+   Shard size: 5000
+   Resume mode: True
+
+Cleaning:   0%|          | 0/2898 [00:00<?, ?it/s]Cleaning:   0%|          | 1/2898 [00:00<15:37,  3.09it/s]Cleaning:  33%|███▎      | 948/2898 [00:00<00:00, 2901.34it/s]Cleaning:  68%|██████▊   | 1970/2898 [00:00<00:00, 5127.06it/s]Cleaning: 100%|██████████| 2898/2898 [00:00<00:00, 4782.33it/s]
+
+======================================================================
+🔨 Finalizing LAMDA sharded pickles...
+======================================================================
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 583, in <module>
+    sys.exit(main())
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 527, in main
+    index_pickle_path = shard_writer.write_index()
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/cleaners/common.py", line 390, in write_index
+    raise ValueError("No shards to index")
+ValueError: No shards to index

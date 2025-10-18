@@ -1,0 +1,154 @@
+# edm_techno_medium.yaml - ベンチマーク曲 #8
+# Genre: EDM, Style: Techno, Difficulty: Medium
+
+meta:
+  title: "EDM Techno Medium"
+  artist: "Benchmark Suite"
+  genre: "EDM"
+  style: "Techno"
+  difficulty: "medium"
+  seed: 3002
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 20
+    sections: 5
+    instruments: ["drums", "bass", "piano", "strings"]
+    tempo_bpm: 132
+    key: "F minor"
+
+global:
+  tempo_bpm: 132
+  time_signature: "4/4"
+  key_signature:
+    tonic: "F"
+    mode: "minor"
+  default_density: "high"
+  default_velocity: 105
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "Fm"
+        duration_bars: 2
+      - symbol: "Eb"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 8
+      piano:
+        voicing: "shell"
+        density: "sparse"
+
+  - name: "Build1"
+    length_bars: 4
+    chords:
+      - symbol: "Fm"
+        duration_bars: 1
+      - symbol: "Db"
+        duration_bars: 1
+      - symbol: "Eb"
+        duration_bars: 1
+      - symbol: "C7"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 12
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "staccato"
+        bow_pressure: 0.5
+
+  - name: "Drop1"
+    length_bars: 6
+    chords:
+      - symbol: "Fm"
+        duration_bars: 2
+      - symbol: "Db"
+        duration_bars: 2
+      - symbol: "Eb"
+        duration_bars: 1
+      - symbol: "C7"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 18
+      piano:
+        voicing: "power"
+        density: "high"
+      strings:
+        technique: "staccato"
+        bow_pressure: 0.6
+
+  - name: "Break"
+    length_bars: 4
+    chords:
+      - symbol: "Bbm"
+        duration_bars: 2
+      - symbol: "Ab"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 5
+      piano:
+        voicing: "shell"
+        density: "sparse"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.7
+        sustain_control: true
+
+  - name: "Outro"
+    length_bars: 2
+    chords:
+      - symbol: "Fm"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "medium"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 3
+      piano:
+        voicing: "triad"
+        density: "low"
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.68
+    ghost_note_ratio_max: 0.25
+    quality_score_min: 0.72
+    syncopation_rate_max: 0.5
+  bass:
+    root_accuracy_min: 0.73
+    groove_quality_min: 0.68
+    pitch_range_fit_min: 0.68
+  piano:
+    chord_tone_rate_min: 0.68
+    velocity_std_range: [12, 28]
+    melody_expression_min: 0.58
+  strings:
+    legato_quality_min: 0.55
+    bowing_expression_min: 0.5
+    harmony_quality_min: 0.57

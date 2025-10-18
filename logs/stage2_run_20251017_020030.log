@@ -1,0 +1,16 @@
+stage2: 0loop [00:00, ?loop/s]stage2: 979loop [00:00, 9789.52loop/s]stage2: 5001loop [00:00, 19314.19loop/s]stage2: 10001loop [00:00, 23925.03loop/s]stage2: 15001loop [00:00, 25113.13loop/s]stage2: 20001loop [00:00, 26377.11loop/s]stage2: 25001loop [00:01, 23260.61loop/s]stage2: 30001loop [00:01, 24541.03loop/s]stage2: 35001loop [00:01, 23001.42loop/s]stage2: 40001loop [00:01, 23492.27loop/s]stage2: 45001loop [00:01, 24352.82loop/s]stage2: 50001loop [00:02, 28186.34loop/s]stage2: 51248loop [00:02, 25373.45loop/s]
+Saved velocity coverage histogram to output/drumloops_v3_stage2/velocity_coverage.json
+======================================================================
+Stage 2 Summary
+======================================================================
+Pipeline version : stage2.v2025.10
+Total loops      : 51248
+Processed loops  : 0
+Passed loops     : 0
+Pass rate        : 0.000
+Retry queue size : 0
+Population      : passed_loops
+Score distribution:
+Exclusions:
+  missing_file: 51248
+======================================================================

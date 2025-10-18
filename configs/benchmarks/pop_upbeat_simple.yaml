@@ -1,0 +1,120 @@
+# pop_upbeat_simple.yaml - ベンチマーク曲 #1
+# Genre: Pop, Style: Upbeat, Difficulty: Simple
+
+meta:
+  title: "Pop Upbeat Simple"
+  artist: "Benchmark Suite"
+  genre: "Pop"
+  style: "Upbeat"
+  difficulty: "simple"
+  seed: 1001
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  # ベンチマーク期待値
+  expected_metrics:
+    total_bars: 16
+    sections: 4
+    instruments: ["drums", "bass", "piano"]
+    tempo_bpm: 120
+    key: "C major"
+
+global:
+  tempo_bpm: 120
+  time_signature: "4/4"
+  key_signature:
+    tonic: "C"
+    mode: "major"
+  default_density: "medium"
+  default_velocity: 85
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "C"
+        duration_bars: 2.0
+      - symbol: "G"
+        duration_bars: 2.0
+    
+    instruments:
+      drums:
+        pattern_type: "basic_rock"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "block"
+        density: "low"
+
+  - name: "Verse"
+    length_bars: 4
+    chords:
+      - symbol: "Am"
+        duration_bars: 2.0
+      - symbol: "F"
+        duration_bars: 2.0
+    
+    instruments:
+      drums:
+        pattern_type: "basic_rock"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 5
+      piano:
+        voicing: "spread"
+        density: "medium"
+
+  - name: "Chorus"
+    length_bars: 4
+    chords:
+      - symbol: "C"
+        duration_bars: 1.0
+      - symbol: "G"
+        duration_bars: 1.0
+      - symbol: "Am"
+        duration_bars: 1.0
+      - symbol: "F"
+        duration_bars: 1.0
+    
+    instruments:
+      drums:
+        pattern_type: "basic_rock"
+        density: "high"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 10
+      piano:
+        voicing: "drop2"
+        density: "high"
+
+  - name: "Outro"
+    length_bars: 4
+    chords:
+      - symbol: "C"
+        duration_bars: 4.0
+    
+    instruments:
+      drums:
+        pattern_type: "basic_rock"
+        density: "low"
+      bass:
+        technique: "root_whole_notes"
+        velocity_boost: -5
+      piano:
+        voicing: "block"
+        density: "low"
+
+# ベンチマーク品質閾値
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.5
+    quality_score_min: 0.6
+  bass:
+    root_accuracy_min: 0.7
+    pitch_range_fit_min: 0.6
+  piano:
+    chord_tone_rate_min: 0.65
+    velocity_std_range: [12, 28]

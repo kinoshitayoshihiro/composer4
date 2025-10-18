@@ -1,0 +1,213 @@
+# rock_progressive_complex.yaml - ベンチマーク曲 #6
+# Genre: Rock, Style: Progressive, Difficulty: Complex
+
+meta:
+  title: "Rock Progressive Complex"
+  artist: "Benchmark Suite"
+  genre: "Rock"
+  style: "Progressive"
+  difficulty: "complex"
+  seed: 2003
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 32
+    sections: 7
+    instruments: ["drums", "bass", "piano", "strings"]
+    tempo_bpm: 135
+    key: "B minor"
+
+global:
+  tempo_bpm: 135
+  time_signature: "4/4"
+  key_signature:
+    tonic: "B"
+    mode: "minor"
+  default_density: "high"
+  default_velocity: 90
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "Bm"
+        duration_bars: 2
+      - symbol: "A"
+        duration_bars: 1
+      - symbol: "G"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 5
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.7
+
+  - name: "Verse1"
+    length_bars: 6
+    chords:
+      - symbol: "Bm"
+        duration_bars: 2
+      - symbol: "G"
+        duration_bars: 2
+      - symbol: "D"
+        duration_bars: 1
+      - symbol: "A"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 10
+      piano:
+        voicing: "power"
+        density: "high"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.8
+
+  - name: "Chorus1"
+    length_bars: 6
+    chords:
+      - symbol: "G"
+        duration_bars: 1.5
+      - symbol: "D"
+        duration_bars: 1.5
+      - symbol: "A"
+        duration_bars: 1.5
+      - symbol: "Bm"
+        duration_bars: 1.5
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 15
+      piano:
+        voicing: "power"
+        density: "high"
+      strings:
+        technique: "staccato"
+        bow_pressure: 0.6
+
+  - name: "Interlude"
+    length_bars: 4
+    chords:
+      - symbol: "Em"
+        duration_bars: 2
+      - symbol: "F#7"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "low"
+      bass:
+        technique: "walking"
+        velocity_boost: 5
+      piano:
+        voicing: "shell"
+        density: "sparse"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.9
+        sustain_control: true
+
+  - name: "Verse2"
+    length_bars: 6
+    chords:
+      - symbol: "Bm"
+        duration_bars: 2
+      - symbol: "G"
+        duration_bars: 2
+      - symbol: "D"
+        duration_bars: 1
+      - symbol: "A"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 10
+      piano:
+        voicing: "power"
+        density: "high"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.75
+
+  - name: "Bridge"
+    length_bars: 4
+    chords:
+      - symbol: "C"
+        duration_bars: 1
+      - symbol: "D"
+        duration_bars: 1
+      - symbol: "Em"
+        duration_bars: 1
+      - symbol: "F#m"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "medium"
+      bass:
+        technique: "walking"
+        velocity_boost: 8
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "staccato"
+        bow_pressure: 0.55
+
+  - name: "Outro"
+    length_bars: 2
+    chords:
+      - symbol: "Bm"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "triad"
+        density: "sparse"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.9
+        sustain_control: true
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.58
+    ghost_note_ratio_max: 0.4
+    quality_score_min: 0.68
+    syncopation_rate_max: 0.75
+  bass:
+    root_accuracy_min: 0.7
+    groove_quality_min: 0.65
+    pitch_range_fit_min: 0.63
+  piano:
+    chord_tone_rate_min: 0.6
+    velocity_std_range: [18, 38]
+    melody_expression_min: 0.58
+  strings:
+    legato_quality_min: 0.62
+    bowing_expression_min: 0.55
+    harmony_quality_min: 0.6

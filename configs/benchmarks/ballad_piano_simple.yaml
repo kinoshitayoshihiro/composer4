@@ -1,0 +1,100 @@
+# ballad_piano_simple.yaml - ベンチマーク曲 #10
+# Genre: Ballad, Style: Piano, Difficulty: Simple
+
+meta:
+  title: "Ballad Piano Simple"
+  artist: "Benchmark Suite"
+  genre: "Ballad"
+  style: "Piano"
+  difficulty: "simple"
+  seed: 4001
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 12
+    sections: 3
+    instruments: ["drums", "bass", "piano"]
+    tempo_bpm: 68
+    key: "F major"
+
+global:
+  tempo_bpm: 68
+  time_signature: "4/4"
+  key_signature:
+    tonic: "F"
+    mode: "major"
+  default_density: "low"
+  default_velocity: 70
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "F"
+        duration_bars: 2
+      - symbol: "C"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "shell"
+        density: "medium"
+
+  - name: "Verse"
+    length_bars: 6
+    chords:
+      - symbol: "F"
+        duration_bars: 2
+      - symbol: "Dm"
+        duration_bars: 2
+      - symbol: "Bb"
+        duration_bars: 1
+      - symbol: "C"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "shell"
+        density: "medium"
+
+  - name: "Outro"
+    length_bars: 2
+    chords:
+      - symbol: "F"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "triad"
+        density: "sparse"
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.45
+    ghost_note_ratio_max: 0.4
+    quality_score_min: 0.55
+    syncopation_rate_max: 0.3
+  bass:
+    root_accuracy_min: 0.75
+    groove_quality_min: 0.6
+    pitch_range_fit_min: 0.65
+  piano:
+    chord_tone_rate_min: 0.7
+    velocity_std_range: [8, 22]
+    melody_expression_min: 0.6

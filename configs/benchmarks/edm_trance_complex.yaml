@@ -1,0 +1,186 @@
+# edm_trance_complex.yaml - ベンチマーク曲 #9
+# Genre: EDM, Style: Trance, Difficulty: Complex
+
+meta:
+  title: "EDM Trance Complex"
+  artist: "Benchmark Suite"
+  genre: "EDM"
+  style: "Trance"
+  difficulty: "complex"
+  seed: 3003
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 24
+    sections: 6
+    instruments: ["drums", "bass", "piano", "strings"]
+    tempo_bpm: 138
+    key: "G major"
+
+global:
+  tempo_bpm: 138
+  time_signature: "4/4"
+  key_signature:
+    tonic: "G"
+    mode: "major"
+  default_density: "high"
+  default_velocity: 108
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "G"
+        duration_bars: 2
+      - symbol: "Em"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 5
+      piano:
+        voicing: "shell"
+        density: "sparse"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.6
+
+  - name: "Build1"
+    length_bars: 4
+    chords:
+      - symbol: "C"
+        duration_bars: 1
+      - symbol: "D"
+        duration_bars: 1
+      - symbol: "Em"
+        duration_bars: 1
+      - symbol: "Bm"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 10
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.7
+
+  - name: "Drop1"
+    length_bars: 6
+    chords:
+      - symbol: "G"
+        duration_bars: 1.5
+      - symbol: "D"
+        duration_bars: 1.5
+      - symbol: "Em"
+        duration_bars: 1.5
+      - symbol: "C"
+        duration_bars: 1.5
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 20
+      piano:
+        voicing: "power"
+        density: "high"
+      strings:
+        technique: "staccato"
+        bow_pressure: 0.6
+
+  - name: "Break"
+    length_bars: 4
+    chords:
+      - symbol: "Am"
+        duration_bars: 2
+      - symbol: "D7"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 3
+      piano:
+        voicing: "shell"
+        density: "sparse"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.8
+        sustain_control: true
+
+  - name: "Build2"
+    length_bars: 4
+    chords:
+      - symbol: "C"
+        duration_bars: 1
+      - symbol: "D"
+        duration_bars: 1
+      - symbol: "Em"
+        duration_bars: 1
+      - symbol: "G"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 15
+      piano:
+        voicing: "shell"
+        density: "high"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.75
+
+  - name: "Outro"
+    length_bars: 2
+    chords:
+      - symbol: "G"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "medium"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 5
+      piano:
+        voicing: "triad"
+        density: "low"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.9
+        sustain_control: true
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.65
+    ghost_note_ratio_max: 0.3
+    quality_score_min: 0.7
+    syncopation_rate_max: 0.65
+  bass:
+    root_accuracy_min: 0.72
+    groove_quality_min: 0.67
+    pitch_range_fit_min: 0.66
+  piano:
+    chord_tone_rate_min: 0.65
+    velocity_std_range: [15, 32]
+    melody_expression_min: 0.6
+  strings:
+    legato_quality_min: 0.6
+    bowing_expression_min: 0.55
+    harmony_quality_min: 0.6

@@ -1,0 +1,73 @@
+[2025-10-15 17:34:13] =========================================
+[2025-10-15 17:34:13] Drumloops MIDI Cleaning Started
+[2025-10-15 17:34:13] =========================================
+[2025-10-15 17:34:13] Base Directory: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-15 17:34:13] Log File: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/logs/drumloops_cleaning_20251015_173413.log
+[2025-10-15 17:34:13] 
+[2025-10-15 17:34:13] 🥁 Starting drumloops cleaning with clean_midi.py...
+[2025-10-15 17:34:13]    Input:      data/loops (77,346 files)
+[2025-10-15 17:34:13]    Output:     output/drumloops_v3_cleaned
+[2025-10-15 17:34:13]    Quarantine: output/drumloops_v3_quarantine
+[2025-10-15 17:34:13]    Instrument: drums
+[2025-10-15 17:34:13]    Jobs:       1 (sequential for stability)
+[2025-10-15 17:34:13]    Seed:       42
+[2025-10-15 17:34:13] 
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+🎵 Processing 77346 MIDI files (drums)
+   Input:        data/loops
+   Output:       output/drumloops_v3_cleaned
+   Quarantine:   output/drumloops_v3_quarantine
+   Jobs:         1
+   Fileset Hash: bc590e39e16d
+
+Cleaning:   0%|          | 0/77346 [00:00<?, ?it/s]Cleaning:   0%|          | 0/77346 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 84, in process_one_file
+    pm = pretty_midi.PrettyMIDI(str(midi_path))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/pretty_midi.py", line 63, in __init__
+    midi_data = mido.MidiFile(filename=midi_file)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/mido/midifiles/midifiles.py", line 319, in __init__
+    with open(filename, 'rb') as file:
+         ^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data/loops/100_funk-rock_92_fill_4-4.mid'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 388, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 320, in main
+    success, meta = _work_wrapper(midi_path)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 147, in _work_wrapper
+    success, meta = process_one_file(
+                    ^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 128, in process_one_file
+    output_path.write_bytes(midi_path.read_bytes())
+                            ^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 1050, in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 1044, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data/loops/100_funk-rock_92_fill_4-4.mid'
+[2025-10-15 17:34:32] 
+[2025-10-15 17:34:32] =========================================
+[2025-10-15 17:34:32] ✅ Drumloops Cleaning Completed!
+[2025-10-15 17:34:32] =========================================
+[2025-10-15 17:34:32] Elapsed Time: 0h 0m 19s
+[2025-10-15 17:34:32] 
+[2025-10-15 17:34:32] 📊 Final Statistics:
+[2025-10-15 17:34:32]    Total Processed:  0 / 77,346
+[2025-10-15 17:34:32]    ✅ Cleaned:       0
+[2025-10-15 17:34:32]    📄 Metadata:      0
+[2025-10-15 17:34:32]    🗑️  Quarantined:   0
+[2025-10-15 17:34:32] 
+[2025-10-15 17:34:32] Next step: Run Stage2 processing
+[2025-10-15 17:34:32]   Command: ./scripts/run_drumloops_stage2.sh
+[2025-10-15 17:34:32] 

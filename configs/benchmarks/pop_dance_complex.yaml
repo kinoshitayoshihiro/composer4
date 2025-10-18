@@ -1,0 +1,143 @@
+# pop_dance_complex.yaml - ベンチマーク曲 #3
+# Genre: Pop, Style: Dance, Difficulty: Complex
+
+meta:
+  title: "Pop Dance Complex"
+  artist: "Benchmark Suite"
+  genre: "Pop"
+  style: "Dance"
+  difficulty: "complex"
+  seed: 1003
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 24
+    sections: 5
+    instruments: ["drums", "bass", "piano", "strings"]
+    tempo_bpm: 128
+    key: "D minor"
+
+global:
+  tempo_bpm: 128
+  time_signature: "4/4"
+  key_signature:
+    tonic: "D"
+    mode: "minor"
+  default_density: "high"
+  default_velocity: 90
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "Dm"
+        duration_bars: 1.0
+      - symbol: "C"
+        duration_bars: 1.0
+      - symbol: "Bb"
+        duration_bars: 1.0
+      - symbol: "A"
+        duration_bars: 1.0
+    
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "medium"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 5
+
+  - name: "Verse1"
+    length_bars: 4
+    chords:
+      - symbol: "Dm"
+        duration_bars: 2.0
+      - symbol: "F"
+        duration_bars: 1.0
+      - symbol: "C"
+        duration_bars: 1.0
+    
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 5
+      piano:
+        voicing: "spread"
+        density: "medium"
+
+  - name: "Chorus"
+    length_bars: 8
+    chords:
+      - symbol: "Bb"
+        duration_bars: 2.0
+      - symbol: "F"
+        duration_bars: 2.0
+      - symbol: "C"
+        duration_bars: 2.0
+      - symbol: "Dm"
+        duration_bars: 2.0
+    
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 15
+      piano:
+        voicing: "drop2"
+        density: "high"
+      strings:
+        technique: "staccato"
+        bow_pressure: 0.8
+
+  - name: "Bridge"
+    length_bars: 4
+    chords:
+      - symbol: "Am"
+        duration_bars: 2.0
+      - symbol: "Gm"
+        duration_bars: 2.0
+    
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "low"
+      bass:
+        technique: "walking"
+        velocity_boost: 0
+      piano:
+        voicing: "block"
+        density: "low"
+
+  - name: "Outro"
+    length_bars: 4
+    chords:
+      - symbol: "Dm"
+        duration_bars: 4.0
+    
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "low"
+      bass:
+        technique: "root_whole_notes"
+        velocity_boost: -10
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.6
+    quality_score_min: 0.7
+    syncopation_rate_max: 0.7
+  bass:
+    root_accuracy_min: 0.7
+    groove_quality_min: 0.6
+  piano:
+    chord_tone_rate_min: 0.7
+    velocity_std_range: [15, 30]
+  strings:
+    harmony_quality_min: 0.6

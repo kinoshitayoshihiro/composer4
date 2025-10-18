@@ -1,0 +1,23 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║  Stage1: Multi-Dataset Cleaning & Sharded Pickle 生成       ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+Settings:
+  SHARD_SIZE       = 5000
+  JOBS             = 8
+  EMIT_META_JSON   = off
+  RESUME_FLAG      = --resume
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+== Stage1: POP909/melody ==
+   Input:       data/POP909
+   Output:      output/pop909/clean/melody
+   Quarantine:  output/pop909/quarantine/melody
+   Pickle:      output/pop909/shards/melody
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 25, in <module>
+    import pretty_midi
+ModuleNotFoundError: No module named 'pretty_midi'

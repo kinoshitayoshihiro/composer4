@@ -1,0 +1,114 @@
+# rock_power_simple.yaml - ベンチマーク曲 #4
+# Genre: Rock, Style: Power, Difficulty: Simple
+
+meta:
+  title: "Rock Power Simple"
+  artist: "Benchmark Suite"
+  genre: "Rock"
+  style: "Power"
+  difficulty: "simple"
+  seed: 2001
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 16
+    sections: 4
+    instruments: ["drums", "bass", "piano"]
+    tempo_bpm: 140
+    key: "E minor"
+
+global:
+  tempo_bpm: 140
+  time_signature: "4/4"
+  key_signature:
+    tonic: "E"
+    mode: "minor"
+  default_density: "high"
+  default_velocity: 95
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "Em"
+        duration_bars: 2.0
+      - symbol: "D"
+        duration_bars: 2.0
+    
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 10
+
+  - name: "Verse"
+    length_bars: 4
+    chords:
+      - symbol: "Em"
+        duration_bars: 1.0
+      - symbol: "C"
+        duration_bars: 1.0
+      - symbol: "D"
+        duration_bars: 1.0
+      - symbol: "Em"
+        duration_bars: 1.0
+    
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "high"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 15
+      piano:
+        voicing: "power"
+        density: "high"
+
+  - name: "Chorus"
+    length_bars: 4
+    chords:
+      - symbol: "C"
+        duration_bars: 1.0
+      - symbol: "D"
+        duration_bars: 1.0
+      - symbol: "Em"
+        duration_bars: 2.0
+    
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 20
+      piano:
+        voicing: "power"
+        density: "high"
+
+  - name: "Outro"
+    length_bars: 4
+    chords:
+      - symbol: "Em"
+        duration_bars: 4.0
+    
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "medium"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 5
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.6
+    quality_score_min: 0.7
+  bass:
+    root_accuracy_min: 0.7
+    groove_quality_min: 0.65
+  piano:
+    chord_tone_rate_min: 0.6
+    velocity_std_range: [18, 35]

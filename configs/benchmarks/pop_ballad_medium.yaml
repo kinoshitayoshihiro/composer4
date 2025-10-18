@@ -1,0 +1,125 @@
+# pop_ballad_medium.yaml - ベンチマーク曲 #2
+# Genre: Pop, Style: Ballad, Difficulty: Medium
+
+meta:
+  title: "Pop Ballad Medium"
+  artist: "Benchmark Suite"
+  genre: "Pop"
+  style: "Ballad"
+  difficulty: "medium"
+  seed: 1002
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 20
+    sections: 4
+    instruments: ["drums", "bass", "piano", "strings"]
+    tempo_bpm: 72
+    key: "G major"
+
+global:
+  tempo_bpm: 72
+  time_signature: "4/4"
+  key_signature:
+    tonic: "G"
+    mode: "major"
+  default_density: "medium"
+  default_velocity: 75
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "G"
+        duration_bars: 2.0
+      - symbol: "Em"
+        duration_bars: 2.0
+    
+    instruments:
+      piano:
+        voicing: "spread"
+        density: "low"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.7
+
+  - name: "Verse"
+    length_bars: 8
+    chords:
+      - symbol: "C"
+        duration_bars: 2.0
+      - symbol: "D"
+        duration_bars: 2.0
+      - symbol: "Em"
+        duration_bars: 2.0
+      - symbol: "C"
+        duration_bars: 2.0
+    
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "block"
+        density: "medium"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.8
+
+  - name: "Chorus"
+    length_bars: 4
+    chords:
+      - symbol: "G"
+        duration_bars: 1.0
+      - symbol: "D"
+        duration_bars: 1.0
+      - symbol: "Em"
+        duration_bars: 1.0
+      - symbol: "C"
+        duration_bars: 1.0
+    
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 10
+      piano:
+        voicing: "drop2"
+        density: "high"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.9
+        sustain_control: 1.0
+
+  - name: "Outro"
+    length_bars: 4
+    chords:
+      - symbol: "G"
+        duration_bars: 4.0
+    
+    instruments:
+      piano:
+        voicing: "spread"
+        density: "low"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.6
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.4
+    quality_score_min: 0.5
+  bass:
+    root_accuracy_min: 0.75
+  piano:
+    chord_tone_rate_min: 0.7
+    velocity_std_range: [10, 25]
+  strings:
+    legato_quality_min: 0.6
+    bowing_expression_min: 0.5

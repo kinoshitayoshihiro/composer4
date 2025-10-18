@@ -1,0 +1,118 @@
+# edm_house_simple.yaml - ベンチマーク曲 #7
+# Genre: EDM, Style: House, Difficulty: Simple
+
+meta:
+  title: "EDM House Simple"
+  artist: "Benchmark Suite"
+  genre: "EDM"
+  style: "House"
+  difficulty: "simple"
+  seed: 3001
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 16
+    sections: 4
+    instruments: ["drums", "bass", "piano"]
+    tempo_bpm: 128
+    key: "C major"
+
+global:
+  tempo_bpm: 128
+  time_signature: "4/4"
+  key_signature:
+    tonic: "C"
+    mode: "major"
+  default_density: "high"
+  default_velocity: 100
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "C"
+        duration_bars: 2
+      - symbol: "G"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "high"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 10
+      piano:
+        voicing: "triad"
+        density: "medium"
+
+  - name: "Build"
+    length_bars: 4
+    chords:
+      - symbol: "Am"
+        duration_bars: 2
+      - symbol: "F"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 12
+      piano:
+        voicing: "shell"
+        density: "high"
+
+  - name: "Drop"
+    length_bars: 6
+    chords:
+      - symbol: "C"
+        duration_bars: 2
+      - symbol: "G"
+        duration_bars: 2
+      - symbol: "Am"
+        duration_bars: 1
+      - symbol: "F"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 15
+      piano:
+        voicing: "shell"
+        density: "high"
+
+  - name: "Outro"
+    length_bars: 2
+    chords:
+      - symbol: "C"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "dance"
+        density: "medium"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 5
+      piano:
+        voicing: "triad"
+        density: "low"
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.7
+    ghost_note_ratio_max: 0.2
+    quality_score_min: 0.75
+    syncopation_rate_max: 0.4
+  bass:
+    root_accuracy_min: 0.75
+    groove_quality_min: 0.7
+    pitch_range_fit_min: 0.7
+  piano:
+    chord_tone_rate_min: 0.7
+    velocity_std_range: [10, 25]
+    melody_expression_min: 0.6

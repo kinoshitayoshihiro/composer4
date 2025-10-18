@@ -1,0 +1,83 @@
+[2025-10-15 17:29:19] =========================================
+[2025-10-15 17:29:19] Drumloops MIDI Cleaning Started
+[2025-10-15 17:29:19] =========================================
+[2025-10-15 17:29:19] Base Directory: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-15 17:29:19] Log File: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/logs/drumloops_cleaning_20251015_172919.log
+[2025-10-15 17:29:19] 
+[2025-10-15 17:29:19] 🥁 Starting drumloops cleaning with clean_midi.py...
+[2025-10-15 17:29:19]    Input:      data/loops (77,346 files)
+[2025-10-15 17:29:19]    Output:     output/drumloops_v3_cleaned
+[2025-10-15 17:29:19]    Quarantine: output/drumloops_v3_quarantine
+[2025-10-15 17:29:19]    Instrument: drums
+[2025-10-15 17:29:19]    Jobs:       4 (parallel)
+[2025-10-15 17:29:19]    Seed:       42
+[2025-10-15 17:29:19] 
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+🎵 Processing 77346 MIDI files (drums)
+   Input:        data/loops
+   Output:       output/drumloops_v3_cleaned
+   Quarantine:   output/drumloops_v3_quarantine
+   Jobs:         4
+   Fileset Hash: bc590e39e16d
+
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Cleaning:   0%|          | 0/77346 [00:00<?, ?it/s]Cleaning:   0%|          | 0/77346 [00:00<?, ?it/s]
+concurrent.futures.process._RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/process.py", line 261, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 147, in _work_wrapper
+    success, meta = process_one_file(
+                    ^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 72, in process_one_file
+    relative_path = midi_path.relative_to(input_dir)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 721, in relative_to
+    to_drv, to_root, to_parts = self._parse_args(other)
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/pathlib.py", line 493, in _parse_args
+    a = os.fspath(a)
+        ^^^^^^^^^^^^
+TypeError: expected str, bytes or os.PathLike object, not NoneType
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 388, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 338, in main
+    success, meta = future.result()
+                    ^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+TypeError: expected str, bytes or os.PathLike object, not NoneType
+[2025-10-15 17:31:20] 
+[2025-10-15 17:31:20] =========================================
+[2025-10-15 17:31:20] ✅ Drumloops Cleaning Completed!
+[2025-10-15 17:31:20] =========================================
+[2025-10-15 17:31:20] Elapsed Time: 0h 2m 1s
+[2025-10-15 17:31:20] 
+[2025-10-15 17:31:20] 📊 Final Statistics:
+[2025-10-15 17:31:20]    Total Processed:  0 / 77,346
+[2025-10-15 17:31:20]    ✅ Cleaned:       0
+[2025-10-15 17:31:20]    📄 Metadata:      0
+[2025-10-15 17:31:20]    🗑️  Quarantined:   0
+[2025-10-15 17:31:20] 
+[2025-10-15 17:31:20] Next step: Run Stage2 processing
+[2025-10-15 17:31:21]   Command: ./scripts/run_drumloops_stage2.sh
+[2025-10-15 17:31:22] 

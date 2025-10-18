@@ -10,10 +10,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import pickle
 import random
 import statistics
 import tempfile
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
@@ -280,3 +281,432 @@ def _deduplicate_overlapping_notes(pm: pretty_midi.PrettyMIDI) -> pretty_midi.Pr
                     pass
     
     return pm
+
+
+# =============================================================================
+# Shard Writer (ストリーミング式pickle生成)
+# =============================================================================
+
+class ShardWriter:
+    """
+    ストリーミング式シャードPickle生成
+    
+    - バッファが閾値に達したら即座にflush
+    - 原子的書き込み (.tmp → rename)
+    - レジューム対応（既存シャード検出）
+    """
+    
+    def __init__(self, out_dir: Path, instrument: str, shard_size: int = 5000, resume: bool = False):
+        """
+        Args:
+            out_dir: 出力ディレクトリ
+            instrument: 楽器名
+            shard_size: シャードあたりの件数
+            resume: 既存シャードから再開するか
+        """
+        self.out_dir = Path(out_dir)
+        self.out_dir.mkdir(parents=True, exist_ok=True)
+        self.instrument = instrument
+        self.shard_size = shard_size
+        self.buffer: List[Dict[str, Any]] = []
+        self.shard_paths: List[Path] = []
+        
+        # 既存シャードを検出して再開
+        existing = sorted(self.out_dir.glob(f"{instrument}_*.pkl"))
+        # インデックスファイルを除外
+        existing = [p for p in existing if "_index.pkl" not in p.name]
+        if resume and existing:
+            # 最後のシャード番号 + 1 から再開
+            last_shard = existing[-1]
+            # {instrument}_{idx:05d}.pkl 形式から番号を抽出
+            idx_str = last_shard.stem.replace(instrument + "_", "")
+            self.shard_idx = int(idx_str) + 1
+            self.shard_paths = existing
+            print(f"📂 Resume mode: Found {len(existing)} existing shards, starting from shard {self.shard_idx:05d}")
+        else:
+            self.shard_idx = 0
+    
+    def add(self, lamda_meta: Dict[str, Any]) -> None:
+        """
+        LAMDA互換メタデータをバッファに追加
+        閾値に達したら自動的にflush
+        """
+        self.buffer.append(lamda_meta)
+        
+        if len(self.buffer) >= self.shard_size:
+            self.flush()
+    
+    def flush(self) -> None:
+        """
+        バッファを原子的にpickleファイルに書き込み
+        """
+        if not self.buffer:
+            return
+        
+        # Stage2互換の命名規則: {instrument}_{idx:05d}.pkl
+        shard_name = f"{self.instrument}_{self.shard_idx:05d}.pkl"
+        tmp_path = self.out_dir / (shard_name + ".tmp")
+        final_path = self.out_dir / shard_name
+        
+        # Shardデータ構造（Stage2互換）
+        shard_data = {
+            "version": "lamda_v2_shard",
+            "shard_index": self.shard_idx,
+            "instrument": self.instrument,
+            "loops": self.buffer,
+            "count": len(self.buffer),
+            "summary": {
+                "total_notes": sum(m.get("note_count", 0) for m in self.buffer),
+                "avg_bpm": sum(m.get("bpm", 0) for m in self.buffer) / len(self.buffer) if self.buffer else 0,
+            }
+        }
+        
+        # 原子的書き込み
+        with open(tmp_path, "wb") as f:
+            pickle.dump(shard_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+            f.flush()
+            os.fsync(f.fileno())  # ディスクに確実に書き込み
+        
+        os.replace(tmp_path, final_path)  # アトミックリネーム
+        
+        self.shard_paths.append(final_path)
+        print(f"  ✓ Shard {self.shard_idx:05d}: {len(self.buffer):,} loops → {shard_name}")
+        
+        # バッファクリア
+        self.buffer.clear()
+        self.shard_idx += 1
+    
+    def write_index(self) -> Path:
+        """
+        全シャードの情報を集約したインデックスpickleを生成（Stage2互換）
+        
+        Returns:
+            インデックスファイルのパス
+        """
+        # 残りをflush
+        self.flush()
+        
+        if not self.shard_paths:
+            raise ValueError("No shards to index")
+        
+        # 各シャードから情報を収集
+        shard_info = []
+        total_loops = 0
+        
+        for shard_path in sorted(self.shard_paths):
+            with open(shard_path, "rb") as f:
+                shard_data = pickle.load(f)
+            
+            # Stage2が期待する構造
+            shard_info.append({
+                "path": shard_path.name,  # 相対パス（ファイル名のみ）
+                "index": shard_data.get("shard_index", 0),  # ★ Stage2が必要とするフィールド
+                "count": shard_data.get("count", 0),
+                "summary": shard_data.get("summary", {}),
+                "metrics_summary": shard_data.get("summary", {}),  # ★ 互換性のため両方用意
+            })
+            total_loops += shard_data.get("count", 0)
+        
+        # インデックスデータ（Stage2互換）
+        index_data = {
+            "version": "lamda_v2_index",
+            "instrument": self.instrument,
+            "total_files": total_loops,
+            "shard_size": self.shard_size,
+            "base_dir": str(self.out_dir),
+            "shards": shard_info,  # ★ Stage2が iter_loop_records() で読むフィールド
+        }
+        
+        index_path = self.out_dir / f"{self.instrument}_index.pkl"
+        tmp_path = self.out_dir / f"{self.instrument}_index.pkl.tmp"
+        
+        # 原子的書き込み
+        with open(tmp_path, "wb") as f:
+            pickle.dump(index_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+            f.flush()
+            os.fsync(f.fileno())
+        
+        os.replace(tmp_path, index_path)
+        
+        return index_path
+
+
+# =============================================================================
+# LAMDA互換メタデータ抽出
+# =============================================================================
+
+def extract_lamda_metadata(
+    pm: pretty_midi.PrettyMIDI,
+    input_path: Path,
+    output_path: Path,
+    base_dir: Path | None = None,
+    genre: str | None = None,
+) -> Dict[str, Any]:
+    """
+    LAMDA互換の詳細メタデータを抽出
+    
+    Args:
+        pm: PrettyMIDI オブジェクト
+        input_path: 元ファイルパス（MD5計算用）
+        output_path: 出力先パス
+        base_dir: 相対パス計算の基準ディレクトリ（Noneの場合は絶対パス）
+        genre: ジャンル情報（Noneの場合は "unknown"）
+        
+    Returns:
+        LAMDA形式のメタデータ辞書（md5はMIDIバイトから32桁、output_pathは相対/絶対）
+    """
+    # ファイル名を抽出
+    filename = input_path.stem
+    # 全ノート収集
+    all_notes = []
+    for inst in pm.instruments:
+        for note in inst.notes:
+            all_notes.append({
+                "pitch": note.pitch,
+                "velocity": note.velocity,
+                "start": note.start,
+                "end": note.end,
+                "duration": note.end - note.start,
+                "is_drum": inst.is_drum,
+                "program": inst.program,
+            })
+    
+    if not all_notes:
+        return {}
+    
+    # ピッチ統計（JSON互換のためint()でキャスト）
+    pitches = [int(n["pitch"]) for n in all_notes]
+    pitches_sum = sum(pitches)
+    pitches_counts = {int(p): int(c) for p, c in Counter(pitches).most_common()}
+    pitches_and_counts = [[int(p), int(c)] for p, c in pitches_counts.items()]
+    
+    # ベロシティ統計
+    velocities = [int(n["velocity"]) for n in all_notes]
+    avg_velocity = sum(velocities) / len(velocities)
+    
+    # プログラム（パッチ）統計（JSON互換のためint()でキャスト）
+    patches = [int(n["program"]) for n in all_notes]
+    patches_counts = {int(p): int(c) for p, c in Counter(patches).most_common()}
+    
+    # タイミング統計（ミリ秒）
+    times_ms = []
+    all_notes_sorted = sorted(all_notes, key=lambda x: x["start"])
+    prev_time = 0
+    for note in all_notes_sorted:
+        delta_ms = (note["start"] - prev_time) * 1000
+        if delta_ms > 0 or prev_time == 0:
+            times_ms.append(int(delta_ms))
+        prev_time = note["start"]
+    
+    times_sum = min(10000000, sum(times_ms))
+    
+    # デュレーション統計（ミリ秒）
+    durations_ms = [int(n["duration"] * 1000) for n in all_notes]
+    
+    # 統計値
+    avg_time = int(sum(times_ms) / len(times_ms)) if times_ms else 0
+    avg_dur = int(sum(durations_ms) / len(durations_ms)) if durations_ms else 0
+    avg_vel = int(avg_velocity)
+    
+    mode_time = statistics.mode(times_ms) if times_ms else 0
+    mode_dur = statistics.mode(durations_ms) if durations_ms else 0
+    mode_vel = statistics.mode(velocities) if velocities else 0
+    
+    median_time = int(statistics.median(times_ms)) if times_ms else 0
+    median_dur = int(statistics.median(durations_ms)) if durations_ms else 0
+    median_vel = int(statistics.median(velocities)) if velocities else 0
+    
+    # コード抽出（同時発音ピッチ）
+    chords = []
+    time_groups = defaultdict(list)
+    for note in all_notes:
+        if not note["is_drum"]:
+            time_key = int(note["start"] * 1000)  # 1ms精度
+            time_groups[time_key].append(note["pitch"] % 12)
+    
+    for time_key in sorted(time_groups.keys()):
+        chord = sorted(set(time_groups[time_key]))
+        if len(chord) > 1:
+            chords.append(chord)
+    
+    ms_chords_counts = sorted(
+        [[list(key), val] for key, val in Counter([tuple(c) for c in chords]).most_common()],
+        reverse=True,
+        key=lambda x: x[1]
+    )
+    if not ms_chords_counts:
+        ms_chords_counts = [[[0, 0], 0]]
+    
+    # テンポ情報
+    tempo_changes = pm.get_tempo_changes()
+    tempo = tempo_changes[1][0] if len(tempo_changes[1]) > 0 else 120.0
+    
+    # 拍子情報
+    time_sig = pm.time_signature_changes[0] if pm.time_signature_changes else None
+    time_signature = f"{time_sig.numerator}/{time_sig.denominator}" if time_sig else "4/4"
+    
+    # MD5: MIDIバイトから計算（32桁）
+    # pm.write() は None を受け付けないため、BytesIO を使用
+    from io import BytesIO
+    midi_buffer = BytesIO()
+    pm.write(midi_buffer)
+    midi_bytes = midi_buffer.getvalue()
+    md5_full = hashlib.md5(midi_bytes).hexdigest()  # 32桁
+    
+    # output_path: base_dirからの相対パスまたは絶対パス
+    if base_dir is not None:
+        try:
+            rel_output = output_path.relative_to(base_dir)
+            final_output_path = str(rel_output)
+        except ValueError:
+            final_output_path = str(output_path)
+    else:
+        final_output_path = str(output_path)
+    
+    # LAMDA形式メタデータ（Stage2互換）
+    metadata = {
+        "filename": filename,
+        "genre": genre if genre is not None else "unknown",  # ★ Stage2が必要とするフィールド
+        "input_path": str(input_path),
+        "output_path": final_output_path,
+        "cleaned_file": final_output_path,  # ★ Stage2互換のためoutput_pathと同じ値を設定
+        "md5": md5_full,  # 32桁
+        "bpm": round(tempo, 1),
+        "time_signature": time_signature,
+        "note_count": len(all_notes),
+        "duration_ms": int(pm.get_end_time() * 1000),
+        "duration_ticks": int(pm.get_end_time() * pm.resolution * tempo / 60),
+        "pitches": {
+            "sum": pitches_sum,
+            "counts": pitches_counts,
+            "distribution": pitches_and_counts,
+        },
+        "patches_counts": patches_counts,
+        "avg_velocity": avg_vel,
+        "statistics": {
+            "average_median_mode_time_ms": [avg_time, median_time, mode_time],
+            "average_median_mode_dur_ms": [avg_dur, median_dur, mode_dur],
+            "average_median_mode_vel": [avg_vel, median_vel, mode_vel],
+        },
+        "pitches_times_sum_ms": times_sum,
+        "ms_chords_counts": ms_chords_counts,
+        "total_number_of_chords": len(chords),
+        "midi_ticks": pm.resolution,
+    }
+    
+    return metadata
+
+
+def safe_pickle_dump(obj: Any, path: Path) -> None:
+    """
+    Pickleを安全に書き込み（.tmp → fsync → rename）
+    
+    Args:
+        obj: Pickle化するオブジェクト
+        path: 最終保存先パス
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    
+    # 一時ファイルに書き込み
+    with open(tmp_path, "wb") as f:
+        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+        f.flush()
+        os.fsync(f.fileno())  # ディスクへ確実に書き込み
+    
+    # アトミックにリネーム
+    os.replace(tmp_path, path)
+
+
+def write_sharded_pickle(
+    metadata_list: List[Dict[str, Any]],
+    output_dir: Path,
+    shard_index: int,
+    instrument: str,
+    shard_prefix: str = "shard",
+) -> Path:
+    """
+    Sharded pickleファイルを書き込み（安全版）
+    
+    Args:
+        metadata_list: メタデータのリスト
+        output_dir: 出力ディレクトリ
+        shard_index: シャード番号
+        instrument: 楽器名
+        shard_prefix: シャードファイルのプレフィックス
+        
+    Returns:
+        書き込んだpickleファイルのパス
+    """
+    shard_data = {
+        "version": "lamda_v2_shard",
+        "shard_index": shard_index,
+        "instrument": instrument,
+        "loops": metadata_list,
+        "count": len(metadata_list),
+        "summary": {
+            "total_notes": sum(m.get("note_count", 0) for m in metadata_list),
+            "avg_bpm": sum(m.get("bpm", 0) for m in metadata_list) / len(metadata_list) if metadata_list else 0,
+        }
+    }
+    
+    shard_path = output_dir / f"{instrument}_{shard_prefix}_{shard_index:05d}.pickle"
+    safe_pickle_dump(shard_data, shard_path)
+    
+    return shard_path
+
+
+def write_index_pickle(
+    shard_paths: List[Path],
+    base_dir: Path,
+    instrument: str,
+    shard_size: int,
+) -> Path:
+    """
+    インデックスpickleファイルを書き込み（LAMDA Stage2互換）
+    
+    Args:
+        shard_paths: シャードファイルのパスリスト
+        base_dir: 相対パス計算の基準ディレクトリ
+        instrument: 楽器名
+        shard_size: シャードサイズ（件数/shard）
+        
+    Returns:
+        書き込んだインデックスファイルのパス
+    """
+    # 各シャードから情報を収集
+    shard_info = []
+    total_loops = 0
+    
+    for shard_path in sorted(shard_paths):
+        with open(shard_path, "rb") as f:
+            shard_data = pickle.load(f)
+        
+        # 相対パス計算
+        try:
+            rel_path = shard_path.relative_to(base_dir)
+        except ValueError:
+            rel_path = shard_path
+        
+        shard_info.append({
+            "path": str(rel_path),
+            "shard_index": shard_data.get("shard_index", 0),
+            "count": shard_data.get("count", len(shard_data.get("loops", []))),
+            "summary": shard_data.get("summary", {}),
+        })
+        total_loops += shard_data.get("count", len(shard_data.get("loops", [])))
+    
+    # インデックスデータ
+    index_data = {
+        "version": "lamda_v2_index",
+        "instrument": instrument,
+        "total_files": total_loops,
+        "shard_size": shard_size,
+        "base_dir": str(base_dir),
+        "shards": shard_info,
+    }
+    
+    index_path = base_dir / f"{instrument}_metadata_v2.pickle"
+    safe_pickle_dump(index_data, index_path)
+    
+    return index_path

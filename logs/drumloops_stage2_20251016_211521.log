@@ -1,0 +1,82 @@
+[2025-10-16 21:15:21] =========================================
+[2025-10-16 21:15:21] Drumloops Stage2 Processing Started
+[2025-10-16 21:15:21] Stage2互換 Pickle入力
+[2025-10-16 21:15:21] =========================================
+[2025-10-16 21:15:21] Base Directory: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-16 21:15:21] Log File: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/logs/drumloops_stage2_20251016_211521.log
+[2025-10-16 21:15:21] 
+[2025-10-16 21:15:21] 📋 Checking pickle compatibility...
+======================================================================
+Stage2互換性チェック
+======================================================================
+
+📋 Checking index: output/drums_metadata/drums_index.pkl
+  ✅ Version: lamda_v2_index
+  ✅ Instrument: drums
+  ✅ Total files: 45321
+  ✅ Shards: 10
+  ✅ Shard structure: ['path', 'index', 'count', 'summary', 'metrics_summary']
+  ✅ First shard: drums_00000.pkl, index=0, count=5000
+
+📚 Found 10 shard files
+
+📦 Checking shard: drums_00000.pkl
+  ✅ Version: lamda_v2_shard
+  ✅ Shard index: 0
+  ✅ Loop count: 5000
+  ✅ Loop structure: ['md5', 'filename', 'genre', 'bpm', 'note_count', 'duration_ticks']
+  ✅ First loop:
+     - filename: 176_afrocuban_105_beat_4-4_26
+     - genre: drums
+     - bpm: 105.0
+     - notes: 2194
+
+🔧 Testing with lamda_tools...
+  ✅ load_metadata_index() succeeded
+  ✅ iter_loop_records() succeeded (5 loops checked)
+  ✅ All loops have 'genre' field
+
+======================================================================
+✅ Stage2互換性チェック完了 - すべてOK！
+======================================================================
+[2025-10-16 21:15:45] 
+[2025-10-16 21:15:45] 📊 Starting Stage2 processing...
+[2025-10-16 21:15:45]    Cleaned Files:    51248
+[2025-10-16 21:15:45]    Pickle Shards:    10
+[2025-10-16 21:15:45]    Metadata Index:   output/drums_metadata/drums_index.pkl
+[2025-10-16 21:15:45]    Input Dir:        output/drumloops_v3
+[2025-10-16 21:15:45]    Output:           output/drumloops_v3_stage2
+[2025-10-16 21:15:45]    Config:           configs/lamda/drums_stage2.yaml
+[2025-10-16 21:15:45]    Threshold:        70.0
+[2025-10-16 21:15:45] 
+[2025-10-16 21:15:45] 🎯 Executing Stage2 extractor with pickle input...
+stage2: 0loop [00:00, ?loop/s]stage2: 5001loop [00:00, 32331.71loop/s]stage2: 10001loop [00:00, 40548.93loop/s]stage2: 15001loop [00:00, 43675.20loop/s]stage2: 20001loop [00:00, 44634.60loop/s]stage2: 25001loop [00:00, 45280.57loop/s]stage2: 30001loop [00:00, 45173.26loop/s]stage2: 35001loop [00:00, 39744.65loop/s]stage2: 40001loop [00:00, 40928.92loop/s]stage2: 45321loop [00:01, 44745.14loop/s]
+Saved velocity coverage histogram to output/drumloops_v3_stage2/velocity_coverage.json
+======================================================================
+Stage 2 Summary
+======================================================================
+Pipeline version : stage2.v2025.10
+Total loops      : 45321
+Processed loops  : 0
+Passed loops     : 0
+Pass rate        : 0.000
+Retry queue size : 0
+Population      : passed_loops
+Score distribution:
+Exclusions:
+  missing_file: 45321
+======================================================================
+[2025-10-16 21:15:49] 
+[2025-10-16 21:15:49] =========================================
+[2025-10-16 21:15:49] ✅ Stage2 Processing Completed!
+[2025-10-16 21:15:49] =========================================
+[2025-10-16 21:15:49] Elapsed Time: 0h 0m 4s
+[2025-10-16 21:15:49] 
+[2025-10-16 21:15:49] 📊 Summary generated: output/drumloops_v3_stage2/stage2_summary.json
+[2025-10-16 21:15:49] 
+[2025-10-16 21:15:49] Output files:
+[2025-10-16 21:15:49]   - output/drumloops_v3_stage2/canonical_events.parquet
+[2025-10-16 21:15:49]   - output/drumloops_v3_stage2/loop_summary.csv
+[2025-10-16 21:15:49]   - output/drumloops_v3_stage2/metrics_score.jsonl
+[2025-10-16 21:15:49]   - output/drumloops_v3_stage2/stage2_summary.json
+[2025-10-16 21:15:49] 

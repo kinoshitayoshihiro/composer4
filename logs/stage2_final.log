@@ -1,0 +1,41 @@
+[2025-10-16 21:22:58] =========================================
+[2025-10-16 21:22:58] Drumloops Stage2 Processing Started
+[2025-10-16 21:22:58] Stage2互換 Pickle入力
+[2025-10-16 21:22:58] =========================================
+[2025-10-16 21:22:58] Base Directory: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-16 21:22:58] Log File: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/logs/drumloops_stage2_20251016_212258.log
+[2025-10-16 21:22:58] 
+[2025-10-16 21:22:59] 📋 Checking pickle compatibility...
+======================================================================
+Stage2互換性チェック
+======================================================================
+
+📋 Checking index: output/drums_metadata/drums_index.pkl
+  ✅ Version: lamda_v2_index
+  ✅ Instrument: drums
+  ✅ Total files: 45321
+  ✅ Shards: 10
+  ✅ Shard structure: ['path', 'index', 'count', 'summary', 'metrics_summary']
+  ✅ First shard: drums_00000.pkl, index=0, count=5000
+
+📚 Found 10 shard files
+
+📦 Checking shard: drums_00000.pkl
+  ✅ Version: lamda_v2_shard
+  ✅ Shard index: 0
+  ✅ Loop count: 5000
+  ✅ Loop structure: ['md5', 'filename', 'genre', 'bpm', 'note_count', 'duration_ticks']
+  ✅ First loop:
+     - filename: 176_afrocuban_105_beat_4-4_26
+     - genre: drums
+     - bpm: 105.0
+     - notes: 2194
+
+🔧 Testing with lamda_tools...
+  ✅ load_metadata_index() succeeded
+  ✅ iter_loop_records() succeeded (5 loops checked)
+  ✅ All loops have 'genre' field
+
+======================================================================
+✅ Stage2互換性チェック完了 - すべてOK！
+======================================================================

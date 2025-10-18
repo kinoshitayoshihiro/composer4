@@ -1,0 +1,1662 @@
+🎵 Found 827 MIDI files in output/drumloops_v3_test
+📦 Building metadata pickle...
+Processing:   0%|          | 0/827 [00:00<?, ?it/s]
+⚠️  Error processing 10_soul-groove10_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_funk-groove1_138_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_funk-groove2_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_soul-groove3_86_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_soul-groove4_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_funk-groove5_84_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_hiphop-groove6_87_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_pop-groove7_138_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock-groove8_65_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_soul-groove9_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 100_neworleans-secondline_94_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 101_dance-disco_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 102_funk_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 103_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 104_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 105_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 106_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 107_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 108_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 109_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 110_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 111_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 112_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 113_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 114_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 115_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 116_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 117_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 118_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 119_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 120_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 121_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 122_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 123_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 124_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 125_funk_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 126_funk-fast_125_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 127_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 128_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 129_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 130_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 131_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 132_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 133_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 134_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 135_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 136_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 137_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 138_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 139_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 140_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 141_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 142_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 143_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 144_funk-fast_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 145_latin-brazilian-baiao_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 146_latin-brazilian-baiao_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 147_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 148_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 149_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 150_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 151_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 152_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 153_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 154_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 155_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 156_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 157_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 158_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 159_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 160_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 161_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 162_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 163_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 164_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 165_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 166_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 167_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 168_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 169_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 170_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 171_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 172_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 173_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 174_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 175_latin-brazilian-baiao_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 176_afrocuban_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 177_afrocuban_105_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 178_afrocuban_105_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 182_afrocuban_105_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 183_afrocuban_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 184_reggae_78_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 195_reggae_78_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_funk_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 201_reggae-slow_64_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 202_rock-halftime_140_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 203_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 204_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 205_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 206_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 207_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 208_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 209_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 210_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 211_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 212_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 213_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 214_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 215_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 216_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 217_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 218_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 219_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 220_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 221_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 222_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 223_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 224_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 226_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 227_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 228_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 229_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 230_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 231_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 232_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 233_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 234_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 235_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 236_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 237_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 238_rock-halftime_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 239_funk-purdieshuffle_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 23_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 240_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 241_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 242_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 243_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 244_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 245_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 246_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 247_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 248_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 249_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 250_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 251_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 252_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 253_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 254_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 255_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 256_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 257_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 258_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 259_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 25_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 260_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 261_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 262_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 263_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 264_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 265_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 266_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 267_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 268_funk-purdieshuffle_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 27_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 28_latin-samba_116_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_funk_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 30_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 31_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 32_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 33_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 34_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 35_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 36_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 37_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 38_latin-samba_116_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 39_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_funk_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 40_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 41_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 42_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 43_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 44_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 45_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 46_latin-samba_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 47_jazz_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 48_jazz_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 49_jazz_125_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_jazz-funk_116_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 50_jazz_125_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 51_rock-shuffle_125_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 52_jazz_125_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 53_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 54_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 55_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 56_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 57_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 58_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 59_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_jazz-funk_116_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 60_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 61_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 62_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 63_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 65_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 66_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 67_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 68_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 69_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 70_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 71_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 72_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 73_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 74_jazz_125_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 75_jazz_125_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 76_jazz-mediumfast_180_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 77_jazz-mediumfast_180_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 78_jazz-fast_290_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 79_latin-reggaeton_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 80_dance-breakbeat_170_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 81_dance-breakbeat_170_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 82_neworleans-funk_84_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 83_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 84_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 85_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 86_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 87_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 88_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 89_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 90_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 91_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 92_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 93_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 94_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 95_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 96_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 97_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 98_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 99_neworleans-funk_84_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_jazz-funk_116_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_country_114_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 110_rock-prog_190_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 111_rock-prog_110_beat_5-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 112_afrocuban-bembe_122_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 117_afrocuban-bembe_122_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 120_afrocuban-bembe_122_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 122_afrocuban-bembe_122_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 139_afrocuban-bembe_122_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 140_afrocuban-bembe_122_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 142_gospel_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 161_afrocuban-rhumba_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 180_rock_50_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 181_rock_115_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 188_rock_115_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 191_rock_115_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 194_rock_115_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_latin-chacarera_157_beat_3-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_latin-chacarera_118_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 32_punk_140_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 33_punk_128_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 34_punk_128_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 35_punk_128_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 36_punk_128_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_latin-chacarera_118_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_jazz_120_beat_3-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 59_punk_128_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_jazz_200_beat_3-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 62_punk_144_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 66_punk_144_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 67_punk_144_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_rock_102_beat_3-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 70_punk_144_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_jazz-march_88_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 88_punk_144_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_jazz-march_176_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 90_funk-rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_jazz-march_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_rock-folk_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_afrobeat_94_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_latin-bomba_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_rock_115_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_rock_94_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_funk_117_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_funk_117_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_afrocuban-calypso_108_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_rock_128_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock-prog_125_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_jazz-swing_185_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock-rockabilly_200_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_jazz-linear_182_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_jazz-linear_128_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_dance-disco_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_dance-disco_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock_135_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_rock_135_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_jazz-swing_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_jazz-swing_124_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_jazz-swing_215_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_jazz-swing_215_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_jazz-swing_215_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_jazz-swing_215_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_jazz-swing_215_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_jazz-swing_215_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_jazz-swing_215_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_jazz-swing_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_rock_130_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_rock_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock-shuffle_85_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 23_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 25_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 29_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 31_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 32_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 33_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 35_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 39_jazz_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 44_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 45_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 48_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 49_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 50_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_jazz_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 23_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 25_hiphop_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 26_hiphop_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 27_jazz_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 28_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 29_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 30_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 31_hiphop_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 32_hiphop_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 33_hiphop_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 34_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 35_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 36_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 37_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 38_rock_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 40_hiphop_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 41_hiphop_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 42_rock_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 43_rock_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 44_rock_110_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 45_rock_110_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 46_rock_110_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 47_rock_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 48_rock_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_87_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_jazz_158_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_jazz-klezmer_152_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_latin-brazilian_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_latin-brazilian_184_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_blues-shuffle_134_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_blues-shuffle_134_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_blues-shuffle_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_latin-merengue_158_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_soul-groove10_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_funk-groove1_138_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_funk-groove2_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_soul-groove3_86_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_soul-groove4_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_funk-groove5_84_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_hiphop-groove6_87_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_pop-groove7_138_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock-groove8_65_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_soul-groove9_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_latin-brazilian-sambareggae_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_latin-brazilian-sambareggae_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_latin-brazilian-sambareggae_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_afrocuban-calypso_124_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_latin-brazilian-songo_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_funk_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_rock_136_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_blues-shuffle_72_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_afrocuban_128_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_middleeastern_126_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_latin-brazilian-bossa_127_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_latin-brazilian-baiao_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_latin-brazilian-bossa_127_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_latin-brazilian-samba_89_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_latin-brazilian-samba_89_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_latin-brazilian-samba_89_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_latin-brazilian-maracatu_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_latin-brazilian-maracatu_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_latin-venezuelan-merengue_162_beat_5-8.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_latin-dominican-merengue_130_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_neworleans-funk_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_soul_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_rock_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_rock_140_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_rock_140_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_latin-venezuelan-joropo_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_latin-ando_125_beat_3-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_latin-brazilian-samba_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_latin-brazilian-samba_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_latin-brazilian-ijexa_108_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_latin-venezuelan-sangueo_101_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_latin-brazilian-ijexa_108_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_latin-brazilian-ijexa_108_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_latin-brazilian-frevo_133_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 23_latin-brazilian-songo_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_latin-brazilian-songo_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_latin-brazilian_101_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_latin-brazilian_101_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_reggae_141_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_reggae_126_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_neworleans-secondline_99_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_neworleans-secondline_124_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_neworleans-chacha_124_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_neworleans-shuffle_104_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_70_beat_6-8.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_70_beat_6-8.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_80_beat_6-8.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_rock_80_beat_6-8.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_rock_60_beat_6-8.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_88_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_rock_127_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_rock_180_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_rock_88_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_rock_88_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_soul-groove10_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_funk-groove1_138_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_funk-groove2_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_soul-groove3_86_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_soul-groove4_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_funk-groove5_84_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_hiphop-groove6_87_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_pop-groove7_138_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock-groove8_65_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_soul-groove9_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_rock_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_rock_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_funk_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_funk_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_jazz_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_jazz_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_hiphop_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_hiphop_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_hiphop_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_86_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_hiphop_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 26_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 29_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_86_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 30_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 32_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 33_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 35_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 36_hiphop_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 38_hiphop_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 39_hiphop_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_86_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 40_hiphop_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_rock_86_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_rock_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_rock_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 100_pop_142_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 101_pop_142_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 102_pop_132_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 103_pop_132_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 104_pop_132_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 105_pop_132_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 106_soul-motown_104_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 108_soul-motown_104_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_rock_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 111_soul-motown_104_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 112_jazz-fusion_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 113_jazz-fusion_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 114_jazz-fusion_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 115_jazz-fusion_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 116_jazz-fusion_96_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 118_jazz-fusion_96_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 119_jazz-fusion_96_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 120_jazz-fusion_96_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 122_jazz-fusion_96_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 123_hiphop_140_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 124_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 125_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 126_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 127_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 128_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 129_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 130_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 131_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 132_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 133_hiphop_140_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_rock_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_rock_118_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_rock_118_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_rock_118_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_rock_118_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_rock_118_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_rock_118_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_rock_118_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_rock_118_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 26_rock_118_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 27_rock_75_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 29_rock_75_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 30_rock_75_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 33_rock_75_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 36_rock_75_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 37_rock_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 40_rock_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 41_rock_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 42_rock_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 43_rock_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 45_rock_135_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 46_rock_135_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 47_rock_135_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 48_rock_135_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 49_rock_135_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 50_rock_135_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 51_rock_135_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 52_rock_135_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 53_rock_135_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 54_soul-motown_148_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 55_soul-motown_148_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 56_soul-motown_148_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 57_soul-motown_148_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 58_soul-motown_148_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 59_soul-motown_148_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 62_soul-motown_148_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 63_soul-motown_148_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 64_rock_145_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 65_rock_145_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 66_rock_145_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 67_rock_145_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 68_rock_145_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 69_rock_145_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 70_rock_145_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 71_rock_145_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 72_funk_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 74_funk_100_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 76_funk_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 77_funk_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 78_funk_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 79_funk_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 80_country_78_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 81_country_78_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 84_country_78_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 85_country_78_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 87_hiphop_75_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 88_hiphop_75_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 89_hiphop_75_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 90_hiphop_75_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 91_hiphop_75_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 92_hiphop_75_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 93_hiphop_75_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 94_hiphop_75_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 95_hiphop_75_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 96_pop_142_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 97_pop_142_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 98_pop_142_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 99_pop_142_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 106_hiphop_70_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 108_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 109_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_rock_60_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 117_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 118_rock_95_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 119_rock_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_pop-soft_83_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 120_rock_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 121_rock_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 122_rock_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 123_rock_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 129_rock_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 130_soul_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 131_soul_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 132_soul_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 133_soul_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 138_soul_105_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 144_soul_105_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 146_soul_105_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 148_soul_105_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 149_soul_105_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 150_soul_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 151_soul_98_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 153_soul_98_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 154_soul_98_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 156_soul_98_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 158_soul_98_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 159_soul_98_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_pop-soft_83_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_60_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_pop-soft_83_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_pop-soft_83_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_pop-soft_83_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 23_pop-soft_83_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_hiphop_67_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 25_hiphop_67_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 29_hiphop_67_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 37_hiphop_67_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 38_hiphop_67_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 39_rock-indie_63_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 46_rock-indie_63_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 47_funk_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 48_funk_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 49_funk_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 52_funk_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 56_funk_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 57_funk_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 61_funk_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 62_funk_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 63_funk_112_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 64_funk_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 65_funk_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 67_neworleans-funk_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 70_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 71_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 73_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 74_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 75_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 76_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 77_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 78_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 79_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 80_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 84_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 85_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 86_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 87_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 88_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 89_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 90_neworleans-funk_93_fill_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 91_neworleans-funk_93_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 92_hiphop_70_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_soul-groove10_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'Processing: 100%|██████████| 827/827 [00:00<00:00, 324449.48it/s]
+
+
+⚠️  Error processing 1_funk-groove1_138_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_funk-groove2_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_soul-groove3_86_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_soul-groove4_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_funk-groove5_84_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_hiphop-groove6_87_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_pop-groove7_138_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock-groove8_65_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_soul-groove9_105_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_neworleans-funk_82_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_neworleans-funk_82_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_latin_118_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_latin_118_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_hiphop_94_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_hiphop_94_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_afrobeat_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_afrobeat_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_funk_108_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_funk_108_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_funk_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_rock-shuffle_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_rock-shuffle_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_funk_115_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 23_hiphop_70_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_funk-latin_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 25_funk-latin_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 26_afrobeat_94_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 27_latin_122_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 28_rock_102_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_funk_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_hiphop_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_hiphop_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_hiphop_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_funk_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_funk_80_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_funk_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_funk_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_hiphop_86_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_funk_81_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_funk_81_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_afrobeat_103_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_afrobeat_103_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_funk_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_funk_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_afrobeat_85_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_afrobeat_85_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_neworleans-funk_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_funk_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_neworleans-funk_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_afrobeat_110_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_rock_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 23_rock_96_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_latin_84_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 25_latin_84_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 26_dance-disco_137_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 27_dance-disco_137_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 28_latin-bounce_106_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 29_latin-bounce_106_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_funk_92_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 30_afrobeat_98_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 31_afrobeat_98_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 32_rock_117_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 33_rock_117_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 34_latin-brazilian-songo_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 35_latin-brazilian-songo_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 36_latin_118_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 37_rock_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 38_rock_112_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 39_rock-indie_104_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_afrobeat_114_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 40_rock-indie_104_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 41_highlife_126_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 42_highlife_126_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_afrobeat_114_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_funk_91_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_funk_91_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_latin_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_latin_95_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_hiphop_86_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 10_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 11_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 12_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 13_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 14_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 15_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 16_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 17_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 18_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 19_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 1_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 20_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 21_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 22_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 23_rock_120_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 24_rock_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 25_rock_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 26_rock_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 27_rock_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 28_rock_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 29_rock_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 2_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 30_rock_90_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 3_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 4_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 5_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 6_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 7_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 8_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+⚠️  Error processing 9_rock_100_beat_4-4.mid: module 'TMIDIX' has no attribute 'Tegridy_MIDI_Processor'
+
+✅ Metadata pickle saved: output/drumloops_v3_metadata/drumloops_v3_metadata.pickle
+📊 Total loops: 0
+   Processed: 0
+   Failed: 827

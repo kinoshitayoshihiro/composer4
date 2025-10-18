@@ -1,0 +1,142 @@
+# ballad_emotional_medium.yaml - ベンチマーク曲 #11
+# Genre: Ballad, Style: Emotional, Difficulty: Medium
+
+meta:
+  title: "Ballad Emotional Medium"
+  artist: "Benchmark Suite"
+  genre: "Ballad"
+  style: "Emotional"
+  difficulty: "medium"
+  seed: 4002
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 16
+    sections: 4
+    instruments: ["drums", "bass", "piano", "strings"]
+    tempo_bpm: 72
+    key: "Ab major"
+
+global:
+  tempo_bpm: 72
+  time_signature: "4/4"
+  key_signature:
+    tonic: "Ab"
+    mode: "major"
+  default_density: "low"
+  default_velocity: 75
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "Ab"
+        duration_bars: 2
+      - symbol: "Eb"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.6
+        sustain_control: true
+
+  - name: "Verse"
+    length_bars: 6
+    chords:
+      - symbol: "Ab"
+        duration_bars: 2
+      - symbol: "Fm"
+        duration_bars: 2
+      - symbol: "Db"
+        duration_bars: 1
+      - symbol: "Eb"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.7
+        sustain_control: true
+
+  - name: "Chorus"
+    length_bars: 4
+    chords:
+      - symbol: "Db"
+        duration_bars: 1
+      - symbol: "Eb"
+        duration_bars: 1
+      - symbol: "Fm"
+        duration_bars: 1
+      - symbol: "Ab"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 5
+      piano:
+        voicing: "shell"
+        density: "high"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.8
+        sustain_control: true
+
+  - name: "Outro"
+    length_bars: 2
+    chords:
+      - symbol: "Ab"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "triad"
+        density: "sparse"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.9
+        sustain_control: true
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.48
+    ghost_note_ratio_max: 0.35
+    quality_score_min: 0.58
+    syncopation_rate_max: 0.35
+  bass:
+    root_accuracy_min: 0.73
+    groove_quality_min: 0.62
+    pitch_range_fit_min: 0.63
+  piano:
+    chord_tone_rate_min: 0.68
+    velocity_std_range: [10, 25]
+    melody_expression_min: 0.62
+  strings:
+    legato_quality_min: 0.65
+    bowing_expression_min: 0.58
+    harmony_quality_min: 0.6

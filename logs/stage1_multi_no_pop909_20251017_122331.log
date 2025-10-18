@@ -1,0 +1,73 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║  Stage1: Multi-Dataset Cleaning & Sharded Pickle 生成       ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+Settings:
+  SHARD_SIZE       = 5000
+  JOBS             = 8
+  EMIT_META_JSON   = off
+  RESUME_FLAG      = --resume
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+== Stage1: SLAKH/drums ==
+   Input:       data/slakh2100_midi/drums
+   Output:      output/slakh/clean/drums
+   Quarantine:  output/slakh/quarantine/drums
+   Pickle:      output/slakh/shards/drums
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+⚠️  No MIDI files found in data/slakh2100_midi/drums
+
+✅ SLAKH/drums 完了
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+== Stage1: SLAKH/guitar ==
+   Input:       data/slakh2100_midi/guitar
+   Output:      output/slakh/clean/guitar
+   Quarantine:  output/slakh/quarantine/guitar
+   Pickle:      output/slakh/shards/guitar
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+⚠️  No MIDI files found in data/slakh2100_midi/guitar
+
+✅ SLAKH/guitar 完了
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+== Stage1: SLAKH/bass ==
+   Input:       data/slakh2100_midi/bass
+   Output:      output/slakh/clean/bass
+   Quarantine:  output/slakh/quarantine/bass
+   Pickle:      output/slakh/shards/bass
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+⚠️  No MIDI files found in data/slakh2100_midi/bass
+
+✅ SLAKH/bass 完了
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+== Stage1: SLAKH/strings ==
+   Input:       data/slakh2100_midi/strings
+   Output:      output/slakh/clean/strings
+   Quarantine:  output/slakh/quarantine/strings
+   Pickle:      output/slakh/shards/strings
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+⚠️  No MIDI files found in data/slakh2100_midi/strings
+
+✅ SLAKH/strings 完了
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+== Stage1: LAMDA/drums ==
+   Input:       data/loops
+   Output:      output/lamda/clean/drumloops
+   Quarantine:  output/lamda/quarantine/drumloops
+   Pickle:      output/lamda/shards/drumloops
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources

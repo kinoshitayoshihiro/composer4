@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/lamda_stage2_extractor.py", line 49, in <module>
+    from lamda_tools import MetricConfig, compute_loop_metrics
+ModuleNotFoundError: No module named 'lamda_tools'

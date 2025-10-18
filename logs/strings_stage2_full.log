@@ -1,0 +1,106 @@
+2025-10-17 15:11:51,878 - INFO - ╔══════════════════════════════════════════════════════════════╗
+2025-10-17 15:11:51,878 - INFO - ║  Testing STRINGS Metrics
+2025-10-17 15:11:51,878 - INFO - ╚══════════════════════════════════════════════════════════════╝
+2025-10-17 15:11:51,878 - INFO - Input:  output/slakh/clean/strings
+2025-10-17 15:11:51,878 - INFO - Config: configs/lamda/strings_stage2.yaml
+2025-10-17 15:11:51,878 - INFO - Limit:  999 files
+2025-10-17 15:11:51,878 - INFO - 
+2025-10-17 15:11:52,026 - INFO - Testing 999 files...
+2025-10-17 15:11:52,026 - INFO - 
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+2025-10-17 15:11:54,221 - INFO -   Progress: 10/999
+2025-10-17 15:11:54,375 - INFO -   Progress: 20/999
+2025-10-17 15:11:54,525 - INFO -   Progress: 30/999
+2025-10-17 15:11:54,646 - INFO -   Progress: 40/999
+2025-10-17 15:11:54,767 - INFO -   Progress: 50/999
+2025-10-17 15:11:54,884 - INFO -   Progress: 60/999
+2025-10-17 15:11:55,004 - INFO -   Progress: 70/999
+2025-10-17 15:11:55,115 - INFO -   Progress: 80/999
+2025-10-17 15:11:55,241 - INFO -   Progress: 90/999
+2025-10-17 15:11:55,366 - INFO -   Progress: 100/999
+2025-10-17 15:11:55,456 - INFO -   Progress: 110/999
+2025-10-17 15:11:55,536 - INFO -   Progress: 120/999
+2025-10-17 15:11:55,642 - INFO -   Progress: 130/999
+2025-10-17 15:11:55,708 - INFO -   Progress: 140/999
+2025-10-17 15:11:55,824 - INFO -   Progress: 150/999
+2025-10-17 15:11:55,944 - INFO -   Progress: 160/999
+2025-10-17 15:11:56,075 - INFO -   Progress: 170/999
+2025-10-17 15:11:56,179 - INFO -   Progress: 180/999
+2025-10-17 15:11:56,275 - INFO -   Progress: 190/999
+2025-10-17 15:11:56,365 - INFO -   Progress: 200/999
+2025-10-17 15:11:56,464 - INFO -   Progress: 210/999
+2025-10-17 15:11:56,559 - INFO -   Progress: 220/999
+2025-10-17 15:11:56,643 - INFO -   Progress: 230/999
+2025-10-17 15:11:56,737 - INFO -   Progress: 240/999
+2025-10-17 15:11:56,846 - INFO -   Progress: 250/999
+2025-10-17 15:11:56,964 - INFO -   Progress: 260/999
+2025-10-17 15:11:57,078 - INFO -   Progress: 270/999
+2025-10-17 15:11:57,207 - INFO -   Progress: 280/999
+2025-10-17 15:11:57,363 - INFO -   Progress: 290/999
+2025-10-17 15:11:57,463 - INFO -   Progress: 300/999
+2025-10-17 15:11:57,571 - INFO -   Progress: 310/999
+2025-10-17 15:11:57,681 - INFO -   Progress: 320/999
+2025-10-17 15:11:57,801 - INFO -   Progress: 330/999
+2025-10-17 15:11:57,916 - INFO -   Progress: 340/999
+2025-10-17 15:11:58,051 - INFO -   Progress: 350/999
+2025-10-17 15:11:58,180 - INFO -   Progress: 360/999
+2025-10-17 15:11:58,294 - INFO -   Progress: 370/999
+2025-10-17 15:11:58,403 - INFO -   Progress: 380/999
+2025-10-17 15:11:58,513 - INFO -   Progress: 390/999
+2025-10-17 15:11:58,641 - INFO -   Progress: 400/999
+2025-10-17 15:11:58,764 - INFO -   Progress: 410/999
+2025-10-17 15:11:58,884 - INFO -   Progress: 420/999
+2025-10-17 15:11:59,011 - INFO -   Progress: 430/999
+2025-10-17 15:11:59,140 - INFO -   Progress: 440/999
+2025-10-17 15:11:59,275 - INFO -   Progress: 450/999
+2025-10-17 15:11:59,392 - INFO -   Progress: 460/999
+2025-10-17 15:11:59,511 - INFO -   Progress: 470/999
+2025-10-17 15:11:59,623 - INFO -   Progress: 480/999
+2025-10-17 15:11:59,738 - INFO -   Progress: 490/999
+2025-10-17 15:11:59,819 - INFO -   Progress: 500/999
+2025-10-17 15:11:59,916 - INFO -   Progress: 510/999
+2025-10-17 15:12:00,008 - INFO -   Progress: 520/999
+2025-10-17 15:12:00,106 - INFO -   Progress: 530/999
+2025-10-17 15:12:00,214 - INFO -   Progress: 540/999
+2025-10-17 15:12:00,324 - INFO -   Progress: 550/999
+2025-10-17 15:12:00,427 - INFO -   Progress: 560/999
+2025-10-17 15:12:00,543 - INFO -   Progress: 570/999
+2025-10-17 15:12:00,658 - INFO -   Progress: 580/999
+2025-10-17 15:12:00,776 - INFO -   Progress: 590/999
+2025-10-17 15:12:00,874 - INFO -   Progress: 600/999
+2025-10-17 15:12:00,970 - INFO -   Progress: 610/999
+2025-10-17 15:12:01,077 - INFO -   Progress: 620/999
+2025-10-17 15:12:01,181 - INFO -   Progress: 630/999
+2025-10-17 15:12:01,289 - INFO -   Progress: 640/999
+2025-10-17 15:12:01,396 - INFO -   Progress: 650/999
+2025-10-17 15:12:01,525 - INFO -   Progress: 660/999
+2025-10-17 15:12:01,641 - INFO -   Progress: 670/999
+2025-10-17 15:12:01,780 - INFO -   Progress: 680/999
+2025-10-17 15:12:01,882 - INFO -   Progress: 690/999
+2025-10-17 15:12:01,972 - INFO -   Progress: 700/999
+2025-10-17 15:12:02,072 - INFO -   Progress: 710/999
+2025-10-17 15:12:02,163 - INFO -   Progress: 720/999
+2025-10-17 15:12:02,260 - INFO -   Progress: 730/999
+2025-10-17 15:12:02,387 - INFO -   Progress: 740/999
+2025-10-17 15:12:02,479 - INFO -   Progress: 750/999
+2025-10-17 15:12:02,594 - INFO -   Progress: 760/999
+2025-10-17 15:12:02,693 - INFO -   Progress: 770/999
+2025-10-17 15:12:02,808 - INFO -   Progress: 780/999
+2025-10-17 15:12:02,925 - INFO -   Progress: 790/999
+2025-10-17 15:12:03,060 - INFO -   Progress: 800/999
+2025-10-17 15:12:03,213 - INFO -   Progress: 810/999
+2025-10-17 15:12:03,324 - INFO -   Progress: 820/999
+2025-10-17 15:12:03,435 - INFO -   Progress: 830/999
+2025-10-17 15:12:03,551 - INFO -   Progress: 840/999
+2025-10-17 15:12:03,685 - INFO -   Progress: 850/999
+2025-10-17 15:12:03,809 - INFO -   Progress: 860/999
+2025-10-17 15:12:03,930 - INFO -   Progress: 870/999
+2025-10-17 15:12:04,058 - INFO -   Progress: 880/999
+2025-10-17 15:12:04,184 - INFO -   Progress: 890/999
+2025-10-17 15:12:04,306 - INFO -   Progress: 900/999
+2025-10-17 15:12:04,416 - INFO -   Progress: 910/999
+2025-10-17 15:12:04,514 - INFO -   Progress: 920/999
+2025-10-17 15:12:04,650 - INFO -   Progress: 930/999
+2025-10-17 15:12:04,777 - INFO -   Progress: 940/999
+2025-10-17 15:12:04,895 - INFO -   Progress: 950/999

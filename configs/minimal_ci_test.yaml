@@ -1,0 +1,199 @@
+# minimal_ci_test.yaml - CI統合テスト用最小YAML
+# Purpose: 60秒以内のフルパイプラインテスト (YAML → MIDI → WAV → Quality Gates)
+# Todo #9: フルパイプライン60秒CI
+
+# ============================================================
+# メタ情報
+# ============================================================
+meta:
+  title: "CI Test Song"
+  artist: "CI Pipeline"
+  seed: 42
+  faithfulness: 0.8
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"  # midi and audio
+
+# ============================================================
+# グローバル設定
+# ============================================================
+global:
+  tempo_bpm: 120
+  time_signature: "4/4"
+  key_signature:
+    tonic: "C"
+    mode: "major"
+  
+  default_density: "medium"
+  default_velocity: 80
+
+# ============================================================
+# セクション構成 (4セクション - 合計16小節)
+# ============================================================
+sections:
+  - name: "Intro"
+    length_bars: 4
+    tempo_bpm: 120
+    chords:
+      - symbol: "C"
+        duration_bars: 2.0
+      - symbol: "G"
+        duration_bars: 2.0
+    
+    # Todo #5: 品質ゲート (Drums)
+    quality_gates:
+      drums:
+        kick_onbeat_ratio_min: 0.4
+        ghost_note_ratio_max: 0.5
+        notes_per_bar_range: [4, 32]
+        complexity_range: [0.2, 0.9]
+        syncopation_rate_max: 0.6
+        density_range: [0.3, 0.9]
+        quality_score_min: 0.5
+    
+    instruments:
+      drums:
+        pattern_type: "basic_rock"
+        density: "low"
+      
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      
+      piano:
+        voicing: "block"
+        density: "low"
+
+  - name: "Verse"
+    length_bars: 4
+    tempo_bpm: 120
+    chords:
+      - symbol: "Am"
+        duration_bars: 2.0
+      - symbol: "F"
+        duration_bars: 2.0
+    
+    quality_gates:
+      drums:
+        kick_onbeat_ratio_min: 0.4
+        ghost_note_ratio_max: 0.5
+        notes_per_bar_range: [4, 32]
+        complexity_range: [0.2, 0.9]
+        syncopation_rate_max: 0.6
+        density_range: [0.3, 0.9]
+        quality_score_min: 0.5
+    
+    instruments:
+      drums:
+        pattern_type: "basic_rock"
+        density: "medium"
+      
+      bass:
+        technique: "walking"
+        velocity_boost: 5
+      
+      piano:
+        voicing: "spread"
+        density: "medium"
+
+  - name: "Chorus"
+    length_bars: 4
+    tempo_bpm: 120
+    chords:
+      - symbol: "C"
+        duration_bars: 1.0
+      - symbol: "G"
+        duration_bars: 1.0
+      - symbol: "Am"
+        duration_bars: 1.0
+      - symbol: "F"
+        duration_bars: 1.0
+    
+    quality_gates:
+      drums:
+        kick_onbeat_ratio_min: 0.4
+        ghost_note_ratio_max: 0.5
+        notes_per_bar_range: [4, 32]
+        complexity_range: [0.2, 0.9]
+        syncopation_rate_max: 0.6
+        density_range: [0.3, 0.9]
+        quality_score_min: 0.5
+    
+    instruments:
+      drums:
+        pattern_type: "basic_rock"
+        density: "high"
+      
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 10
+      
+      piano:
+        voicing: "drop2"
+        density: "high"
+      
+      strings:
+        technique: "legato"
+        bow_pressure: 0.8
+        sustain_control: 0.9
+
+  - name: "Outro"
+    length_bars: 4
+    tempo_bpm: 120
+    chords:
+      - symbol: "C"
+        duration_bars: 4.0
+    
+    quality_gates:
+      drums:
+        kick_onbeat_ratio_min: 0.4
+        ghost_note_ratio_max: 0.5
+        notes_per_bar_range: [4, 32]
+        complexity_range: [0.2, 0.9]
+        syncopation_rate_max: 0.6
+        density_range: [0.3, 0.9]
+        quality_score_min: 0.5
+    
+    instruments:
+      drums:
+        pattern_type: "basic_rock"
+        density: "low"
+      
+      bass:
+        technique: "root_whole_notes"
+        velocity_boost: -5
+      
+      piano:
+        voicing: "block"
+        density: "low"
+
+# ============================================================
+# エクスポート設定
+# ============================================================
+export:
+  midi_dir: "out/ci_test/midi"
+  audio_dir: "out/ci_test/wav"
+  
+  filename_format: "{section}_{instrument}_{technique}_{bpm}"
+  
+  provenance:
+    enabled: true
+    include_git_sha: true
+    include_pattern_id: true
+
+# ============================================================
+# CI統合テスト用メタデータ
+# ============================================================
+ci_test:
+  max_execution_time_sec: 60
+  expected_sections: 4
+  expected_total_bars: 16
+  expected_instruments: ["drums", "bass", "piano", "strings"]
+  expected_files:
+    midi:
+      - "Intro_drums_basic_rock_120.mid"
+      - "Verse_bass_walking_120.mid"
+      - "Chorus_piano_drop2_120.mid"
+    wav:
+      - "Intro_drums_basic_rock_120.wav"
+      - "Verse_bass_walking_120.wav"
+      - "Chorus_piano_drop2_120.wav"

@@ -1,0 +1,163 @@
+# ballad_epic_complex.yaml - ベンチマーク曲 #12
+# Genre: Ballad, Style: Epic, Difficulty: Complex
+
+meta:
+  title: "Ballad Epic Complex"
+  artist: "Benchmark Suite"
+  genre: "Ballad"
+  style: "Epic"
+  difficulty: "complex"
+  seed: 4003
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 20
+    sections: 5
+    instruments: ["drums", "bass", "piano", "strings"]
+    tempo_bpm: 76
+    key: "Eb major"
+
+global:
+  tempo_bpm: 76
+  time_signature: "4/4"
+  key_signature:
+    tonic: "Eb"
+    mode: "major"
+  default_density: "medium"
+  default_velocity: 80
+
+sections:
+  - name: "Intro"
+    length_bars: 4
+    chords:
+      - symbol: "Eb"
+        duration_bars: 2
+      - symbol: "Bb"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.7
+        sustain_control: true
+
+  - name: "Verse"
+    length_bars: 6
+    chords:
+      - symbol: "Eb"
+        duration_bars: 2
+      - symbol: "Cm"
+        duration_bars: 2
+      - symbol: "Ab"
+        duration_bars: 1
+      - symbol: "Bb"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.75
+        sustain_control: true
+
+  - name: "Chorus"
+    length_bars: 6
+    chords:
+      - symbol: "Ab"
+        duration_bars: 1.5
+      - symbol: "Bb"
+        duration_bars: 1.5
+      - symbol: "Cm"
+        duration_bars: 1.5
+      - symbol: "Eb"
+        duration_bars: 1.5
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 8
+      piano:
+        voicing: "power"
+        density: "high"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.85
+        sustain_control: true
+
+  - name: "Bridge"
+    length_bars: 2
+    chords:
+      - symbol: "Fm"
+        duration_bars: 1
+      - symbol: "Bb7"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "medium"
+      bass:
+        technique: "walking"
+        velocity_boost: 5
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "staccato"
+        bow_pressure: 0.6
+
+  - name: "Outro"
+    length_bars: 2
+    chords:
+      - symbol: "Eb"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "ballad"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "triad"
+        density: "sparse"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.95
+        sustain_control: true
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.5
+    ghost_note_ratio_max: 0.38
+    quality_score_min: 0.6
+    syncopation_rate_max: 0.4
+  bass:
+    root_accuracy_min: 0.72
+    groove_quality_min: 0.63
+    pitch_range_fit_min: 0.62
+  piano:
+    chord_tone_rate_min: 0.66
+    velocity_std_range: [12, 28]
+    melody_expression_min: 0.63
+  strings:
+    legato_quality_min: 0.68
+    bowing_expression_min: 0.6
+    harmony_quality_min: 0.62

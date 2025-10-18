@@ -200,50 +200,6 @@ drums:
 
 ---
 
-## ✅ 検証結果 (2024年10月15日)
-
-**決定性検証**: 100%成功 🎉
-
-### テスト実行サマリー
-
-1. **クリーニング決定性**
-   - 20ファイルサブセットで2回実行 (同一seed)
-   - ✅ Fileset Hash一致: `8efad288c36b`
-   - ✅ 全メタデータSHA1一致
-   - ✅ `diff -r` 完全一致
-
-2. **品質ゲート検証**
-   - 14ファイル検証 (Drums)
-   - ✅ 5件合格 (35.7%)
-   - ✅ 9件不合格 (`min_kick_on_beat_rate_violation`)
-   - ✅ 非クリティカル正常処理
-
-3. **層別分割決定性**
-   - 同一seedで2回実行
-   - ✅ Train 10 / Val 0 / Test 4 (両実行で一致)
-   - ✅ 層別化: 5初期層 → 3最終層
-   - ✅ `diff -r` 完全一致
-
-### 実装完了機能
-
-| 機能 | 実装 | 検証 |
-|------|------|------|
-| `stable_list_midis()` | ✅ | ✅ |
-| `seeded_rng()` | ✅ | ✅ |
-| `atomic_write_json()` | ✅ | ✅ |
-| Schema versioning | ✅ | ✅ |
-| Provenance tracking | ✅ | ✅ |
-| `--dry-run` | ✅ | ✅ |
-| `--jobs` | ✅ | ✅ |
-| `--fail-on-critical` | ✅ | ✅ |
-| `--summary` | ✅ | ✅ |
-| Quality gates YAML | ✅ | ✅ |
-
-**詳細**: `MIDI_CLEANING_VALIDATION.md` 参照  
-**CI/CD**: `.github/workflows/midi_cleaning_ci.yml` 参照
-
----
-
 ## 📈 reason_codes一覧
 
 ### Critical (強制隔離)

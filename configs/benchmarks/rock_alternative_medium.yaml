@@ -1,0 +1,159 @@
+# rock_alternative_medium.yaml - ベンチマーク曲 #5
+# Genre: Rock, Style: Alternative, Difficulty: Medium
+
+meta:
+  title: "Rock Alternative Medium"
+  artist: "Benchmark Suite"
+  genre: "Rock"
+  style: "Alternative"
+  difficulty: "medium"
+  seed: 2002
+  soundfont: "assets/FluidR3_GM.sf2"
+  output_format: "both"
+  
+  expected_metrics:
+    total_bars: 20
+    sections: 5
+    instruments: ["drums", "bass", "piano", "strings"]
+    tempo_bpm: 125
+    key: "A minor"
+
+global:
+  tempo_bpm: 125
+  time_signature: "4/4"
+  key_signature:
+    tonic: "A"
+    mode: "minor"
+  default_density: "medium"
+  default_velocity: 85
+
+sections:
+  - name: "Intro"
+    length_bars: 3
+    chords:
+      - symbol: "Am"
+        duration_bars: 2
+      - symbol: "G"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "triad"
+        density: "sparse"
+
+  - name: "Verse"
+    length_bars: 6
+    chords:
+      - symbol: "Am"
+        duration_bars: 2
+      - symbol: "F"
+        duration_bars: 2
+      - symbol: "C"
+        duration_bars: 1
+      - symbol: "G"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "medium"
+      bass:
+        technique: "root_eighths"
+        velocity_boost: 5
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.6
+        sustain_control: true
+
+  - name: "Chorus"
+    length_bars: 5
+    chords:
+      - symbol: "F"
+        duration_bars: 1
+      - symbol: "G"
+        duration_bars: 1
+      - symbol: "Am"
+        duration_bars: 2
+      - symbol: "C"
+        duration_bars: 1
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "high"
+      bass:
+        technique: "syncopated"
+        velocity_boost: 10
+      piano:
+        voicing: "power"
+        density: "high"
+      strings:
+        technique: "legato"
+        bow_pressure: 0.7
+        sustain_control: true
+
+  - name: "Bridge"
+    length_bars: 4
+    chords:
+      - symbol: "Dm"
+        duration_bars: 2
+      - symbol: "E7"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "medium"
+      bass:
+        technique: "walking"
+        velocity_boost: 5
+      piano:
+        voicing: "shell"
+        density: "medium"
+      strings:
+        technique: "staccato"
+        bow_pressure: 0.5
+
+  - name: "Outro"
+    length_bars: 2
+    chords:
+      - symbol: "Am"
+        duration_bars: 2
+    instruments:
+      drums:
+        pattern_type: "rock"
+        density: "low"
+      bass:
+        technique: "root_quarters"
+        velocity_boost: 0
+      piano:
+        voicing: "triad"
+        density: "sparse"
+      strings:
+        technique: "sustained"
+        bow_pressure: 0.8
+        sustain_control: true
+
+quality_thresholds:
+  drums:
+    kick_onbeat_ratio_min: 0.55
+    ghost_note_ratio_max: 0.35
+    quality_score_min: 0.65
+    syncopation_rate_max: 0.6
+  bass:
+    root_accuracy_min: 0.72
+    groove_quality_min: 0.63
+    pitch_range_fit_min: 0.65
+  piano:
+    chord_tone_rate_min: 0.62
+    velocity_std_range: [15, 32]
+    melody_expression_min: 0.55
+  strings:
+    legato_quality_min: 0.6
+    bowing_expression_min: 0.52
+    harmony_quality_min: 0.58
