@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -243,6 +244,22 @@ _global_index_path = None
 _global_emit_meta_json = None  # 新規: .meta.json 出力モード
 
 
+def _init_worker(input_dir, output_dir, quarantine_dir, instrument, force, fileset_hash, provenance, index_path, emit_meta_json):
+    """ワーカープロセスの初期化関数"""
+    global _global_input_dir, _global_output_dir, _global_quarantine_dir, _global_instrument, _global_force
+    global _global_fileset_hash, _global_provenance, _global_index_path, _global_emit_meta_json
+    
+    _global_input_dir = input_dir
+    _global_output_dir = output_dir
+    _global_quarantine_dir = quarantine_dir
+    _global_instrument = instrument
+    _global_force = force
+    _global_fileset_hash = fileset_hash
+    _global_provenance = provenance
+    _global_index_path = index_path
+    _global_emit_meta_json = emit_meta_json
+
+
 def _work_wrapper(p: Path) -> Tuple[bool, Dict]:
     """並列処理用のワーカー関数（トップレベルでpickle可能）"""
     # グローバル変数がNoneの場合のエラーハンドリング
@@ -311,8 +328,33 @@ def _should_quarantine(reason_codes: list, meta: Dict) -> bool:
 
 
 def main():
+    """メイン処理"""
+    # グローバル変数（シグナルハンドラーからアクセスするため）
+    global _shard_writer_instance
+    _shard_writer_instance = None
+    
+    def signal_handler(sig, frame):
+        """Ctrl+C でも安全にpickleを保存"""
+        print("\n\n⚠️  Interrupt received. Saving progress...", flush=True)
+        if _shard_writer_instance:
+            try:
+                if hasattr(_shard_writer_instance, 'buffer') and _shard_writer_instance.buffer:
+                    print(f"💾 Flushing {len(_shard_writer_instance.buffer)} entries to pickle...", flush=True)
+                    _shard_writer_instance.flush()
+                    print("✅ Progress saved successfully!", flush=True)
+                else:
+                    print("ℹ️  No pending data to save.", flush=True)
+            except Exception as e:
+                print(f"❌ Error saving progress: {e}", flush=True)
+        print("Exiting...", flush=True)
+        sys.exit(0)
+    
+    # シグナルハンドラー登録
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
     parser = argparse.ArgumentParser(
-        description="統合MIDIクリーニング (共通 + 楽器別)"
+        description="統合MIDIクリーニングツール"
     )
     parser.add_argument(
         "--in",
@@ -376,10 +418,22 @@ def main():
         help="既存シャードから再開（途中停止対応）",
     )
     parser.add_argument(
+        "--subfolder-id",
+        type=str,
+        default=None,
+        help="サブフォルダID (0-9, a-f) - LAMDA専用モード",
+    )
+    parser.add_argument(
         "--seed",
         type=str,
         default="cleaning-default",
         help="乱数シード",
+    )
+    parser.add_argument(
+        "--subfolder-mode",
+        type=str,
+        default="",
+        help="サブフォルダモード: 単一pickleファイルを生成 (例: '0', 'a', 'f')",
     )
     
     args = parser.parse_args()
@@ -451,18 +505,39 @@ def main():
     
     # ShardWriter初期化（pickle-outが指定されている場合のみ）
     shard_writer = None
+    subfolder_mode = args.subfolder_id.strip() if args.subfolder_id else ""
+    
     if args.pickle_out:
         pickle_out_dir = Path(args.pickle_out)
         pickle_out_dir.mkdir(parents=True, exist_ok=True)
-        shard_writer = ShardWriter(
-            out_dir=pickle_out_dir,
-            instrument=args.instrument,
-            shard_size=args.shard_size,
-            resume=args.resume,
-        )
-        print(f"📦 ShardWriter initialized: {pickle_out_dir}")
-        print(f"   Shard size: {args.shard_size}")
-        print(f"   Resume mode: {args.resume}")
+        
+        if subfolder_mode:
+            # サブフォルダモード: 単一pickleファイルを生成
+            # shard_size を大きくして1ファイルにまとめる
+            shard_writer = ShardWriter(
+                out_dir=pickle_out_dir,
+                instrument=args.instrument,
+                shard_size=len(midi_files) + 1000,  # 全ファイルが1シャードに収まるように
+                resume=args.resume,
+                subfolder_id=subfolder_mode,  # サブフォルダIDを渡す
+            )
+            print(f"📦 ShardWriter initialized (SUBFOLDER MODE: {subfolder_mode})")
+            print(f"   Output: {pickle_out_dir}/{args.instrument}_shard_{subfolder_mode}.pickle")
+            print(f"   Files to process: {len(midi_files)}")
+        else:
+            # 通常モード: 複数シャードに分割
+            shard_writer = ShardWriter(
+                out_dir=pickle_out_dir,
+                instrument=args.instrument,
+                shard_size=args.shard_size,
+                resume=args.resume,
+            )
+            print(f"📦 ShardWriter initialized: {pickle_out_dir}")
+            print(f"   Shard size: {args.shard_size}")
+            print(f"   Resume mode: {args.resume}")
+        
+        # グローバル変数に保存（シグナルハンドラーから参照）
+        _shard_writer_instance = shard_writer
         print()
     
     # 並列/直列の切り替え
@@ -489,11 +564,22 @@ def main():
                 stats["reason_codes"][code] = stats["reason_codes"].get(code, 0) + 1
     else:
         # 並列
-        with ProcessPoolExecutor(max_workers=args.jobs) as executor:
+        checkpoint_interval = 500  # 500ファイルごとに自動保存
+        processed_count = 0
+        
+        with ProcessPoolExecutor(
+            max_workers=args.jobs,
+            initializer=_init_worker,
+            initargs=(
+                input_dir, output_dir, quarantine_dir, args.instrument, args.force,
+                fileset_hash, provenance, index_path, args.emit_meta_json
+            )
+        ) as executor:
             futures = {executor.submit(_work_wrapper, p): p for p in midi_files}
             
             for future in tqdm(as_completed(futures), total=len(futures), desc="Cleaning"):
                 success, meta = future.result()
+                processed_count += 1
                 
                 if meta.get("skipped"):
                     stats["skipped"] += 1
@@ -510,6 +596,13 @@ def main():
                 
                 for code in meta.get("reason_codes", []):
                     stats["reason_codes"][code] = stats["reason_codes"].get(code, 0) + 1
+                
+                # チェックポイント: 500ファイルごとに自動保存
+                if shard_writer and processed_count % checkpoint_interval == 0:
+                    if shard_writer.buffer:
+                        print(f"\n💾 Checkpoint: Saving {len(shard_writer.buffer)} entries...", flush=True)
+                        shard_writer.flush()
+                        print(f"✅ Checkpoint saved (processed: {processed_count}/{len(futures)})", flush=True)
     
     # ShardWriter の最終処理（flush & index生成）
     index_pickle_path = None
@@ -523,20 +616,30 @@ def main():
         if shard_writer.buffer:
             shard_writer.flush()
         
-        # インデックス生成
-        index_pickle_path = shard_writer.write_index()
+        # サブフォルダモードではインデックス不要
+        if not subfolder_mode:
+            # インデックス生成（通常モードのみ）
+            index_pickle_path = shard_writer.write_index()
+            
+            total_shards = shard_writer.shard_idx + (1 if shard_writer.buffer else 0)
+            print()
+            print(f"📚 Index pickle saved: {index_pickle_path}")
+            print(f"   Format: LAMDA Stage2 compatible")
+            print(f"   Total shards: {total_shards}")
+            print(f"   Shard size:   {args.shard_size}")
+            print()
+            print("✅ Ready for Stage2 processing:")
+            print(f"   python scripts/lamda_stage2_extractor.py \\")
+            print(f"       --metadata-index {index_pickle_path} \\")
+            print(f"       --input-dir {output_dir.parent}")
+        else:
+            # サブフォルダモード: 単一pickleファイルのパスを表示
+            pickle_file = pickle_out_dir / f"{args.instrument}_shard_{subfolder_mode}.pickle"
+            print()
+            print(f"📦 Subfolder pickle saved: {pickle_file}")
+            print(f"   Entries: {len(shard_writer.buffer) if hasattr(shard_writer, 'buffer') else 'flushed'}")
+            print(f"   Format: LAMDA Stage2 compatible (single shard)")
         
-        total_shards = shard_writer.shard_idx + (1 if shard_writer.buffer else 0)
-        print()
-        print(f"📚 Index pickle saved: {index_pickle_path}")
-        print(f"   Format: LAMDA Stage2 compatible")
-        print(f"   Total shards: {total_shards}")
-        print(f"   Shard size:   {args.shard_size}")
-        print()
-        print("✅ Ready for Stage2 processing:")
-        print(f"   python scripts/lamda_stage2_extractor.py \\")
-        print(f"       --metadata-index {index_pickle_path} \\")
-        print(f"       --input-dir {output_dir.parent}")
         print("=" * 70)
     
     # 結果レポート

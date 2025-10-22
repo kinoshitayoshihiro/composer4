@@ -62,10 +62,33 @@ def compute_fileset_hash(paths: Iterable[Path]) -> str:
 # =============================================================================
 
 def stable_list_midis(root: str | Path) -> List[Path]:
-    """ファイルシステム順に依存しない安定列挙。"""
+    """
+    ファイルシステム順に依存しない安定列挙。
+    大規模データセット(LAMDA等)向けに find コマンドで高速化。
+    """
+    import subprocess
+    
     root = Path(root)
-    files = list(root.rglob("*.mid")) + list(root.rglob("*.midi"))
+    
+    # find コマンドで高速検索（rglob より 10-100倍速い）
+    print(f"🔍 Enumerating MIDI files in {root} (this may take a few minutes)...", flush=True)
+    try:
+        # -name は複数回指定可能
+        result = subprocess.run(
+            ["find", str(root), "-type", "f", "-name", "*.mid", "-o", "-name", "*.midi"],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=600,  # 10分でタイムアウト
+        )
+        files = [Path(line.strip()) for line in result.stdout.split("\n") if line.strip()]
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired) as e:
+        # fallback to rglob (slower but compatible)
+        print(f"   ⚠️  find command failed ({e}), falling back to rglob...", flush=True)
+        files = list(root.rglob("*.mid")) + list(root.rglob("*.midi"))
+    
     files.sort(key=lambda p: p.as_posix())
+    print(f"✅ Found {len(files)} MIDI files", flush=True)
     return files
 
 
@@ -296,13 +319,14 @@ class ShardWriter:
     - レジューム対応（既存シャード検出）
     """
     
-    def __init__(self, out_dir: Path, instrument: str, shard_size: int = 5000, resume: bool = False):
+    def __init__(self, out_dir: Path, instrument: str, shard_size: int = 5000, resume: bool = False, subfolder_id: str = ""):
         """
         Args:
             out_dir: 出力ディレクトリ
             instrument: 楽器名
             shard_size: シャードあたりの件数
             resume: 既存シャードから再開するか
+            subfolder_id: サブフォルダID（例: '0', 'a', 'f'）。指定時は単一pickleファイルを生成
         """
         self.out_dir = Path(out_dir)
         self.out_dir.mkdir(parents=True, exist_ok=True)
@@ -310,8 +334,22 @@ class ShardWriter:
         self.shard_size = shard_size
         self.buffer: List[Dict[str, Any]] = []
         self.shard_paths: List[Path] = []
+        self.subfolder_id = subfolder_id  # サブフォルダモード用
         
-        # 既存シャードを検出して再開
+        # サブフォルダモードの場合
+        if subfolder_id:
+            # 既存ファイルがあればスキップ扱い
+            expected_pickle = self.out_dir / f"{instrument}_shard_{subfolder_id}.pickle"
+            if resume and expected_pickle.exists():
+                print(f"📂 Resume mode: Pickle already exists: {expected_pickle}")
+                print(f"   This subfolder will be skipped.")
+                self.shard_idx = -1  # スキップフラグ
+                return
+            else:
+                self.shard_idx = 0
+                return
+        
+        # 通常モード: 既存シャードを検出して再開
         existing = sorted(self.out_dir.glob(f"{instrument}_*.pkl"))
         # インデックスファイルを除外
         existing = [p for p in existing if "_index.pkl" not in p.name]
@@ -331,6 +369,10 @@ class ShardWriter:
         LAMDA互換メタデータをバッファに追加
         閾値に達したら自動的にflush
         """
+        # スキップモード（既存pickleがある場合）
+        if self.shard_idx == -1:
+            return
+        
         self.buffer.append(lamda_meta)
         
         if len(self.buffer) >= self.shard_size:
@@ -340,11 +382,16 @@ class ShardWriter:
         """
         バッファを原子的にpickleファイルに書き込み
         """
-        if not self.buffer:
+        if not self.buffer or self.shard_idx == -1:
             return
         
-        # Stage2互換の命名規則: {instrument}_{idx:05d}.pkl
-        shard_name = f"{self.instrument}_{self.shard_idx:05d}.pkl"
+        # サブフォルダモードの場合
+        if self.subfolder_id:
+            shard_name = f"{self.instrument}_shard_{self.subfolder_id}.pickle"
+        else:
+            # Stage2互換の命名規則: {instrument}_{idx:05d}.pkl
+            shard_name = f"{self.instrument}_{self.shard_idx:05d}.pkl"
+        
         tmp_path = self.out_dir / (shard_name + ".tmp")
         final_path = self.out_dir / shard_name
         
