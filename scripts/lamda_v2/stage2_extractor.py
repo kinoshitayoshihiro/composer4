@@ -31,6 +31,7 @@ except ImportError:
 from scripts.lamda_v2.tempo_timing import build_beat_grid
 from scripts.lamda_v2.chord_analyzer import extract_bar_chords
 from scripts.lamda_v2.key_analyzer import estimate_local_key_sequence, to_key_hints_payload
+from scripts.lamda_v2.section_analyzer import auto_segment_sections
 
 
 SCHEMA_VERSION = "lamda_v2.6"
@@ -90,8 +91,12 @@ def extract_stage2_metadata(midi_path: Path) -> Dict[str, Any]:
         )
         key_payload = to_key_hints_payload(key_seq)
         
-        # Phase2-4: Sections (TODO)
-        sections = []  # Placeholder for auto_segment_sections()
+        # Phase2-4: Sections
+        sections = auto_segment_sections(
+            pm,
+            downbeats_ql,
+            min_bars=8,
+        )
         
         # Phase3: Groove & controls (TODO)
         groove = {}  # Placeholder
@@ -130,7 +135,7 @@ def _error_payload(error_msg: str) -> Dict[str, Any]:
         "chordmap": {"unit": "ql", "events": []},
         "key_hint": [],
         "modulations": [],
-        "sections_auto": [],
+        "sections_auto": {"unit": "bar", "sections": [], "energy": []},
         "groove": {},
         "controls": {},
     }
