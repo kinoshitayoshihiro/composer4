@@ -7,6 +7,7 @@ import argparse
 import importlib
 import json
 import math
+import pickle
 import statistics
 import sys
 import hashlib
@@ -45,6 +46,37 @@ try:
 except Exception:
     pa = None
     pq = None
+
+try:
+    import pretty_midi
+except ImportError:
+    pretty_midi = None  # type: ignore
+
+# --- legacy utils (optional) ---
+try:
+    from utilities import harmonic_utils  # estimate_bar_chords, estimate_local_key_sequence
+except Exception:
+    harmonic_utils = None
+
+try:
+    from utilities import groove_sampler_v2
+except Exception:
+    groove_sampler_v2 = None
+
+try:
+    from utilities import pb_math  # ±8191/半音換算
+except Exception:
+    pb_math = None
+
+try:
+    from utilities import tempo_utils  # beat_to_seconds, TempoMap
+except Exception:
+    tempo_utils = None
+
+try:
+    from utilities import timing_utils  # merge_min_dwell (to be implemented)
+except Exception:
+    timing_utils = None
 
 from lamda_tools import MetricConfig, compute_loop_metrics
 from lamda_tools.metadata_io import iter_loop_records, load_metadata_index
@@ -402,6 +434,11 @@ class Stage2Paths:
     summary_out: Optional[Path]
     sample_event_rows: int = 5000
     audio_embeddings_parquet: Optional[Path] = None
+
+    # v2.1拡張: JSON/PKL/CSV出力ディレクトリ
+    json_dir: Optional[Path] = None
+    pkl_dir: Optional[Path] = None
+    csv_dir: Optional[Path] = None
 
 
 AUDIO_LOOP_DEFAULTS: Dict[str, Optional[Any]] = {
@@ -1654,6 +1691,14 @@ class Stage2Settings:
     audio_adaptive_weights: Optional[AudioAdaptiveWeights] = None
     audio_guidance: Optional[AudioGuidanceStore] = None
 
+    # v2.1拡張: 出力フォーマット制御
+    emit_json: bool = True
+    emit_pickle: bool = True
+    emit_csv: str = ""  # "aggregate" or ""
+    
+    # Phase13/15: sections注入
+    sections_json: Optional[Path] = None
+
 
 def _primary_retry_key(reason: str) -> str:
     if "_" in reason:
@@ -1795,23 +1840,26 @@ class _StreamingSinks:
     JSONL（metrics）と Parquet（events）を逐次書き出しする薄いラッパ。
     メモリ蓄積を回避して、ストリーミングで出力する。
     """
-    def __init__(self, out_dir: Path, parquet_schema: Optional[Dict[str, Any]] = None, row_group: int = 4096):
+
+    def __init__(
+        self, out_dir: Path, parquet_schema: Optional[Dict[str, Any]] = None, row_group: int = 4096
+    ):
         self.out_dir = Path(out_dir)
         self.out_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # metrics: JSONL
         self.metrics_fp = io.open(self.out_dir / "metrics_score.jsonl", "a", encoding="utf-8")
-        
+
         # loop summary: CSV (ヘッダー付き)
         self.loop_csv_fp = io.open(self.out_dir / "loop_summary.csv", "a", encoding="utf-8")
         self._loop_csv_header_written = False
-        
+
         # events: Parquet（オプション）
         self.pq_writer = None
         self.row_group = row_group
         self._pq_buffer: List[Dict[str, Any]] = []
         self._pq_path = self.out_dir / "canonical_events.parquet"
-        
+
         if pq is not None and parquet_schema is not None:
             self._schema_fields = list(parquet_schema.keys())
         else:
@@ -1838,7 +1886,7 @@ class _StreamingSinks:
         """イベントバッチをParquet形式で書き出し"""
         if self._schema_fields is None or pq is None or not rows:
             return  # Parquet書き出しを無効化
-        
+
         self._pq_buffer.extend(rows)
         if len(self._pq_buffer) >= self.row_group:
             self._flush_parquet()
@@ -1847,15 +1895,11 @@ class _StreamingSinks:
         """Parquetバッファをディスクにフラッシュ"""
         if not self._pq_buffer:
             return
-        
+
         try:
             table = pa.Table.from_pylist(self._pq_buffer)
             if self.pq_writer is None:
-                self.pq_writer = pq.ParquetWriter(
-                    self._pq_path,
-                    table.schema,
-                    compression="zstd"
-                )
+                self.pq_writer = pq.ParquetWriter(self._pq_path, table.schema, compression="zstd")
             self.pq_writer.write_table(table)
             self._pq_buffer.clear()
         except Exception as e:
@@ -1877,27 +1921,30 @@ class _BatchManifest:
     冪等実行のための処理済みトラッカー。
     BATCH_MANIFEST.json に処理済みファイルリストを保存。
     """
+
     def __init__(self, out_dir: Path, meta_index_path: Path, resume: bool = False):
         self.path = Path(out_dir) / "BATCH_MANIFEST.json"
         self.resume = resume
         self.data = {
             "created_at": _dt.datetime.utcnow().isoformat() + "Z",
             "meta_index_sha1": _sha1_file(meta_index_path) if meta_index_path.exists() else "",
-            "processed": []  # cleaned_file の相対パス
+            "processed": [],  # cleaned_file の相対パス
         }
-        
+
         if resume and self.path.exists():
             try:
                 loaded = json.loads(self.path.read_text(encoding="utf-8"))
                 # SHA1が一致する場合のみ再開
                 if loaded.get("meta_index_sha1") == self.data["meta_index_sha1"]:
                     self.data["processed"] = loaded.get("processed", [])
-                    print(f"[Resume] Loaded {len(self.data['processed'])} processed records from manifest")
+                    print(
+                        f"[Resume] Loaded {len(self.data['processed'])} processed records from manifest"
+                    )
                 else:
                     print("[Resume] Index SHA1 mismatch, starting fresh")
             except Exception as e:
                 print(f"[Resume] Failed to load manifest: {e}")
-        
+
         self._processed_set = set(self.data["processed"])
         self._dirty = False
 
@@ -1921,8 +1968,7 @@ class _BatchManifest:
         """マニフェストをJSONファイルに保存"""
         try:
             self.path.write_text(
-                json.dumps(self.data, ensure_ascii=False, indent=2),
-                encoding="utf-8"
+                json.dumps(self.data, ensure_ascii=False, indent=2), encoding="utf-8"
             )
             self._dirty = False
         except Exception as e:
@@ -1945,25 +1991,75 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--limit", type=int, help="Maximum number of loops to process")
     parser.add_argument("--offset", type=int, default=0, help="Starting position (0-based index)")
-    
+
     # しきい値の二段運用
     parser.add_argument("--threshold", type=float, help="後方互換: soft/hard両方に適用")
     parser.add_argument("--threshold-soft", type=float, help="学習候補用の緩い閾値")
     parser.add_argument("--threshold-hard", type=float, help="公開用の厳しい閾値")
-    
+
     parser.add_argument("--summary-out", type=Path)
     parser.add_argument("--print-summary", action="store_true")
     parser.add_argument("--sample-events", type=int)
     parser.add_argument("--articulation-thresholds", type=Path)
-    
+
     # ストリーミング I/O
     parser.add_argument("--streaming", action="store_true", help="メモリ蓄積せず逐次書き出し")
-    parser.add_argument("--parquet-row-group", type=int, default=4096, help="Parquet行グループサイズ")
-    
+    parser.add_argument(
+        "--parquet-row-group", type=int, default=4096, help="Parquet行グループサイズ"
+    )
+
     # 冪等化メタ
     parser.add_argument("--resume", action="store_true", help="BATCH_MANIFEST.json に基づいて再開")
-    parser.add_argument("--manifest-flush-n", type=int, default=200, help="何件ごとにメタをフラッシュするか")
+    parser.add_argument(
+        "--manifest-flush-n", type=int, default=200, help="何件ごとにメタをフラッシュするか"
+    )
+
+    # 出力フォーマット制御（JSON/PKL が本線、CSV は監査用オプショナル）
+    parser.add_argument(
+        "--emit-json",
+        type=int,
+        default=1,
+        choices=[0, 1],
+        help="各曲の *.stage2.json を出力 (既定=1)",
+    )
+    parser.add_argument(
+        "--emit-pickle",
+        type=int,
+        default=1,
+        choices=[0, 1],
+        help="各曲の *.stage2.pkl を出力 (既定=1)",
+    )
+    parser.add_argument(
+        "--emit-csv",
+        type=str,
+        default="",
+        choices=["", "aggregate"],
+        help="CSV集計を出力: 'aggregate'=4つのCSV生成、''=出力なし (既定='')",
+    )
+
+    # LAMDA統合: 外部chordmap優先＋ホワイトリスト検証
+    parser.add_argument(
+        "--lamda-chords-dir",
+        type=Path,
+        default=None,
+        help="外部chordmap.jsonディレクトリ（LAMDA由来）を優先使用",
+    )
+    parser.add_argument(
+        "--whitelist-validate",
+        type=int,
+        default=1,
+        choices=[0, 1],
+        help="music21ホワイトリスト検証を実行 (1=ON, 0=OFF, 既定=1)",
+    )
     
+    # Phase13/15: RMS+novelty sections注入
+    parser.add_argument(
+        "--sections-json",
+        type=Path,
+        default=None,
+        help="precomputed sections.json (RMS+novelty) を優先採用",
+    )
+
     return parser.parse_args()
 
 
@@ -2110,9 +2206,10 @@ def _load_velocity_scoring_config(
         return None
     target_path = _resolve_config_path(config_dir, str(target_path_value))
     if not target_path.exists():
-        raise FileNotFoundError(
-            f"Velocity target histogram file not found: {target_path}",
-        )
+        # velocity評価は抽出に必須ではない → Noneを返して続行（スコアはNA）
+        print(f"WARNING: Velocity target histogram file not found: {target_path}", file=sys.stderr)
+        print("         Velocity scoring will be skipped (extraction continues).", file=sys.stderr)
+        return None
     target_text = target_path.read_text(encoding="utf-8")
     raw_loaded: Any = yaml.safe_load(target_text) or {}
     if not isinstance(raw_loaded, dict):
@@ -2670,6 +2767,19 @@ def _resolve_paths(
     if audio_embeddings_parquet:
         audio_embeddings_parquet.parent.mkdir(parents=True, exist_ok=True)
 
+    # v2.1拡張: JSON/PKL/CSV出力ディレクトリ
+    json_dir = base / "json"
+    pkl_dir = base / "pkl"
+    csv_dir = base / "csv"
+
+    # emit-json/pickle/csvフラグに応じてディレクトリを作成
+    if getattr(args, "emit_json", 1):
+        json_dir.mkdir(parents=True, exist_ok=True)
+    if getattr(args, "emit_pickle", 1):
+        pkl_dir.mkdir(parents=True, exist_ok=True)
+    if getattr(args, "emit_csv", "") == "aggregate":
+        csv_dir.mkdir(parents=True, exist_ok=True)
+
     return Stage2Paths(
         events_parquet=events_parquet,
         events_csv_sample=events_csv_sample,
@@ -2679,6 +2789,9 @@ def _resolve_paths(
         summary_out=summary_out,
         sample_event_rows=sample_rows,
         audio_embeddings_parquet=audio_embeddings_parquet,
+        json_dir=json_dir,
+        pkl_dir=pkl_dir,
+        csv_dir=csv_dir,
     )
 
 
@@ -2695,18 +2808,24 @@ def _build_settings(
     threshold = float(pipeline_cfg.get("threshold", 70.0))
     if args.threshold is not None:
         threshold = args.threshold
-    
+
     # しきい値の二段運用（後方互換性あり）
     if args.threshold_soft is None and args.threshold_hard is None:
         # 旧形式: --threshold のみ指定
         threshold_soft = threshold_hard = threshold
     else:
         # 新形式: soft/hard 個別指定
-        threshold_soft = float(args.threshold_soft if args.threshold_soft is not None else threshold)
-        threshold_hard = float(args.threshold_hard if args.threshold_hard is not None else threshold)
-    
+        threshold_soft = float(
+            args.threshold_soft if args.threshold_soft is not None else threshold
+        )
+        threshold_hard = float(
+            args.threshold_hard if args.threshold_hard is not None else threshold
+        )
+
     if threshold_soft > threshold_hard:
-        raise ValueError(f"--threshold-soft({threshold_soft}) must be <= --threshold-hard({threshold_hard})")
+        raise ValueError(
+            f"--threshold-soft({threshold_soft}) must be <= --threshold-hard({threshold_hard})"
+        )
 
     score_cfg = cast(Dict[str, Any], config.get("score", {}))
     axis_cfg_raw = cast(Dict[str, Any], score_cfg.get("axes", {}))
@@ -2769,13 +2888,21 @@ def _build_settings(
 
     paths = _resolve_paths(config, args)
 
-    offset = getattr(args, 'offset', 0) or 0
-    
+    offset = getattr(args, "offset", 0) or 0
+
     # ストリーミングと冪等化のオプション
-    streaming = getattr(args, 'streaming', False)
-    resume = getattr(args, 'resume', False)
-    parquet_row_group = getattr(args, 'parquet_row_group', 4096)
-    manifest_flush_n = getattr(args, 'manifest_flush_n', 200)
+    streaming = getattr(args, "streaming", False)
+    resume = getattr(args, "resume", False)
+    parquet_row_group = getattr(args, "parquet_row_group", 4096)
+    manifest_flush_n = getattr(args, "manifest_flush_n", 200)
+
+    # v2.1拡張: 出力フォーマット制御
+    emit_json = bool(getattr(args, "emit_json", 1))
+    emit_pickle = bool(getattr(args, "emit_pickle", 1))
+    emit_csv = str(getattr(args, "emit_csv", ""))
+    
+    # Phase13/15: sections注入
+    sections_json = getattr(args, "sections_json", None)
 
     return Stage2Settings(
         pipeline_version=version,
@@ -2798,6 +2925,10 @@ def _build_settings(
         structure_scoring=structure_scoring,
         audio_adaptive_weights=audio_adaptive_weights,
         audio_guidance=audio_guidance,
+        emit_json=emit_json,
+        emit_pickle=emit_pickle,
+        emit_csv=emit_csv,
+        sections_json=sections_json,
     )
 
 
@@ -4232,6 +4363,467 @@ def _percentile(values: Sequence[float], ratio: float) -> float:
     return ordered[low] * (1 - weight) + ordered[high] * weight
 
 
+# ========== Stage2拡張: 時間軸メタ抽出スケルトン（v2.1） ==========
+# 目的: xMIDI相当の文脈ラベル（テンポ/拍・コード・キー・セクション・グルーヴ等）を最小実装。
+# NO-OP方針: 例外時は空dict/listを返し、既存処理を壊さない。
+
+
+def _safe_round_extended(x: Any, nd: int = 3) -> float:
+    """安全な丸め処理"""
+    try:
+        return round(float(x), nd)
+    except (TypeError, ValueError, AttributeError):
+        return 0.0
+
+
+def extract_tempo_grid_extended(midi_data: Any) -> Dict[str, Any]:
+    """
+    1) テンポ/拍グリッド抽出
+    pretty_midi.PrettyMIDI → tempo_map, timesig_map, downbeats(QL)
+    NO-OP: pmが無効な場合は空配列で返す
+    """
+    out: Dict[str, Any] = {"tempo_map": [], "timesig_map": [], "downbeats_ql": []}
+    try:
+        # tempo changes
+        changes, tempi = midi_data.get_tempo_changes()
+        out["tempo_map"] = [
+            [_safe_round_extended(t, 3), _safe_round_extended(b, 2)] for t, b in zip(changes, tempi)
+        ]
+
+        # downbeats (秒)
+        try:
+            db_sec = midi_data.get_downbeats()
+        except Exception:
+            db_sec = []
+
+        # 秒→QL 変換（クォーター=1.0 の定義）
+        # 近傍 BPM を使うと理想だが、最小差分では先頭 BPM を採用
+        bpm0 = float(tempi[0]) if len(tempi) > 0 else 120.0
+        sec2ql = lambda s: float(s) * bpm0 / 60.0
+        out["downbeats_ql"] = [_safe_round_extended(sec2ql(t), 3) for t in db_sec]
+
+        # timesig を最も近い downbeat の bar index に割付
+        if hasattr(midi_data, "time_signature_changes"):
+            ts_changes = list(midi_data.time_signature_changes or [])
+        else:
+            ts_changes = []
+        if ts_changes and len(db_sec) > 0:
+
+            def _nearest_bar_index(t: float) -> int:
+                # 二分探索でも良いが最小差分として線形探索
+                nearest = 0
+                best = float("inf")
+                for i, d in enumerate(db_sec):
+                    diff = abs(d - float(t))
+                    if diff < best:
+                        best = diff
+                        nearest = i
+                return nearest
+
+            out["timesig_map"] = [
+                [_nearest_bar_index(ts.time), f"{ts.numerator}/{ts.denominator}"]
+                for ts in ts_changes
+            ]
+        else:
+            out["timesig_map"] = [[0, "4/4"]]
+
+    except Exception:
+        pass
+    return out
+
+
+def extract_bar_chords_extended(
+    midi_data: Any,
+    downbeats_ql: List[float],
+    min_dwell_ql: float = 4.0,
+) -> Dict[str, Any]:
+    """
+    2) 1小節コード化（簡易PC-set→maj/min）
+    各バー内の音高集合から和音を推定し、1小節1コードに整形
+    返り値: {"unit":"ql", "events":[{"time":ql, "root":"D", "quality":"maj", "confidence":0.5}]}
+    NO-OP: 音符がない場合は空eventsを返す
+    """
+    out: Dict[str, Any] = {"unit": "ql", "events": []}
+    try:
+        if not downbeats_ql or len(downbeats_ql) < 2:
+            return out
+
+        instruments = [ins for ins in midi_data.instruments if not ins.is_drum]
+        if not instruments:
+            return out
+
+        # 各バーのPC集計
+        nbar = len(downbeats_ql) - 1
+        for i in range(nbar):
+            t0_ql = downbeats_ql[i]
+            t1_ql = downbeats_ql[i + 1]
+
+            # QL→秒変換（簡易）
+            bpm = 120.0  # 後でtempo_mapから正確に取得
+            ql2sec = lambda q: q * 60.0 / bpm
+            t0_sec, t1_sec = ql2sec(t0_ql), ql2sec(t1_ql)
+
+            # バー内の音符を収集
+            pc_hist = np.zeros(12, dtype=int)
+            for ins in instruments:
+                for n in ins.notes:
+                    if n.end <= t0_sec or n.start >= t1_sec:
+                        continue
+                    pc_hist[n.pitch % 12] += 1
+
+            if pc_hist.sum() == 0:
+                # 無音→N（No chord）
+                out["events"].append(
+                    {
+                        "time": float(t0_ql),
+                        "root": "N",
+                        "quality": "",
+                        "confidence": 0.0,
+                    }
+                )
+                continue
+
+            # 最大ヒットをroot候補に
+            root_pc = int(np.argmax(pc_hist))
+            m3_pc = (root_pc + 3) % 12
+            M3_pc = (root_pc + 4) % 12
+
+            # maj/min判定（簡易）
+            quality = "min" if pc_hist[m3_pc] > pc_hist[M3_pc] else "maj"
+            confidence = float(pc_hist[root_pc]) / float(pc_hist.sum())
+
+            root_name = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][root_pc]
+
+            out["events"].append(
+                {
+                    "time": float(t0_ql),
+                    "root": root_name,
+                    "quality": quality,
+                    "confidence": _safe_round_extended(confidence, 3),
+                }
+            )
+
+        # 連続同一のマージ＋最短持続=min_dwell_ql（timing_utils優先パス）
+        if timing_utils and hasattr(timing_utils, "merge_min_dwell"):
+            out = timing_utils.merge_min_dwell(out, min_ql=min_dwell_ql)
+
+    except Exception:
+        pass
+    return out
+
+
+def estimate_local_keys_extended(chordmap: Dict[str, Any], win_bars: int = 2) -> Dict[str, Any]:
+    """
+    3) ローカルキー/転調ヒント（8-16拍窓の簡易推定）
+    chordmap(QL)からバー単位で key_hint を出す
+    返り値: {"key_hint":[[bar,"D"],...], "modulations":[{"time":ql,"to":"G"},...]}
+    NO-OP: chordmapが空の場合は空配列を返す
+    
+    優先: harmonic_utils.estimate_local_key_sequence があれば使用
+    フォールバック: 簡易実装（root同名長調）
+    """
+    out: Dict[str, Any] = {"key_hint": [], "modulations": []}
+    try:
+        # 旧資産優先パス
+        if harmonic_utils and hasattr(harmonic_utils, "estimate_local_key_sequence"):
+            seq = harmonic_utils.estimate_local_key_sequence(chordmap, win_beats=win_bars*4) or {}
+            keys = seq.get("keys", [])
+            out["key_hint"] = [[i, k] for i, k in enumerate(keys)]
+            out["modulations"] = seq.get("modulations", [])
+            return out
+        
+        # フォールバック: 簡易実装
+        events = chordmap.get("events", [])
+        if not events:
+            return out
+
+        prev_key: Optional[str] = None
+        for i, e in enumerate(events):
+            root = e.get("root", "C")
+            if root == "N":
+                root = "C"  # デフォルト
+
+            # 簡易: rootをキーとして使用（後で多数決に置換）
+            key = root
+            out["key_hint"].append([i, key])
+
+            # 転調検出
+            if prev_key and key != prev_key:
+                out["modulations"].append(
+                    {
+                        "time": float(e.get("time", 0.0)),
+                        "to": key,
+                    }
+                )
+            prev_key = key
+
+    except Exception:
+        pass
+    return out
+
+
+def auto_sections_from_energy_extended(
+    midi_data: Any,
+    downbeats_ql: List[float],
+    min_bars: int = 8,
+    sections_json: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    4) セクション自動（最小8小節＋自動ラベル）
+    エネルギーをバー単位に集計し、最小8小節で分割、規則ベースでラベル付与
+    返り値: {"unit":"bar", "sections":[{"bar":0,"label":"intro"},...], "energy":[[bar,0..1],...]}
+    NO-OP: downbeatsが不足する場合は最小構成を返す
+    
+    優先: sections_json があればそれを優先採用（RMS+novelty想定）
+    フォールバック: 現行の規則ラベリング（最小8小節）
+    """
+    # sections_json 優先パス
+    if sections_json and Path(sections_json).exists():
+        try:
+            with open(sections_json, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    
+    # フォールバック: 既存実装
+    out: Dict[str, Any] = {"unit": "bar", "sections": [], "energy": []}
+    try:
+        if not downbeats_ql or len(downbeats_ql) < 2:
+            out["sections"] = [{"bar": 0, "label": "intro"}]
+            return out
+
+        nb = len(downbeats_ql) - 1
+        # 実ノート数ベースのエネルギー近似（librosa不要）
+        try:
+            db_sec = midi_data.get_downbeats()
+        except Exception:
+            db_sec = []
+        # 秒境界が取れない場合は従来ロジックにフォールバック
+        if not db_sec or len(db_sec) < 2:
+            bar_energy = [0.2] * nb
+        else:
+            bar_energy = [0] * nb
+            for ins in midi_data.instruments:
+                for n in ins.notes:
+                    # 各ノートの start が属する小節に 1 カウント
+                    # 端点は含め過ぎないよう < 次境界
+                    for i in range(nb):
+                        if db_sec[i] <= n.start < db_sec[i + 1]:
+                            bar_energy[i] += 1
+                            break
+        # 正規化 0..1
+        m = max(bar_energy) if nb > 0 else 1
+        m = m if m > 0 else 1.0
+        out["energy"] = [[i, _safe_round_extended(bar_energy[i] / m, 3)] for i in range(nb)]
+
+        # 分割: min_barsで3-4区間に分割（intro/verse/chorus/outro）
+        cuts = [0]
+        step = max(min_bars, max(1, nb // 3))
+        b = step
+        while b < nb:
+            cuts.append(b)
+            b += step
+        if cuts[-1] != nb:
+            cuts.append(nb)
+
+        labels = ["intro", "verse", "chorus", "outro"]
+        for j, bar_idx in enumerate(cuts[:-1]):
+            label = labels[min(j, len(labels) - 1)]
+            out["sections"].append({"bar": int(bar_idx), "label": label})
+
+    except Exception:
+        pass
+    return out
+
+
+def analyze_groove_extended(midi_data: Any, downbeats_ql: List[float]) -> Dict[str, Any]:
+    """
+    5) グルーヴ特徴（スケルトン）
+    ざっくりグルーヴ要約。NO-OP時は既定値
+    返り値: {"swing_pct":0..100, "backbeat_strength":0..1, "onset_deviation_hist":[...]}
+    
+    優先: groove_sampler_v2.analyze があれば使用（単位=QL/拍相対）
+    フォールバック: 既定値
+    """
+    if groove_sampler_v2 and hasattr(groove_sampler_v2, "analyze"):
+        try:
+            g = groove_sampler_v2.analyze(midi_data, downbeats_ql)
+            # 期待キー: swing_pct, backbeat_strength, onset_deviation_hist
+            return {
+                "swing_pct": float(g.get("swing_pct", 0.0)),
+                "backbeat_strength": float(g.get("backbeat_strength", 0.0)),
+                "onset_deviation_hist": g.get("onset_deviation_hist", []),
+                "rhythm_hash": g.get("rhythm_hash"),
+            }
+        except Exception:
+            pass
+    
+    # フォールバック: 既定値
+    return {
+        "swing_pct": 0.0,
+        "backbeat_strength": 0.5,
+        "onset_deviation_hist": [],
+        "rhythm_hash": None,
+    }
+
+
+def summarize_controls_extended(midi_data: Any) -> Dict[str, Any]:
+    """
+    6) コントロール・レーン要約（PB/CC/RPN）
+    PB/CC/RPNの存在とレンジ。NO-OP時は空
+    返り値: {"pb_range":[min,max], "cc_summary":{"1":{"min":..,"max":..}}, "rpn_seen":false}
+    
+    優先: pb_math があれば半音換算も実施
+    フォールバック: 既存実装（±8191規約）
+    """
+    out: Dict[str, Any] = {"pb_range": [0, 0], "cc_summary": {}, "rpn_seen": False}
+    try:
+        # pb_math 規約: ±8191 を厳守
+        PB_MIN, PB_MAX = -8191, 8191
+        pb_min, pb_max = PB_MAX, PB_MIN
+        rpn_seen = False
+        bend_range_semi = None
+        cc_summary: Dict[str, Dict[str, int]] = {}
+
+        def _seen_rpn_sequence(ctrls: List[Any], window: float = 0.5) -> bool:
+            """CC101→CC100→(CC6|CC38) を window 秒以内で検出（同一トラック）。"""
+            if not ctrls:
+                return False
+            ctrls_sorted = sorted(ctrls, key=lambda c: float(c.time))
+            state = 0
+            t0 = None
+            for cc in ctrls_sorted:
+                num = int(cc.number)
+                t = float(cc.time)
+                if state == 0 and num == 101:
+                    state = 1
+                    t0 = t
+                    continue
+                if state == 1:
+                    if num == 100 and t0 is not None and (t - t0) <= window:
+                        state = 2
+                        t0 = t
+                        continue
+                    if t0 is not None and (t - t0) > window:
+                        state = 0
+                        t0 = None
+                if state == 2 and num in (6, 38) and t0 is not None and (t - t0) <= window:
+                    return True
+            return False
+
+        for ins in midi_data.instruments:
+            # Pitch Bend
+            for pb in ins.pitch_bends:
+                val = int(pb.pitch)
+                if val < PB_MIN:
+                    val = PB_MIN
+                if val > PB_MAX:
+                    val = PB_MAX
+                pb_min = min(pb_min, val)
+                pb_max = max(pb_max, val)
+
+            # Control Changes
+            for cc in ins.control_changes:
+                k = str(int(cc.number))
+                d = cc_summary.setdefault(k, {"min": 127, "max": 0})
+                v = int(cc.value)
+                d["min"] = min(d["min"], v)
+                d["max"] = max(d["max"], v)
+
+            # RPN は「存在」ではなくシーケンス検出
+            if _seen_rpn_sequence(list(ins.control_changes)):
+                rpn_seen = True
+
+        # 曲に PB が存在しない場合の初期値補正
+        if pb_min == PB_MAX and pb_max == PB_MIN:
+            pb_min, pb_max = 0, 0
+        
+        # pb_math による半音換算（優先パス）
+        if pb_math and (pb_min != 0 or pb_max != 0):
+            try:
+                # 端点→半音に正規化（両端の絶対値の最大を採用）
+                semi = max(abs(pb_math.pb_to_semi(pb_min)), abs(pb_math.pb_to_semi(pb_max)))
+                bend_range_semi = float(round(semi, 2))
+            except Exception:
+                bend_range_semi = None
+        
+        out["pb_range"] = [int(pb_min), int(pb_max)]
+        out["cc_summary"] = cc_summary
+        out["rpn_seen"] = bool(rpn_seen)
+        if bend_range_semi is not None:
+            out["rpn_bend_range_semitone"] = bend_range_semi
+
+    except Exception:
+        pass
+    return out
+
+
+def estimate_roles_extended(midi_data: Any) -> Dict[str, Any]:
+    """
+    7) ロール要約（GM/ch10ベースの簡易推定）
+    GM/チャネル/レンジベースの簡易ロール推定。NO-OP時は空
+    返り値: {"role_map":{...}, "drum_tokens":[], "bass_motion":{"root":0.0,"fifth":0.0}}
+    """
+    out: Dict[str, Any] = {
+        "role_map": {},
+        "drum_tokens": [],
+        "bass_motion": {"root": 0.0, "fifth": 0.0, "walk": 0.0, "approach": 0.0},
+    }
+    try:
+        # GM Program クラスに基づくラベル
+        def _gm_role(program: int) -> str:
+            # 0-based GM
+            if 32 <= program <= 39:
+                return "bass"
+            if 24 <= program <= 31:
+                return "guitar"
+            if 40 <= program <= 47:
+                return "strings"
+            if 0 <= program <= 7:
+                return "piano"
+            if 48 <= program <= 55:
+                return "ensemble"
+            if 56 <= program <= 63:
+                return "brass"
+            if 64 <= program <= 71:
+                return "reed"
+            if 72 <= program <= 79:
+                return "pipe"
+            if 80 <= program <= 87:
+                return "lead"
+            if 88 <= program <= 95:
+                return "pad"
+            return "other"
+
+        for i, ins in enumerate(midi_data.instruments):
+            if ins.is_drum:
+                out["role_map"][str(i)] = "drums"
+                # 代表的なドラムピッチのヒット数を簡易出力
+                pitch_counts = {p: 0 for p in (36, 38, 40, 42, 44, 46, 49)}
+                for n in ins.notes:
+                    if n.pitch in pitch_counts:
+                        pitch_counts[n.pitch] += 1
+                out["drum_tokens"].append({"index": i, "counts": pitch_counts})
+                continue
+
+            role = _gm_role(getattr(ins, "program", 0))
+            # 音域で補正
+            if ins.notes:
+                pitches = [n.pitch for n in ins.notes]
+                avg_pitch = sum(pitches) / max(1, len(pitches))
+                if avg_pitch < 50:
+                    role = "bass"
+                elif 50 <= avg_pitch < 70 and role == "other":
+                    role = "guitar"
+                elif avg_pitch >= 70 and role in ("other", "guitar"):
+                    role = "piano"
+            out["role_map"][str(i)] = role
+
+    except Exception:
+        pass
+    return out
+
+
 @dataclass
 class Stage2Extractor:
     settings: Stage2Settings
@@ -4252,7 +4844,7 @@ class Stage2Extractor:
         # ストリーミング出力とバッチ冪等化の初期化
         sinks: Optional[_StreamingSinks] = None
         manifest: Optional[_BatchManifest] = None
-        
+
         if self.settings.streaming:
             # Parquetスキーマ（events_rowsの構造に合わせる）
             parquet_schema = {
@@ -4269,14 +4861,12 @@ class Stage2Extractor:
             sinks = _StreamingSinks(
                 self.settings.paths.metrics_jsonl.parent,
                 parquet_schema=parquet_schema,
-                row_group=self.settings.parquet_row_group
+                row_group=self.settings.parquet_row_group,
             )
-        
+
         if self.settings.resume:
             manifest = _BatchManifest(
-                self.settings.paths.metrics_jsonl.parent,
-                self.metadata_index,
-                resume=True
+                self.settings.paths.metrics_jsonl.parent, self.metadata_index, resume=True
             )
 
         events_rows: List[Dict[str, Any]] = []
@@ -4324,11 +4914,11 @@ class Stage2Extractor:
             adaptive_total_delta_limited = None
 
         limit = self.settings.limit
-        offset = getattr(self.settings, 'offset', 0) or 0
-        
+        offset = getattr(self.settings, "offset", 0) or 0
+
         # Apply offset and limit to iterator
         iterator: Iterator[Dict[str, Any]] = iter(records)
-        
+
         # Skip offset records
         if offset > 0:
             print(f"[Stage2] Skipping first {offset} records...")
@@ -4338,7 +4928,7 @@ class Stage2Extractor:
                     total_seen += 1
                 except StopIteration:
                     break
-        
+
         # Calculate effective limit
         effective_limit = limit
         if offset > 0 and limit is not None:
@@ -4347,7 +4937,7 @@ class Stage2Extractor:
             print(f"[Stage2] Processing records from {offset} onwards")
         elif limit is not None:
             print(f"[Stage2] Processing first {limit} records")
-        
+
         for record in tqdm(iterator, desc="stage2", unit="loop"):
             if effective_limit is not None and processed >= effective_limit:
                 break
@@ -4363,7 +4953,7 @@ class Stage2Extractor:
             if not output_path:
                 exclusions["missing_output_path"] += 1
                 continue
-            
+
             # 冪等チェック: 既に処理済みならスキップ
             if manifest is not None and manifest.is_done(str(output_path)):
                 exclusions["already_processed"] += 1
@@ -4564,7 +5154,7 @@ class Stage2Extractor:
                 pipeline_version=self.settings.pipeline_version,
                 file_digest=file_digest,
             )
-            
+
             # 従来モードのみevents_rowsに蓄積（ストリーミングは後で書き出す）
             if sinks is None:
                 events_rows.extend(event_rows)
@@ -4615,7 +5205,11 @@ class Stage2Extractor:
             metrics_dict["audio.adaptive_axis_weights"] = effective_axis_weights
             metrics_dict["audio.adaptive_pivot"] = adaptive_pivot
             metrics_dict["audio.adaptive_rule"] = _adaptive_rule_to_dict(applied_adaptive_rule)
-            details_log_level = self.settings.audio_adaptive_weights.log_level
+            details_log_level = (
+                self.settings.audio_adaptive_weights.log_level
+                if self.settings.audio_adaptive_weights
+                else "summary"
+            )
             metrics_dict["audio.adaptive_details"] = _summarise_adaptive_details(
                 adaptive_details,
                 applied_adaptive_rule,
@@ -4855,12 +5449,96 @@ class Stage2Extractor:
                 loop_row["audio_adaptive_total_delta"] = None
                 loop_row["audio_adaptive_total_delta_limited"] = None
                 loop_row["audio_adaptive_total_delta_ratio"] = None
+
+            # ========== NEW: Stage2拡張タグ付与（v2.1） ==========
+            try:
+                if pretty_midi is not None:
+                    pm_midi = pretty_midi.PrettyMIDI(str(midi_path))
+
+                    # 1) テンポ/拍グリッド
+                    tempo_grid = extract_tempo_grid_extended(pm_midi)
+                    downbeats_ql = tempo_grid.get("downbeats_ql", [])
+
+                    # 2) 1小節コード化
+                    chordmap = extract_bar_chords_extended(pm_midi, downbeats_ql, min_dwell_ql=4.0)
+
+                    # --- LAMDA統合: 外部chordmap優先 ---
+                    try:
+                        file_id = loop_row.get("file_id") or loop_row.get("id") or loop_row.get("loop_id")
+                        if file_id and args.lamda_chords_dir:
+                            json_path = args.lamda_chords_dir / f"{file_id}.chordmap.json"
+                            if json_path.exists():
+                                with open(json_path, "r", encoding="utf-8") as f:
+                                    cm = json.load(f)
+                                if cm.get("events"):
+                                    chordmap = cm
+                                    # print(f"  🎵 Using external chordmap for {file_id}")
+                    except Exception:
+                        pass
+
+                    # --- ホワイトリスト検証（music21準拠） ---
+                    try:
+                        if args.whitelist_validate == 1 and chordmap.get("events"):
+                            from adapters.chord_whitelist import validate_events
+                            cleaned, stats = validate_events(chordmap["events"])
+                            chordmap["events"] = cleaned
+                            chordmap["validation"] = stats
+                    except Exception:
+                        pass
+
+                    # 3) ローカルキー/転調
+                    keyinfo = estimate_local_keys_extended(chordmap, win_bars=2)
+
+                    # 4) セクション自動（sections_json優先パス対応）
+                    sections_json_path = str(self.settings.sections_json) if self.settings.sections_json else None
+                    sections = auto_sections_from_energy_extended(
+                        pm_midi, downbeats_ql, min_bars=8, sections_json=sections_json_path
+                    )
+
+                    # 5) グルーヴ
+                    groove = analyze_groove_extended(pm_midi, downbeats_ql)
+
+                    # 6) コントロール
+                    controls = summarize_controls_extended(pm_midi)
+
+                    # 7) ロール要約
+                    roles = estimate_roles_extended(pm_midi)
+
+                    # loop_rowに追加（JSON文字列化）
+                    # schema_versionの段階的更新（Phase適用状況による）
+                    schema_ver = "lamda_v2.6"  # Phase1完了（tempo_utils, timing_utils配線）
+                    loop_row["extended.schema_version"] = schema_ver
+                    loop_row["extended.tempo_map"] = json.dumps(
+                        tempo_grid.get("tempo_map", []), ensure_ascii=False
+                    )
+                    loop_row["extended.timesig_map"] = json.dumps(
+                        tempo_grid.get("timesig_map", []), ensure_ascii=False
+                    )
+                    loop_row["extended.downbeats_ql"] = json.dumps(downbeats_ql, ensure_ascii=False)
+                    loop_row["extended.chordmap"] = json.dumps(chordmap, ensure_ascii=False)
+                    loop_row["extended.key_hints"] = json.dumps(
+                        keyinfo.get("key_hint", []), ensure_ascii=False
+                    )
+                    loop_row["extended.modulations"] = json.dumps(
+                        keyinfo.get("modulations", []), ensure_ascii=False
+                    )
+                    loop_row["extended.sections_auto"] = json.dumps(sections, ensure_ascii=False)
+                    loop_row["extended.groove"] = json.dumps(groove, ensure_ascii=False)
+                    loop_row["extended.controls"] = json.dumps(controls, ensure_ascii=False)
+                    loop_row["extended.roles"] = json.dumps(roles, ensure_ascii=False)
+                else:
+                    loop_row["extended.schema_version"] = "lamda_v2.0"  # pretty_midi未導入
+            except Exception as e:
+                # フェイルセーフ: 拡張メタ抽出失敗時も処理続行
+                loop_row["extended.schema_version"] = "lamda_v2.0_error"
+                loop_row["extended.error"] = str(e)
+
             # ストリーミング書き出し or 従来のメモリ蓄積
             if sinks is not None:
                 # ストリーミングモード: 逐次書き出し
                 pass_soft = score_total >= self.settings.threshold_soft
                 pass_hard = score_total >= self.settings.threshold_hard
-                
+
                 metric_rec = {
                     "loop_id": loop_id,
                     "score": score_total,
@@ -4878,12 +5556,23 @@ class Stage2Extractor:
                 sinks.write_metric(metric_rec)
                 sinks.write_loop_summary(loop_row)
                 sinks.write_events_batch(event_rows)
+
+                # v2.1拡張: JSON/PKL出力（ストリーミングモード）
+                if self.settings.emit_json and self.settings.paths.json_dir:
+                    json_path = self.settings.paths.json_dir / f"{loop_id}.stage2.json"
+                    with json_path.open("w", encoding="utf-8") as f:
+                        json.dump(loop_row, f, ensure_ascii=False, indent=2)
+
+                if self.settings.emit_pickle and self.settings.paths.pkl_dir:
+                    pkl_path = self.settings.paths.pkl_dir / f"{loop_id}.stage2.pkl"
+                    with pkl_path.open("wb") as f:
+                        pickle.dump(loop_row, f, protocol=pickle.HIGHEST_PROTOCOL)
             else:
                 # 従来モード: メモリに蓄積
                 loop_rows.append(loop_row)
-            
+
             loop_ids.append(loop_id)
-            
+
             # 冪等メタ更新
             if manifest is not None:
                 manifest.mark_done(str(output_path))
@@ -4897,7 +5586,7 @@ class Stage2Extractor:
         # ストリーミング終了処理
         if sinks is not None:
             sinks.close()
-        
+
         if manifest is not None:
             manifest.close()
 
@@ -4927,7 +5616,29 @@ class Stage2Extractor:
 
             if loop_rows:
                 loop_df = pd.DataFrame(loop_rows)
-                loop_df.to_csv(self.settings.paths.loop_summary_csv, index=False)
+
+                # v2.1拡張: CSV出力はオプショナル
+                if self.settings.emit_csv == "aggregate" and self.settings.paths.csv_dir:
+                    csv_path = self.settings.paths.csv_dir / "stage2_index.csv"
+                    loop_df.to_csv(csv_path, index=False)
+                else:
+                    # 既定動作: loop_summary.csv を出力（後方互換性）
+                    loop_df.to_csv(self.settings.paths.loop_summary_csv, index=False)
+
+                # v2.1拡張: JSON/PKL出力（非ストリーミングモード）
+                if self.settings.emit_json and self.settings.paths.json_dir:
+                    for loop_row in loop_rows:
+                        loop_id = loop_row.get("loop_id", "unknown")
+                        json_path = self.settings.paths.json_dir / f"{loop_id}.stage2.json"
+                        with json_path.open("w", encoding="utf-8") as f:
+                            json.dump(loop_row, f, ensure_ascii=False, indent=2)
+
+                if self.settings.emit_pickle and self.settings.paths.pkl_dir:
+                    for loop_row in loop_rows:
+                        loop_id = loop_row.get("loop_id", "unknown")
+                        pkl_path = self.settings.paths.pkl_dir / f"{loop_id}.stage2.pkl"
+                        with pkl_path.open("wb") as f:
+                            pickle.dump(loop_row, f, protocol=pickle.HIGHEST_PROTOCOL)
 
             if audio_embedding_rows and self.settings.paths.audio_embeddings_parquet is not None:
                 _write_audio_embeddings(
@@ -5067,10 +5778,10 @@ def _build_summary(
             passed_count_soft += 1
         if score >= settings.threshold_hard:
             passed_count_hard += 1
-    
+
     pass_rate_soft = passed_count_soft / processed if processed > 0 else 0.0
     pass_rate_hard = passed_count_hard / processed if processed > 0 else 0.0
-    
+
     summary: Dict[str, Any] = {
         "pipeline_version": settings.pipeline_version,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -5114,11 +5825,15 @@ def _print_summary(summary: Dict[str, Any]) -> None:
     outputs = cast(Dict[str, Any], summary.get("outputs", {}))
     print(f"Total loops      : {inputs.get('total_loops')}")
     print(f"Processed loops  : {inputs.get('processed_loops')}")
-    
+
     # しきい値の二段表示
     threshold_soft = outputs.get("threshold_soft")
     threshold_hard = outputs.get("threshold_hard")
-    if threshold_soft is not None and threshold_hard is not None and threshold_soft != threshold_hard:
+    if (
+        threshold_soft is not None
+        and threshold_hard is not None
+        and threshold_soft != threshold_hard
+    ):
         print(f"Threshold (soft) : {threshold_soft:.1f} (学習候補)")
         print(f"Threshold (hard) : {threshold_hard:.1f} (公開用)")
         if "passed_loops_soft" in outputs:
@@ -5128,7 +5843,7 @@ def _print_summary(summary: Dict[str, Any]) -> None:
     else:
         if "passed_loops" in outputs:
             print(f"Passed loops     : {outputs.get('passed_loops')}")
-    
+
     pass_rate = outputs.get("pass_rate")
     if isinstance(pass_rate, (int, float)):
         print(f"Pass rate        : {pass_rate:.3f}")

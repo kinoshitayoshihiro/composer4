@@ -194,3 +194,71 @@ def align_to_consonant(
         vel = 0
 
     return (result_off, vel) if (return_vel or velocity_boost) else result_off
+
+
+def merge_min_dwell(chordmap: dict, min_ql: float = 2.0) -> dict:
+    """Merge consecutive identical chords and enforce minimum dwell time.
+    
+    Parameters
+    ----------
+    chordmap : dict
+        Chord map with "events" list containing dicts with "time", "root", "quality".
+    min_ql : float, optional
+        Minimum dwell time in quarter lengths. Defaults to 2.0.
+    
+    Returns
+    -------
+    dict
+        Modified chordmap with merged events.
+    
+    Examples
+    --------
+    >>> chordmap = {
+    ...     "unit": "ql",
+    ...     "events": [
+    ...         {"time": 0.0, "root": "C", "quality": "maj"},
+    ...         {"time": 1.0, "root": "C", "quality": "maj"},  # 連続同一
+    ...         {"time": 2.0, "root": "Am", "quality": "min"},
+    ...         {"time": 3.5, "root": "F", "quality": "maj"},  # <2QL
+    ...         {"time": 5.0, "root": "G", "quality": "maj"},
+    ...     ]
+    ... }
+    >>> merged = merge_min_dwell(chordmap, min_ql=2.0)
+    >>> merged["events"]
+    [{'time': 0.0, 'root': 'C', 'quality': 'maj'}, 
+     {'time': 2.0, 'root': 'Am', 'quality': 'min'}, 
+     {'time': 5.0, 'root': 'G', 'quality': 'maj'}]
+    """
+    if not isinstance(chordmap, dict):
+        return chordmap
+    
+    events = chordmap.get("events", [])
+    if not events:
+        return chordmap
+    
+    merged_events = []
+    prev_event = None
+    
+    for event in events:
+        root = event.get("root", "")
+        quality = event.get("quality", "")
+        time = event.get("time", 0.0)
+        
+        # 連続同一チェック
+        if prev_event and prev_event["root"] == root and prev_event["quality"] == quality:
+            continue  # スキップ（前のイベントに統合）
+        
+        # 最短持続時間チェック（前のイベントとの間隔）
+        if prev_event:
+            duration = time - prev_event["time"]
+            if 0 < duration < min_ql:
+                # 短すぎる → 前のイベントを削除
+                if merged_events and merged_events[-1] == prev_event:
+                    merged_events.pop()
+        
+        merged_events.append(event)
+        prev_event = event
+    
+    result = dict(chordmap)
+    result["events"] = merged_events
+    return result
