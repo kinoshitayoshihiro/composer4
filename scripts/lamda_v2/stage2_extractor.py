@@ -32,6 +32,8 @@ from scripts.lamda_v2.tempo_timing import build_beat_grid
 from scripts.lamda_v2.chord_analyzer import extract_bar_chords
 from scripts.lamda_v2.key_analyzer import estimate_local_key_sequence, to_key_hints_payload
 from scripts.lamda_v2.section_analyzer import auto_segment_sections
+from scripts.lamda_v2.groove_analyzer import analyze_groove
+from scripts.lamda_v2.controls_analyzer import analyze_controls
 
 
 SCHEMA_VERSION = "lamda_v2.6"
@@ -100,9 +102,9 @@ def extract_stage2_metadata(midi_path: Path) -> Dict[str, Any]:
             min_bars=8,
         )
         
-        # Phase3: Groove & controls (TODO)
-        groove = {}  # Placeholder
-        controls = {}  # Placeholder
+        # Phase3: Groove & controls (NO-OP safe)
+        groove = analyze_groove(pm, downbeats_sec)
+        controls = analyze_controls(pm)
         
         # Build payload
         payload = {
@@ -140,8 +142,8 @@ def _error_payload(error_msg: str) -> Dict[str, Any]:
         "key_hint": [],
         "modulations": [],
         "sections_auto": {"unit": "bar", "sections": [], "energy": []},
-        "groove": {},
-        "controls": {},
+        "groove": {"swing_pct": 0.0, "backbeat_strength": 0.5, "onset_deviation_hist": []},
+        "controls": {"pb_range": [0, 0], "cc_summary": {}, "rpn_seen": False},
     }
 
 
