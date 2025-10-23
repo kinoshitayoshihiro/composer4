@@ -13,7 +13,7 @@ def _cm(root: str, bars: int) -> dict:
 def test_constant_c_major():
     """Test constant C major key detection (no modulation)."""
     cm = _cm("C", 16)
-    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4)
+    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4, ks_weight=0.7)
     assert len(seq["keys"]) == 16
     assert all(k == "C" for k in seq["keys"]), "Expected stable C major"
     
@@ -32,7 +32,7 @@ def test_simple_modulation_c_to_g():
         events.append({"time": float(b * 4.0), "root": "G", "quality": "maj"})
     cm = {"unit": "ql", "events": events}
 
-    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4)
+    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4, ks_weight=0.7)
     keys = seq["keys"]
     assert keys[:6].count("C") >= 5, "Early bars should be C-dominant"
     assert keys[-6:].count("G") >= 5, "Late bars should be G-dominant"
@@ -55,7 +55,7 @@ def test_debounce_short_fluctuation():
         events.append({"time": float(b * 4.0), "root": "C", "quality": "maj"})
     cm = {"unit": "ql", "events": events}
 
-    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4)
+    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4, ks_weight=0.7)
     mods = seq["modulations"]
     # No modulation due to debouncing of short spike
     assert len(mods) == 0, f"Expected no modulations, got {mods}"
@@ -64,7 +64,7 @@ def test_debounce_short_fluctuation():
 def test_empty_chordmap():
     """Test handling of empty chordmap."""
     cm = {"unit": "ql", "events": []}
-    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4)
+    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4, ks_weight=0.7)
     assert seq["keys"] == []
     assert seq["modulations"] == []
 
@@ -72,7 +72,7 @@ def test_empty_chordmap():
 def test_payload_format():
     """Test payload formatting for Stage2 integration."""
     cm = _cm("D", 8)
-    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4)
+    seq = estimate_local_key_sequence(cm, win_bars=4, min_hold=4, ks_weight=0.7)
     payload = to_key_hints_payload(seq)
     
     # Check key_hint format: [[bar, key], ...]

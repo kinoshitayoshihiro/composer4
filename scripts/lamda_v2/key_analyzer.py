@@ -8,13 +8,18 @@ Lamda v2 — Phase2: Local key hints and modulation detection (production-safe m
 
 設計方針:
 - まずは "窓内の root 最多数決" + スムージング(min_hold) の素朴法で安定化。
-- 将来は K-S プロファイルや n-gram 事前分布に差し替え可能（APIは維持）。
+- 将来は K-S プロファイルや n-gram 事前分布に差し替え可能(APIは維持)。
 - enharmonic は # 優先（C, C#, D, ...）。
 """
 from typing import Dict, Any, List, Tuple
+import numpy as np
 
 ROOTS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
 NAME2PC = {n: i for i, n in enumerate(ROOTS)}
+
+# Krumhansl-Schmuckler key profiles (normalized weights)
+_KS_MAJOR = np.array([6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88])
+_KS_MINOR = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17])
 
 
 def _events_to_bar_roots(chordmap: Dict[str, Any]) -> List[str]:
@@ -50,23 +55,57 @@ def estimate_local_key_sequence(
     chordmap: Dict[str, Any],
     win_bars: int = 4,
     min_hold: int = 4,
+    ks_weight: float = 0.6,
 ) -> Dict[str, Any]:
     """
     バー列からローカルキー（=多数決 root を key とみなす簡易版）を生成し、
     min_hold でデバウンスして転調点を抽出。
+    
+    ks_weight: Krumhansl-Schmuckler profile との加重平均比率 (0.0~1.0)
+               0.5以上でK-Sプロファイル優先、0.0で従来の多数決のみ
+    
     Returns {"keys": [key per bar], "modulations": [{"time": ql, "from": k0, "to": k1}, ...]}
     """
     roots = _events_to_bar_roots(chordmap)
     if not roots:
         return {"keys": [], "modulations": []}
 
-    # スライディング多数決
+    # スライディング多数決 + K-Sプロファイル
     keys_raw: List[str] = []
     n = len(roots)
     for i in range(n):
         lo = max(0, i - win_bars + 1)
         hi = i + 1
-        keys_raw.append(_majority(roots[lo:hi]))
+        win = roots[lo:hi]
+        key_vote = _majority(win)
+        
+        # K-S: 窓内PCヒスト（root triad近似）
+        pc = np.zeros(12)
+        for r in win:
+            if r == "N":
+                continue
+            idx = NAME2PC[r]
+            pc[idx] += 1.0           # root
+            pc[(idx + 4) % 12] += 0.6  # major third
+            pc[(idx + 7) % 12] += 0.8  # perfect fifth
+        
+        if pc.sum() > 0:
+            best_key = key_vote
+            best_score = -1e9
+            for rot in range(12):
+                maj = float(np.dot(np.roll(pc, -rot), _KS_MAJOR))
+                minr = float(np.dot(np.roll(pc, -rot), _KS_MINOR))
+                if maj >= minr:
+                    score, cand = maj, ROOTS[rot]
+                else:
+                    score, cand = minr, ROOTS[rot]
+                if score > best_score:
+                    best_score, best_key = score, cand
+            # blend: KS優先比率 ks_weight（>0.5 を推奨）
+            key_blend = best_key if ks_weight >= 0.5 else key_vote
+            keys_raw.append(key_blend)
+        else:
+            keys_raw.append(key_vote)
 
     # デバウンスして安定列へ
     keys: List[str] = []

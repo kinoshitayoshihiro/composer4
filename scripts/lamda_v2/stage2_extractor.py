@@ -72,6 +72,7 @@ def extract_stage2_metadata(midi_path: Path) -> Dict[str, Any]:
         grid = build_beat_grid(pm)
         tempo_map = grid.get("tempo_map", [[0.0, 120.0]])
         timesig_map = grid.get("timesig_map", [[0, "4/4"]])
+        timesig_map_time = grid.get("timesig_map_time", [(0.0, "4/4")])
         downbeats_sec = grid.get("downbeats_sec", [])
         downbeats_ql = grid.get("downbeats_ql", [])
         
@@ -88,6 +89,7 @@ def extract_stage2_metadata(midi_path: Path) -> Dict[str, Any]:
             chordmap,
             win_bars=4,
             min_hold=4,
+            ks_weight=0.7,
         )
         key_payload = to_key_hints_payload(key_seq)
         
@@ -107,6 +109,7 @@ def extract_stage2_metadata(midi_path: Path) -> Dict[str, Any]:
             "schema_version": SCHEMA_VERSION,
             "tempo_map": tempo_map,
             "timesig_map": timesig_map,
+            "timesig_map_time": timesig_map_time,
             "downbeats_sec": downbeats_sec,
             "downbeats_ql": downbeats_ql,
             "chordmap": chordmap,
@@ -130,6 +133,7 @@ def _error_payload(error_msg: str) -> Dict[str, Any]:
         "error": error_msg,
         "tempo_map": [[0.0, 120.0]],
         "timesig_map": [[0, "4/4"]],
+        "timesig_map_time": [(0.0, "4/4")],
         "downbeats_sec": [],
         "downbeats_ql": [],
         "chordmap": {"unit": "ql", "events": []},

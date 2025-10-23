@@ -24,6 +24,7 @@ Notes
 - No external deps besides pretty_midi (for build_beat_grid).
 """
 from typing import List, Tuple, Dict, Any
+import bisect
 
 # ---------- core conversions ----------
 
@@ -99,10 +100,12 @@ def build_beat_grid(pm) -> Dict[str, Any]:
     try:
         ts = getattr(pm, "time_signature_changes", []) or []
         timesig_map = [(i, f"{s.numerator}/{s.denominator}") for i, s in enumerate(ts)]
+        timesig_map_time = [(float(s.time), f"{s.numerator}/{s.denominator}") for s in ts] if ts else [(0.0, "4/4")]
         if not timesig_map:
             timesig_map = [(0, "4/4")]
     except Exception:
         timesig_map = [(0, "4/4")]
+        timesig_map_time = [(0.0, "4/4")]
 
     try:
         downbeats_sec = [float(x) for x in pm.get_downbeats()]
@@ -114,6 +117,7 @@ def build_beat_grid(pm) -> Dict[str, Any]:
     return {
         "tempo_map": tempo_map,
         "timesig_map": timesig_map,
+        "timesig_map_time": timesig_map_time,
         "downbeats_sec": downbeats_sec,
         "downbeats_ql": downbeats_ql,
     }
@@ -154,13 +158,47 @@ def merge_min_dwell(events: List[Dict[str, Any]], min_ql: float = 2.0) -> List[D
 
 
 def snap_times_to_grid(times_ql: List[float], grid_ql: List[float]) -> List[float]:
+    """Snap times to nearest grid points using O(N log M) bisect search.
+    
+    Parameters
+    ----------
+    times_ql : List[float]
+        Times to snap (in quarter lengths).
+    grid_ql : List[float]
+        Grid points to snap to (in quarter lengths).
+    
+    Returns
+    -------
+    List[float]
+        Snapped times (same length as times_ql).
+    
+    Notes
+    -----
+    Improved from O(N*M) to O(N log M) using binary search.
+    """
     if not times_ql:
         return []
     if not grid_ql:
         return list(times_ql)
+    
     out: List[float] = []
     for x in times_ql:
-        # find nearest grid point
-        best = min(grid_ql, key=lambda g: abs(g - x))
+        # Binary search for insertion point
+        i = bisect.bisect_left(grid_ql, x)
+        
+        if i == 0:
+            # x is before first grid point
+            out.append(float(grid_ql[0]))
+            continue
+        
+        if i == len(grid_ql):
+            # x is after last grid point
+            out.append(float(grid_ql[-1]))
+            continue
+        
+        # Compare distances to neighbors
+        a, b = grid_ql[i - 1], grid_ql[i]
+        best = a if abs(a - x) <= abs(b - x) else b
         out.append(float(best))
+    
     return out

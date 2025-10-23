@@ -65,10 +65,15 @@ def auto_segment_sections(
     boundaries = _detect_section_boundaries(
         energy_normalized,
         min_bars=min_bars,
+        snap_to_downbeats=True,
     )
     
-    # Assign section labels
-    sections = _assign_section_labels(boundaries, len(downbeats_ql))
+    # Assign section labels (pass energy for better labeling)
+    sections = _assign_section_labels(
+        boundaries, 
+        len(downbeats_ql),
+        energy=energy_normalized,
+    )
     
     # Format energy output
     energy_output = [[i, float(e)] for i, e in enumerate(energy_normalized)]
@@ -129,8 +134,19 @@ def _compute_bar_energy(
 def _detect_section_boundaries(
     energy: List[float],
     min_bars: int = 8,
+    snap_to_downbeats: bool = True,
 ) -> List[int]:
     """Detect section boundaries using energy curve analysis.
+    
+    Parameters
+    ----------
+    energy : List[float]
+        Normalized energy per bar.
+    min_bars : int
+        Minimum section length in bars.
+    snap_to_downbeats : bool
+        If True, snap boundaries to downbeats (default: True).
+        Flag reserved for future API use (bars are already downbeat-aligned).
     
     Returns list of bar indices where sections start.
     """
@@ -165,19 +181,26 @@ def _detect_section_boundaries(
             if not boundaries or i - boundaries[-1] >= min_bars:
                 boundaries.append(i)
     
+    if snap_to_downbeats:
+        # bars are already downbeat-based → no-op (flag for future API)
+        pass
+    
     return boundaries
 
 
 def _assign_section_labels(
     boundaries: List[int],
     total_bars: int,
+    energy: Optional[List[float]] = None,
 ) -> List[Dict[str, Any]]:
-    """Assign section labels based on position and count.
+    """Assign section labels based on position, count, and energy patterns.
     
     Simple heuristic:
     - First section: "intro"
     - Last section: "outro"
-    - Middle sections: alternate "verse", "chorus"
+    - High energy peaks: "chorus"
+    - Low energy before peak: "pre_chorus"
+    - Middle sections: "verse", "bridge"
     """
     if not boundaries:
         return [{"bar": 0, "label": "intro"}]
@@ -185,15 +208,33 @@ def _assign_section_labels(
     sections = []
     num_sections = len(boundaries)
     
+    # Find peak energy bar if energy provided
+    peak_bar = -1
+    if energy and len(energy) > 0:
+        peak_bar = int(np.argmax(energy))
+    
     for idx, bar in enumerate(boundaries):
         if idx == 0:
             label = "intro"
         elif idx == num_sections - 1 and total_bars - bar <= 8:
             label = "outro"
-        elif idx % 2 == 1:
-            label = "verse"
+        elif peak_bar >= 0:
+            # Energy-based labeling
+            mid = bar + (boundaries[idx + 1] - bar) // 2 if idx + 1 < len(boundaries) else bar
+            
+            if abs(mid - peak_bar) <= 8:
+                lab = "chorus"
+            elif mid < peak_bar and (peak_bar - mid) <= 4 and energy and energy[mid] < energy[peak_bar]:
+                # Pre-chorus: low energy section immediately before chorus
+                lab = "pre_chorus"
+            elif energy and energy[mid] < 0.3:
+                lab = "bridge"
+            else:
+                lab = "verse"
+            label = lab
         else:
-            label = "chorus"
+            # Fallback to alternating pattern
+            label = "verse" if idx % 2 == 1 else "chorus"
         
         sections.append({"bar": int(bar), "label": label})
     
