@@ -1,0 +1,115 @@
+=== Canary KPI Test - v3 Guitar ML Production ===
+Start: 2025年 10月27日 月曜日 06時20分49秒 JST
+
+Running v3 evaluation with production config...
+  - threshold: 0.0 (ML always-on)
+  - w_proba: 1.00 (rerank disabled)
+  - pickle: stage2_guitar_v3_meta.pickle
+
+INFO: Found 2104 packages in index
+INFO: Sampled 10 songs for A/B test
+INFO:   gold: 8
+INFO:   silver: 2
+INFO: Re-ranking parameters:
+INFO:   conf_thresh: 0.0
+INFO:   weights: proba=1.0, accent=0.0, density=0.0, section=0.0
+INFO:   mode: v3-only (absolute quality metrics)
+INFO: Loading v3 pickle: data/patterns/stage2_guitar_v3_meta.pickle
+INFO:   ✓ Loaded ML model from harmony_baseline_xgb_tuned.joblib
+INFO: Initialized SimplePatternRecommender for guitar
+INFO:   Version: 1.0
+INFO:   Total patterns: 2148
+INFO:   Selector type: xgboost
+INFO:   Provider: xgboost
+INFO:   Model: harmony_baseline_xgb_tuned.joblib
+INFO:   Classes: 1119
+INFO: v3 selector type: xgboost
+INFO: Generated 640 test cases
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+INFO: Results saved to data/canary_kpi_v3_production.csv
+INFO: 
+============================================================
+INFO: v3 Absolute Quality Metrics
+INFO: ============================================================
+INFO: Accent Score (mean): 91.91%
+INFO: Density Abs (median): 0.00 notes/bar
+INFO: Chord Fit (mean): 83.59%
+INFO: ML Usage Rate: 100.00%
+INFO: Top-1 Proba (mean): 0.3230
+INFO: 
+INFO: Section-wise Metrics:
+INFO:   Chorus:
+INFO:     Accent Score: 95.65%
+INFO:     ML Usage: 100.00%
+INFO:   Verse:
+INFO:     Accent Score: 93.50%
+INFO:     ML Usage: 100.00%
+INFO:   Bridge:
+INFO:     Accent Score: 90.16%
+INFO:     ML Usage: 100.00%
+INFO: 
+INFO: ------------------------------------------------------------
+INFO: Pass/Fail Criteria (Absolute KPIs)
+INFO: ------------------------------------------------------------
+INFO: Accent Score >= 65%: PASS (91.91%)
+INFO: Density Abs <= 1.0: PASS (0.00)
+INFO: Chord Fit >= 60%: PASS (83.59%)
+INFO: ML Usage >= 70%: PASS (100.00%)
+INFO: 
+============================================================
+INFO: Overall: ✓ PASS (v3 production ready)
+INFO: ============================================================
+
+INFO: v3 evaluation complete. Results: data/canary_kpi_v3_production.csv
+
+========================================
+Canary KPI Test Complete
+Output: data/canary_kpi_v3_production.csv
+Log: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/logs/canary_kpi_20251027_062049.log
+End: 2025年 10月27日 月曜日 06時21分02秒 JST
+
+=== Result Summary ===
+5fefe22d10fe35a0,Bridge,Am,min7,120.0,unknown,0.9219544457292885,0.0,1.0,1,0.3362831175327301,0
+5fefe22d10fe35a0,Bridge,F,maj,120.0,unknown,0.8861862597425676,0.0,0.5,1,0.4903653860092163,0
+5fefe22d10fe35a0,Bridge,F,maj7,120.0,unknown,0.8065591326174432,0.0,0.5,1,0.16174842417240143,0
+5fefe22d10fe35a0,Bridge,F,min,120.0,unknown,0.8660254037844385,0.0,1.0,1,0.025596771389245987,0
+5fefe22d10fe35a0,Bridge,F,min7,120.0,unknown,0.8660254037844385,0.0,1.0,1,0.025596771389245987,0

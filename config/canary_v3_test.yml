@@ -1,0 +1,64 @@
+# Canary Playlist Test - v3 Guitar ML Production
+# 10曲のフル生成でKPI検証
+
+global_settings:
+  song_title: "Canary_Test_v3"
+  time_signature: "4/4"
+  tempo_bpm: 120
+  key_tonic: "C"
+  key_mode: "major"
+  swing_ratio: 0.0
+  humanize_profile: "soft_reflective"
+  default_dynamics_profile: "mp"
+
+paths:
+  chordmap_path: "data/processed_chordmap_with_emotion.yaml"
+  output_dir: "midi_out/canary_v3"
+
+part_defaults:
+  guitar:
+    rhythm_key: "guitar_ballad_arpeggio"
+    velocity: 74
+    humanize_profile: "soft_reflective"
+    articulation: "fingerstyle"
+    # 🎸 Stage2 v3 本番設定
+    stage2_min_score: 0.0  # threshold=0.0（常時ML採用）
+    stage2_pickle: "data/patterns/stage2_guitar_v3_meta.pickle"
+    stage2_rerank_w_proba: 1.00  # 再ランク無効
+    stage2_rerank_w_accent: 0.00
+    stage2_rerank_w_density: 0.00
+
+  bass:
+    rhythm_key: "bass_pump_8th_octaves"
+    velocity: 80
+    humanize_profile: "soft_reflective"
+
+  drums:
+    style_key: "ballad_soft_kick_snare_8th_hat"
+    ghost_hat_on_offbeat: true
+    humanize_profile: "soft_reflective"
+
+  piano:
+    apply_pedal: true
+    rh_velocity: 65
+    lh_velocity: 60
+    humanize_profile: "soft_reflective"
+
+sections_to_generate:
+  - "intro"
+  - "verse"
+  - "chorus"
+  - "bridge"
+  - "outro"
+
+humanize_profiles:
+  soft_reflective:
+    offset_ms: { mean: 0.0, stdev: 12.0 }
+    velocity: { mean: -6.0, stdev: 4.0 }
+    duration_pct: { mean: 102, stdev: 3 }
+
+controls:
+  enable: true
+
+duv:
+  enable: false
