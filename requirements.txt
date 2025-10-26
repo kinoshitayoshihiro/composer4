@@ -1,11 +1,20 @@
-numpy<2.3
+# Core dependencies (stable versions for Docker compatibility)
+numpy==1.26.4
+scipy==1.11.4
+matplotlib>=3.0
+pydub>=0.25.1
+llvmlite>=0.43.0
 numba>=0.60.0
 librosa==0.10.2.post1
+soundfile==0.12.1
+
 # PyTorch: Install separately using platform-specific command
 # For CPU: pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
 # For CUDA: pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cu118
 # Or use: torch>=2.3,<2.4
 torch>=2.3,<2.4
+
+# Other dependencies
 mido>=1.3
 pandas>=1.5
 scikit-learn>=1.3
@@ -14,7 +23,9 @@ hydra-core>=1.3,<1.4
 -r requirements/extra-ml.txt
 -r requirements/extra-audio.txt
 music21>=9.1,<9.2
-scipy>=1.13,<1.14
 pytorch-lightning>=2.3,<2.4
 torchmetrics>=1.4,<1.5
 TorchCRF
+
+# Chord Recognition (Deep Learning)
+madmom>=0.16.1  # CNN-based Chord Recognition, 85-90% accuracy

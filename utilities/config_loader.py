@@ -199,32 +199,52 @@ def _merge_section_override(cfg: dict[str, Any], section_name: str) -> dict[str,
     return merged
 
 
-# 既存の load_chordmap を load_chordmap_yaml という名前でも呼べるようエイリアス
-# (もし load_chordmap がこのファイル内にあれば、それを直接使うか、
-#  別ファイルにあれば from .some_module import load_chordmap のように読み込む)
-
-# 例: このファイル内に load_chordmap があると仮定
-# def load_chordmap(path: Path, ...):
-#     # ... 既存のChordMap読み込み処理 ...
-#     pass
-
-
-def load_chordmap_yaml(path: Path | str) -> Any:  # ChordMapの型に合わせて修正
+def load_chordmap(path: Path | str) -> dict[str, Any]:
     """
-    YAML 形式の ChordMap を読み込む。(実際の処理は既存関数を呼び出すか、ここに実装)
+    JSON/YAML 形式の ChordMap を読み込む。
+    
+    拡張子で自動判別:
+    - .json → json.load()
+    - .yaml/.yml → yaml.safe_load()
+    
+    Parameters
+    ----------
+    path : Path | str
+        chordmap ファイルのパス (.json, .yaml, .yml)
+    
+    Returns
+    -------
+    dict
+        chordmap データ（sections, unit, などを含む辞書）
     """
-    # もし既存の load_chordmap があれば:
-    # return load_chordmap(path)
-
-    # ここに直接YAMLを読み込む処理を実装する場合:
+    import json
+    
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"Chordmap file not found: {path}")
+    
+    suffix = path.suffix.lower()
+    
     with open(path, encoding="utf-8") as f:
-        # ここでは単純にyaml.safe_loadを呼ぶ例。
-        # 実際にはChordMapオブジェクトを返すなど、適切な処理が必要。
-        data = yaml.safe_load(f)
-    # 必要であればここでChordMapオブジェクトに変換する処理などを追加
-    # from data_models.chordmap import ChordMap  # 例
-    # return ChordMap(**data) # Pydanticモデルなどを使っている場合
-    return data  # とりあえずパースした辞書を返す例
+        if suffix == ".json":
+            data = json.load(f)
+            logger.info(f"Loaded JSON chordmap: {path}")
+        elif suffix in (".yaml", ".yml"):
+            data = yaml.safe_load(f)
+            logger.info(f"Loaded YAML chordmap: {path}")
+        else:
+            # デフォルトはYAMLとして試行
+            data = yaml.safe_load(f)
+            logger.warning(f"Unknown extension '{suffix}', tried YAML: {path}")
+    
+    return data
+
+
+# 後方互換性のため、旧名も残す
+def load_chordmap_yaml(path: Path | str) -> dict[str, Any]:
+    """
+    [Deprecated] load_chordmap() を使用してください。
+    後方互換性のため残していますが、将来削除される可能性があります。
+    """
+    logger.warning("load_chordmap_yaml() is deprecated, use load_chordmap() instead")
+    return load_chordmap(path)

@@ -1,0 +1,160 @@
+=== Grid Search: threshold × Chorus weights ===
+Target: Accent Delta >= +5%, ML Usage >= 70%, Family Match >= 80%
+
+Testing threshold=0.20...
+INFO: Family Match Rate: 14.06%
+INFO: Top-1 Proba (mean): 0.5687
+INFO: 
+Section-wise Metrics:
+INFO:   Chorus:
+INFO:     Accent Delta: -10.23%
+INFO:     ML Usage: 100.00%
+INFO:   Verse:
+INFO:     Accent Delta: -20.97%
+INFO:     ML Usage: 100.00%
+INFO:   Bridge:
+INFO:     Accent Delta: +0.25%
+INFO:     ML Usage: 100.00%
+INFO: 
+Harmonic Rules OK (v1): 50.00%
+INFO: Harmonic Rules OK (v3): 50.00%
+INFO: 
+------------------------------------------------------------
+INFO: Pass/Fail Criteria (Musical KPIs)
+INFO: ------------------------------------------------------------
+INFO: Accent Delta >= +5%: FAIL (-8.55%)
+INFO: Density Diff <= 1 note/bar: PASS (0.00)
+INFO: ML Usage >= 70%: PASS (100.00%)
+INFO: Family Match >= 80%: FAIL (14.06%)
+INFO: 
+============================================================
+INFO: Overall: ✗ FAIL (needs parameter tuning)
+INFO: ============================================================
+
+INFO: A/B test complete. Results: data/ab_v3_rerank_TH0.20.csv
+
+Testing threshold=0.25...
+INFO: Family Match Rate: 14.06%
+INFO: Top-1 Proba (mean): 0.5711
+INFO: 
+Section-wise Metrics:
+INFO:   Chorus:
+INFO:     Accent Delta: -13.73%
+INFO:     ML Usage: 100.00%
+INFO:   Verse:
+INFO:     Accent Delta: -24.47%
+INFO:     ML Usage: 100.00%
+INFO:   Bridge:
+INFO:     Accent Delta: +0.25%
+INFO:     ML Usage: 100.00%
+INFO: 
+Harmonic Rules OK (v1): 50.00%
+INFO: Harmonic Rules OK (v3): 50.00%
+INFO: 
+------------------------------------------------------------
+INFO: Pass/Fail Criteria (Musical KPIs)
+INFO: ------------------------------------------------------------
+INFO: Accent Delta >= +5%: FAIL (-10.29%)
+INFO: Density Diff <= 1 note/bar: PASS (0.00)
+INFO: ML Usage >= 70%: PASS (100.00%)
+INFO: Family Match >= 80%: FAIL (14.06%)
+INFO: 
+============================================================
+INFO: Overall: ✗ FAIL (needs parameter tuning)
+INFO: ============================================================
+
+INFO: A/B test complete. Results: data/ab_v3_rerank_TH0.25.csv
+
+Testing threshold=0.30...
+INFO: Family Match Rate: 17.19%
+INFO: Top-1 Proba (mean): 0.5724
+INFO: 
+Section-wise Metrics:
+INFO:   Chorus:
+INFO:     Accent Delta: -13.73%
+INFO:     ML Usage: 100.00%
+INFO:   Verse:
+INFO:     Accent Delta: -24.47%
+INFO:     ML Usage: 100.00%
+INFO:   Bridge:
+INFO:     Accent Delta: +0.25%
+INFO:     ML Usage: 100.00%
+INFO: 
+Harmonic Rules OK (v1): 50.00%
+INFO: Harmonic Rules OK (v3): 50.00%
+INFO: 
+------------------------------------------------------------
+INFO: Pass/Fail Criteria (Musical KPIs)
+INFO: ------------------------------------------------------------
+INFO: Accent Delta >= +5%: FAIL (-12.04%)
+INFO: Density Diff <= 1 note/bar: PASS (0.00)
+INFO: ML Usage >= 70%: PASS (100.00%)
+INFO: Family Match >= 80%: FAIL (17.19%)
+INFO: 
+============================================================
+INFO: Overall: ✗ FAIL (needs parameter tuning)
+INFO: ============================================================
+
+INFO: A/B test complete. Results: data/ab_v3_rerank_TH0.30.csv
+
+Testing threshold=0.35...
+INFO: Family Match Rate: 23.44%
+INFO: Top-1 Proba (mean): 0.5702
+INFO: 
+Section-wise Metrics:
+INFO:   Chorus:
+INFO:     Accent Delta: -24.21%
+INFO:     ML Usage: 100.00%
+INFO:   Verse:
+INFO:     Accent Delta: -24.47%
+INFO:     ML Usage: 100.00%
+INFO:   Bridge:
+INFO:     Accent Delta: -6.74%
+INFO:     ML Usage: 100.00%
+INFO: 
+Harmonic Rules OK (v1): 50.00%
+INFO: Harmonic Rules OK (v3): 50.00%
+INFO: 
+------------------------------------------------------------
+INFO: Pass/Fail Criteria (Musical KPIs)
+INFO: ------------------------------------------------------------
+INFO: Accent Delta >= +5%: FAIL (-16.41%)
+INFO: Density Diff <= 1 note/bar: PASS (0.00)
+INFO: ML Usage >= 70%: PASS (100.00%)
+INFO: Family Match >= 80%: FAIL (23.44%)
+INFO: 
+============================================================
+INFO: Overall: ✗ FAIL (needs parameter tuning)
+INFO: ============================================================
+
+INFO: A/B test complete. Results: data/ab_v3_rerank_TH0.35.csv
+
+=== Generating Summary ===
+
+=== Grid Search Summary ===
+                        file  threshold  family_match%  accent_delta%  density_abs  ml_usage%  top1_proba  samples  chorus_accent%  chorus_ml%
+data/ab_v3_rerank_TH0.20.csv       0.20        14.0625      -8.546715          0.0      100.0    0.568724     3200      -10.230572       100.0
+data/ab_v3_rerank_TH0.25.csv       0.25        14.0625     -10.294287          0.0      100.0    0.571117     3200      -13.725716       100.0
+data/ab_v3_rerank_TH0.30.csv       0.30        17.1875     -12.041858          0.0      100.0    0.572412     3200      -13.725716       100.0
+data/ab_v3_rerank_TH0.35.csv       0.35        23.4375     -16.410787          0.0      100.0    0.570201     3200      -24.211145       100.0
+
+Saved to: data/ab_v3_grid_summary.csv
+
+=== Best Parameters (KPI-gated) ===
+⚠️  No config meets all KPIs yet. Pick the highest accent_delta% as reference.
+
+Best configuration:
+file              data/ab_v3_rerank_TH0.20.csv
+threshold                                  0.2
+family_match%                          14.0625
+accent_delta%                        -8.546715
+density_abs                                0.0
+ml_usage%                                100.0
+top1_proba                            0.568724
+samples                                   3200
+chorus_accent%                      -10.230572
+chorus_ml%                               100.0
+
+✓ Saved best config to: data/ab_v3_best.yaml
+
+=== Grid Search Complete ===

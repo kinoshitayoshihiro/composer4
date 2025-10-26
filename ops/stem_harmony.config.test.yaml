@@ -1,0 +1,39 @@
+# ops/stem_harmony.config.test.yaml
+# テスト用設定（N状態無効、chorus/verseのパラメータ調整）
+
+global_key:
+  gamma: 0.15
+
+HMM:
+  stay: 0.93
+  near: 0.03
+
+local_key:
+  win_beats: 8
+  mode: mean       # gaussian より軽量
+  gamma: 0.30
+  per_section:
+    chorus:
+      win_beats: 6
+      gamma: 0.45  # コーラスで強めのローカルキー
+    verse:
+      win_beats: 10
+      gamma: 0.25  # ヴァースで安定
+    intro:
+      win_beats: 8
+      gamma: 0.30
+    outro:
+      win_beats: 8
+      gamma: 0.30
+
+N_state:
+  enable: false    # テストではN状態を無効化
+
+stem_weight:
+  - "bass=1.3"
+  - "keyboard=1.2"
+  - "keys=1.2"
+  - "piano=1.2"
+  - "guitar=1.0"
+  - "strings=0.9"
+  - "fx=0.6"

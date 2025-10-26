@@ -1,0 +1,59 @@
+2025-10-26 20:11:21 [INFO] Loading training data from harmony_dataset/splits/train.parquet
+2025-10-26 20:11:22 [INFO]   Loaded 121843 sequences from 1682 songs
+2025-10-26 20:11:22 [INFO]   Sampled 10.0% -> 12184 sequences
+2025-10-26 20:11:22 [INFO] Loading validation data from harmony_dataset/splits/val.parquet
+2025-10-26 20:11:22 [INFO]   Loaded 15176 sequences from 209 songs
+2025-10-26 20:11:22 [INFO] Expanding chord sequences...
+2025-10-26 20:11:23 [INFO]   Processed 10000/12184 sequences...
+2025-10-26 20:11:23 [INFO]   Processed 12184/12184 sequences...
+2025-10-26 20:11:23 [INFO]   Expanded to 97238 chord events from 12184 sequences
+2025-10-26 20:11:23 [INFO] Expanding chord sequences...
+2025-10-26 20:11:23 [INFO]   Processed 10000/15176 sequences...
+2025-10-26 20:11:23 [INFO]   Processed 15176/15176 sequences...
+2025-10-26 20:11:23 [INFO]   Expanded to 121122 chord events from 15176 sequences
+2025-10-26 20:11:23 [INFO] Creating pattern IDs...
+2025-10-26 20:11:24 [INFO]   Created 1597 unique pattern IDs
+2025-10-26 20:11:24 [INFO] Creating pattern IDs...
+2025-10-26 20:11:24 [INFO]   Created 1492 unique pattern IDs
+2025-10-26 20:11:24 [INFO] Filtering patterns with usage < 10...
+2025-10-26 20:11:24 [INFO]   Train: 97238 -> 94721 events
+2025-10-26 20:11:24 [INFO]   Val: 121122 -> 115618 events
+2025-10-26 20:11:24 [INFO]   Valid patterns: 1119
+2025-10-26 20:11:24 [INFO] Encoding features...
+2025-10-26 20:11:27 [INFO]   section: 6 classes
+2025-10-26 20:11:27 [INFO]   chord_root: 21 classes
+2025-10-26 20:11:27 [INFO]   chord_quality: 5 classes
+2025-10-26 20:11:27 [INFO]   tempo_bin: 5 classes
+2025-10-26 20:11:27 [INFO]   time_sig: 23 classes
+2025-10-26 20:11:27 [INFO]   Feature matrix shape: train (94721, 7), val (115618, 7)
+2025-10-26 20:11:27 [INFO] Encoding target (pattern_id)...
+2025-10-26 20:11:27 [INFO]   Target classes: 1119
+2025-10-26 20:11:27 [INFO] Training xgboost model...
+2025-10-26 20:11:27 [INFO]   n_estimators: 50
+2025-10-26 20:11:27 [INFO]   max_depth: 4
+2025-10-26 20:14:48 [INFO]   Training complete
+2025-10-26 20:14:48 [INFO] Evaluating model...
+2025-10-26 20:15:29 [INFO]   Accuracy: 0.9584
+2025-10-26 20:15:29 [INFO]   Top-3 Accuracy: 0.9799
+2025-10-26 20:15:29 [INFO]   Weighted F1: 0.9491
+2025-10-26 20:15:29 [INFO] Top 20 feature importances:
+2025-10-26 20:15:29 [INFO]   section: 0.2215
+2025-10-26 20:15:29 [INFO]   chord_root: 0.2029
+2025-10-26 20:15:29 [INFO]   tempo_bin: 0.1888
+2025-10-26 20:15:29 [INFO]   chord_quality: 0.1466
+2025-10-26 20:15:29 [INFO]   tempo: 0.1222
+2025-10-26 20:15:29 [INFO]   confidence: 0.0891
+2025-10-26 20:15:29 [INFO]   time_sig: 0.0290
+2025-10-26 20:15:29 [INFO] Saving model to /tmp/harmony_baseline_xgb_tuned.joblib
+2025-10-26 20:15:29 [INFO]   ✓ Saved model package to /tmp/harmony_baseline_xgb_tuned.joblib
+2025-10-26 20:15:29 [INFO]   ✓ Saved metadata to /tmp/harmony_baseline_xgb_tuned.json
+2025-10-26 20:15:29 [INFO]   ✓ Saved feature importance to /tmp/harmony_baseline_xgb_tuned_feature_importance.csv
+2025-10-26 20:15:29 [INFO] 
+2025-10-26 20:15:29 [INFO] ============================================================
+2025-10-26 20:15:29 [INFO] Training complete!
+2025-10-26 20:15:29 [INFO] ============================================================
+2025-10-26 20:15:29 [INFO] Model: xgboost
+2025-10-26 20:15:29 [INFO] Accuracy: 0.9584
+2025-10-26 20:15:29 [INFO] Top-3 Accuracy: 0.9799
+2025-10-26 20:15:29 [INFO] Weighted F1: 0.9491
+2025-10-26 20:15:29 [INFO] Output: /tmp/harmony_baseline_xgb_tuned.joblib

@@ -1,0 +1,1969 @@
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py:103: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  features['tempo'] = float(tempo)
+
+======================================================================
+LOCAL LAMDA WAV Integration - musdb18
+======================================================================
+Input dir: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_decoded
+Total song directories: 150
+Output DB: data/musdb18_wav_unified.db
+======================================================================
+
+[1/150]
+
+======================================================================
+Processing: Creepoid - OldTree
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 6e96dd592361
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 281a42ce5243
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: d84b1b5de259
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[2/150]
+
+======================================================================
+Processing: Angels In Amplifiers - I'm Alright
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: ad092f45ebcf
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: e8b27446ba6f
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: c8b6c1841067
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[3/150]
+
+======================================================================
+Processing: The Doppler Shift - Atrophy
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 692017bf0002
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 520c74b601c1
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 32b166c5857b
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[4/150]
+
+======================================================================
+Processing: Girls Under Glass - We Feel Alright
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f80d3402e2ff
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 3b96f98cb74b
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 8d87f6bb16f4
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[5/150]
+
+======================================================================
+Processing: Black Bloc - If You Want Success
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 3726f8e1453d
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: b9a294005677
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 7554ec732825
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[6/150]
+
+======================================================================
+Processing: Jay Menon - Through My Eyes
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: ef952df92ffc
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 17d0d7166075
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: bf7e431d5986
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[7/150]
+
+======================================================================
+Processing: Bobby Nobody - Stitch Up
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 3ba72cf7091c
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 97f38ce2f64f
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 53e418b89a7d
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[8/150]
+
+======================================================================
+Processing: Arise - Run Run Run
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 0e07cd250521
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: dd275934394c
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 2cef5dae2315
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[9/150]
+
+======================================================================
+Processing: Remember December - C U Next Time
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: ed348c74d9da
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 204776933443
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 7235fd5c69c2
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[10/150]
+
+======================================================================
+Processing: Swinging Steaks - Lost My Way
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: b2666075c9f7
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 2d5c3bb70936
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: f842bb97d89a
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[11/150]
+
+======================================================================
+Processing: Buitraker - Revo X
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 161b130bb784
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 96c62b29e51f
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: bd9aea9b50ce
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[12/150]
+
+======================================================================
+Processing: Music Delta - Reggae
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 5e301de7acdc
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 6857c5a1a951
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 430bf8573b75
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[13/150]
+
+======================================================================
+Processing: North To Alaska - All The Same
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 616656cb599d
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 736467ceacfc
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 65c3239a7a65
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[14/150]
+
+======================================================================
+Processing: Mu - Too Bright
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 81d30aa239bb
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 4cc0cff7df41
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 93f148ff2132
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[15/150]
+
+======================================================================
+Processing: PR - Oh No
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: c3b9503b62b7
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 7d9e228d81f5
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 857e5d2e423f
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[16/150]
+
+======================================================================
+Processing: Timboz - Pony
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 0e43990624bd
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: ef60e2c0ba9b
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: c7b5034a0023
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[17/150]
+
+======================================================================
+Processing: Fergessen - Nos Palpitants
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 60c46897a69e
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 124639d323c8
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 07d618fdb8ec
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[18/150]
+
+======================================================================
+Processing: James May - If You Say
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 8dffb4a05038
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 67435c613880
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: f7da387e28a1
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[19/150]
+
+======================================================================
+Processing: Music Delta - Country1
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 0cb9f8ff1ef1
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: b9c628828ea8
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: e0a51c2ac83e
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[20/150]
+
+======================================================================
+Processing: Patrick Talbot - Set Me Free
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: df3f58d16e25
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: d719b71a005e
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: ae237a7e64fe
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[21/150]
+
+======================================================================
+Processing: Wall Of Death - Femme
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: ef47706cf66f
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: bc6a70a9ef24
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 6e1e8a18037d
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[22/150]
+
+======================================================================
+Processing: Speak Softly - Like Horses
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 3b245070cd8c
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: b0fc68a6bd1a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: cf07932cf26e
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[23/150]
+
+======================================================================
+Processing: Music Delta - Beatles
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 9af08c9288c1
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 9ff62d5ff597
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 8807f99c656a
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[24/150]
+
+======================================================================
+Processing: Giselle - Moss
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 68554411045b
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 4e0d67d34be2
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 6c9d28299e73
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[25/150]
+
+======================================================================
+Processing: Louis Cressy Band - Good Time
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 77d51f7aa322
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: cdaa59aaf993
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 3abe682ca8a8
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[26/150]
+
+======================================================================
+Processing: AvaLuna - Waterduct
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 125ba741b10e
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: ff039cad4861
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 643aaa82d806
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[27/150]
+
+======================================================================
+Processing: The Sunshine Garcia Band - For I Am The Moon
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 639eed84fa7c
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 24a334f9778a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 28dd92182da9
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[28/150]
+
+======================================================================
+Processing: Cnoc An Tursa - Bannockburn
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f2106b594d3c
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: f4e50b51a8b8
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 94e4551b9e4b
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[29/150]
+
+======================================================================
+Processing: Moosmusic - Big Dummy Shake
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 9e0bfa8d2f1a
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: e6fa5dac7ef4
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 899a0630df31
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[30/150]
+
+======================================================================
+Processing: Music Delta - Hendrix
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 5db9536c1a1b
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: b88e039aa0f2
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 24ac7c59286b
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[31/150]
+
+======================================================================
+Processing: Auctioneer - Our Future Faces
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 965b7a01651b
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: c2d758ba8b44
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: e7d7016b9594
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[32/150]
+
+======================================================================
+Processing: Speak Softly - Broken Man
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 0b54a65de4b9
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: d46b9477d86a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 383dcf6b1792
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[33/150]
+
+======================================================================
+Processing: Alexander Ross - Goodbye Bolero
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 5c7ffac7a1b4
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: c02bd6058a96
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 7d538d2fc0d2
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[34/150]
+
+======================================================================
+Processing: Dreamers Of The Ghetto - Heavy Love
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: e59f99ff67df
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 4df57e7c6674
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 24764631d997
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[35/150]
+
+======================================================================
+Processing: Georgia Wonder - Siren
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f0401548ac63
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 8a6a96a59999
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b7504621267c
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[36/150]
+
+======================================================================
+Processing: Secretariat - Borderline
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 7e7bdda04289
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 7df353dce8d4
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 2ab7e4f92f22
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[37/150]
+
+======================================================================
+Processing: James May - On The Line
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 7fb404425c88
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: b5a409538fd0
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 8aa23f9d829f
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[38/150]
+
+======================================================================
+Processing: Music Delta - 80s Rock
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 0b4ab70dda1d
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 639a68586564
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: bfcb44a9d5d0
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[39/150]
+
+======================================================================
+Processing: Lushlife - Toynbee Suite
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 106eef0d43bd
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 666f412e5f29
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: bed8c5d85b06
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[40/150]
+
+======================================================================
+Processing: Johnny Lokke - Whisper To A Scream
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 1fd69b2a3235
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: be8b62b7e70a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 9c6658af8e37
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[41/150]
+
+======================================================================
+Processing: Detsky Sad - Walkie Talkie
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 30370ae1b0eb
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 6f26e305690a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 0606404c48ae
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[42/150]
+
+======================================================================
+Processing: Chris Durban - Celebrate
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: ded4aafcec85
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 6b9682ea388a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b730dd5f3884
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[43/150]
+
+======================================================================
+Processing: Triviul - Angelsaint
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f9a2302d4750
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 541ef5b10daa
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: e532bfec1efb
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[44/150]
+
+======================================================================
+Processing: James Elder & Mark M Thompson - The English Actor
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 68f4d0395a04
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 5c5061f89f7d
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 92ce8f619e34
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[45/150]
+
+======================================================================
+Processing: Titanium - Haunted Age
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: e514fb1d552f
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 6cdbbd5f6349
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 509560200b60
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[46/150]
+
+======================================================================
+Processing: Aimee Norwich - Child
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 1b9528043c3e
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 9edd1ce00583
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 075930c0775d
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[47/150]
+
+======================================================================
+Processing: Bill Chudziak - Children Of No-one
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 371044a4e8fa
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 45bf710d1a6c
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: cfafeccb9277
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[48/150]
+
+======================================================================
+Processing: Phre The Eon - Everybody's Falling Apart
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 85a9ac77089a
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 082eb43a3966
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 11d4498eb74f
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[49/150]
+
+======================================================================
+Processing: Strand Of Oaks - Spacestation
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 5a1944bed65d
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 8381aacfc6ca
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: a3e3097c418d
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[50/150]
+
+======================================================================
+Processing: Triviul feat. The Fiend - Widow
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: e6e997973569
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: fbe318e94714
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: c3739560d804
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[51/150]
+
+======================================================================
+Processing: The Easton Ellises - Falcon 69
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: d9ccf8539a19
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 9be7c32b1216
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 55639e13355f
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[52/150]
+
+======================================================================
+Processing: Ben Carrigan - We'll Talk About It All Tonight
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 36a10b03b0bc
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 5e08a2d72a06
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 6d7a49610377
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[53/150]
+
+======================================================================
+Processing: Leaf - Come Around
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 74ef4f51f56b
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 077d0034b79e
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 8a7764626475
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[54/150]
+
+======================================================================
+Processing: Matthew Entwistle - Dont You Ever
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 19644145bedd
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 79148b7f765a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 72b463f96a94
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[55/150]
+
+======================================================================
+Processing: Juliet's Rescue - Heartbeats
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 24cf7d7a016b
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: d750d193cdbf
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 1a2e27acf903
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[56/150]
+
+======================================================================
+Processing: Music Delta - Disco
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: b0dc4fcbabc6
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 54e5fba9f4fa
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: cec0d105085a
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[57/150]
+
+======================================================================
+Processing: The Scarlet Brand - Les Fleurs Du Mal
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: a4d77e4a6423
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: a750abd9d99b
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 50521722bd9c
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[58/150]
+
+======================================================================
+Processing: Port St Willow - Stay Even
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f9254ede1dfa
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 15a4316fa197
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 92e29b620aeb
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[59/150]
+
+======================================================================
+Processing: BigTroubles - Phantom
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 4da8bf9c7b9c
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 62518f05cefa
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 9ee9454a9bf4
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[60/150]
+
+======================================================================
+Processing: Dark Ride - Burning Bridges
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 155c5c0a3463
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 5fafe556782e
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 712b95ec54a0
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[61/150]
+
+======================================================================
+Processing: Fergessen - Back From The Start
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 5b24fda542c0
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 58b972bc8f45
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: e41534fdcb32
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[62/150]
+
+======================================================================
+Processing: Spike Mullings - Mike's Sulking
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 2e32cbc18fa0
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: c8f583f72341
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 921934bec868
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[63/150]
+
+======================================================================
+Processing: Triviul - Dorothy
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 03b4ab775d98
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 4639175096b4
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: c1fb8b645dd0
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[64/150]
+
+======================================================================
+Processing: Snowmine - Curfews
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 6169961ca3d5
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: c5d97a3e4284
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 53fb72d7030d
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[65/150]
+
+======================================================================
+Processing: The Long Wait - Back Home To Blue
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 1dce9986e2d0
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 2ac8e46ad046
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b3dc192f6f4b
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[66/150]
+
+======================================================================
+Processing: The Mountaineering Club - Mallory
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 939516d051a4
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: d4c72604fb38
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 6ad74a5b75ca
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[67/150]
+
+======================================================================
+Processing: James May - All Souls Moon
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 5277d28a1b18
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 8d8215d13419
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 7c8dc59b6153
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[68/150]
+
+======================================================================
+Processing: A Classic Education - NightOwl
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 5815bd97b278
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: b812a14c57d5
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 1c44ab13d1e5
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[69/150]
+
+======================================================================
+Processing: Punkdisco - Oral Hygiene
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 645ba7cf8c0f
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 3c14509f1244
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: e61f509e748f
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[70/150]
+
+======================================================================
+Processing: Cristina Vane - So Easy
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 14ec6ba77b9d
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 0727f9677bed
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: dd40374d0332
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[71/150]
+
+======================================================================
+Processing: Actions - Devil's Words
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 2273a3f041e3
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 120e496a5e7f
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 09924f4265d6
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[72/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Waltz For My Victims
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 9dccd1c5877e
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: bf8ea51e71f4
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 38f260f2d656
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[73/150]
+
+======================================================================
+Processing: Al James - Schoolboy Facination
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 1d1706b30013
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 6c86186a619b
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 519eea61e355
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[74/150]
+
+======================================================================
+Processing: Leaf - Summerghost
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 36e57fb35567
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 4a54dc307a44
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 9409f28ce6cd
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[75/150]
+
+======================================================================
+Processing: Tom McKenzie - Directions
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: abf99de6fe3a
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 421ceb6440da
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 6b77dd035d62
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[76/150]
+
+======================================================================
+Processing: Helado Negro - Mitad Del Mundo
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 56228c109536
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: a465045ab5d2
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 199fd0ff3c59
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[77/150]
+
+======================================================================
+Processing: BKS - Bulldozer
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: e05ff9dc503a
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 112f1b8e9a91
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 596bbd8555ab
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[78/150]
+
+======================================================================
+Processing: ANiMAL - Rockshow
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 7184dde95768
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 85321413e465
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: daf5b8e0452f
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[79/150]
+
+======================================================================
+Processing: James May - Dont Let Go
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 6275c741b871
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: e7ecf98c5604
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 2d051ad294e3
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[80/150]
+
+======================================================================
+Processing: Carlos Gonzalez - A Place For Us
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 728a01714510
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 12943211acc5
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 51eabb5fb0b0
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[81/150]
+
+======================================================================
+Processing: Secret Mountains - High Horse
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 90ae9b6fec56
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 7f5b5d825e7f
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: d04949876af1
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[82/150]
+
+======================================================================
+Processing: Music Delta - Britpop
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 63a1c8c93839
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 1a9f924ba311
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: bd8465a78ed8
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[83/150]
+
+======================================================================
+Processing: Music Delta - Grunge
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 9afe59668bd4
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 9234876eade5
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 024fe92ed51c
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[84/150]
+
+======================================================================
+Processing: Side Effects Project - Sing With Me
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f816609ec354
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: d2f166ddc301
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 9009c5420894
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[85/150]
+
+======================================================================
+Processing: Grants - PunchDrunk
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: d4c1899885bd
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 06a124740ee8
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: c4517b93d243
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[86/150]
+
+======================================================================
+Processing: Night Panther - Fire
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 82ce416bac29
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 6d5deacfdd20
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 3a8ffab392f3
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[87/150]
+
+======================================================================
+Processing: Young Griffo - Facade
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 0b120274fe69
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 698b49ad65f9
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 59ebff069d49
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[88/150]
+
+======================================================================
+Processing: Sweet Lights - You Let Me Down
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: bbb56a86641f
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 1dba02e342cc
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 8c929ee232d6
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[89/150]
+
+======================================================================
+Processing: Traffic Experiment - Once More (With Feeling)
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 5ab1b5e9c115
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 32683bff58c8
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 5dfa60051bd2
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[90/150]
+
+======================================================================
+Processing: Skelpolu - Together Alone
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 67cf62e93303
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: bcaaae3afdd4
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 03fb386a9b16
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[91/150]
+
+======================================================================
+Processing: Music Delta - Country2
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 29c092d2c547
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 2555f03b42d1
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b9acb9af1889
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[92/150]
+
+======================================================================
+Processing: Celestial Shore - Die For Us
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: b3adc4657e9a
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 069318bd37e1
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: ba85910d3c45
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[93/150]
+
+======================================================================
+Processing: Lyndsey Ollard - Catching Up
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 538f5d04e431
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 8ed41993d78d
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 55d3349ac19b
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[94/150]
+
+======================================================================
+Processing: Invisible Familiars - Disturbing Wildlife
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 14b16831c3c5
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 537132671a9d
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b7c21d081ee4
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[95/150]
+
+======================================================================
+Processing: Atlantis Bound - It Was My Fault For Waiting
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 88f2c3d36ffa
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 81e748e3217e
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 052f9422807b
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[96/150]
+
+======================================================================
+Processing: The Wrong'Uns - Rothko
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: a6229e70a679
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: d35d814869c0
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: d1371db0436a
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[97/150]
+
+======================================================================
+Processing: Patrick Talbot - A Reason To Leave
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: c4303081b420
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 3f08691f3b0d
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 6cab67255fa5
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[98/150]
+
+======================================================================
+Processing: Music Delta - Rockabilly
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: e62cc328d5d6
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 2942d745578c
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 36f7b8968a0a
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[99/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Stella
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: ac12bd75dad5
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 18d81f2f6777
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 8b17478f8faa
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[100/150]
+
+======================================================================
+Processing: Young Griffo - Pennies
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 321d0d7ffd3c
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 308d4818009c
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 8ecbd63d21fc
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[101/150]
+
+======================================================================
+Processing: Hop Along - Sister Cities
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 50389b8b8a1a
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: fd05481715a9
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: aace39670528
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[102/150]
+
+======================================================================
+Processing: Jokers, Jacks & Kings - Sea Of Leaves
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 553ad1a9a953
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: abe50649d490
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 042849581d91
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[103/150]
+
+======================================================================
+Processing: Secretariat - Over The Top
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 40524d3381d6
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 5a702887d6e2
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 932cf8a9911c
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[104/150]
+
+======================================================================
+Processing: The Long Wait - Dark Horses
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: d182e5b9a006
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 28cc17e6ee12
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: eee991bed529
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[105/150]
+
+======================================================================
+Processing: Skelpolu - Resurrection
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f8eba9650ea7
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: e17b2083d51f
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 2a20a5e37c73
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[106/150]
+
+======================================================================
+Processing: Skelpolu - Human Mistakes
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 75b78d203904
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: c33f51360ece
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: a03d95331d6a
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[107/150]
+
+======================================================================
+Processing: Motor Tapes - Shore
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 2c9767184b50
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: dff9470b4887
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: fe412b9af3d3
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[108/150]
+
+======================================================================
+Processing: Alexander Ross - Velvet Curtain
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f6da12112e60
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 7875209ae3f3
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 60e7d5704603
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[109/150]
+
+======================================================================
+Processing: Faces On Film - Waiting For Ga
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: beb685962a39
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: e24e9c754507
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 55376e950729
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[110/150]
+
+======================================================================
+Processing: Hezekiah Jones - Borrowed Heart
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 604ed5cd864e
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 56d5bb29cc3f
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: e8641aa37cf7
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[111/150]
+
+======================================================================
+Processing: The Districts - Vermont
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 112689e719b7
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 341ea9e17c1b
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 261fb8043cbb
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[112/150]
+
+======================================================================
+Processing: Nerve 9 - Pray For The Rain
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 2adb132bf9a7
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 9c36fe4eb54a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 0cd247ae39e6
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[113/150]
+
+======================================================================
+Processing: Zeno - Signs
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 797f01a6717b
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: ad7fe5b6d457
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: bb2397ff52ea
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[114/150]
+
+======================================================================
+Processing: Young Griffo - Blood To Bone
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 6886b12e8713
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 48cb09248173
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 91cff767accc
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[115/150]
+
+======================================================================
+Processing: ANiMAL - Clinic A
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 6d741b03a8da
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: c12b0fe31eb0
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: e2119ae0c943
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[116/150]
+
+======================================================================
+Processing: Signe Jakobsen - What Have You Done To Me
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: c85fa8b21919
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 4c0fe3beefda
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 5bc7e38d7d58
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[117/150]
+
+======================================================================
+Processing: Tim Taler - Stalker
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 0f3d1d1f00cf
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 4b016619d3de
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: c6d6fc57a61b
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[118/150]
+
+======================================================================
+Processing: Actions - One Minute Smile
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 68280faa784b
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 3562c8979382
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: bbb03b25dd51
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[119/150]
+
+======================================================================
+Processing: Angela Thomas Wade - Milk Cow Blues
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: e2f1c22da831
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 4d8f0ea8d236
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 5ebd13aa66b8
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[120/150]
+
+======================================================================
+Processing: Leaf - Wicked
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 81ea5cdf405a
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 15bc243832ab
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 2f79d54aba45
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[121/150]
+
+======================================================================
+Processing: Drumtracks - Ghost Bitch
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: b0d9e28d198d
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 5aeb3ea1a179
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: d48aab6f1f3b
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[122/150]
+
+======================================================================
+Processing: AM Contra - Heart Peripheral
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: c9df2322a078
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: c0423a987987
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b7eb0201ce94
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[123/150]
+
+======================================================================
+Processing: Actions - South Of The Water
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 548ec06643fb
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 5fc52b9a61df
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 52b5d106f6e7
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[124/150]
+
+======================================================================
+Processing: Hollow Ground - Left Blind
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 6a2d1c8c78a4
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: e9d5b2bb3e48
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 519850efbc79
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[125/150]
+
+======================================================================
+Processing: M.E.R.C. Music - Knockout
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 2f30aea47e68
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: f3b6ed5925e6
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 87d84b197fe3
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[126/150]
+
+======================================================================
+Processing: Music Delta - Gospel
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: a02b33b8d39f
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 74f8d2d44cac
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: d93982bcede6
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[127/150]
+
+======================================================================
+Processing: Meaxic - Take A Step
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 00844f42afe6
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: a3aba092ba2a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 908bca400a75
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[128/150]
+
+======================================================================
+Processing: The So So Glos - Emergency
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: c1cf60c88619
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 214883be9fd3
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 4eae3ddeb807
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[129/150]
+
+======================================================================
+Processing: PR - Happy Daze
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 90394cded7cb
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: a33fbd353563
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b304fda4f5b8
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[130/150]
+
+======================================================================
+Processing: Raft Monk - Tiring
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 474b5c0d9c3a
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: ab37b6a82ddc
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b47916813ab9
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[131/150]
+
+======================================================================
+Processing: Traffic Experiment - Sirens
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 28c7a4e2a329
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 08c151a71f75
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 1fa5a8e231e0
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[132/150]
+
+======================================================================
+Processing: Forkupines - Semantics
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: ec084d7f78d9
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: e7c4ee0e78c3
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: c2d8a5c69073
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[133/150]
+
+======================================================================
+Processing: ANiMAL - Easy Tiger
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 79450fb82d56
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: c046c99bbc28
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 9a106e04ec17
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[134/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Air Traffic
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: dd8642bcc364
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 38200f79552d
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: d7ebbe7d4e78
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[135/150]
+
+======================================================================
+Processing: We Fell From The Sky - Not You
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: fafed736221f
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 2f84c11dcd18
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 8e38f2cc8172
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[136/150]
+
+======================================================================
+Processing: Music Delta - Rock
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 84ab6588bc48
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: b198118a4c1a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 83573bbb8910
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[137/150]
+
+======================================================================
+Processing: Sambasevam Shanmugam - Kaathaadi
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 4d03b5fbd9e1
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: a2ffa6b74794
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: f6b2444b76e0
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[138/150]
+
+======================================================================
+Processing: Meaxic - You Listen
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 8a8f3850ccf5
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 1846b13cc9bf
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 28e0ef77c68c
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[139/150]
+
+======================================================================
+Processing: Little Chicago's Finest - My Own
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: d16b41aad449
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 30f639e67982
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 5e4f9c092ccb
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[140/150]
+
+======================================================================
+Processing: Voelund - Comfort Lives In Belief
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 18a3b586bec5
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: a8d9340901ef
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b25e364eb30e
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[141/150]
+
+======================================================================
+Processing: The Easton Ellises (Baumi) - SDRNR
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 2c4780fce6e0
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 58a61abd8b8d
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 2eaa5a694817
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[142/150]
+
+======================================================================
+Processing: Fergessen - The Wind
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 2d5aa9efdba5
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 9722d1a67322
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: ac0323477c35
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[143/150]
+
+======================================================================
+Processing: Johnny Lokke - Promises & Lies
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 3fc033ddcc00
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 1aff11e18c6e
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 29ef33857e9e
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[144/150]
+
+======================================================================
+Processing: St Vitus - Word Gets Around
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: c4fb5d68ac9b
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 953f91c035cb
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: c2f36d3ce668
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[145/150]
+
+======================================================================
+Processing: BKS - Too Much
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 765f2852925e
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 587cc3478a57
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 6d262716874c
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[146/150]
+
+======================================================================
+Processing: Music Delta - Punk
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: a1d99067ff54
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 54a5a8bb4548
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: ed47e9808ded
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[147/150]
+
+======================================================================
+Processing: Hollow Ground - Ill Fate
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 3e2ccf023bdf
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: bfcf06967213
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: 4d447924ddbc
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[148/150]
+
+======================================================================
+Processing: Steven Clark - Bounty
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: f28ca627b2f6
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 2bcd59d799ef
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: d7f50f703410
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[149/150]
+
+======================================================================
+Processing: Enda Reilly - Cur An Long Ag Seol
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 0fda784189d5
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 69af0c32c14a
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: bf1d376d8457
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+[150/150]
+
+======================================================================
+Processing: Flags - 54
+======================================================================
+🎵 Processing stem: other.wav
+   → Role: other, File ID: 701430f11cea
+🎵 Processing stem: bass.wav
+   → Role: bass, File ID: 19410a22113e
+🎵 Processing stem: drums.wav
+   → Role: drums, File ID: b0415cce1ae2
+✅ Processed 3 stems: ['other', 'bass', 'drums']
+
+======================================================================
+Processing Summary - musdb18
+======================================================================
+✅ Songs processed: 150
+🎵 Total stems: 450
+❌ Failed: 0
+======================================================================
+📄 Metadata: data/musdb18_wav_unified.jsonl

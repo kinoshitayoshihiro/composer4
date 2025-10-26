@@ -33,7 +33,7 @@ from music21 import (
 import utilities.humanizer as humanizer  # type: ignore
 from generator.guitar_generator import TUNING_PRESETS
 from utilities import sanitize_chord_label
-from utilities.config_loader import load_chordmap_yaml, load_main_cfg
+from utilities.config_loader import load_chordmap, load_main_cfg
 
 # --- project utilities ----------------------------------------------------
 from utilities.generator_factory import GenFactory  # type: ignore
@@ -98,6 +98,7 @@ def compose(
     expr_curve: str = "cubic-in",
     kick_leak_jitter: int = 0,
     disable_harmonics: bool = False,
+    sections_list: list[dict[str, Any]] | None = None,  # ← 分離型sections対応
 ) -> tuple[stream.Score, list[dict[str, Any]]]:
     if tempo_map is None:
         part_gens = GenFactory.build_from_config(main_cfg, rhythm_lib)
@@ -113,16 +114,20 @@ def compose(
 
     part_streams: dict[str, stream.Part] = {}
 
-    sections_to_gen: list[str] = main_cfg["sections_to_generate"]
-    raw_sections: dict[str, dict[str, Any]] = chordmap.get("sections", {})
-    sections: list[dict[str, Any]] = []
-    for name in sections_to_gen:
-        sec = raw_sections.get(name)
-        if not sec:
-            continue
-        sec_copy = dict(sec)
-        sec_copy["label"] = name
-        sections.append(sec_copy)
+    # sections_list が渡されていればそれを使用（分離型）、なければchordmapから取得（統合型）
+    if sections_list:
+        sections = sections_list
+    else:
+        sections_to_gen: list[str] = main_cfg["sections_to_generate"]
+        raw_sections: dict[str, dict[str, Any]] = chordmap.get("sections", {})
+        sections: list[dict[str, Any]] = []
+        for name in sections_to_gen:
+            sec = raw_sections.get(name)
+            if not sec:
+                continue
+            sec_copy = dict(sec)
+            sec_copy["label"] = name
+            sections.append(sec_copy)
 
     executor = None
     if num_workers and num_workers > 1:
@@ -365,7 +370,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--chordmap",
         "-c",
-        help="YAML: processed_chordmap_with_emotion.yaml のパス",
+        help="JSON/YAML: chordmap ファイルのパス (.json, .yaml, .yml)",
     )
     p.add_argument(
         "--rhythm",
@@ -390,6 +395,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="MIDI ファイル名 (default: output.mid)",
     )
     p.add_argument("--tempo-curve", help="JSON tempo curve path")
+    p.add_argument(
+        "--sections",
+        "-s",
+        help="JSON: sections.json のパス (chordmapと分離されている場合)",
+    )
     p.add_argument(
         "--threads",
         type=int,
@@ -529,8 +539,8 @@ def main_cli() -> None:
     )
     main_cfg.setdefault("global_settings", {})["drum_map"] = drum_map_name
 
-    # 3. ファイル読み込み
-    chordmap = load_chordmap_yaml(Path(paths["chordmap_path"]))
+    # 3. ファイル読み込み (JSON/YAML自動判別)
+    chordmap = load_chordmap(Path(paths["chordmap_path"]))
     rhythm_lib = load_rhythm_library(paths["rhythm_library_path"])
 
     overrides_model = None
@@ -544,8 +554,30 @@ def main_cli() -> None:
         except Exception as e:
             logger.error("Failed to load arrangement overrides: %s", e)
 
+    # sections.json を別ファイルとして読み込む（分離型フォーマット対応）
+    sections_data = None
+    if args.sections:
+        import json
+        with open(args.sections, "r", encoding="utf-8") as f:
+            sections_data = json.load(f)
+        logger.info("Loaded sections from %s", args.sections)
+    
     section_names: list[str] = main_cfg["sections_to_generate"]
-    raw_sections: dict[str, dict[str, Any]] = chordmap["sections"]
+    
+    # chordmapに"sections"キーがあれば統合形式、なければ分離形式
+    if "sections" in chordmap:
+        raw_sections: dict[str, dict[str, Any]] = chordmap["sections"]
+    elif sections_data:
+        # sections.json から sections を構築
+        raw_sections = {}
+        if "sections" in sections_data:
+            for sec in sections_data["sections"]:
+                label = sec.get("label")
+                if label:
+                    raw_sections[label] = sec
+    else:
+        logger.error("chordmap に sections キーがなく、--sections も指定されていません")
+        return
     sections: list[dict[str, Any]] = []
     for name in section_names:
         sec = raw_sections.get(name)
@@ -555,6 +587,53 @@ def main_cli() -> None:
         # ラベルを明示的に保持しておく
         sec_copy = dict(sec)
         sec_copy["label"] = name
+        
+        # 分離型の場合：chordmap.eventsをbar範囲に基づいて割り当て
+        if sections_data and "events" in chordmap:
+            start_bar = sec.get("bar", 0)
+            # 次のセクションのbar位置を取得（sections_layoutから）
+            end_bar = None
+            if "sections_layout" in sections_data:
+                for layout in sections_data["sections_layout"]:
+                    if layout.get("start_bar") == start_bar:
+                        end_bar = layout.get("end_bar")
+                        break
+            
+            if end_bar is None:
+                # sections_layoutがない場合、次のセクションのbar位置を使用
+                current_idx = [s.get("label") for s in sections_data["sections"]].index(name)
+                if current_idx + 1 < len(sections_data["sections"]):
+                    end_bar = sections_data["sections"][current_idx + 1].get("bar", start_bar + 8)
+                else:
+                    end_bar = start_bar + 100  # 最後のセクションは大きめに設定
+            
+            # chordmap.events から該当するbar範囲のコード進行を抽出
+            bar_duration = 4.0  # 4/4拍子を想定
+            start_time = start_bar * bar_duration
+            end_time = end_bar * bar_duration
+            
+            processed_events = []
+            for ev in chordmap["events"]:
+                ev_time = ev.get("time", 0)
+                if start_time <= ev_time < end_time:
+                    # イベントをprocessed_chord_events形式に変換
+                    chord_symbol = f"{ev['root']}{ev['quality']}" if "quality" in ev else ev["root"]
+                    processed_ev = {
+                        "absolute_offset_beats": ev_time,
+                        "original_offset_beats": ev_time - start_time,
+                        "humanized_offset_beats": ev_time - start_time,
+                        "original_duration_beats": 4.0,  # デフォルト
+                        "humanized_duration_beats": 4.0,
+                        "chord_symbol_for_voicing": chord_symbol,
+                        "original_chord_label": chord_symbol,
+                        "specified_bass_for_voicing": None,
+                    }
+                    processed_events.append(processed_ev)
+            
+            if processed_events:
+                sec_copy["processed_chord_events"] = processed_events
+                logger.info(f"Section '{name}': assigned {len(processed_events)} chord events (bar {start_bar}-{end_bar})")
+        
         sections.append(sec_copy)
 
     if not sections:
@@ -577,6 +656,7 @@ def main_cli() -> None:
         expr_curve=args.expr_curve,
         kick_leak_jitter=args.kick_leak_jitter,
         disable_harmonics=args.no_harmonics,
+        sections_list=sections,  # ← 分離型sectionsを渡す
     )
 
     if args.counterline:

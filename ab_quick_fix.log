@@ -1,0 +1,62 @@
+INFO: Found 2104 packages in index
+INFO: Sampled 10 songs for A/B test
+INFO:   gold: 8
+INFO:   silver: 2
+INFO: Re-ranking parameters:
+INFO:   conf_thresh: 0.25
+INFO:   weights: proba=0.6, accent=0.25, density=0.1, section=0.05
+INFO: Loading v1 pickle: data/patterns/stage2_guitar.pickle
+INFO: Loading v2 pickle: data/patterns/stage2_guitar_v3_meta.pickle
+INFO: Initialized SimplePatternRecommender for guitar
+INFO:   Version: 1.0
+INFO:   Total patterns: 2148
+INFO:   Selector type: rule_based
+INFO:   ✓ Loaded ML model from harmony_baseline_xgb_tuned.joblib
+INFO: Initialized SimplePatternRecommender for guitar
+INFO:   Version: 1.0
+INFO:   Total patterns: 2148
+INFO:   Selector type: xgboost
+INFO:   Provider: xgboost
+INFO:   Model: harmony_baseline_xgb_tuned.joblib
+INFO:   Classes: 1119
+INFO: v1 selector type: rule_based
+INFO: v2 selector type: xgboost
+INFO: Generated 640 test cases
+INFO: Results saved to data/ab_quick_after_fix.csv
+INFO: 
+============================================================
+INFO: A/B Test Results Summary (Musical KPIs)
+INFO: ============================================================
+INFO: Accent Delta (v3 - v1): -18.01%
+INFO: Density Diff (median): 0.00 notes/bar
+INFO: ML Usage Rate: 96.88%
+INFO: Family Match Rate: 14.06%
+INFO: Top-1 Proba (mean): 0.3243
+INFO: 
+Section-wise Metrics:
+INFO:   Chorus:
+INFO:     Accent Delta: -6.55%
+INFO:     ML Usage: 100.00%
+INFO:   Verse:
+INFO:     Accent Delta: -25.16%
+INFO:     ML Usage: 100.00%
+INFO:   Bridge:
+INFO:     Accent Delta: -19.20%
+INFO:     ML Usage: 87.50%
+INFO: 
+Harmonic Rules OK (v1): 50.00%
+INFO: Harmonic Rules OK (v3): 50.00%
+INFO: 
+------------------------------------------------------------
+INFO: Pass/Fail Criteria (Musical KPIs)
+INFO: ------------------------------------------------------------
+INFO: Accent Delta >= +5%: FAIL (-18.01%)
+INFO: Density Diff <= 1 note/bar: PASS (0.00)
+INFO: ML Usage >= 70%: PASS (96.88%)
+INFO: Family Match >= 80%: FAIL (14.06%)
+INFO: 
+============================================================
+INFO: Overall: ✗ FAIL (needs parameter tuning)
+INFO: ============================================================
+
+INFO: A/B test complete. Results: data/ab_quick_after_fix.csv

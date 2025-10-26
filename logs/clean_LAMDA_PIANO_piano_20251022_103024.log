@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 26, in <module>
+    from tqdm import tqdm
+ModuleNotFoundError: No module named 'tqdm'

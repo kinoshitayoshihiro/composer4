@@ -1,0 +1,23 @@
+version: 1
+updated: 2025-10-24
+alias_map:
+  mix:        ["mix"]
+  vocals:     ["vocals","vox","lead_vocal","singer"]
+  drums:      ["drums","drum","kit"]
+  percussion: ["percussion","perc"]
+  bass:       ["bass","bass_guitar"]
+  guitar:     ["guitar","gtr","elec_guitar","ac_guitar"]
+  piano:      ["piano","keys_piano"]
+  other:      ["other","accomp","band"]
+  other_keys: ["other_keys","keys","synth","pad","organ","ep","strings"]
+  strings:    ["strings","string"]
+  keys:       ["keys","keyboard","synth","pad","organ","ep"]
+roles_priority:
+  harmony: ["guitar","piano","other_keys","strings","keys","other","bass"]
+  beat:    ["drums","percussion","mix","other"]
+  energy:  ["drums","other","bass"]
+exclude_for_harmony: ["mix","vocals","drums","percussion"]
+default_weights:
+  harmony: {"guitar": 0.45, "piano": 0.45, "other_keys": 0.40, "strings": 0.35, "keys": 0.35, "other": 0.30, "bass": 0.25}
+  beat:    {"drums": 1.0, "percussion": 0.6, "mix": 0.15, "other": 0.15}
+  energy:  {"drums": 0.4, "other": 0.4, "bass": 0.2}

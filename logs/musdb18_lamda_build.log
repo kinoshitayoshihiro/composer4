@@ -1,0 +1,11 @@
+============================================
+🏗️  LOCAL LAMDA-like Bundle Builder
+============================================
+Input Root: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_decoded
+Output Dir: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_lamda
+Mode:       WAV
+WAV Stem:   other
+
+🔊 Building LOCAL LAMDA from WAV (other)...
+❌ Missing dependency: No module named 'librosa'
+Install with: pip install librosa soundfile

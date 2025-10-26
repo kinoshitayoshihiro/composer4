@@ -1,0 +1,715 @@
+2025-10-23 19:39:27,003 - INFO - ============================================================
+2025-10-23 19:39:27,003 - INFO - 本番Stage2バッチ処理開始
+2025-10-23 19:39:27,003 - INFO -   Input:  /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/output/stage1_test100
+2025-10-23 19:39:27,003 - INFO -   Output: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/output/stage2_test100
+2025-10-23 19:39:27,003 - INFO -   Chordmap: internal analysis
+2025-10-23 19:39:27,004 - INFO -   Log:    /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/logs/stage2_test100.log
+2025-10-23 19:39:27,004 - INFO - ============================================================
+2025-10-23 19:39:27,082 - ERROR - ✗ 008-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,087 - ERROR - ✗ 012-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,088 - ERROR - ✗ 014-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,089 - ERROR - ✗ 016-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,090 - ERROR - ✗ 018-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,090 - ERROR - ✗ 020-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,091 - ERROR - ✗ 022-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,091 - ERROR - ✗ 032-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,092 - ERROR - ✗ 041-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,092 - ERROR - ✗ 043-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,093 - ERROR - ✗ 047-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,093 - ERROR - ✗ 055-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,102 - ERROR - ✗ 059-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,103 - ERROR - ✗ 063-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,109 - ERROR - ✗ 069-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,110 - ERROR - ✗ 071-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,111 - ERROR - ✗ 082-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,112 - ERROR - ✗ 088-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,113 - ERROR - ✗ 090-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,113 - ERROR - ✗ 096-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,114 - ERROR - ✗ 106-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,115 - ERROR - ✗ 108-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,115 - ERROR - ✗ 118-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,115 - ERROR - ✗ 120-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,115 - ERROR - ✗ 122-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,116 - ERROR - ✗ 159-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,117 - ERROR - ✗ 182-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,117 - ERROR - ✗ 196-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,117 - ERROR - ✗ 198-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,120 - ERROR - ✗ 211-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,124 - ERROR - ✗ 227-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,128 - ERROR - ✗ 242-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,128 - ERROR - ✗ 260-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,129 - ERROR - ✗ 266-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,130 - ERROR - ✗ 274-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,130 - ERROR - ✗ 278-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,131 - ERROR - ✗ 285-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,131 - ERROR - ✗ 287-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,132 - ERROR - ✗ 293-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,133 - ERROR - ✗ 305-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,134 - ERROR - ✗ 323-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,135 - ERROR - ✗ 331-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,135 - ERROR - ✗ 335-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,136 - ERROR - ✗ 339-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,137 - ERROR - ✗ 340-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,138 - ERROR - ✗ 342-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,138 - ERROR - ✗ 344-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,140 - ERROR - ✗ 350-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,141 - ERROR - ✗ 352-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,141 - ERROR - ✗ 368-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,141 - ERROR - ✗ 376-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,142 - ERROR - ✗ 378-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,142 - ERROR - ✗ 387-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,142 - ERROR - ✗ 425-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,143 - ERROR - ✗ 454-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,144 - ERROR - ✗ 456-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,144 - ERROR - ✗ 458-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,145 - ERROR - ✗ 472-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,146 - ERROR - ✗ 491-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,146 - ERROR - ✗ 493-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,146 - ERROR - ✗ 513-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,147 - ERROR - ✗ 525-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,148 - ERROR - ✗ 527-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,148 - ERROR - ✗ 552-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,150 - ERROR - ✗ 560-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,151 - ERROR - ✗ 568-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,151 - ERROR - ✗ 572-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,152 - ERROR - ✗ 589-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,152 - ERROR - ✗ 597-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,153 - ERROR - ✗ 608-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,154 - ERROR - ✗ 612-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,155 - ERROR - ✗ 618-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,156 - ERROR - ✗ 620-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,157 - ERROR - ✗ 667-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,157 - ERROR - ✗ 671-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,158 - ERROR - ✗ 680-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,159 - ERROR - ✗ 692-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,160 - ERROR - ✗ 694-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,160 - ERROR - ✗ 698-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,161 - ERROR - ✗ 700-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,162 - ERROR - ✗ 702-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,162 - ERROR - ✗ 708-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,163 - ERROR - ✗ 736-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,163 - ERROR - ✗ 745-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,164 - ERROR - ✗ 755-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,164 - ERROR - ✗ 757-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,164 - ERROR - ✗ 773-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,165 - ERROR - ✗ 775-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,165 - ERROR - ✗ 790-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,166 - ERROR - ✗ 792-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,166 - ERROR - ✗ 798-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,167 - ERROR - ✗ 817-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,167 - ERROR - ✗ 827-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,168 - ERROR - ✗ 839-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,168 - ERROR - ✗ 848-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,169 - ERROR - ✗ 864-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,169 - ERROR - ✗ 893-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,172 - ERROR - ✗ 903-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,174 - ERROR - ✗ 905-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,176 - ERROR - ✗ 907-v1.mid: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/run_stage2_batch_production.py", line 102, in process_batch
+    meta = extract_stage2_metadata(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: extract_stage2_metadata() got an unexpected keyword argument 'chordmap_json'
+2025-10-23 19:39:27,178 - INFO - 本番Stage2バッチ処理完了: 0 success, 100 failed
+2025-10-23 19:47:52,719 - INFO - ============================================================
+2025-10-23 19:47:52,724 - INFO - 本番Stage2バッチ処理開始
+2025-10-23 19:47:52,724 - INFO -   Input:  /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/output/stage1_test100
+2025-10-23 19:47:52,724 - INFO -   Output: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/output/stage2_test100
+2025-10-23 19:47:52,724 - INFO -   Log:    /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/logs/stage2_test100.log
+2025-10-23 19:47:52,724 - INFO - ============================================================
+2025-10-23 19:47:52,933 - INFO - ✓ 008-v1.mid (0.17s)
+2025-10-23 19:47:53,131 - INFO - ✓ 012-v1.mid (0.19s)
+2025-10-23 19:47:53,349 - INFO - ✓ 014-v1.mid (0.21s)
+2025-10-23 19:47:53,463 - INFO - ✓ 016-v1.mid (0.11s)
+2025-10-23 19:47:53,565 - INFO - ✓ 018-v1.mid (0.09s)
+2025-10-23 19:47:53,778 - INFO - ✓ 020-v1.mid (0.21s)
+2025-10-23 19:47:53,933 - INFO - ✓ 022-v1.mid (0.15s)
+2025-10-23 19:47:54,064 - INFO - ✓ 032-v1.mid (0.12s)
+2025-10-23 19:47:54,337 - INFO - ✓ 041-v1.mid (0.24s)
+2025-10-23 19:47:55,113 - INFO - ✓ 043-v1.mid (0.75s)
+2025-10-23 19:47:55,611 - INFO - ✓ 047-v1.mid (0.48s)
+2025-10-23 19:47:56,131 - INFO - ✓ 055-v1.mid (0.49s)
+2025-10-23 19:47:56,515 - INFO - ✓ 059-v1.mid (0.37s)
+2025-10-23 19:47:56,870 - INFO - ✓ 063-v1.mid (0.32s)
+2025-10-23 19:47:57,704 - INFO - ✓ 069-v1.mid (0.52s)
+2025-10-23 19:47:58,328 - INFO - ✓ 071-v1.mid (0.48s)
+2025-10-23 19:47:58,592 - INFO - ✓ 082-v1.mid (0.26s)
+2025-10-23 19:47:58,811 - INFO - ✓ 088-v1.mid (0.20s)
+2025-10-23 19:47:59,287 - INFO - ✓ 090-v1.mid (0.47s)
+2025-10-23 19:48:01,218 - INFO - ✓ 096-v1.mid (1.90s)
+2025-10-23 19:48:03,001 - INFO - ✓ 106-v1.mid (1.76s)
+2025-10-23 19:48:03,695 - INFO - ✓ 108-v1.mid (0.67s)
+2025-10-23 19:48:04,339 - INFO - ✓ 118-v1.mid (0.62s)
+2025-10-23 19:48:04,517 - INFO - ✓ 120-v1.mid (0.16s)
+2025-10-23 19:48:04,709 - INFO - ✓ 122-v1.mid (0.19s)
+2025-10-23 19:48:05,394 - INFO - ✓ 159-v1.mid (0.68s)
+2025-10-23 19:48:05,517 - INFO - ✓ 182-v1.mid (0.11s)
+2025-10-23 19:48:05,795 - INFO - ✓ 196-v1.mid (0.25s)
+2025-10-23 19:48:06,030 - INFO - ✓ 198-v1.mid (0.22s)
+2025-10-23 19:48:06,204 - INFO - ✓ 211-v1.mid (0.17s)
+2025-10-23 19:48:06,364 - INFO - ✓ 227-v1.mid (0.15s)
+2025-10-23 19:48:06,470 - INFO - ✓ 242-v1.mid (0.10s)
+2025-10-23 19:48:06,630 - INFO - ✓ 260-v1.mid (0.16s)
+2025-10-23 19:48:06,760 - INFO - ✓ 266-v1.mid (0.12s)
+2025-10-23 19:48:06,898 - INFO - ✓ 274-v1.mid (0.13s)
+2025-10-23 19:48:07,010 - INFO - ✓ 278-v1.mid (0.11s)
+2025-10-23 19:48:07,109 - INFO - ✓ 285-v1.mid (0.10s)
+2025-10-23 19:48:07,231 - INFO - ✓ 287-v1.mid (0.12s)
+2025-10-23 19:48:07,332 - INFO - ✓ 293-v1.mid (0.10s)
+2025-10-23 19:48:07,523 - INFO - ✓ 305-v1.mid (0.19s)
+2025-10-23 19:48:07,673 - INFO - ✓ 323-v1.mid (0.15s)
+2025-10-23 19:48:07,709 - INFO - ✓ 331-v1.mid (0.03s)
+2025-10-23 19:48:07,892 - INFO - ✓ 335-v1.mid (0.17s)
+2025-10-23 19:48:08,115 - INFO - ✓ 339-v1.mid (0.22s)
+2025-10-23 19:48:08,272 - INFO - ✓ 340-v1.mid (0.15s)
+2025-10-23 19:48:08,502 - INFO - ✓ 342-v1.mid (0.23s)
+2025-10-23 19:48:08,600 - INFO - ✓ 344-v1.mid (0.10s)
+2025-10-23 19:48:08,822 - INFO - ✓ 350-v1.mid (0.22s)
+2025-10-23 19:48:09,171 - INFO - ✓ 352-v1.mid (0.33s)
+2025-10-23 19:48:09,726 - INFO - ✓ 368-v1.mid (0.52s)
+2025-10-23 19:48:10,172 - INFO - ✓ 376-v1.mid (0.41s)
+2025-10-23 19:48:10,625 - INFO - ✓ 378-v1.mid (0.43s)
+2025-10-23 19:48:11,500 - INFO - ✓ 387-v1.mid (0.87s)
+2025-10-23 19:48:11,690 - INFO - ✓ 425-v1.mid (0.18s)
+2025-10-23 19:48:11,979 - INFO - ✓ 454-v1.mid (0.28s)
+2025-10-23 19:48:12,283 - INFO - ✓ 456-v1.mid (0.30s)
+2025-10-23 19:48:12,641 - INFO - ✓ 458-v1.mid (0.35s)
+2025-10-23 19:48:12,873 - INFO - ✓ 472-v1.mid (0.23s)
+2025-10-23 19:48:13,131 - INFO - ✓ 491-v1.mid (0.25s)
+2025-10-23 19:48:13,485 - INFO - ✓ 493-v1.mid (0.33s)
+2025-10-23 19:48:13,856 - INFO - ✓ 513-v1.mid (0.36s)
+2025-10-23 19:48:14,121 - INFO - ✓ 525-v1.mid (0.25s)
+2025-10-23 19:48:14,314 - INFO - ✓ 527-v1.mid (0.19s)
+2025-10-23 19:48:14,421 - INFO - ✓ 552-v1.mid (0.10s)
+2025-10-23 19:48:14,638 - INFO - ✓ 560-v1.mid (0.21s)
+2025-10-23 19:48:14,750 - INFO - ✓ 568-v1.mid (0.11s)
+2025-10-23 19:48:14,832 - INFO - ✓ 572-v1.mid (0.08s)
+2025-10-23 19:48:14,955 - INFO - ✓ 589-v1.mid (0.12s)
+2025-10-23 19:48:15,067 - INFO - ✓ 597-v1.mid (0.11s)
+2025-10-23 19:48:15,167 - INFO - ✓ 608-v1.mid (0.10s)
+2025-10-23 19:48:15,271 - INFO - ✓ 612-v1.mid (0.10s)
+2025-10-23 19:48:15,375 - INFO - ✓ 618-v1.mid (0.10s)
+2025-10-23 19:48:15,469 - INFO - ✓ 620-v1.mid (0.09s)
+2025-10-23 19:48:15,687 - INFO - ✓ 667-v1.mid (0.21s)
+2025-10-23 19:48:15,803 - INFO - ✓ 671-v1.mid (0.11s)
+2025-10-23 19:48:15,957 - INFO - ✓ 680-v1.mid (0.15s)
+2025-10-23 19:48:16,078 - INFO - ✓ 692-v1.mid (0.12s)
+2025-10-23 19:48:16,231 - INFO - ✓ 694-v1.mid (0.15s)
+2025-10-23 19:48:16,362 - INFO - ✓ 698-v1.mid (0.13s)
+2025-10-23 19:48:16,566 - INFO - ✓ 700-v1.mid (0.20s)
+2025-10-23 19:48:16,755 - INFO - ✓ 702-v1.mid (0.18s)
+2025-10-23 19:48:16,922 - INFO - ✓ 708-v1.mid (0.16s)
+2025-10-23 19:48:17,045 - INFO - ✓ 736-v1.mid (0.12s)
+2025-10-23 19:48:17,240 - INFO - ✓ 745-v1.mid (0.19s)
+2025-10-23 19:48:17,418 - INFO - ✓ 755-v1.mid (0.15s)
+2025-10-23 19:48:18,015 - INFO - ✓ 757-v1.mid (0.58s)
+2025-10-23 19:48:18,350 - INFO - ✓ 773-v1.mid (0.33s)
+2025-10-23 19:48:18,598 - INFO - ✓ 775-v1.mid (0.24s)
+2025-10-23 19:48:18,824 - INFO - ✓ 790-v1.mid (0.20s)
+2025-10-23 19:48:19,068 - INFO - ✓ 792-v1.mid (0.23s)
+2025-10-23 19:48:19,191 - INFO - ✓ 798-v1.mid (0.12s)
+2025-10-23 19:48:19,344 - INFO - ✓ 817-v1.mid (0.15s)
+2025-10-23 19:48:19,518 - INFO - ✓ 827-v1.mid (0.17s)
+2025-10-23 19:48:19,663 - INFO - ✓ 839-v1.mid (0.14s)
+2025-10-23 19:48:19,805 - INFO - ✓ 848-v1.mid (0.14s)
+2025-10-23 19:48:19,925 - INFO - ✓ 864-v1.mid (0.12s)
+2025-10-23 19:48:20,085 - INFO - ✓ 893-v1.mid (0.15s)
+2025-10-23 19:48:20,261 - INFO - ✓ 903-v1.mid (0.17s)
+2025-10-23 19:48:20,337 - INFO - ✓ 905-v1.mid (0.07s)
+2025-10-23 19:48:20,432 - INFO - ✓ 907-v1.mid (0.09s)
+2025-10-23 19:48:20,434 - INFO - 本番Stage2バッチ処理完了: 100 success, 0 failed

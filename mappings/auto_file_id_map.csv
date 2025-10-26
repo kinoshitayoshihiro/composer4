@@ -1,0 +1,12 @@
+src_id,target_id
+# Auto-generated file_id mapping (optional)
+# Format: src_id,target_id
+#
+# NOTE: Current datasets (drumloops_v3/session1/session2) are NOT in LAMDA.
+# LAMDA integration will be NO-OP for these files (expected behavior).
+#
+# When adding Pop909/MAESTRO/LMD datasets, add mappings here:
+# Example:
+# 001,pop909_001
+# 002,pop909_002
+# maestro_001,maestro_2004_001

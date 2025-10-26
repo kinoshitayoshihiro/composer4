@@ -1,0 +1,16 @@
+📂 Scanning WAV files in data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/moisesdb...
+🎵 Preferred stems: ('guitar', 'other', 'mixture')
+
+✓ Found 0 tracks
+
+
+💾 Saving LOCAL LAMDA files...
+  ✓ LOCAL_KILO_CHORDS_DATA.pickle (0 entries)
+  ✓ LOCAL_SIGNATURES_DATA.pickle (0 entries)
+  ✓ LOCAL_TOTALS.pickle
+  ✓ LOCAL_ID_MAP.csv (0 entries)
+  ✓ LOCAL_META_DATA_000001.pickle (audio_proxy)
+
+✅ WAV→LOCAL LAMDA complete!
+📁 Output: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/moisesdb_lamda
+📊 Tracks: 0

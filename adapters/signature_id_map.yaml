@@ -1,0 +1,8 @@
+# Map from LAMDA SIGNATURES_DATA numeric IDs to "num/den" strings.
+# ⚠️ Fill this mapping when the official table is known.
+# Fallback: unknown IDs will be reported as "unknown:<id>"
+map:
+  211: "4/4"
+  155: "3/4"
+  279: "6/8"
+  # add more ids here...

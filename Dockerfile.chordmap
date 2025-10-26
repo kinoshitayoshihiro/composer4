@@ -1,0 +1,41 @@
+FROM python:3.10
+
+# 1) ランタイム必須
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libsndfile1 ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2) pip/ビルド系を先にアップデートして解決率UP
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# 3) 依存ピン留め（安定＆高速セット）
+RUN pip install \
+    numpy==1.26.4 \
+    scipy==1.11.4 \
+    llvmlite==0.42.0 \
+    numba==0.59.1 \
+    soundfile==0.12.1 \
+    librosa==0.10.2.post1 \
+    pretty_midi==0.2.10 \
+    music21==9.1.0 \
+    PyYAML==6.0.2 \
+    pydub==0.25.1 \
+    audioread==3.0.1
+
+# 4) 便利ENV
+ENV PIP_NO_CACHE_DIR=1 \
+    PYTHONUTF8=1 \
+    NUMBA_CACHE_DIR=/tmp/numba-cache
+
+WORKDIR /app
+
+# 5) スモークテスト（ビルド時に失敗させて早期発見）
+RUN python - <<'PY'
+import numpy, numba, llvmlite, librosa, soundfile
+print("OK numpy", numpy.__version__, "numba", numba.__version__, "llvmlite", llvmlite.__version__, "librosa", librosa.__version__)
+# librosa の numba-decorated 関数が import で落ちないか確認
+import librosa.core.audio as L
+print("OK librosa.core.audio import")
+PY
+
+CMD ["bash"]

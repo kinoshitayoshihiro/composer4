@@ -1,0 +1,43 @@
+
+============================================================
+🔎 LOCAL LAMDA Bundle QA
+============================================================
+
+1️⃣  File Existence Check
+  ✅ LOCAL_KILO_CHORDS_DATA.pickle
+  ✅ LOCAL_SIGNATURES_DATA.pickle
+  ✅ LOCAL_TOTALS.pickle
+  ❌ LOCAL_ID_MAP.csv
+  ✅ LOCAL_META_DATA*.pickle (1 shard(s))
+
+2️⃣  ID Map Integrity
+  ⚠️  LOCAL_ID_MAP.csv not found (will be generated in fixed version)
+
+3️⃣  KILO Shape Check
+  ✅ KILO entries: 50000
+  ✅ Sample bars: 0 for LOCAL:ab089f625e...
+
+4️⃣  Signatures & 1/4 Rescue Check
+  📏 Total signatures: 56410
+  📏 '1/4' ratio: 0.0112 (target < 0.005)
+     ⚠️  High 1/4 ratio - consider applying 1/4 rescue patch
+  📊 Top 5 signatures:
+     - unknown:4/4: 53912 (95.6%)
+     - unknown:1/4: 632 (1.1%)
+     - unknown:6/8: 534 (0.9%)
+     - unknown:2/4: 484 (0.9%)
+     - unknown:3/4: 479 (0.8%)
+
+5️⃣  TOTALS Shape Check
+  ✅ TOTALS shape 256 OK
+     - pitch_hist_256: 25412149 total counts
+     - dur_hist_256: 25412149 total counts
+     - vel_hist_256: 25412149 total counts
+
+6️⃣  META Entries Check
+  ✅ META entries: 55640
+
+============================================================
+✅ QA Finished
+============================================================
+

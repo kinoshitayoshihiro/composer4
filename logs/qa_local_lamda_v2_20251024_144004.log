@@ -1,0 +1,23 @@
+
+============================================================
+🔎 LOCAL LAMDA Bundle QA
+============================================================
+
+1️⃣  File Existence Check
+  ✅ LOCAL_KILO_CHORDS_DATA.pickle
+  ✅ LOCAL_SIGNATURES_DATA.pickle
+  ✅ LOCAL_TOTALS.pickle
+  ✅ LOCAL_ID_MAP.csv
+  ✅ LOCAL_META_DATA*.pickle (1 shard(s))
+
+2️⃣  ID Map Integrity
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda/qa_local_lamda.py", line 267, in <module>
+    main()
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda/qa_local_lamda.py", line 79, in main
+    rels = [r["rel_path"] for r in id_rows]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda/qa_local_lamda.py", line 79, in <listcomp>
+    rels = [r["rel_path"] for r in id_rows]
+            ~^^^^^^^^^^^^
+KeyError: 'rel_path'

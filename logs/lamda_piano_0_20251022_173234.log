@@ -1,0 +1,39 @@
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+🔍 Enumerating MIDI files in /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/MIDIs/0 (this may take a few minutes)...
+✅ Found 25511 MIDI files
+🎵 Processing 25511 MIDI files (piano)
+   Input:        /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/MIDIs/0
+   Output:       /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/cleaned/lamda_piano/0
+   Quarantine:   /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/quarantine/lamda_piano/0
+   Jobs:         4
+   Fileset Hash: c12e7913d526
+
+📦 ShardWriter initialized (SUBFOLDER MODE: 0)
+   Output: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/lamda_piano_metadata/piano_shard_0.pickle
+   Files to process: 25511
+
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Cleaning:   0%|          | 0/25511 [00:00<?, ?it/s]Cleaning:   0%|          | 120/25511 [00:00<00:21, 1197.75it/s]Cleaning:   3%|▎         | 859/25511 [00:00<00:05, 4829.77it/s]Cleaning:   6%|▌         | 1541/25511 [00:00<00:04, 5736.89it/s]Cleaning:  10%|█         | 2611/25511 [00:00<00:02, 7692.28it/s]Cleaning:  15%|█▍        | 3765/25511 [00:00<00:02, 9041.54it/s]Cleaning:  19%|█▊        | 4742/25511 [00:00<00:02, 9287.36it/s]Cleaning:  22%|██▏       | 5671/25511 [00:00<00:02, 8673.17it/s]Cleaning:  26%|██▋       | 6755/25511 [00:00<00:02, 9329.98it/s]Cleaning:  31%|███       | 7946/25511 [00:00<00:01, 10109.47it/s]Cleaning:  35%|███▌      | 8973/25511 [00:01<00:01, 10156.53it/s]Cleaning:  39%|███▉      | 9995/25511 [00:01<00:01, 9774.61it/s] Cleaning:  43%|████▎     | 10980/25511 [00:01<00:01, 9645.92it/s]Cleaning:  47%|████▋     | 11950/25511 [00:01<00:01, 9629.83it/s]Cleaning:  51%|█████     | 12917/25511 [00:01<00:01, 9487.64it/s]Cleaning:  54%|█████▍    | 13877/25511 [00:01<00:01, 9517.28it/s]Cleaning:  59%|█████▊    | 14930/25511 [00:01<00:01, 9815.09it/s]Cleaning:  63%|██████▎   | 16144/25511 [00:01<00:00, 10502.71it/s]Cleaning:  68%|██████▊   | 17371/25511 [00:01<00:00, 11024.80it/s]Cleaning:  73%|███████▎  | 18564/25511 [00:01<00:00, 11291.05it/s]Cleaning:  77%|███████▋  | 19695/25511 [00:02<00:00, 10910.16it/s]Cleaning:  81%|████████▏ | 20790/25511 [00:02<00:00, 10554.23it/s]Cleaning:  86%|████████▌ | 21850/25511 [00:02<00:00, 10435.43it/s]Cleaning:  90%|████████▉ | 22943/25511 [00:02<00:00, 10576.20it/s]Cleaning:  95%|█████████▍| 24147/25511 [00:02<00:00, 11000.38it/s]Cleaning:  99%|█████████▉| 25372/25511 [00:02<00:00, 11367.16it/s]Cleaning: 100%|██████████| 25511/25511 [00:02<00:00, 9872.28it/s] 
+
+======================================================================
+🔨 Finalizing LAMDA sharded pickles...
+======================================================================
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 607, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 551, in main
+    index_pickle_path = shard_writer.write_index()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/cleaners/common.py", line 437, in write_index
+    raise ValueError("No shards to index")
+ValueError: No shards to index

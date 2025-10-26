@@ -1,0 +1,23 @@
+Tempo Accuracy Statistics:
+  Median: 25.0 ms
+  Max: 65.0 ms
+  Mean: 24.9 ms
+
+Sections (9):
+  Bar   0: intro
+  Bar  21: verse
+  Bar  35: verse
+  Bar  43: chorus
+  Bar  48: post_chorus
+  Bar  63: verse
+  Bar  67: bridge
+  Bar  69: chorus
+  Bar  71: outro
+
+Key Hints (6 change points):
+  Bar   0: Fm
+  Bar  21: A
+  Bar  43: D
+  Bar  48: A
+  Bar  69: Fm
+  Bar  71: D

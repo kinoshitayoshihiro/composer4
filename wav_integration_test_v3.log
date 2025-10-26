@@ -1,0 +1,62 @@
+scikit-learn version 1.7.2 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+WARNING:root:onnxruntime is not installed. If you plan to use an ONNX Model, reinstall basic-pitch with `pip install 'basic-pitch[onnx]'`
+WARNING:root:Tensorflow is not installed. If you plan to use a TF Saved Model, reinstall basic-pitch with `pip install 'basic-pitch[tf]'`
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py:70: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  features['tempo'] = float(tempo)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py:70: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  features['tempo'] = float(tempo)
+⚠️ suno_wav_to_midi not available
+
+======================================================================
+LOCAL LAMDA WAV Integration
+======================================================================
+Total files: 2
+Output DB: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_integration_test/local_lamda.db
+======================================================================
+
+[1/2]
+
+======================================================================
+Processing: Bobby
+Nobody
+-
+Stitch
+Up_other.wav
+File ID: 8c4539bb8b855413
+======================================================================
+🎵 Extracting features from: Bobby
+Nobody
+-
+Stitch
+Up_other.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 484
+   Chord candidates: ['A', 'E', 'F#']
+
+[2/2]
+
+======================================================================
+Processing: Buitraker
+-
+Revo
+X_other.wav
+File ID: 3526b9ac6794052d
+======================================================================
+🎵 Extracting features from: Buitraker
+-
+Revo
+X_other.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 502
+   Chord candidates: ['D#', 'G#', 'C#']
+
+======================================================================
+Processing Summary
+======================================================================
+✅ Success: 2
+❌ Failed: 0
+======================================================================
+📄 Metadata: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_integration_test/local_lamda.jsonl

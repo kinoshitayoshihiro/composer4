@@ -1,0 +1,2275 @@
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_moises_integration.py:260: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  features['tempo'] = float(tempo)
+📋 [Policy] profile=musdb18 v2
+   harmony={bass:0.25,mix:0.10,other:0.65}
+   exclude_for_harmony=['mix', 'vocals', 'drums']
+   ✅ Policy validation passed for 'musdb18'
+
+======================================================================
+LOCAL LAMDA MoisesDB Integration - musdb18
+======================================================================
+Input dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/CLEANED_WAV/musdb18_decoded
+Total song directories: 150
+Output DB: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA/local_lamda_registry.db
+Policy: custom
+======================================================================
+
+[1/150]
+
+======================================================================
+Processing: Creepoid - OldTree - Unknown
+Song ID: Creepoid - OldTree
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 67aa3cc21b9f, Duration: 302.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: 503df4268a37, Duration: 302.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[2/150]
+
+======================================================================
+Processing: Angels In Amplifiers - I'm Alright - Unknown
+Song ID: Angels In Amplifiers - I'm Alright
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 4b242a0e8a09, Duration: 179.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 2ffa11d278b4, Duration: 179.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[3/150]
+
+======================================================================
+Processing: The Doppler Shift - Atrophy - Unknown
+Song ID: The Doppler Shift - Atrophy
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 6f4d65fddee3, Duration: 331.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 0b0632132174, Duration: 331.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[4/150]
+
+======================================================================
+Processing: Girls Under Glass - We Feel Alright - Unknown
+Song ID: Girls Under Glass - We Feel Alright
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 1cfd08568ca1, Duration: 317.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: cddf6be1cd49, Duration: 317.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[5/150]
+
+======================================================================
+Processing: Black Bloc - If You Want Success - Unknown
+Song ID: Black Bloc - If You Want Success
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 74480a0ea925, Duration: 398.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: b1d09124f9eb, Duration: 398.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[6/150]
+
+======================================================================
+Processing: Jay Menon - Through My Eyes - Unknown
+Song ID: Jay Menon - Through My Eyes
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 96f341d5572f, Duration: 253.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: 36b472766f6b, Duration: 253.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[7/150]
+
+======================================================================
+Processing: Bobby Nobody - Stitch Up - Unknown
+Song ID: Bobby Nobody - Stitch Up
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 03579b497985, Duration: 221.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: 21cd1e8aeebb, Duration: 221.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[8/150]
+
+======================================================================
+Processing: Arise - Run Run Run - Unknown
+Song ID: Arise - Run Run Run
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: bfdc254025aa, Duration: 219.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: d6cdafe983a4, Duration: 219.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[9/150]
+
+======================================================================
+Processing: Remember December - C U Next Time - Unknown
+Song ID: Remember December - C U Next Time
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: dc3204badc25, Duration: 242.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 41d1a6b4b820, Duration: 242.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[10/150]
+
+======================================================================
+Processing: Swinging Steaks - Lost My Way - Unknown
+Song ID: Swinging Steaks - Lost My Way
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e104e94388d3, Duration: 310.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: b5a0ad6b40bc, Duration: 310.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[11/150]
+
+======================================================================
+Processing: Buitraker - Revo X - Unknown
+Song ID: Buitraker - Revo X
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: b30346c596af, Duration: 275.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: b0ff8f1e69bf, Duration: 275.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[12/150]
+
+======================================================================
+Processing: Music Delta - Reggae - Unknown
+Song ID: Music Delta - Reggae
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 5b2aaa9e5b12, Duration: 17.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 928e40785781, Duration: 17.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[13/150]
+
+======================================================================
+Processing: North To Alaska - All The Same - Unknown
+Song ID: North To Alaska - All The Same
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 64b9d8293580, Duration: 248.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: 95d882070689, Duration: 248.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[14/150]
+
+======================================================================
+Processing: Mu - Too Bright - Unknown
+Song ID: Mu - Too Bright
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d2ec23b976d6, Duration: 272.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: 91d16b18e984, Duration: 272.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[15/150]
+
+======================================================================
+Processing: PR - Oh No - Unknown
+Song ID: PR - Oh No
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: b6618a6fc97c, Duration: 76.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: 981ed40613a8, Duration: 76.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[16/150]
+
+======================================================================
+Processing: Timboz - Pony - Unknown
+Song ID: Timboz - Pony
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 4453423f88f9, Duration: 252.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: 577ae30509b6, Duration: 252.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[17/150]
+
+======================================================================
+Processing: Fergessen - Nos Palpitants - Unknown
+Song ID: Fergessen - Nos Palpitants
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 6a4f464e5c0b, Duration: 198.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: 515c5f534784, Duration: 198.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[18/150]
+
+======================================================================
+Processing: James May - If You Say - Unknown
+Song ID: James May - If You Say
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 3d16ce0f9e62, Duration: 258.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: b2f3b96785b5, Duration: 258.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[19/150]
+
+======================================================================
+Processing: Music Delta - Country1 - Unknown
+Song ID: Music Delta - Country1
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 823817429137, Duration: 34.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 79e11a009785, Duration: 34.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[20/150]
+
+======================================================================
+Processing: Patrick Talbot - Set Me Free - Unknown
+Song ID: Patrick Talbot - Set Me Free
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d8a90323ee60, Duration: 289.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: c4cf96a4f055, Duration: 289.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[21/150]
+
+======================================================================
+Processing: Wall Of Death - Femme - Unknown
+Song ID: Wall Of Death - Femme
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 90082797949c, Duration: 238.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: b06d69c28498, Duration: 238.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[22/150]
+
+======================================================================
+Processing: Speak Softly - Like Horses - Unknown
+Song ID: Speak Softly - Like Horses
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d8b7fa755350, Duration: 312.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 57653de1a8ba, Duration: 312.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[23/150]
+
+======================================================================
+Processing: Music Delta - Beatles - Unknown
+Song ID: Music Delta - Beatles
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d7775b6cf9b7, Duration: 36.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: 37468114580a, Duration: 36.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[24/150]
+
+======================================================================
+Processing: Giselle - Moss - Unknown
+Song ID: Giselle - Moss
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 22352aa426ce, Duration: 201.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 8e9b01ea015e, Duration: 201.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[25/150]
+
+======================================================================
+Processing: Louis Cressy Band - Good Time - Unknown
+Song ID: Louis Cressy Band - Good Time
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 475f0a4e88f6, Duration: 292.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: f2ed6b90a117, Duration: 292.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[26/150]
+
+======================================================================
+Processing: AvaLuna - Waterduct - Unknown
+Song ID: AvaLuna - Waterduct
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: b5171e19822b, Duration: 259.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: 451238c3b8f5, Duration: 259.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[27/150]
+
+======================================================================
+Processing: The Sunshine Garcia Band - For I Am The Moon - Unknown
+Song ID: The Sunshine Garcia Band - For I Am The Moon
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 241122312f10, Duration: 320.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: dfe983a21aa8, Duration: 320.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[28/150]
+
+======================================================================
+Processing: Cnoc An Tursa - Bannockburn - Unknown
+Song ID: Cnoc An Tursa - Bannockburn
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 26a61bf032ea, Duration: 294.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 85d238dc8008, Duration: 294.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[29/150]
+
+======================================================================
+Processing: Moosmusic - Big Dummy Shake - Unknown
+Song ID: Moosmusic - Big Dummy Shake
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 62a9026c23d5, Duration: 198.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 4221c2c945c7, Duration: 198.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[30/150]
+
+======================================================================
+Processing: Music Delta - Hendrix - Unknown
+Song ID: Music Delta - Hendrix
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 79d475f08a63, Duration: 19.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 025745437842, Duration: 19.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[31/150]
+
+======================================================================
+Processing: Auctioneer - Our Future Faces - Unknown
+Song ID: Auctioneer - Our Future Faces
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: bf10b5d7d8f7, Duration: 207.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: db0d624fc73e, Duration: 207.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[32/150]
+
+======================================================================
+Processing: Speak Softly - Broken Man - Unknown
+Song ID: Speak Softly - Broken Man
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 215c06cd455e, Duration: 253.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: 5208bf41cf24, Duration: 253.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[33/150]
+
+======================================================================
+Processing: Alexander Ross - Goodbye Bolero - Unknown
+Song ID: Alexander Ross - Goodbye Bolero
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 2a7798676e38, Duration: 418.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 764217fb1b5a, Duration: 418.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[34/150]
+
+======================================================================
+Processing: Dreamers Of The Ghetto - Heavy Love - Unknown
+Song ID: Dreamers Of The Ghetto - Heavy Love
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e4caa23988a8, Duration: 294.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: d010bf777be6, Duration: 294.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[35/150]
+
+======================================================================
+Processing: Georgia Wonder - Siren - Unknown
+Song ID: Georgia Wonder - Siren
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: a2e8e9968775, Duration: 430.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: aa631c60a202, Duration: 430.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[36/150]
+
+======================================================================
+Processing: Secretariat - Borderline - Unknown
+Song ID: Secretariat - Borderline
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 101fbdb97f6a, Duration: 286.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: f83fc7750931, Duration: 286.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[37/150]
+
+======================================================================
+Processing: James May - On The Line - Unknown
+Song ID: James May - On The Line
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 2345c0bdeab7, Duration: 256.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: 3573f0d72c4f, Duration: 256.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[38/150]
+
+======================================================================
+Processing: Music Delta - 80s Rock - Unknown
+Song ID: Music Delta - 80s Rock
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e962ab4161f2, Duration: 36.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 4d49d0cafc76, Duration: 36.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[39/150]
+
+======================================================================
+Processing: Lushlife - Toynbee Suite - Unknown
+Song ID: Lushlife - Toynbee Suite
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: aab8a91082dc, Duration: 628.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 0b3e5b244e6e, Duration: 628.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[40/150]
+
+======================================================================
+Processing: Johnny Lokke - Whisper To A Scream - Unknown
+Song ID: Johnny Lokke - Whisper To A Scream
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: bb3f2008c7a4, Duration: 255.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: d3cbd5c5634f, Duration: 255.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[41/150]
+
+======================================================================
+Processing: Detsky Sad - Walkie Talkie - Unknown
+Song ID: Detsky Sad - Walkie Talkie
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 9c3a2653e2f5, Duration: 190.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: f3bd4f067c94, Duration: 190.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[42/150]
+
+======================================================================
+Processing: Chris Durban - Celebrate - Unknown
+Song ID: Chris Durban - Celebrate
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 386c32d80591, Duration: 301.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: d16ee74558a8, Duration: 301.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[43/150]
+
+======================================================================
+Processing: Triviul - Angelsaint - Unknown
+Song ID: Triviul - Angelsaint
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d839ec6ee789, Duration: 236.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 224ff8a31a16, Duration: 236.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[44/150]
+
+======================================================================
+Processing: James Elder & Mark M Thompson - The English Actor - Unknown
+Song ID: James Elder & Mark M Thompson - The English Actor
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 6537b7c20253, Duration: 205.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 12387789b7ab, Duration: 205.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[45/150]
+
+======================================================================
+Processing: Titanium - Haunted Age - Unknown
+Song ID: Titanium - Haunted Age
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 4a86d59fc513, Duration: 248.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: 1efb5c17da8b, Duration: 248.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[46/150]
+
+======================================================================
+Processing: Aimee Norwich - Child - Unknown
+Song ID: Aimee Norwich - Child
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: bd344b509bc9, Duration: 189.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: 3f18711861f2, Duration: 189.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[47/150]
+
+======================================================================
+Processing: Bill Chudziak - Children Of No-one - Unknown
+Song ID: Bill Chudziak - Children Of No-one
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: ac615dc5c2ea, Duration: 230.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 83cde8411bf9, Duration: 230.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[48/150]
+
+======================================================================
+Processing: Phre The Eon - Everybody's Falling Apart - Unknown
+Song ID: Phre The Eon - Everybody's Falling Apart
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 8a6d7ea62e15, Duration: 224.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: bab8e52ea5df, Duration: 224.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[49/150]
+
+======================================================================
+Processing: Strand Of Oaks - Spacestation - Unknown
+Song ID: Strand Of Oaks - Spacestation
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d5270c0f9004, Duration: 243.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: be6b14696692, Duration: 243.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[50/150]
+
+======================================================================
+Processing: Triviul feat. The Fiend - Widow - Unknown
+Song ID: Triviul feat. The Fiend - Widow
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: a84d47cdd95c, Duration: 234.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: ae99b24b0016, Duration: 234.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[51/150]
+
+======================================================================
+Processing: The Easton Ellises - Falcon 69 - Unknown
+Song ID: The Easton Ellises - Falcon 69
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 26918e193d3f, Duration: 246.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 97f60198d53a, Duration: 246.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[52/150]
+
+======================================================================
+Processing: Ben Carrigan - We'll Talk About It All Tonight - Unknown
+Song ID: Ben Carrigan - We'll Talk About It All Tonight
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: dcba79d7cc51, Duration: 254.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 90d982e07fb4, Duration: 254.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[53/150]
+
+======================================================================
+Processing: Leaf - Come Around - Unknown
+Song ID: Leaf - Come Around
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 9de21a276a84, Duration: 264.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 6a6830ec1ebc, Duration: 264.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[54/150]
+
+======================================================================
+Processing: Matthew Entwistle - Dont You Ever - Unknown
+Song ID: Matthew Entwistle - Dont You Ever
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: fada1cbe43c4, Duration: 113.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 77a0cc3b99dd, Duration: 113.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[55/150]
+
+======================================================================
+Processing: Juliet's Rescue - Heartbeats - Unknown
+Song ID: Juliet's Rescue - Heartbeats
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 928edec070c2, Duration: 267.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: ceccf53927ba, Duration: 267.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[56/150]
+
+======================================================================
+Processing: Music Delta - Disco - Unknown
+Song ID: Music Delta - Disco
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 694d7e37cdf4, Duration: 124.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: dee058e3a75c, Duration: 124.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[57/150]
+
+======================================================================
+Processing: The Scarlet Brand - Les Fleurs Du Mal - Unknown
+Song ID: The Scarlet Brand - Les Fleurs Du Mal
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: aa87a9dab2fc, Duration: 303.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: a68091845473, Duration: 303.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[58/150]
+
+======================================================================
+Processing: Port St Willow - Stay Even - Unknown
+Song ID: Port St Willow - Stay Even
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 28c9e7fec027, Duration: 316.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 7010440dde72, Duration: 316.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[59/150]
+
+======================================================================
+Processing: BigTroubles - Phantom - Unknown
+Song ID: BigTroubles - Phantom
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d8d51d8afdbb, Duration: 146.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: c81a19dc0e56, Duration: 146.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[60/150]
+
+======================================================================
+Processing: Dark Ride - Burning Bridges - Unknown
+Song ID: Dark Ride - Burning Bridges
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 94d776e9273d, Duration: 232.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: fa678fc1f832, Duration: 232.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[61/150]
+
+======================================================================
+Processing: Fergessen - Back From The Start - Unknown
+Song ID: Fergessen - Back From The Start
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: fe6b2073affb, Duration: 168.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 1a42897549ed, Duration: 168.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[62/150]
+
+======================================================================
+Processing: Spike Mullings - Mike's Sulking - Unknown
+Song ID: Spike Mullings - Mike's Sulking
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: f5e251559b6b, Duration: 256.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: b185e8c97ee7, Duration: 256.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[63/150]
+
+======================================================================
+Processing: Triviul - Dorothy - Unknown
+Song ID: Triviul - Dorothy
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: eddb94e0ff14, Duration: 187.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 8b7d302eebf4, Duration: 187.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[64/150]
+
+======================================================================
+Processing: Snowmine - Curfews - Unknown
+Song ID: Snowmine - Curfews
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 0ef2b658c97a, Duration: 275.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: f45750dbd9bc, Duration: 275.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[65/150]
+
+======================================================================
+Processing: The Long Wait - Back Home To Blue - Unknown
+Song ID: The Long Wait - Back Home To Blue
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 09f3237fef82, Duration: 260.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 208689db981a, Duration: 260.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[66/150]
+
+======================================================================
+Processing: The Mountaineering Club - Mallory - Unknown
+Song ID: The Mountaineering Club - Mallory
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: ae086765a11d, Duration: 244.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 7f8421e6d5b2, Duration: 244.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[67/150]
+
+======================================================================
+Processing: James May - All Souls Moon - Unknown
+Song ID: James May - All Souls Moon
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: a2c8a66a84eb, Duration: 220.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 1ed3bef35c35, Duration: 220.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[68/150]
+
+======================================================================
+Processing: A Classic Education - NightOwl - Unknown
+Song ID: A Classic Education - NightOwl
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 9d7ba390dfc8, Duration: 171.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: 0714fad1d04b, Duration: 171.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[69/150]
+
+======================================================================
+Processing: Punkdisco - Oral Hygiene - Unknown
+Song ID: Punkdisco - Oral Hygiene
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: a7186848a894, Duration: 221.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: dc0400088ad6, Duration: 221.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[70/150]
+
+======================================================================
+Processing: Cristina Vane - So Easy - Unknown
+Song ID: Cristina Vane - So Easy
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: dd020eabf668, Duration: 254.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: d5831f7095f8, Duration: 254.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[71/150]
+
+======================================================================
+Processing: Actions - Devil's Words - Unknown
+Song ID: Actions - Devil's Words
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 1da95587d7c0, Duration: 196.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 002deaf20e7c, Duration: 196.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[72/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Waltz For My Victims - Unknown
+Song ID: Clara Berry And Wooldog - Waltz For My Victims
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 993adb8d915f, Duration: 175.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: c35b93a3a459, Duration: 175.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[73/150]
+
+======================================================================
+Processing: Al James - Schoolboy Facination - Unknown
+Song ID: Al James - Schoolboy Facination
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: c596cb935f2f, Duration: 200.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 03ca30c87f12, Duration: 200.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[74/150]
+
+======================================================================
+Processing: Leaf - Summerghost - Unknown
+Song ID: Leaf - Summerghost
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 8ce51bcb2754, Duration: 231.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 488e120eac65, Duration: 231.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[75/150]
+
+======================================================================
+Processing: Tom McKenzie - Directions - Unknown
+Song ID: Tom McKenzie - Directions
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: ec3e40acdf71, Duration: 175.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 61ff3a3785d3, Duration: 175.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[76/150]
+
+======================================================================
+Processing: Helado Negro - Mitad Del Mundo - Unknown
+Song ID: Helado Negro - Mitad Del Mundo
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: b679ef93992a, Duration: 181.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: ec48cb6b1ecc, Duration: 181.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[77/150]
+
+======================================================================
+Processing: BKS - Bulldozer - Unknown
+Song ID: BKS - Bulldozer
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 4f1b0a3f5dc0, Duration: 336.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: a939f85d8775, Duration: 336.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[78/150]
+
+======================================================================
+Processing: ANiMAL - Rockshow - Unknown
+Song ID: ANiMAL - Rockshow
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: fb13f1fe3d2e, Duration: 165.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 6c0c911d99e6, Duration: 165.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[79/150]
+
+======================================================================
+Processing: James May - Dont Let Go - Unknown
+Song ID: James May - Dont Let Go
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: c00a928217f9, Duration: 242.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: 69233586d43d, Duration: 242.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[80/150]
+
+======================================================================
+Processing: Carlos Gonzalez - A Place For Us - Unknown
+Song ID: Carlos Gonzalez - A Place For Us
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 6a3f3ada9b5b, Duration: 250.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: cd00bff2b319, Duration: 250.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[81/150]
+
+======================================================================
+Processing: Secret Mountains - High Horse - Unknown
+Song ID: Secret Mountains - High Horse
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 5fd0a2ee48f2, Duration: 355.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 89272ac1109e, Duration: 355.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[82/150]
+
+======================================================================
+Processing: Music Delta - Britpop - Unknown
+Song ID: Music Delta - Britpop
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d54bb8e4d26c, Duration: 36.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 1f6321f15d9f, Duration: 36.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[83/150]
+
+======================================================================
+Processing: Music Delta - Grunge - Unknown
+Song ID: Music Delta - Grunge
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 95b926c22865, Duration: 41.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 1a57606ec81f, Duration: 41.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[84/150]
+
+======================================================================
+Processing: Side Effects Project - Sing With Me - Unknown
+Song ID: Side Effects Project - Sing With Me
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e020bba84a86, Duration: 243.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 08c75d2320b5, Duration: 243.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[85/150]
+
+======================================================================
+Processing: Grants - PunchDrunk - Unknown
+Song ID: Grants - PunchDrunk
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: c4dcf260a43e, Duration: 204.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: b579eb95de08, Duration: 204.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[86/150]
+
+======================================================================
+Processing: Night Panther - Fire - Unknown
+Song ID: Night Panther - Fire
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 93569ca1265d, Duration: 212.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: de6de3d1954c, Duration: 212.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[87/150]
+
+======================================================================
+Processing: Young Griffo - Facade - Unknown
+Song ID: Young Griffo - Facade
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: b313c2a51e8f, Duration: 167.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: f86ce2a45656, Duration: 167.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[88/150]
+
+======================================================================
+Processing: Sweet Lights - You Let Me Down - Unknown
+Song ID: Sweet Lights - You Let Me Down
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 89690adcd32a, Duration: 391.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 7d7eb9b85791, Duration: 391.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[89/150]
+
+======================================================================
+Processing: Traffic Experiment - Once More (With Feeling) - Unknown
+Song ID: Traffic Experiment - Once More (With Feeling)
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d3eefc2511c0, Duration: 435.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: 91043eb7159e, Duration: 435.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[90/150]
+
+======================================================================
+Processing: Skelpolu - Together Alone - Unknown
+Song ID: Skelpolu - Together Alone
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: a9fefa32a07a, Duration: 325.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 1b5db867100f, Duration: 325.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[91/150]
+
+======================================================================
+Processing: Music Delta - Country2 - Unknown
+Song ID: Music Delta - Country2
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: fb86663def44, Duration: 17.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 2086dd16a676, Duration: 17.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[92/150]
+
+======================================================================
+Processing: Celestial Shore - Die For Us - Unknown
+Song ID: Celestial Shore - Die For Us
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 5952d4875f42, Duration: 278.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: c6b04d868ddf, Duration: 278.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[93/150]
+
+======================================================================
+Processing: Lyndsey Ollard - Catching Up - Unknown
+Song ID: Lyndsey Ollard - Catching Up
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 81ee0331a586, Duration: 227.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: bc83b2c5eac8, Duration: 227.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[94/150]
+
+======================================================================
+Processing: Invisible Familiars - Disturbing Wildlife - Unknown
+Song ID: Invisible Familiars - Disturbing Wildlife
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 7b82b094e92c, Duration: 218.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 5ef2507cc012, Duration: 218.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[95/150]
+
+======================================================================
+Processing: Atlantis Bound - It Was My Fault For Waiting - Unknown
+Song ID: Atlantis Bound - It Was My Fault For Waiting
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 61186a5dec4f, Duration: 268.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: e177f2eeaaea, Duration: 268.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[96/150]
+
+======================================================================
+Processing: The Wrong'Uns - Rothko - Unknown
+Song ID: The Wrong'Uns - Rothko
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 1caaf1217917, Duration: 202.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: 6c511e704efd, Duration: 202.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[97/150]
+
+======================================================================
+Processing: Patrick Talbot - A Reason To Leave - Unknown
+Song ID: Patrick Talbot - A Reason To Leave
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 3beaf7fc0763, Duration: 259.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 5dfcc80098ab, Duration: 259.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[98/150]
+
+======================================================================
+Processing: Music Delta - Rockabilly - Unknown
+Song ID: Music Delta - Rockabilly
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 8e54b08cd42d, Duration: 25.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 418f0ec516e3, Duration: 25.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[99/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Stella - Unknown
+Song ID: Clara Berry And Wooldog - Stella
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 593e0d2fa465, Duration: 195.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: e64baa6cfed9, Duration: 195.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[100/150]
+
+======================================================================
+Processing: Young Griffo - Pennies - Unknown
+Song ID: Young Griffo - Pennies
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 537aac6de239, Duration: 277.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 002c4ac58386, Duration: 277.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[101/150]
+
+======================================================================
+Processing: Hop Along - Sister Cities - Unknown
+Song ID: Hop Along - Sister Cities
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 34a5f4df00dd, Duration: 283.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: 2ea8303e6af6, Duration: 283.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[102/150]
+
+======================================================================
+Processing: Jokers, Jacks & Kings - Sea Of Leaves - Unknown
+Song ID: Jokers, Jacks & Kings - Sea Of Leaves
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 8e5341d1f9fc, Duration: 191.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 027d3e8b8576, Duration: 191.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[103/150]
+
+======================================================================
+Processing: Secretariat - Over The Top - Unknown
+Song ID: Secretariat - Over The Top
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 564747aeb276, Duration: 250.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: adcef855b2c5, Duration: 250.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[104/150]
+
+======================================================================
+Processing: The Long Wait - Dark Horses - Unknown
+Song ID: The Long Wait - Dark Horses
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 7d71a060383b, Duration: 305.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 2ca073686cb9, Duration: 305.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[105/150]
+
+======================================================================
+Processing: Skelpolu - Resurrection - Unknown
+Song ID: Skelpolu - Resurrection
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 51fc25802950, Duration: 395.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 0513ba1268a6, Duration: 395.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[106/150]
+
+======================================================================
+Processing: Skelpolu - Human Mistakes - Unknown
+Song ID: Skelpolu - Human Mistakes
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 37e837b8c844, Duration: 324.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 52288a0ea758, Duration: 324.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[107/150]
+
+======================================================================
+Processing: Motor Tapes - Shore - Unknown
+Song ID: Motor Tapes - Shore
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 0db99815eaa4, Duration: 246.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 981505c0ca6c, Duration: 246.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[108/150]
+
+======================================================================
+Processing: Alexander Ross - Velvet Curtain - Unknown
+Song ID: Alexander Ross - Velvet Curtain
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 45598ef0efbb, Duration: 514.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 1dfb9a0fae1e, Duration: 514.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[109/150]
+
+======================================================================
+Processing: Faces On Film - Waiting For Ga - Unknown
+Song ID: Faces On Film - Waiting For Ga
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: dab56fe5615a, Duration: 257.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 378783d167ec, Duration: 257.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[110/150]
+
+======================================================================
+Processing: Hezekiah Jones - Borrowed Heart - Unknown
+Song ID: Hezekiah Jones - Borrowed Heart
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 197fbc9413e2, Duration: 241.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 5ff5ce79de9a, Duration: 241.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[111/150]
+
+======================================================================
+Processing: The Districts - Vermont - Unknown
+Song ID: The Districts - Vermont
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e1e7a1175c57, Duration: 228.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: e485b333466c, Duration: 228.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[112/150]
+
+======================================================================
+Processing: Nerve 9 - Pray For The Rain - Unknown
+Song ID: Nerve 9 - Pray For The Rain
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 5d49e32c951d, Duration: 343.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: fe21c8965aa7, Duration: 343.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[113/150]
+
+======================================================================
+Processing: Zeno - Signs - Unknown
+Song ID: Zeno - Signs
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 5c4a92b05836, Duration: 234.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: f194689fbfe3, Duration: 234.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[114/150]
+
+======================================================================
+Processing: Young Griffo - Blood To Bone - Unknown
+Song ID: Young Griffo - Blood To Bone
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e40b7f646597, Duration: 254.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 0aee1d737051, Duration: 254.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[115/150]
+
+======================================================================
+Processing: ANiMAL - Clinic A - Unknown
+Song ID: ANiMAL - Clinic A
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 216a5aa94bc7, Duration: 237.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: 4fe161ddbdb1, Duration: 237.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[116/150]
+
+======================================================================
+Processing: Signe Jakobsen - What Have You Done To Me - Unknown
+Song ID: Signe Jakobsen - What Have You Done To Me
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 56c24babbc59, Duration: 177.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: 6be5ba2dff45, Duration: 177.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+[117/150]
+
+======================================================================
+Processing: Tim Taler - Stalker - Unknown
+Song ID: Tim Taler - Stalker
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 41313a8fd522, Duration: 237.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 704de55b2203, Duration: 237.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[118/150]
+
+======================================================================
+Processing: Actions - One Minute Smile - Unknown
+Song ID: Actions - One Minute Smile
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 8a0d2e4d1a34, Duration: 163.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 858841c4c723, Duration: 163.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[119/150]
+
+======================================================================
+Processing: Angela Thomas Wade - Milk Cow Blues - Unknown
+Song ID: Angela Thomas Wade - Milk Cow Blues
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d8592c86b90e, Duration: 210.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: 5d4b9c6af6f8, Duration: 210.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[120/150]
+
+======================================================================
+Processing: Leaf - Wicked - Unknown
+Song ID: Leaf - Wicked
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 36c9b127bf05, Duration: 190.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: e03519549780, Duration: 190.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[121/150]
+
+======================================================================
+Processing: Drumtracks - Ghost Bitch - Unknown
+Song ID: Drumtracks - Ghost Bitch
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e463c7035ca2, Duration: 356.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: 32e8b7f1405e, Duration: 356.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[122/150]
+
+======================================================================
+Processing: AM Contra - Heart Peripheral - Unknown
+Song ID: AM Contra - Heart Peripheral
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: a9396675d0c1, Duration: 209.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: 4b35275db502, Duration: 209.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[123/150]
+
+======================================================================
+Processing: Actions - South Of The Water - Unknown
+Song ID: Actions - South Of The Water
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d965633f415c, Duration: 176.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: f7358ab35f3b, Duration: 176.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[124/150]
+
+======================================================================
+Processing: Hollow Ground - Left Blind - Unknown
+Song ID: Hollow Ground - Left Blind
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 79de6931b042, Duration: 159.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: 41cff43c8de9, Duration: 159.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[125/150]
+
+======================================================================
+Processing: M.E.R.C. Music - Knockout - Unknown
+Song ID: M.E.R.C. Music - Knockout
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 5b1575573a76, Duration: 269.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 8ae407e55867, Duration: 269.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[126/150]
+
+======================================================================
+Processing: Music Delta - Gospel - Unknown
+Song ID: Music Delta - Gospel
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 00c8e0f583f2, Duration: 75.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 92ab6788b07d, Duration: 75.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[127/150]
+
+======================================================================
+Processing: Meaxic - Take A Step - Unknown
+Song ID: Meaxic - Take A Step
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 305ff9a6fc87, Duration: 282.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: fc658a395689, Duration: 282.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[128/150]
+
+======================================================================
+Processing: The So So Glos - Emergency - Unknown
+Song ID: The So So Glos - Emergency
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: c68bdbf6747d, Duration: 166.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 20204bf779ce, Duration: 166.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[129/150]
+
+======================================================================
+Processing: PR - Happy Daze - Unknown
+Song ID: PR - Happy Daze
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: b09be3d45131, Duration: 162.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: c812f9a1bb15, Duration: 162.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[130/150]
+
+======================================================================
+Processing: Raft Monk - Tiring - Unknown
+Song ID: Raft Monk - Tiring
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 7f38ce895adc, Duration: 212.1s
+🎵 Processing stem: bass → role: bass
+   → File ID: 7bd0ad3cb382, Duration: 212.1s
+✅ Processed 2 stems: ['other', 'bass']
+
+[131/150]
+
+======================================================================
+Processing: Traffic Experiment - Sirens - Unknown
+Song ID: Traffic Experiment - Sirens
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 398fd14dbee6, Duration: 421.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 6f9d360bb72d, Duration: 421.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[132/150]
+
+======================================================================
+Processing: Forkupines - Semantics - Unknown
+Song ID: Forkupines - Semantics
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: d41318557097, Duration: 273.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 7d2db0e23701, Duration: 273.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[133/150]
+
+======================================================================
+Processing: ANiMAL - Easy Tiger - Unknown
+Song ID: ANiMAL - Easy Tiger
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: dd5d0c992ab5, Duration: 205.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: f353c6269b7b, Duration: 205.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[134/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Air Traffic - Unknown
+Song ID: Clara Berry And Wooldog - Air Traffic
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: f4398a7acbd3, Duration: 173.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 2fb5d6114451, Duration: 173.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[135/150]
+
+======================================================================
+Processing: We Fell From The Sky - Not You - Unknown
+Song ID: We Fell From The Sky - Not You
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: bafc8187e90d, Duration: 207.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 4900983954b7, Duration: 207.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[136/150]
+
+======================================================================
+Processing: Music Delta - Rock - Unknown
+Song ID: Music Delta - Rock
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 06f643f9b387, Duration: 12.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: 6bb2a2043cb1, Duration: 12.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[137/150]
+
+======================================================================
+Processing: Sambasevam Shanmugam - Kaathaadi - Unknown
+Song ID: Sambasevam Shanmugam - Kaathaadi
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 0551d18d8dca, Duration: 317.7s
+🎵 Processing stem: bass → role: bass
+   → File ID: 59eb916d571e, Duration: 317.7s
+✅ Processed 2 stems: ['other', 'bass']
+
+[138/150]
+
+======================================================================
+Processing: Meaxic - You Listen - Unknown
+Song ID: Meaxic - You Listen
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 9a1049e92bf1, Duration: 412.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 0f4165a6e378, Duration: 412.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[139/150]
+
+======================================================================
+Processing: Little Chicago's Finest - My Own - Unknown
+Song ID: Little Chicago's Finest - My Own
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e28c098c9427, Duration: 281.4s
+🎵 Processing stem: bass → role: bass
+   → File ID: 4db33c930d2c, Duration: 281.4s
+✅ Processed 2 stems: ['other', 'bass']
+
+[140/150]
+
+======================================================================
+Processing: Voelund - Comfort Lives In Belief - Unknown
+Song ID: Voelund - Comfort Lives In Belief
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 27fd0b5c400e, Duration: 209.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: 45c66a261727, Duration: 209.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[141/150]
+
+======================================================================
+Processing: The Easton Ellises (Baumi) - SDRNR - Unknown
+Song ID: The Easton Ellises (Baumi) - SDRNR
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 055bf4b9667e, Duration: 234.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: 4d9202c8f71e, Duration: 234.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[142/150]
+
+======================================================================
+Processing: Fergessen - The Wind - Unknown
+Song ID: Fergessen - The Wind
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: e8e632ce889b, Duration: 191.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 6922685504b6, Duration: 191.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[143/150]
+
+======================================================================
+Processing: Johnny Lokke - Promises & Lies - Unknown
+Song ID: Johnny Lokke - Promises & Lies
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 24a8c33f1bd0, Duration: 285.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 190e896c3396, Duration: 285.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[144/150]
+
+======================================================================
+Processing: St Vitus - Word Gets Around - Unknown
+Song ID: St Vitus - Word Gets Around
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 8a071150b493, Duration: 247.0s
+🎵 Processing stem: bass → role: bass
+   → File ID: a3e3ce9b4ebe, Duration: 247.0s
+✅ Processed 2 stems: ['other', 'bass']
+
+[145/150]
+
+======================================================================
+Processing: BKS - Too Much - Unknown
+Song ID: BKS - Too Much
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: ceeee80ad8d0, Duration: 219.9s
+🎵 Processing stem: bass → role: bass
+   → File ID: e5c62f5c3ed1, Duration: 219.9s
+✅ Processed 2 stems: ['other', 'bass']
+
+[146/150]
+
+======================================================================
+Processing: Music Delta - Punk - Unknown
+Song ID: Music Delta - Punk
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 9c462441d758, Duration: 28.6s
+🎵 Processing stem: bass → role: bass
+   → File ID: 5e671b8e05f3, Duration: 28.6s
+✅ Processed 2 stems: ['other', 'bass']
+
+[147/150]
+
+======================================================================
+Processing: Hollow Ground - Ill Fate - Unknown
+Song ID: Hollow Ground - Ill Fate
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 82f1ddb1c887, Duration: 141.5s
+🎵 Processing stem: bass → role: bass
+   → File ID: bf832ff99736, Duration: 141.5s
+✅ Processed 2 stems: ['other', 'bass']
+
+[148/150]
+
+======================================================================
+Processing: Steven Clark - Bounty - Unknown
+Song ID: Steven Clark - Bounty
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 0a37df5f3ce8, Duration: 289.3s
+🎵 Processing stem: bass → role: bass
+   → File ID: 0768a6e7052b, Duration: 289.3s
+✅ Processed 2 stems: ['other', 'bass']
+
+[149/150]
+
+======================================================================
+Processing: Enda Reilly - Cur An Long Ag Seol - Unknown
+Song ID: Enda Reilly - Cur An Long Ag Seol
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: 168540a97f0c, Duration: 186.8s
+🎵 Processing stem: bass → role: bass
+   → File ID: 41761185e5c2, Duration: 186.8s
+✅ Processed 2 stems: ['other', 'bass']
+
+[150/150]
+
+======================================================================
+Processing: Flags - 54 - Unknown
+Song ID: Flags - 54
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🔎  Processing (separate): mix (role: mix)
+🎵 Processing stem: other → role: other
+   → File ID: b813f67cfc28, Duration: 315.2s
+🎵 Processing stem: bass → role: bass
+   → File ID: cba61f66f9b0, Duration: 315.2s
+✅ Processed 2 stems: ['other', 'bass']
+
+======================================================================
+Processing Summary - musdb18
+======================================================================
+✅ Songs processed: 150
+⏭️  Skipped (already done): 0
+🎵 Total stems: 300
+❌ Failed: 0
+======================================================================
+📄 Metadata: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA/local_lamda_registry.jsonl

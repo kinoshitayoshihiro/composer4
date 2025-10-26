@@ -1,0 +1,22 @@
+2025-10-26 14:07:18 [INFO] Loading training data from harmony_dataset/training_sequences.parquet
+2025-10-26 14:07:19 [INFO] Loaded 152237 sequences from 2104 songs
+2025-10-26 14:07:19 [INFO] Extracting guitar patterns...
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/build_stage2_guitar_pickle.py", line 301, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/build_stage2_guitar_pickle.py", line 237, in main
+    patterns = extract_patterns(df)
+               ^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/build_stage2_guitar_pickle.py", line 62, in extract_patterns
+    pattern_groups = df.groupby([
+                     ^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/core/frame.py", line 9210, in groupby
+    return DataFrameGroupBy(
+           ^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/core/groupby/groupby.py", line 1331, in __init__
+    grouper, exclusions, obj = get_grouper(
+                               ^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/core/groupby/grouper.py", line 1043, in get_grouper
+    raise KeyError(gpr)
+KeyError: 'chord_root'

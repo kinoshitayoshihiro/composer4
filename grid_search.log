@@ -1,0 +1,4 @@
+=== Grid Search: threshold × Chorus weights ===
+Target: Accent Delta >= +5%, ML Usage >= 70%, Family Match >= 80%
+
+Testing threshold=0.20...

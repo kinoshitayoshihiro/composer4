@@ -1,11 +1,27 @@
-# Los-Angeles-MIDI クリーニングガイド
+# LAMDA (Los-Angeles-MIDI) クリーニングガイド
 
 ## 概要
-このガイドでは、Los-Angeles-MIDIデータセットのクリーニング方法を説明します。
+**LAMDA (Los-Angeles-MIDI Dataset)** は約40万ファイル（404,714個）のマルチトラック楽曲データセットです。
+このガイドでは、LAMDAを**楽器別に分離してクリーニング**する方法を説明します。
+
+### LAMDAの特徴
+- **約40万ファイル**: 大規模な一般MIDI楽曲コレクション
+- **マルチトラック**: piano, strings, drums, guitar, bass等が混在
+- **Pitch範囲**: 22-86（通常の楽器範囲）
+- **コンテンツ**: メロディ、ハーモニー、コード進行を含む完全な楽曲
+
+### クリーニング方針
+LAMDAは**単一楽器データセットではない**ため、楽器別に分離して処理します：
+- **LAMDA_PIANO**: ピアノパート抽出 + クリーニング
+- **LAMDA_STRINGS**: ストリングスパート抽出 + クリーニング
+- **LAMDA_GUITAR**: ギターパート抽出 + クリーニング
+- **LAMDA_BASS**: ベースパート抽出 + クリーニング
+- **LAMDA_DRUMS**: ドラムパート抽出 + クリーニング（オプション）
 
 ## 前提条件
 - POP909、SLAKH、loopsフォルダは既にクリーニング済み（Stage2まで完了）
 - Los-Angeles-MIDIデータは `/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/MIDIs` に配置済み
+- `scripts/cleaners/` に楽器別クリーナー (`piano.py`, `strings.py`, `guitar.py`, `bass.py`, `drums.py`) が配置済み
 
 ## クリーニングプロセス
 
@@ -16,28 +32,52 @@
 ./scripts/check_lamidi_dataset.sh
 ```
 
-出力されたファイル数を確認し、`scripts/monitor_lamidi.sh` の `EXPECTED_TOTAL` 変数を更新してください。
-
 ### 2. ドライラン（コマンド確認）
 実行せずにコマンドを確認:
 
 ```bash
-./scripts/run_lamidi_full.sh --dry-run
+# 全楽器（piano/strings/guitar/bass）
+./scripts/run_lamda_full.sh --dry-run
+
+# 特定の楽器のみ確認
+./scripts/run_lamda_full.sh --dry-run piano
+./scripts/run_lamda_full.sh --dry-run guitar bass
 ```
 
 ### 3. クリーニング実行
-実際にクリーニングを開始:
 
+#### オプションA: 推奨4楽器を一括実行（drumsを除く）
 ```bash
-./scripts/run_lamidi_full.sh
+./scripts/run_lamda_full.sh
+```
+デフォルトで `piano`, `strings`, `guitar`, `bass` を処理します。
+drumsは母数が巨大なため、明示的に指定した場合のみ実行されます。
+
+#### オプションB: 特定の楽器のみ実行
+```bash
+# pianoのみ
+./scripts/run_lamda_full.sh piano
+
+# guitarとbassのみ
+./scripts/run_lamda_full.sh guitar bass
+
+# 全楽器（drumsを含む）
+./scripts/run_lamda_full.sh piano strings guitar bass drums
 ```
 
 ### 4. 進捗モニター（別ターミナル）
 別のターミナルウィンドウで進捗を監視:
 
 ```bash
-./scripts/monitor_lamidi.sh
+./scripts/monitor_lamda.sh
 ```
+
+全楽器の処理状況を一覧表示します：
+- 各楽器の処理済みファイル数
+- クリーニング成功率
+- 隔離ファイル数
+- Pickleインデックス状態
+- 最新ログ
 
 ## Stage 1 の処理内容
 

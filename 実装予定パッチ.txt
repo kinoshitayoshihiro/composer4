@@ -1,0 +1,793 @@
+guitar_params_stage2.py = 「設定・方針（パラメータ層）」
+
+guitar_generator_stage2.py = 「生成エンジン（実装層）」
+
+どっちもStage2（編曲）用ですが、**片方が“何をどうするかを決める”、もう片方が“実際に鳴らす”**役割です。
+
+それぞれ何のためのファイル？
+guitar_params_stage2.py（パラメータ層）
+
+目的: スタイルプリセットやYAMLを読み、値の表記ゆれを正規化して、生成エンジンがそのまま使える“設計図”を作る。
+
+主な仕事
+
+guitar_style_presets.yaml の読込（load_yaml_presets）
+
+密度の正規化（normalize_density：[4,8] → {min:4,max:8} など）
+
+セクション/感情/テンポ/キーに応じたプリセットの選択・合成
+
+人間味パラメータ（タイミング/ベロシティ揺らぎ）の範囲決定
+
+右手パターン（ストローク/アルペジオ）の候補セットを構築
+
+入出力のイメージ
+
+入力: プロジェクト設定、スタイル名、emotion_profile.yaml、テンポ/キー
+
+出力: 生成器がそのまま使える 辞書 or Paramsオブジェクト（密度・ボイシング方針・人間味範囲・アーティキュレーション方針など）
+
+ポイント: ここではMIDIや音符は作らない。副作用を持たず、テスト容易。
+
+guitar_generator_stage2.py（生成エンジン層）
+
+目的: 上の“設計図”と chordmap.yaml / rhythm_library.yaml を使って、実際のギターパート（音符列/MIDI）を組み立てる。
+
+主な仕事
+
+BasePartGenerator を継承して Verse/Pre/Chorus/Bridge ごとにパターンを選択
+
+右手（ストローク/分散和音）の具体化、ダウン/アップ制御、ゴースト/装飾の挿入
+
+和音のボイシング（開放弦・指板ポジション・転回形・カポ対応など）
+
+アーティキュレーション（ミュート、タイ、スライド、アクセント）
+
+人間味（タイミング/Vel揺らぎ、手癖カーブ）の適用
+
+章構造に沿って全曲のMIDIトラックを出力（pretty_midi / music21）
+
+入出力のイメージ
+
+入力: 上記 Params（guitar_params_stage2.pyの結果）＋ chordmap/rhythm_library/emotion
+
+出力: ギター用の MIDI/Stream（章構成と一致、VOCALOID/SynthVに流せる命名）
+
+どう使い分ける？
+
+音色やノリの“方針”を変えたい（例: ストローク密度、人間味の強さ、セクション別のスタイル）
+→ guitar_params_stage2.py を編集（YAMLや合成ロジック側）
+
+演奏ロジックを拡張したい（例: 新しいストラムエンジン、指板ポジション探索、ゴーストの挿入規則）
+→ guitar_generator_stage2.py を編集（アルゴリズム側）
+
+典型的な処理の流れ（ざっくり）
+
+guitar_params_stage2.py
+
+YAML読み込み → 密度/人間味/スタイルを正規化したParamsにまとめる
+
+guitar_generator_stage2.py
+
+Params + chordmap/rhythmを受け取り
+
+セクション単位でパターン選択→ボイシング→右手化→人間味→MIDI出力
+
+テストや運用のヒント
+
+回帰性: params側はNO-OP既定で書く（空設定なら以前と同じ）。
+
+責務分離: “値の決定”と“音符の生成”が分かれているので、片方の変更で全体が壊れにくい。
+
+A/B比較: 同じgeneratorに対して、Paramsだけ切り替えて作風A/Bを即比較できる。
+
+要するに、
+
+paramsは“設計図の整備係”、
+
+generatorは“職人（実装担当）”。
+
+この二段構えで、表現力と保守性を両立させています。
+
+
+
+
+Q  sunoaiのwavから、アレンジMIDIを製作しようとしています。ステムwavはドコでどう関わりますか？
+
+
+いい質問！結論から言うと、**SunoのステムWAVは「分析（feature抽出）」の段で効きまくり、実際のMIDI生成は“抽出済み特徴”を食べて走る**、という分業です。WAVそのものは最終段では触りません。
+
+# どこで関わる？（全体フロー）
+
+1. **ステム取り込み（WAV）**
+
+   * 例：`vocals.wav / drums.wav / bass.wav / other.wav`
+   * ここでやるのは“聴いてわかる情報”を**数列に変換**すること（後述の特徴量）。
+
+2. **特徴抽出（Analysis）** ← ステムが主役
+   ステムから以下の“時間列”を作ります（楽曲全体を通した関数 E(t), events(t) のイメージ）。
+
+   * **テンポ／拍グリッド**：主に**drums**のオンセット列からBPM・拍位置（bar/beat/sub）を推定
+   * **エネルギー曲線 E(t)**：主に**vocals**（必要に応じてmix/全体）からRMSを平滑化
+   * **子音クラス窓**：**vocals**の近傍で、シビランス/破裂音/鼻音っぽい瞬間を短い窓として抽出
+     （厳密なASRが無くても、スペクトル特徴で“sibilant多め/破裂っぽい”などの**近似**が可能）
+   * **セクション境界**：ノベリティ（変化度）や密度の急変から Verse/Chorus 等の**候補**を出す
+     （既に章構成がある場合はそれを優先）
+   * **レジスタ／F0ヒント**：**bass**の強い基本周波数を拾い、**根音/5度重み**の参考に（任意）
+   * **ドラム密度ヒント**：**drums**のヒット密度から、その小節の**HH密度・fill許容量**のスカラーを出す
+
+   これらをひとまとめにして、各ジェネレータが読める形（例：`mix_context`）で渡します：
+
+   * `mix_context.vocal_energy: List[(time_ql, energy_0_1)]`
+   * `mix_context.vocal_phonemes: List[(time_ql, "sibilant|plosive|nasal"...)]`
+   * `mix_context.sections: List[{bar:int, label:str}]`（外部マップ優先）
+   * `mix_context.tempo_map / beat_grid`
+   * `mix_context.hint.drum_density_per_bar` / `hint.bass_f0_strong_degrees`（任意）
+
+3. **編曲MIDI生成（Stage2 Generators）** ← “抽出済みの数列”を使う
+   ここから先は**WAVは触らず**、手にした特徴列を **設定（YAML/params）× アルゴリズム** に掛け合わせてMIDIを出します。
+
+# どう使われる？（モジュール別の具体例）
+
+* ## Drums（あなたの環境だと実装が最も進んでいる領域）
+
+  抽出した **E(t)** と **子音窓**、**セクション境界** が軸です。
+
+  * **Markovのエネルギー依存**：`vocal_energy` → Rideボイス（ride1/ride2/china）の遷移確率をEに応じて押し引き
+  * **preempt（境界予知）/ latch**：`sections` → サビ直前で ride2 を増やす、セクション頭でガチャつきを抑える
+  * **phoneme_blend**：`vocal_phonemes` → シビランス周辺で Bell/China を控えめ etc.（クラス別窓＆E連動）
+  * **spec_collision**：`vocal_phonemes`（高域がキツい区間）→ Ride bell/China の比率やVelを自動減衰
+  * **HH密度/ghost/fill**：`drum_density_per_bar` → 小節ごとにHH密度・ゴースト・フィルの強さを調整
+
+* ## Bass / Piano / Guitar / Strings
+
+  * **密度・ダイナミクス**：`vocal_energy` でパターン密度やVoicingの広がりを段階制御
+  * **スケール度数の重み**（任意）：`bass_f0` の強い度数（根音/5度）に寄せる確率を少し上げ、**連続オクターブの縮退**で濁りを防止
+  * **セクション駆動**：`sections` で Verse/Chorus/Bridge のスタイル切替・リズムライブラリ選択
+  * **人間味の時間変動**：E(t)や章でタイミング・ベロシティ揺らぎのレンジをスライド
+
+# 超ざっくり擬似コード
+
+```python
+# 1) ステム解析（WAV → 特徴列）
+mix_context = analyze_stems({
+    "vocals": "stems/vocals.wav",
+    "drums":  "stems/drums.wav",
+    "bass":   "stems/bass.wav",
+    "other":  "stems/other.wav",
+})
+# -> dict(vocal_energy, vocal_phonemes, sections, beat_grid, hint.*)
+
+# 2) 各ジェネレーターへ（WAVは渡さず、特徴だけを共有）
+drums = DrumsGeneratorStage2(overrides={"mix_context": mix_context})
+bass  = BassGeneratorStage2(overrides={"mix_context": mix_context})
+# ...
+# 3) 章構成に沿ってMIDIを生成
+drums_midi = drums.generate(chordmap, rhythm_library, params)
+```
+
+# よくある質問（運用Tips）
+
+* **ステムが荒い/にじむ** → ボーカルだけでもE(t)と子音窓は十分効きます。ドラム密度は「強すぎない重み」で合流させるのが吉。
+* **章構成は既にある** → セクション検出は**補助**に回し、外部の章マップをそのまま使う（preempt/latchが安定）。
+* **コードは既にYAML（chordmap.yaml）にある** → ステムからの和声推定はオフでOK。代わりに`bass_f0`を“根音/5度の信頼度”として**薄く**混ぜると自然。
+* **実時間と拍のズレ** → 解析時のテンポマップを**QL(四分音符単位長)**に正規化して各モジュールで共有するとズレにくい。
+
+---
+
+要するに、**ステムWAVは「耳的なニュアンスを数値化」する入口**で、その数値（エネルギー・子音窓・密度・境界・F0ヒント）が**Stage2の各ジェネレータのノブ**に差し込まれます。
+MIDIそのものは**YAML（chordmap/rhythm/emotion）× 解析特徴**の掛け合わせで生成され、WAVは“参照役”に徹します。
+
+
+
+
+Q  主に、原曲wavと係わっているのは、paramsなんですね。そして、このシステムは、原曲を単純にMIDI化してパラメーター（velocityなど）を足したものではない、ということですか？ノート配置などは参考にしないということですか？
+
+SUNOAIで製作した原曲には、chordmapを用意してないですね。これまでchordmapは歌詞を中心にChatGPTと生み出していましたので、SUNO原曲とは無関係なものでした。
+
+これまでの製作では、歌詞と、原曲のvocalステムでSectionタイミングを書き出して、コードを製作していました。そして、vocalwavはこのまま使います。
+
+この手法だと、原曲の持っているコード、
+新たに作成したchordmap
+
+は別物になると考えていました。なので、原曲のもっているchordに沿えばよいとの考えでした。
+
+
+
+
+結論から先に：
+
+* **はい**。現状の設計では、原曲のWAV（とステム）は主に **params／mix_context（特徴量）** に効きます。
+* **いいえ**。このシステムは **“WAV→MIDIの逐語変換”** ではありません。ノート配置やフレーズを機械転写してVelだけ足す仕組みではなく、**新しく編曲を“生成”** します。
+* 原曲の**ノート配置（オンセット列やフィルの細部）**は**参照しません**（デフォルト）。使うのは、テンポ・拍グリッド、エネルギー、子音クラス窓、セクション境界、密度などの“上位特徴”です。
+
+---
+
+# いまのあなたの手法との関係整理
+
+> これまで：歌詞＋vocalステムからセクション時刻を書き出し → **新規で chordmap を作る** → vocal.wav はそのまま使用
+
+この流れだと、**原曲が“持っている”コード**と、**新たに作った chordmap** は一致しない前提ですよね。
+ここで選択肢は3つあります：
+
+## A) 「原曲コードに従う」モード（おすすめ）
+
+* 目的：SUNO原曲の**調性感・和声**を保ちつつ、編曲だけ差し替える。
+
+* 方法：
+
+  1. ステム（主に bass / other / mix）から**“Audio側のコード進行”**を1本作る（軽い推定でもOK・手耳でも可）。
+
+     * 形式：`audio_chordmap.yaml`（bar/beatごとのコード＋信頼度）
+  2. 生成系は **audio_chordmap を正** とし、従来の（歌詞から作った）chordmapは **無効 or 参考** に回す。
+  3. 各Part Generatorは、audio_chordmap の **根音/5度重み** と **連続オクターブ縮退**を強めに使い、**非和声音の出現率**を制御。
+
+* メリット：vocal.wav と**濁りづらく、グルーヴが崩れにくい**。
+
+* 使うパラメータ例（YAMLイメージ）：
+
+  ```yaml
+  harmony:
+    source: audio      # audio | text | hybrid
+    fallback: text     # 解析に穴があればtextへ
+    prefer_root5: true # 根音/5度重みを強める
+    collapse_octaves: true # 連続オクターブ縮退
+  ```
+
+  ※ これは概念スイッチ。実装済みの「スケール度数の重み付け・オクターブ縮退」ロジックに、**audio由来の和声**を流し込むだけです。
+
+## B) 「創作 chordmap を優先」モード
+
+* 目的：原曲の声やセクション感だけ借りて、**和声は再構築**したい。
+* 方法：これまでのやり方そのまま。WAV由来の特徴は **密度やエネルギー** など**非和声のノブ**に限定して使う。
+* メリット：リハーモナイズで**物語の解釈**を強く押し出せる。
+
+## C) ハイブリッド（実務でよく使う）
+
+* 目的：原曲の“土台”は守りつつ、**部分的に差し替え**。
+* 方法：`harmony.source: hybrid` にして、**原曲コードをトニックセンター＆根音参照**に、上もの（テンション）だけ**text chordmap**から借りる。
+* コントロール：
+
+  ```yaml
+  harmony:
+    source: hybrid
+    blend: 0.6          # 0=完全text, 1=完全audio
+    keep_audio_root: true
+    allow_text_tensions: [9, 11]  # 許可テンション
+    resolve_conflicts: prefer_audio
+  ```
+
+---
+
+# 「ノート配置を参考にしない」の意味（もう一歩）
+
+* **参照するもの**：テンポ/拍、セクション境界、エネルギー曲線E(t)、子音クラスの短窓、（任意）ドラム密度やベースのF0ヒント。
+* **参照しないもの**：原曲の“具体的な”ノートの開始/終了、フィルの細部、アルペジオの順序など。
+
+  * ただし、**望むなら**：
+
+    * HHの**密度**だけ原曲から借りる（当プロジェクトのDrums実装はすでに対応）。
+    * ベースの**強拍ヒット位置**を“スナップの優先候補”にする（ノートをコピーはしない）。
+
+---
+
+# いまの案件に最適な運用（すぐできる手順）
+
+1. そのまま使う vocal.wav の**セクション時刻**を既にお持ちなので、**bar/beatにアサイン**して固定。
+2. **audio_chordmap.yaml** を作る（簡易でOK）：
+
+   * 小節単位で「たぶん C → F → G …」と**人手で置く**（耳コピで十分／後で精密化）。
+   * 迷う箇所は `confidence: 0.6` など付ける。
+3. `harmony.source` を **audio** に。各パートの params に **根音/5度↑／連続オクターブ縮退**を有効化。
+4. Drums は既存の **E(t)・preempt・latch・phoneme連動** を効かせつつ、原曲のダイナミクスに追従。
+5. もし**創作 chordmap** を残したいなら、C)ハイブリッドで**テンションだけ**活かす。
+
+---
+
+# 迷いどころの指針
+
+* **vocal.wavを“既に使う”**前提なら：
+  → **A) audio優先**がブレにくい。まずこれで仕上げて、欲しければC)で彩度を足す。
+
+* **文学的リハモ重視**なら：
+  → **B) text優先**でOK。ただし**スケール度数重み**と**オクターブ縮退**を強めにして、濁りを抑えるのがコツ。
+
+
+
+
+
+Q  今は、原曲のvocalを採用する予定なので、A案を採用して、
+
+進めます。
+
+B) 「創作 chordmap を優先」は、vocalも差し替えが前提の設計ですね？
+
+chordの割り出しに、vocalもふくめた統合wavを使う事はないんですか？vocalをのぞいたinstrumentのみを使うんですか？
+
+data/Los-Angeles-MIDIの元々のscriptを使えば、chordも推定できる？
+
+
+
+
+
+結論を先に3点だけ。
+
+1. **A案でOK**：原曲のvocalをそのまま使うなら、和声は「音源（ステム）から推定した chordmap＝audio_chordmap.yaml」を正にして進めるのが一番安定です。
+2. **B案は“ボーカル差し替え前提”ではない**けど、強いリハモをすると原メロと衝突しやすいので、既存vocalをそのまま使うなら慎重設定（度数重み・テンション制限など）が必須。
+3. **コード推定に使う音源は“基本はインスト合成（＝ボーカル抜き）”がベター**。vocalはキー推定の補助に留め、コード当ては「bass＋伴奏（other）」中心で重み付けするのが安定します。
+
+---
+
+# Q&A すぐ答え
+
+### Q1. B)「創作 chordmap 優先」はボーカル差し替え前提？
+
+* **前提ではない**です。原vocalのままでも可。ただしリハーモナイズが大きいと**メロと和声の不協和**が出やすいので、以下の安全策が必要になります：
+
+  * スケール度数重み（根音/5度↑、3度/7度は控えめ）
+  * テンションのホワイトリスト（例：9, 11のみ許可）
+  * メロ救済の“最近傍コードトーン優先”スナップ（ベース/内声の非和声音を間引く）
+    結果、Bは**“文学的リハモを強く出したい時”**のモードで、原vocalを替えない場合は上記のセーフティが必要、という位置づけです。
+
+### Q2. コード割り出しは「統合wav（vocal入り）」？ それとも「instrument-only」？
+
+* 実務上は**instrument-only（= stemsのdrums/bass/otherを合成）**が第一候補。
+
+  * **bass**：根音推定に最重要（root/5thスコア用）。
+  * **other**：和声音（和音の構成）を拾う主戦力。
+  * **drums**：拍・小節グリッド用。
+* **vocal**は“単音旋律”なので、コード当てにはむしろノイズになることが多いです。
+
+  * ただし**キー推定**や**セクション境界**の補助には有益。
+* したがって推定時の重み付けはこんな感じが定番：
+
+  * chord（和音）= 0.6×other + 0.3×bass（root優先） + 0.1×mix（低域限定）
+  * key（調）= 0.6×instrumental + 0.4×vocal（長期平均）
+
+### Q3. `data/Los-Angeles-MIDI` の元スクリプトでコード推定できる？
+
+* **できます（概ね“粗い推定”は可能）**。もともと**拍同期クロマ→HMM/Viterbi**的な流れがあるはずなので、以下の“ステム前提の前処理”だけ足すと実用度が上がります（新規依存を増やさず、既存方針のまま）：
+
+  1. **ビート/小節**：drums stemのオンセットからグリッド決定（既存のテンポ推定経路を優先）。
+  2. **インスト合成**：`instrumental = bass + other`（ゲイン正規化）。
+  3. **帯域ヒント**：低域（～200Hz）でbassのF0系列→**root候補の事前確率**に足す。
+  4. **拍同期クロマ**：instrumentalから拍ごとの和音特徴（方法は既存スクリプトに合わせる）。
+  5. **デコーディング**：HMM/Viterbiで最尤コード列。
+  6. **スムージング**：最小持続長（例：1拍）と転調ペナルティ。
+  7. **YAML化**：`audio_chordmap.yaml`（bar/beatごとに `chord`, `confidence`）。
+
+> 注意：プロジェクト方針「新規依存を足さない」を守るため、既存の実装資産のなかで“ステム重み付け”と“ルート優先”を加えるのが安全です。
+
+---
+
+## 実運用ガイド（A案で進めるとき）
+
+### 1) audio_chordmap.yaml のフォーマット（例）
+
+```yaml
+key: C
+confidence_key: 0.78
+items:
+  - bar: 0
+    beat: 1
+    chord: C:maj
+    confidence: 0.86
+  - bar: 2
+    beat: 1
+    chord: F:maj
+    confidence: 0.82
+  - bar: 4
+    beat: 1
+    chord: G:maj
+    confidence: 0.80
+# …小節境界で十分（拍単位まで細かくしすぎない）
+```
+
+### 2) harmony のスイッチ（YAML）
+
+```yaml
+harmony:
+  source: audio          # audio | text | hybrid
+  fallback: text         # 穴があれば歌詞chordmapへ
+  keep_audio_root: true  # ベースは原曲root優先
+  prefer_root5: true     # 根音/5度重み
+  collapse_octaves: true # 連続オクターブ縮退
+  allow_text_tensions: []  # A案なら原則OFF（濁り防止）
+```
+
+### 3) 生成側の安全プリセット
+
+* **Bass**：root→5th→3rdの順で重み、**連続オクターブ縮退=ON**。
+* **Piano/Strings**：テンションは**key整合・声部進行が滑らかな範囲のみ**（短2度衝突は回避）。
+* **Guitar**：開放弦優先のポジションに寄せる（原曲とのレゾナンス維持）。
+* **Drums**：既存の E(t)/preempt/latch/phoneme-blend をそのまま活かす（和声非依存）。
+
+---
+
+## 迷ったときの判断
+
+* **原vocalを絶対に活かす** → A案（audio_chordmap）を中心。創作chordmapは**テンション限定の彩り**に留める。
+* **和声で物語を押し切りたい** → B案。ただしメロ保護のセーフティ（度数重み・テンション制限・スナップ）を併用。
+
+---
+
+必要なら、`Los-Angeles-MIDI`系の「インスト合成→root事前→Viterbi」の**具体的な差分パッチ（最小差分／未設定=NO-OP）**をすぐ出します。A案で固める前提なら、まずは**audio_chordmap.yaml を仮で耳コピ入力**→生成を回し、違和感の強い小節だけ再推定/手修正、が一番早いです。
+
+
+
+
+
+Q  sunoのステムは最大で12に分離されます。６ぐらいにわかれることが多いです。
+
+各楽器はセクションごとになったり鳴らなかったりしているので、曲全体でなっているものは限られています。
+
+そこで、各楽器ごとにchordを推定して、再生箇所も合わせるやり方が最初は良いだろうと思っていました。
+
+機能がすすんできたら、eakeyプラグインのように、drumやguitarから、pianoのMIDIを生成する機能も実装可能かと考えていました。
+
+
+
+めっちゃ筋がいい発想です。要点だけ先に：
+
+* **はい**：最初は「各ステムごとにコード推定→そのステムが鳴っている区間にだけ効かせる（活動マスク）」が安定します。
+* **推定に使う音源**は、基本は**インスト合成（= vocal抜き）**を主に、必要があれば**vocalはキー推定やセクション検出の補助**にだけ薄く使うのが無難。
+* **eakey 的な“他パート→ピアノMIDI生成”**は、この活動マスク＋アクセント格子（drums/guitar由来）を**piano_generator のリズム決定層**に挿すことで実装可能です。
+
+---
+
+# 推奨パイプライン（段階導入）
+
+## Phase 1：各ステムで「活動マスク」と「ざっくりコード」
+
+（未設定=NO-OP、既存API不変で追加できます）
+
+1. **活動マスク**（per stem）
+
+* 1小節 or 1拍ごとにRMS/スペクトル量から「鳴いてる/休み」を0..1で出す。
+* 例: `mix_context.activity["guitar"]= [(bar, level0_1), ...]`
+
+2. **拍同期クロマ → 候補コード**（per stem）
+
+* 各拍で「メジャー/マイナー/7th」などテンプレートに照合し、上位N候補をスコア付きで出す。
+* Bassは**root/5thに重み**、Guitar/Pianoは**完全三和音整合に重み**、Stringsは**曖昧度高め**など、**stem別の採点関数**にする。
+* 出力例:
+  `mix_context.stem_chords["guitar"][bar,beat] = [{"chord":"C:maj","score":0.71}, {"chord":"Am","score":0.54}]`
+
+3. **vocalの扱い**
+
+* **キー推定の補助**（長時間平均のピッチクラス）と**セクション検出**の補助のみ。
+* コード推定スコアには原則混ぜない（混ぜる場合はごく小さい重み、例 0.1）。
+
+## Phase 2：アグリゲータ（全体の chordmap に統合）
+
+* **活動マスク×stem重み**で、各拍の**総合スコア**を作成。
+* **HMM/Viterbi か 簡易DP**でスムージング（最小持続長=1拍、転調ペナルティ）。
+* **Bassのroot推定**を事前確率に足す（root/5th重視）。
+* 出力を `audio_chordmap.yaml` に書く（バー/拍と `confidence` を持つ）。
+
+## Phase 3：リズム影響（eakey的ブリッジ）
+
+* `mix_context` に**アクセント格子**を追加：
+
+  * Drums→`accent_grid.hihat/kick/snare: [off_ql...]`
+  * Guitar→`strum_pattern（U/Dとサブディビジョン）`
+* `piano_generator` は、これを**右手/左手の置き場所**と**分散和音の方向（上行/下行）**決定に使用。
+* つまり、「他パートの“リズム意志”でピアノのコンピングを決める」。
+
+---
+
+# ファイル構成（最小追加）
+
+* `analysis/stem_harmony.py`（新規・分析専用）
+
+  * `estimate_activity(stem_wav, beat_grid) -> List[(bar, level0_1)]`
+  * `estimate_chords_per_stem(stem_wav, beat_grid, key_hint=None, role='guitar') -> Dict[(bar,beat) -> [{chord,score}]]`
+  * `aggregate_stem_chords(stem_votes, activity, key_hint, sections, cfg) -> audio_chordmap_dict`
+* `data/audio_chordmap.yaml`（生成物）
+
+> 既存方針「依存追加なし」を守り、**NumPy標準 + pydub + music21**の範囲で簡易クロマ/スコアリングを実装すればOKです（高機度の転写は不要）。
+
+---
+
+# YAML 例：`audio_chordmap.yaml`
+
+```yaml
+key: C
+confidence_key: 0.74
+sources:
+  weights: { bass: 0.35, guitar: 0.35, piano: 0.2, strings: 0.1 }  # 例
+items:
+  - bar: 0
+    beat: 1
+    chord: C:maj
+    confidence: 0.86
+    votes:
+      bass:    { top: "C:maj", score: 0.80, active: 0.9 }
+      guitar:  { top: "C:maj", score: 0.88, active: 1.0 }
+      piano:   { top: "C:maj", score: 0.64, active: 0.5 }
+  - bar: 2
+    beat: 1
+    chord: F:maj
+    confidence: 0.82
+```
+
+---
+
+# 生成側の使い方（A案＝audio優先）
+
+`harmony` スイッチを（params層で）こう置くだけ：
+
+```yaml
+harmony:
+  source: audio          # ← ここをaudioに
+  fallback: text
+  keep_audio_root: true
+  prefer_root5: true       # 根音/5度重みを強める
+  collapse_octaves: true   # 連続オクターブ縮退
+  allow_text_tensions: []  # A案では通常OFF
+```
+
+> これで **各ジェネレーター（Bass/Piano/Guitar/Strings）は audio_chordmap を正** として使い、歌詞由来の chordmap は“穴埋め”か“テンション彩り”に限定できます。
+
+---
+
+# eakey的「他パート→Piano」ブリッジの実装メモ
+
+* `mix_context.accent_grid`:
+
+  * `from_drums`: キック（L.H.ルートの候補）/スネア（R.H.アタック）/HH（サブ分割密度）
+  * `from_guitar`: アップ/ダウンのストラム位置（R.H.分散和音の向きに反映）
+* `piano_params_stage2.py` にスイッチ追加（未設定=NO-OP）：
+
+```yaml
+piano:
+  influence:
+    drums:
+      use: true
+      kick_to_left_root: 0.7   # 係数
+      snare_to_right_accent: 0.5
+      hihat_subdivision_bias: 0.6
+    guitar:
+      use: true
+      strum_to_broken_chord: updown  # up/down → 分散和音パターン
+      density_follow: 0.5
+```
+
+* `piano_generator_stage2.py` のリズム決定部で、`accent_grid` があれば **既存の rhythm_library を“重み付け選択”**。無ければ従来通り（NO-OP）。
+
+---
+
+# 「Los-Angeles-MIDI の元スクリプトは使える？」への答え
+
+* **使えます。** 拍同期クロマ→確率モデル（HMM/Viterbi）の骨格はそのまま流用できます。
+* **足すだけで良い差分**：
+
+  1. **ステム合成**（instrumental = bass + other、ゲイン整列）
+  2. **stem別スコアリング**（Bassはroot/5th寄り、Guitar/Pianoは三和音整合）
+  3. **活動マスク**（active==0 の区間は票重み0）
+  4. **最小持続長・転調ペナルティ**（チャタリング防止）
+  5. **YAML書き出し**（上記スキーマ）
+
+---
+
+# 受け入れ基準（最初のゴール）
+
+* `audio_chordmap.yaml` を作り、**A案でMIDIが自然に重なる**（vocalそのまま）。
+* 「活動マスクON / OFF」で比較し、**休符区間に無理なコード推定が立たない**。
+* Drums/Guitarの**アクセントを入れたPiano**が、**元曲の躍動と同期**して聴こえる。
+* 依存追加なし／既存API不変／未設定=NO-OPを維持。
+
+---
+
+このまま進めるなら、まず **instrument-only 合成→活動マスク→拍同期クロマ** の“骨”を入れて、`audio_chordmap.yaml` を1曲ぶん出しましょう。
+必要なら、そのための**ミニモジュール雛形（関数名と戻り値だけ揃えた実装スケルトン）**をすぐお渡しします。
+
+
+
+結論だけ先に👇
+
+* **Copilotの「WAV→MIDI統合」＝“音声を逐語転写して各パートのMIDIを作る”ではなく**、このプロジェクトの流儀では **WAV→特徴抽出→（必要に応じて）ガイド用のMIDI化** です。
+* つまり「MIDIにしてパラメータ化？」の答えは **“主にパラメータ化（mix_context）で使い、QAや耳確認のために最小限のガイドMIDIを出す”** が正解。
+* Phase 13–19 は、この **分析→パラメータ化→（任意のガイドMIDI）→Stage2へ投入** を段階導入する実装ステップです。原曲のvocalを採用するA案と完全整合します。
+
+---
+
+# いまの整理（誤解しやすいポイント）
+
+* ❌ 「WAVを完全にMIDI転写して、そのノート配置を使う」
+* ✅ **WAVから“編曲に効く数列（特徴）を取り出す”**：拍グリッド、エネルギーE(t)、子音クラス窓、活動マスク、stem別コード票、ベースrootヒント 等
+* ✅ （任意）**ガイドMIDI**：テンポ/小節マーカー、ブロックコード、ベースrootの参考音など—耳での整合チェック用
+* ✅ **本番MIDI（編曲）は生成器が作る**（Drums/Guitar/Bass/Piano/Stringsの各ジェネレータ）。原曲ノートの逐語コピーはしない
+
+---
+
+# Phase 13–19 実装プラン（最小差分／未設定=NO-OP／公開API不変）
+
+## Phase 13：ステム取り込み & 拍グリッド
+
+* 入力：Suno stems（~6～12本；vocalは推定に使わない方針でOK）
+* 出力：`beat_grid`, `tempo_map`, `sections`（既存のセクションにアライン）
+* 実装（新規モジュール）: `analysis/stem_harmony.py`
+
+  * `make_beat_grid(stems) -> BeatGrid`
+  * ドラムのオンセットでテンポを整え、QL（四分音長）に正規化
+
+## Phase 14：活動マスク（per stem）
+
+* 各stemの1拍/小節ごとの「鳴いている度」0..1
+* `mix_context.activity["guitar"|"piano"|...] = [(bar, level0_1), ...]`
+
+## Phase 15：拍同期クロマ & stem別コード候補
+
+* `estimate_chords_per_stem(stem_wav, beat_grid, role)`
+
+  * bass → **root/5th**に重み
+  * guitar/piano → **三和音一致**に重み
+  * strings → 曖昧度高め
+* 出力：`stem_chords[stem][(bar,beat)] = [{"chord":"C:maj","score":0.71}, ...]`
+
+## Phase 16：集約 → `audio_chordmap.yaml`
+
+* 活動マスク×stem重みで総合スコア化 → HMM/Viterbi or 簡易DPでスムージング
+* bassのF0系列を **root事前確率** に加算
+* 出力例：
+
+  ```yaml
+  key: C; confidence_key: 0.74
+  items:
+    - { bar:0, beat:1, chord:C:maj, confidence:0.86 }
+    - { bar:2, beat:1, chord:F:maj, confidence:0.82 }
+  ```
+
+## Phase 17：アクセント格子（eakey的ブリッジ）
+
+* `accent_grid` を抽出して、他パート→Piano/Guitarへ影響させる
+
+  * from_drums: kick/snare/hh の拍位置
+  * from_guitar: up/down のストラム位置（分散和音の向きに反映）
+* `mix_context.accent_grid = { "kick":[off_ql...], "snare":[...], "hh":[...], "strum_ud":[(off_ql,"U|D")] }`
+
+## Phase 18：（任意）ガイドMIDI出力
+
+* **耳確認/QA用にだけ**：
+
+  * tempo & section マーカー
+  * `audio_chordmap` のブロックコード（全音符など、シンプルに）
+  * 低Vel rootトーン（参考）
+* 本番レンダは各Generatorが行うため、ここは**無効化可（NO-OP）**。
+
+## Phase 19：Stage2統合スイッチ
+
+* params層に **harmony source** と **influence** を追加（既定NO-OP）
+
+  ```yaml
+  harmony:
+    source: audio        # audio | text | hybrid
+    fallback: text
+    keep_audio_root: true
+    prefer_root5: true
+    collapse_octaves: true
+    allow_text_tensions: []  # A案では通常OFF
+  influence:
+    piano:
+      drums:  { use: true, kick_to_left_root: 0.7, snare_to_right_accent: 0.5, hh_subdivision_bias: 0.6 }
+      guitar: { use: true, strum_to_broken_chord: updown, density_follow: 0.5 }
+  ```
+* `stage2_production_test.py` に **1ステップ追加**：
+  `stems → mix_context → (任意)ガイドMIDI → Generators(5)`
+
+---
+
+---
+
+## 受け入れ基準（Phase 13–19）
+
+* **NO-OP回帰**：`audio_ingest.enable:false` で過去生成と完全一致（シード固定）。
+* **audio優先**：`harmony.source: audio` で vocal.wav と**濁らずに**融合。
+* **活動マスク**：休符区間で無理なコードが立たない。
+* **eakey的影響**：`accent_grid` をONすると Piano の置き所が**ドラム/ギターの躍動に同期**。
+* **ガイドMIDI**（任意）：ブロックコードの耳検証がしやすい。
+* **依存追加なし**／**公開API不変**／**未設定=NO-OP** を維持。
+
+---
+
+## よくある質問に即答
+
+* **vocal入りの統合WAVでコード推定しないの？**
+  → 基本は**instrument-only合成**でやります。vocalは単音旋律でコード当てのノイズになりやすい。キー推定やセクション検出の補助には使ってOK。
+
+* **B案（創作chordmap優先）はvocal差し替え前提？**
+  → 前提ではありません。ただし原vocalを使うなら**度数重み＆テンション制限**などのセーフティ必須。
+
+* **Los-Angeles-MIDIの元スクリプトは使える？**
+  → 使えます。「拍同期クロマ→確率デコード」の骨格に、**stem重み・活動マスク・root事前**を足すだけで Phase 15–16 を満たせます。
+
+---
+
+必要なら、このまま **`analysis/stem_harmony.py` の実コード雛形**（関数本体の骨と戻り値を埋めた版）もすぐ渡せます。
+Phase 13–19、A案基準でこの順番のまま進めてOKです。
+
+
+
+
+
+
+Phase 14：活動マスクで「原曲の構成に忠実」になるか？
+
+はい（マクロ構成はかなり忠実になります）。
+活動マスクを bar単位のON/OFF/強度(0..1) として各ジェネレーターに渡すと、
+
+その楽器が鳴いている小節だけ生成
+
+活動レベルで密度/ダイナミクスをスライド
+という制御ができ、“どのセクションで何が鳴くか” は原曲寄りに揃えられます。
+ただし、具体的なフィルやストラム順序などのミクロは生成器のロジックで“新しく編曲”します（逐語転写はしません）。
+
+運用のコツ：
+
+activity_threshold を各パートの params に追加（例：0.25未満は休む）。
+
+さらに density_scale = base_density * activity_level のように連動させると、
+原曲が薄い区間は薄く／厚い区間は厚く という挙動になります。
+
+今回のステム → 既存ジェネレーターへのマッピング
+
+フォルダ内（例のスクショ）に合わせて：
+
+Backing Vocals → 解析のみでOK（E(t)や子音窓、セクション補助）
+
+Bass → Bass generator に直結
+
+Drums → Drums generator に直結（Markov群・HH密度・preempt/latch 等が効く）
+
+Guitar → Guitar generator
+
+Keyboard → Piano generator（＝KeyboardはPiano扱い）
+
+Strings → Strings generator
+
+Percussion → 専用ジェネレータ未実装：活動マスク＆アクセント格子（from_drums/percussion）として影響元に使うのが先手（Phase17）
+
+Synth / FX → 専用ジェネレータ未実装：
+
+コード投票（和声の曖昧な補助）
+
+活動マスク（Pad/ARの厚み→Strings/Pianoの広がりに反映）
+
+アクセント格子（持続シンセなら不要）
+
+つまり、「generator が無いステム」は 活動マスク/コード投票/アクセント格子 として 他パートの判断材料 になれます。
+とくに Percussion は Piano/Guitar のリズム設計（eakey的ブリッジ）で効きます。
+
+すぐ使える接続（例）
+# stems はファイルパス辞書
+grid = make_beat_grid(stems, default_bpm=120.0, time_sig=(4,4))
+
+activity = {}
+for name, path in stems.items():
+    role = guess_role_from_path(path)
+    if role == "vocals":
+        continue  # コード推定からは外す
+    activity[role] = estimate_activity(path, grid)
+
+# 拍同期候補（現状は key_hint ベースのスケルトン）
+votes = {}
+for name, path in stems.items():
+    role = guess_role_from_path(path)
+    if role in ("vocals", "backing_vocals"):
+        continue
+    votes[role] = estimate_chords_per_stem(path, grid, role=role, key_hint="C:maj")
+
+audio_ch = aggregate_stem_chords(votes, activity, key_hint="C:maj",
+                                 sections=[], cfg={"weights":{"bass":0.35,"guitar":0.35,"piano":0.2,"strings":0.1}})
+
+accent = extract_accent_grid(stems, grid)
+
+overrides = {"mix_context":{"beat_grid":grid,"activity":activity,"accent_grid":accent},
+             "audio_chordmap": audio_ch}
+
+
+export_guides_to_midi('guides.mid', grid, sections, audio_ch) を呼ぶと、テンポ・マーカー・ブロックコードの耳チェックMIDIも出せます（任意）。
+
+
+

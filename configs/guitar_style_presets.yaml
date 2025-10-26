@@ -1,0 +1,357 @@
+# ========================================================================
+# Guitar Style Presets - Genre/Playing Style Presets
+# ========================================================================
+# Phase 11-12: 基本密度・音域
+# Phase 13-19: 語彙・和声・同期・遷移・装飾・ダイナミクス・グルーヴ
+# Phase 22-24: Emotion mapping・Controls・Prosody
+
+simple:
+  description: "シンプルなギター伴奏（ダウンストローク中心・4分音符）"
+  
+  # Phase 11: 密度整形
+  density:
+    strums_per_bar_range: [4, 8]
+    arpeggio_ratio: 0.1
+  
+  # Phase 12: 音域補正
+  register:
+    min_midi: 40  # E2
+    max_midi: 76  # E5
+  
+  # Phase 13: 語彙（レイク・スライド）
+  vocabulary:
+    rake_prob: 0.1
+    slide_prob: 0.05
+  
+  # Phase 14: 和声知性（コード形状選択）
+  harmonic:
+    open_chord_bias: 0.6
+    sus_bias: 0.2
+    voicing_variety: 0.3
+  
+  # Phase 15: クロス同期（HH同期）
+  cross_sync:
+    hihat_sync_prob: 0.5
+    snare_accent_prob: 0.3
+  
+  # Phase 16: 遷移平滑化
+  transition:
+    enable_crescendo: false
+  
+  # Phase 17: アーティキュレーション
+  articulation:
+    mute_prob: 0.1
+    palm_mute_prob: 0.05
+  
+  # Phase 18: ダイナミクス整形
+  dynamics:
+    velocity_curve: flat
+    min_vel: 70
+    max_vel: 95
+  
+  # Phase 19: グルーヴマイクロタイミング
+  groove:
+    swing_amount: 0.0
+    laidback_ms: 0.0
+  
+  # Phase 20: Humanize
+  humanize:
+    timing_ms: 10.0
+    vel_sigma: 6.0
+  
+  # Phase 22: Emotion mapping
+  emotion_map:
+    density_gain: 0.5
+    register_shift: 2
+    staccato_bias: 0.1
+    smooth_ms: 200
+  
+  # Phase 24: Controls
+  controls:
+    expression_curve: flat
+    sustain_policy: off
+    bend_range: 2
+  
+  # Phase 23: Prosody
+  prosody:
+    enable: false
+  
+  # Phase 25: Sparsify（間引き・衝突回避）
+  sparsify:
+    enable: false
+  
+  # Phase 26: Hybrid Harmony（原曲×創作ブレンド）
+  harmony:
+    source: "audio"
+    blend: 0.0
+    keep_audio_root: true
+    allow_text_tensions: []
+  
+  # Phase 27: Style Adaptation（活動度→プリセット切替）
+  style_adapt:
+    enable: false
+  
+  # Phase 28: Export Postprocess（量子化・命名）
+  export:
+    quantize_ql: 0.0625
+    track_split: ["Clean", "FX"]
+    name_fmt: "{idx:02d}_Guitar_{section}"
+
+moderate:
+  description: "標準的なギター伴奏（アップダウン・アルペジオ併用）"
+  
+  density:
+    strums_per_bar_range: [6, 12]
+    arpeggio_ratio: 0.3
+  
+  register:
+    min_midi: 40
+    max_midi: 76
+  
+  vocabulary:
+    rake_prob: 0.15
+    slide_prob: 0.1
+  
+  harmonic:
+    open_chord_bias: 0.5
+    sus_bias: 0.3
+    voicing_variety: 0.4
+  
+  cross_sync:
+    hihat_sync_prob: 0.6
+    snare_accent_prob: 0.4
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 2
+    velocity_step: 4
+  
+  articulation:
+    mute_prob: 0.15
+    palm_mute_prob: 0.1
+  
+  dynamics:
+    velocity_curve: linear_up
+    min_vel: 65
+    max_vel: 100
+  
+  groove:
+    swing_amount: 0.0
+    laidback_ms: 3.0
+  
+  humanize:
+    timing_ms: 10.0
+    vel_sigma: 6.0
+  
+  emotion_map:
+    density_gain: 0.6
+    register_shift: 2
+    staccato_bias: 0.15
+    smooth_ms: 180
+  
+  controls:
+    expression_curve: linear
+    sustain_policy: off
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 8
+    sibilant_duck_db: -3
+    plosive_gap_ms: 40
+    window_ms: 120
+  
+  # Phase 25: Sparsify
+  sparsify:
+    enable: false
+  
+  # Phase 26: Hybrid Harmony
+  harmony:
+    source: "hybrid"
+    blend: 0.3
+    keep_audio_root: true
+    allow_text_tensions: [9]
+  
+  # Phase 27: Style Adaptation
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.3, 0.7]
+    order: ["simple", "moderate"]
+  
+  # Phase 28: Export Postprocess
+  export:
+    quantize_ql: 0.0625
+    track_split: ["Clean", "FX"]
+    name_fmt: "{idx:02d}_Guitar_{section}"
+
+complex:
+  description: "複雑なギター伴奏（フィンガーピッキング・装飾多用）"
+  
+  density:
+    strums_per_bar_range: [8, 16]
+    arpeggio_ratio: 0.5
+  
+  register:
+    min_midi: 40
+    max_midi: 84  # C6（高音域拡張）
+  
+  vocabulary:
+    rake_prob: 0.2
+    slide_prob: 0.15
+  
+  harmonic:
+    open_chord_bias: 0.4
+    sus_bias: 0.4
+    voicing_variety: 0.6
+  
+  cross_sync:
+    hihat_sync_prob: 0.7
+    snare_accent_prob: 0.5
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 2
+    decrescendo_bars: 1
+    velocity_step: 6
+  
+  articulation:
+    mute_prob: 0.2
+    palm_mute_prob: 0.15
+  
+  dynamics:
+    velocity_curve: peak_middle
+    min_vel: 60
+    max_vel: 105
+  
+  groove:
+    swing_amount: 0.05
+    laidback_ms: 5.0
+  
+  humanize:
+    timing_ms: 12.0
+    vel_sigma: 7.0
+  
+  emotion_map:
+    density_gain: 0.7
+    register_shift: 3
+    staccato_bias: 0.2
+    smooth_ms: 150
+  
+  controls:
+    expression_curve: arch
+    sustain_policy: off
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 10
+    sibilant_duck_db: -4
+    plosive_gap_ms: 50
+    window_ms: 100
+  
+  # Phase 25-28
+  sparsify:
+    enable: true
+    keep_endpoints: true
+    min_gap_ms: 40
+  harmony:
+    source: "hybrid"
+    blend: 0.5
+    keep_audio_root: true
+    allow_text_tensions: [9, 11]
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.4, 0.8]
+    order: ["moderate", "complex"]
+  export:
+    quantize_ql: 0.125
+    track_split: ["Clean", "FX"]
+    name_fmt: "{idx:02d}_Guitar_{section}"
+
+intense:
+  description: "激しいギター伴奏（高速ストローク・強いアクセント）"
+  
+  density:
+    strums_per_bar_range: [12, 20]
+    arpeggio_ratio: 0.6
+  
+  register:
+    min_midi: 40
+    max_midi: 84
+  
+  vocabulary:
+    rake_prob: 0.25
+    slide_prob: 0.2
+  
+  harmonic:
+    open_chord_bias: 0.3
+    sus_bias: 0.5
+    voicing_variety: 0.7
+  
+  cross_sync:
+    hihat_sync_prob: 0.8
+    snare_accent_prob: 0.6
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 1
+    decrescendo_bars: 0
+    velocity_step: 8
+  
+  articulation:
+    mute_prob: 0.25
+    palm_mute_prob: 0.2
+  
+  dynamics:
+    velocity_curve: peak_middle
+    min_vel: 70
+    max_vel: 115
+  
+  groove:
+    swing_amount: 0.08
+    laidback_ms: 0.0  # プッシュ気味
+    push_sixteenth_ms: -3.0
+  
+  humanize:
+    timing_ms: 15.0
+    vel_sigma: 8.0
+  
+  emotion_map:
+    density_gain: 0.8
+    register_shift: 4
+    staccato_bias: 0.25
+    smooth_ms: 120
+  
+  controls:
+    expression_curve: arch
+    sustain_policy: off
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 12
+    sibilant_duck_db: -5
+    plosive_gap_ms: 60
+    window_ms: 100
+  
+  # Phase 25-28
+  sparsify:
+    enable: true
+    keep_endpoints: true
+    min_gap_ms: 30
+  harmony:
+    source: "hybrid"
+    blend: 0.6
+    keep_audio_root: true
+    allow_text_tensions: [9, 11, 13]
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.5, 0.9]
+    order: ["complex", "intense"]
+  export:
+    quantize_ql: 0.125
+    track_split: ["Clean", "FX"]
+    name_fmt: "{idx:02d}_Guitar_{section}"

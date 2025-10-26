@@ -1,0 +1,515 @@
+#!/usr/bin/env python3
+"""
+LOCAL LAMDA WAV版統合システム (楽曲ディレクトリ単位処理)
+
+データセット構造:
+- MoisesDB: moisesdb_v0.1/<song_id>/{drums,bass,vocals,other,mix}.wav
+- MUSDB18: musdb18_decoded/<song_name>/{drums,bass,vocals,other,mix}.wav
+
+各楽曲ディレクトリからmix.wavを処理してメタデータ抽出
+
+Usage:
+    # MoisesDB処理
+    python scripts/local_lamda_wav_integration.py \\
+        --input-dir data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/moisesdb/moisesdb_v0.1 \\
+        --output-db data/moisesdb_wav_unified.db \\
+        --source-name moisesdb \\
+        --verbose
+
+    # MUSDB18処理
+    python scripts/local_lamda_wav_integration.py \\
+        --input-dir data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_decoded \\
+        --output-db data/musdb18_wav_unified.db \\
+        --source-name musdb18 \\
+        --verbose
+"""
+
+import argparse
+import hashlib
+import json
+import sqlite3
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import librosa
+import numpy as np
+
+# WAV → MIDI変換
+try:
+    from scripts.suno_wav_to_midi import convert_basic, post_process_midi
+    WAV_TO_MIDI_AVAILABLE = True
+except ImportError:
+    WAV_TO_MIDI_AVAILABLE = False
+    print("⚠️ suno_wav_to_midi not available")
+
+# Stage2統合（MIDI系）
+try:
+    from scripts.lamda_v2.stage2_extractor import extract_stage2_metadata
+    STAGE2_AVAILABLE = True
+except ImportError:
+    STAGE2_AVAILABLE = False
+    print("⚠️ Stage2 extractor not available")
+
+
+# ========== WAV Feature Extractor ==========
+
+class WAVFeatureExtractor:
+    """WAV音声からbeat/activity/accent/chord候補を抽出"""
+    
+    def __init__(self, sr: int = 22050):
+        self.sr = sr
+    
+    def extract_features(self, wav_path: Path, verbose: bool = False) -> Dict[str, Any]:
+        """WAV特徴量抽出"""
+        if verbose:
+            print(f"🎵 Extracting features from: {wav_path.name}")
+        
+        # 音声読み込み
+        y, sr = librosa.load(str(wav_path), sr=self.sr, mono=True)
+        duration = len(y) / sr
+        
+        features = {
+            'duration': duration,
+            'sample_rate': sr,
+        }
+        
+        # 1. テンポ＆ビート検出
+        try:
+            tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+            beat_times = librosa.frames_to_time(beats, sr=sr)
+            
+            features['tempo'] = float(tempo)
+            features['beats'] = beat_times.tolist()
+            features['num_beats'] = len(beats)
+            
+            if verbose:
+                print(f"   Tempo: {tempo:.1f} BPM, Beats: {len(beats)}")
+        except Exception as e:
+            if verbose:
+                print(f"   ⚠️ Beat detection failed: {e}")
+            features['tempo'] = None
+            features['beats'] = []
+            features['num_beats'] = 0
+        
+        # 2. オンセット検出
+        try:
+            onset_env = librosa.onset.onset_strength(y=y, sr=sr)
+            onsets = librosa.onset.onset_detect(onset_envelope=onset_env, sr=sr, backtrack=True)
+            onset_times = librosa.frames_to_time(onsets, sr=sr)
+            onset_strengths = onset_env[onsets]
+            
+            features['onsets'] = onset_times.tolist()
+            features['accents'] = list(zip(onset_times.tolist(), onset_strengths.tolist()))
+            features['num_onsets'] = len(onsets)
+            
+            if verbose:
+                print(f"   Onsets: {len(onsets)}")
+        except Exception as e:
+            if verbose:
+                print(f"   ⚠️ Onset detection failed: {e}")
+            features['onsets'] = []
+            features['accents'] = []
+            features['num_onsets'] = 0
+        
+        # 3. クロマ特徴量（コード候補）
+        try:
+            chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
+            chroma_mean = np.mean(chroma, axis=1)
+            pitch_classes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+            
+            top_pitches_idx = np.argsort(chroma_mean)[-3:][::-1]
+            chord_candidates = [pitch_classes[i] for i in top_pitches_idx]
+            
+            features['chroma_mean'] = chroma_mean.tolist()
+            features['chord_candidates'] = chord_candidates
+            
+            if verbose:
+                print(f"   Chord candidates: {chord_candidates}")
+        except Exception as e:
+            if verbose:
+                print(f"   ⚠️ Chroma extraction failed: {e}")
+            features['chord_candidates'] = []
+        
+        # 4. アクティビティプロファイル（RMS）
+        try:
+            rms = librosa.feature.rms(y=y)[0]
+            rms_normalized = (rms - rms.min()) / (rms.max() - rms.min() + 1e-8)
+            
+            features['activity_profile'] = rms_normalized.tolist()
+            features['activity_mean'] = float(np.mean(rms))
+            features['activity_std'] = float(np.std(rms))
+        except Exception as e:
+            if verbose:
+                print(f"   ⚠️ Activity extraction failed: {e}")
+            features['activity_mean'] = 0.0
+            features['activity_std'] = 0.0
+        
+        # 5. スペクトル特徴量
+        try:
+            spectral_centroid = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
+            spectral_rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)[0]
+            
+            features['spectral_centroid_mean'] = float(np.mean(spectral_centroid))
+            features['spectral_rolloff_mean'] = float(np.mean(spectral_rolloff))
+        except Exception as e:
+            if verbose:
+                print(f"   ⚠️ Spectral extraction failed: {e}")
+            features['spectral_centroid_mean'] = 0.0
+            features['spectral_rolloff_mean'] = 0.0
+        
+        return features
+
+
+# ========== LOCAL LAMDA Integrator ==========
+
+class LocalLAMDAIntegrator:
+    """LOCAL LAMDA WAV版統合システム"""
+    
+    def __init__(self, db_path: Path, wav_features_dir: Path, guide_midi_dir: Path, sr: int = 22050):
+        self.db_path = db_path
+        self.wav_features_dir = wav_features_dir
+        self.guide_midi_dir = guide_midi_dir
+        self.sr = sr
+        
+        self.extractor = WAVFeatureExtractor(sr=sr)
+        self._init_database()
+    
+    def _init_database(self):
+        """統合データベース初期化"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # WAV特徴量テーブル
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS wav_features (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_id TEXT UNIQUE NOT NULL,
+                file_path TEXT NOT NULL,
+                duration REAL,
+                tempo REAL,
+                num_beats INTEGER,
+                num_onsets INTEGER,
+                chord_candidates TEXT,
+                activity_mean REAL,
+                activity_std REAL,
+                spectral_centroid_mean REAL,
+                spectral_rolloff_mean REAL,
+                features_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wav_file_id ON wav_features(file_id)")
+        
+        # MIDI特徴量テーブル
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS midi_features (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_id TEXT UNIQUE NOT NULL,
+                midi_path TEXT NOT NULL,
+                chords TEXT,
+                key_sequence TEXT,
+                tempo_map TEXT,
+                stage2_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_midi_file_id ON midi_features(file_id)")
+        
+        # コード進行テーブル
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS progressions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_id TEXT NOT NULL,
+                progression TEXT NOT NULL,
+                source_type TEXT,
+                chord_events INTEGER
+            )
+        """)
+        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_prog_file_id ON progressions(file_id)")
+        
+        # WAV↔MIDI紐付け
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS wav_midi_mappings (
+                wav_file_id TEXT PRIMARY KEY,
+                midi_file_id TEXT,
+                guide_midi_path TEXT,
+                alignment_score REAL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        conn.commit()
+        conn.close()
+    
+    def process_wav_file(self, wav_path: Path, verbose: bool = True) -> Dict[str, Any]:
+        """1つのWAVファイルを処理"""
+        file_id = self._calc_file_id(wav_path)
+        
+        if verbose:
+            print(f"\n{'='*70}")
+            print(f"Processing: {wav_path.name}")
+            print(f"File ID: {file_id}")
+            print(f"{'='*70}")
+        
+        # 1. WAV特徴量抽出
+        wav_features = self.extractor.extract_features(wav_path, verbose)
+        
+        # 2. Guide MIDI生成
+        guide_midi_path = None
+        if WAV_TO_MIDI_AVAILABLE:
+            guide_midi_path = self._generate_guide_midi(wav_path, file_id, verbose)
+        
+        # 3. Stage2メタデータ抽出
+        stage2_meta = None
+        if guide_midi_path and STAGE2_AVAILABLE:
+            stage2_meta = self._extract_stage2_from_midi(guide_midi_path, verbose)
+        
+        # 4. データベース保存
+        self._save_to_database(file_id, wav_path, wav_features, guide_midi_path, stage2_meta)
+        
+        # 5. WAV特徴量JSON保存
+        self._save_wav_features_json(file_id, wav_features)
+        
+        return {
+            'status': 'success',
+            'file_id': file_id,
+            'duration': wav_features['duration'],
+            'tempo': wav_features.get('tempo'),
+            'guide_midi_path': str(guide_midi_path) if guide_midi_path else None
+        }
+    
+    def _generate_guide_midi(self, wav_path: Path, file_id: str, verbose: bool) -> Optional[Path]:
+        """WAV → Guide MIDI変換"""
+        midi_path = self.guide_midi_dir / f"{file_id}.mid"
+        
+        try:
+            if verbose:
+                print(f"🎹 Generating Guide MIDI...")
+            
+            midi = convert_basic(str(wav_path))
+            midi = post_process_midi(midi, quantize=True, quantize_resolution=16)
+            
+            midi_path.parent.mkdir(parents=True, exist_ok=True)
+            midi.write(str(midi_path))
+            
+            if verbose:
+                print(f"✅ Guide MIDI: {midi_path.name}")
+            
+            return midi_path
+        except Exception as e:
+            if verbose:
+                print(f"❌ Guide MIDI generation failed: {e}")
+            return None
+    
+    def _extract_stage2_from_midi(self, midi_path: Path, verbose: bool) -> Optional[Dict[str, Any]]:
+        """MIDIからStage2メタデータ抽出"""
+        try:
+            if verbose:
+                print(f"📊 Extracting Stage2 metadata...")
+            
+            meta = extract_stage2_metadata(str(midi_path))
+            
+            if verbose:
+                chords = meta.get('chords', {})
+                if isinstance(chords, dict):
+                    chord_events = chords.get('events', [])
+                else:
+                    chord_events = chords if isinstance(chords, list) else []
+                print(f"✅ Stage2: {len(chord_events)} chord events")
+            
+            return meta
+        except Exception as e:
+            if verbose:
+                print(f"⚠️ Stage2 extraction failed: {e}")
+            return None
+    
+    def _calc_file_id(self, wav_path: Path) -> str:
+        """ファイルID生成"""
+        return hashlib.md5(wav_path.name.encode()).hexdigest()[:16]
+    
+    def _save_to_database(self, file_id: str, wav_path: Path, wav_features: Dict,
+                          guide_midi_path: Optional[Path], stage2_meta: Optional[Dict]):
+        """統合データベース保存"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # WAV特徴量
+        cursor.execute("""
+            INSERT OR REPLACE INTO wav_features
+            (file_id, file_path, duration, tempo, num_beats, num_onsets, 
+             chord_candidates, activity_mean, activity_std, 
+             spectral_centroid_mean, spectral_rolloff_mean, features_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            file_id, str(wav_path), wav_features['duration'],
+            wav_features.get('tempo'), wav_features.get('num_beats'),
+            wav_features.get('num_onsets'),
+            json.dumps(wav_features.get('chord_candidates', [])),
+            wav_features.get('activity_mean'), wav_features.get('activity_std'),
+            wav_features.get('spectral_centroid_mean'),
+            wav_features.get('spectral_rolloff_mean'),
+            json.dumps(wav_features)
+        ))
+        
+        # MIDI特徴量（Stage2がある場合）
+        if stage2_meta:
+            cursor.execute("""
+                INSERT OR REPLACE INTO midi_features
+                (file_id, midi_path, chords, key_sequence, tempo_map, stage2_json)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                file_id, str(guide_midi_path) if guide_midi_path else None,
+                json.dumps(stage2_meta.get('chords', {})),
+                json.dumps(stage2_meta.get('key_sequence', [])),
+                json.dumps(stage2_meta.get('tempo_map', {})),
+                json.dumps(stage2_meta)
+            ))
+            
+            # コード進行（MIDI系）
+            chords = stage2_meta.get('chords', {})
+            if isinstance(chords, dict):
+                chord_events = chords.get('events', [])
+            else:
+                chord_events = chords if isinstance(chords, list) else []
+            
+            if chord_events:
+                cursor.execute("""
+                    INSERT INTO progressions
+                    (file_id, progression, source_type, chord_events)
+                    VALUES (?, ?, ?, ?)
+                """, (file_id, json.dumps(chord_events), 'midi', len(chord_events)))
+        
+        # コード進行（WAV系）
+        if wav_features.get('chord_candidates'):
+            cursor.execute("""
+                INSERT INTO progressions
+                (file_id, progression, source_type, chord_events)
+                VALUES (?, ?, ?, ?)
+            """, (
+                file_id,
+                json.dumps(wav_features['chord_candidates']),
+                'wav',
+                len(wav_features['chord_candidates'])
+            ))
+        
+        # WAV↔MIDI紐付け
+        if guide_midi_path:
+            cursor.execute("""
+                INSERT OR REPLACE INTO wav_midi_mappings
+                (wav_file_id, midi_file_id, guide_midi_path, alignment_score)
+                VALUES (?, ?, ?, ?)
+            """, (file_id, file_id, str(guide_midi_path), 1.0))
+        
+        conn.commit()
+        conn.close()
+    
+    def _save_wav_features_json(self, file_id: str, features: Dict):
+        """WAV特徴量をJSON保存"""
+        json_path = self.wav_features_dir / f"{file_id}.json"
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(features, f, ensure_ascii=False, indent=2)
+    
+    def process_dataset(self, input_dir: Path, max_files: int = -1, verbose: bool = True) -> Dict[str, Any]:
+        """データセット全体を処理（楽曲ディレクトリ単位）"""
+        # 楽曲ディレクトリを取得
+        song_dirs = sorted([d for d in input_dir.iterdir() if d.is_dir()])
+        
+        if max_files > 0:
+            song_dirs = song_dirs[:max_files]
+        
+        print(f"\n{'='*70}")
+        print(f"LOCAL LAMDA WAV Integration")
+        print(f"{'='*70}")
+        print(f"Total songs: {len(song_dirs)}")
+        print(f"Output DB: {self.db_path}")
+        print(f"{'='*70}")
+        
+        results = {'success': 0, 'failed': 0, 'processed_files': []}
+        
+        for i, song_dir in enumerate(song_dirs, 1):
+            try:
+                print(f"\n[{i}/{len(song_dirs)}]")
+                
+                # mix.wavを優先、なければ最初のWAVファイルを使用
+                mix_wav = song_dir / "mix.wav"
+                if not mix_wav.exists():
+                    wav_files = list(song_dir.glob("*.wav"))
+                    if not wav_files:
+                        print(f"⚠️ No WAV files in {song_dir.name}")
+                        results['failed'] += 1
+                        continue
+                    mix_wav = wav_files[0]
+                
+                result = self.process_wav_file(mix_wav, verbose)
+                
+                if result['status'] == 'success':
+                    results['success'] += 1
+                    results['processed_files'].append(result)
+            except Exception as e:
+                print(f"❌ Failed: {song_dir.name}: {e}")
+                results['failed'] += 1
+        
+        return results
+
+
+def main():
+    parser = argparse.ArgumentParser(description="LOCAL LAMDA WAV版統合システム (楽曲ディレクトリ単位処理)")
+    parser.add_argument('--input-dir', type=Path, required=True, 
+                       help='楽曲ディレクトリを含む親ディレクトリ (moisesdb_v0.1 or musdb18_decoded)')
+    parser.add_argument('--output-db', type=Path, required=True,
+                       help='出力SQLiteデータベース')
+    parser.add_argument('--source-name', type=str, required=True,
+                       choices=['moisesdb', 'musdb18'],
+                       help='データソース名')
+    parser.add_argument('--wav-features-dir', type=Path, 
+                       default=Path('data/local_lamda_wav_features'))
+    parser.add_argument('--guide-midi-dir', type=Path, 
+                       default=Path('data/local_lamda_guide_midi'))
+    parser.add_argument('--max-files', type=int, default=-1,
+                       help='処理する最大楽曲数 (-1=全曲)')
+    parser.add_argument('--sr', type=int, default=22050)
+    parser.add_argument('--verbose', action='store_true')
+    
+    args = parser.parse_args()
+    
+    # 出力ディレクトリ作成
+    args.output_db.parent.mkdir(parents=True, exist_ok=True)
+    args.wav_features_dir.mkdir(parents=True, exist_ok=True)
+    args.guide_midi_dir.mkdir(parents=True, exist_ok=True)
+    
+    integrator = LocalLAMDAIntegrator(
+        db_path=args.output_db,
+        wav_features_dir=args.wav_features_dir,
+        guide_midi_dir=args.guide_midi_dir,
+        sr=args.sr
+    )
+    
+    results = integrator.process_dataset(
+        input_dir=args.input_dir,
+        max_files=args.max_files,
+        verbose=args.verbose
+    )
+    
+    print(f"\n{'='*70}")
+    print(f"Processing Summary - {args.source_name}")
+    print(f"{'='*70}")
+    print(f"✅ Success: {results['success']}")
+    print(f"❌ Failed: {results['failed']}")
+    print(f"{'='*70}")
+    
+    # メタデータJSONL出力
+    meta_output = args.output_db.with_suffix('.jsonl')
+    with open(meta_output, 'w', encoding='utf-8') as f:
+        for item in results['processed_files']:
+            f.write(json.dumps(item, ensure_ascii=False) + '\n')
+    
+    print(f"📄 Metadata: {meta_output}")
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,254 @@
+INFO: Found 2104 packages in index
+INFO: Sampled 50 songs for A/B test
+INFO:   gold: 38
+INFO:   silver: 12
+INFO: Re-ranking parameters:
+INFO:   conf_thresh: 0.0
+INFO:   weights: proba=1.0, accent=0.0, density=0.0, section=0.0
+INFO:   mode: v3-only (absolute quality metrics)
+INFO: Loading v3 pickle: data/patterns/stage2_guitar_v3_meta.pickle
+INFO:   ✓ Loaded ML model from harmony_baseline_xgb_tuned.joblib
+INFO: Initialized SimplePatternRecommender for guitar
+INFO:   Version: 1.0
+INFO:   Total patterns: 2148
+INFO:   Selector type: xgboost
+INFO:   Provider: xgboost
+INFO:   Model: harmony_baseline_xgb_tuned.joblib
+INFO:   Classes: 1119
+INFO: v3 selector type: xgboost
+INFO: Generated 3200 test cases
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+WARNING: Low confidence safety: top1_proba=0.148 < 0.15, fallback to safe-kit
+INFO: Results saved to data/eval_v3_prod_50songs.csv
+INFO: 
+============================================================
+INFO: v3 Absolute Quality Metrics
+INFO: ============================================================
+INFO: Accent Score (mean): 91.91%
+INFO: Density Abs (median): 0.00 notes/bar
+INFO: Chord Fit (mean): 83.59%
+INFO: ML Usage Rate: 100.00%
+INFO: Top-1 Proba (mean): 0.3230
+INFO: 
+INFO: Section-wise Metrics:
+INFO:   Chorus:
+INFO:     Accent Score: 95.65%
+INFO:     ML Usage: 100.00%
+INFO:   Verse:
+INFO:     Accent Score: 93.50%
+INFO:     ML Usage: 100.00%
+INFO:   Bridge:
+INFO:     Accent Score: 90.16%
+INFO:     ML Usage: 100.00%
+INFO: 
+INFO: ------------------------------------------------------------
+INFO: Pass/Fail Criteria (Absolute KPIs)
+INFO: ------------------------------------------------------------
+INFO: Accent Score >= 65%: PASS (91.91%)
+INFO: Density Abs <= 1.0: PASS (0.00)
+INFO: Chord Fit >= 60%: PASS (83.59%)
+INFO: ML Usage >= 70%: PASS (100.00%)
+INFO: 
+============================================================
+INFO: Overall: ✓ PASS (v3 production ready)
+INFO: ============================================================
+
+INFO: v3 evaluation complete. Results: data/eval_v3_prod_50songs.csv

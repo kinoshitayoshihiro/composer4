@@ -1,0 +1,29 @@
+2025-10-26 14:55:21 [INFO] Loading training data from harmony_dataset/splits/train.parquet
+2025-10-26 14:55:21 [INFO]   Loaded 121843 sequences from 1682 songs
+2025-10-26 14:55:21 [INFO] Loading validation data from harmony_dataset/splits/val.parquet
+2025-10-26 14:55:22 [INFO]   Loaded 15176 sequences from 209 songs
+2025-10-26 14:55:22 [INFO] Expanding chord sequences...
+2025-10-26 14:55:29 [INFO]   Expanded to 972647 chord events from 121843 sequences
+2025-10-26 14:55:29 [INFO] Expanding chord sequences...
+2025-10-26 14:55:30 [INFO]   Expanded to 121122 chord events from 15176 sequences
+2025-10-26 14:55:30 [INFO] Creating pattern IDs...
+2025-10-26 14:55:37 [INFO]   Created 2236 unique pattern IDs
+2025-10-26 14:55:37 [INFO] Creating pattern IDs...
+2025-10-26 14:55:38 [INFO]   Created 1492 unique pattern IDs
+2025-10-26 14:55:38 [INFO] Filtering patterns with usage < 10...
+2025-10-26 14:55:38 [INFO]   Train: 972647 -> 970902 events
+2025-10-26 14:55:38 [INFO]   Val: 121122 -> 120672 events
+2025-10-26 14:55:38 [INFO]   Valid patterns: 1902
+2025-10-26 14:55:38 [INFO] Encoding features...
+2025-10-26 14:55:47 [INFO]   section: 6 classes
+2025-10-26 14:55:47 [INFO]   chord_root: 24 classes
+2025-10-26 14:55:47 [INFO]   chord_quality: 5 classes
+2025-10-26 14:55:47 [INFO]   tempo_bin: 5 classes
+2025-10-26 14:55:47 [INFO]   time_sig: 23 classes
+2025-10-26 14:55:47 [INFO]   Feature matrix shape: train (970902, 7), val (120672, 7)
+2025-10-26 14:55:47 [INFO] Encoding target (pattern_id)...
+2025-10-26 14:55:47 [INFO]   Target classes: 1902
+2025-10-26 14:55:47 [INFO] Training xgboost model...
+2025-10-26 14:55:47 [INFO]   n_estimators: 100
+2025-10-26 14:55:47 [INFO]   max_depth: 6
+2025-10-26 14:55:47 [ERROR] XGBoost not installed. Install with: pip install xgboost

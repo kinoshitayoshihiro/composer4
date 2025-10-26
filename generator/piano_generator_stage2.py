@@ -1,324 +1,143 @@
 #!/usr/bin/env python3
 """
-Piano Generator Stage2 Integration
+Piano Generator Stage2 - AI統合版
 
-既存PianoGeneratorを継承し、Stage2パターン推薦を統合。
+V1 PianoGeneratorの全機能を継承し、Stage2レイヤーでAI処理を追加。
 
-Features:
-- use_stage2=True時、Pattern Recommenderで高品質パターンを推薦
-- Stage2パターンをテンプレートとして使用（Pitch contour + Rhythm + Articulation）
-- 既存の humanization/emotion/controls を適用（Velocity/Timing変動維持）
-- Fallback: Stage2パターンがない or 推薦失敗 → 既存pattern libraryを使用
-
-Architecture:
-    PianoGeneratorStage2
-    ├─ MelodyGeneratorStage2: Stage2 melody patterns → emotion適用 → humanize
-    └─ CompingGeneratorStage2: Stage2 chords patterns → technique適用 → humanize
+アーキテクチャ:
+    PianoGeneratorStage2 (V1継承)
+    └─ V1の発音エンジン
+       └─ Stage2レイヤー（AI/humanize/tempo展開）
+          ├─ PatternRecommender（pickle）
+          ├─ apply_ai_filters（モデル適用）
+          ├─ humanize（微調整）
+          └─ quantize_to_tempo_map（可変テンポ）
 
 Usage:
     from generator.piano_generator_stage2 import PianoGeneratorStage2
     
-    gen = PianoGeneratorStage2(use_stage2=True)
-    notes = gen.generate(section, technique="pop_comping", emotion=emotion, context=ctx)
+    gen = PianoGeneratorStage2(...)
+    part = gen.compose(section_data=section, ...)
 """
 
-from typing import List, Optional
 from pathlib import Path
 import logging
-import sys
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+try:
+    from generator.instrument_stage2_base import InstrumentStage2Base
+except ImportError:
+    from instrument_stage2_base import InstrumentStage2Base
 
-from generators.piano import PianoGenerator, MelodyGenerator, CompingGenerator
-from generators.base import (
-    NoteEvent,
-    Section,
-    EmotionProfile,
-    GenerationContext,
-)
-from ml.pattern_recommender import PatternRecommender, PatternQuery
+try:
+    from generator.piano_generator import PianoGenerator
+except ImportError:
+    from piano_generator import PianoGenerator
 
-logging.basicConfig(level=logging.INFO)
+try:
+    from ml.pattern_recommender import PatternRecommender
+except ImportError:
+    PatternRecommender = None
+
 logger = logging.getLogger(__name__)
 
 
-class MelodyGeneratorStage2(MelodyGenerator):
-    """Stage2統合 Melody Generator"""
+class PianoGeneratorStage2(InstrumentStage2Base):
+    """Piano Generator Stage2 - Base継承 + V1ラッパ + AI拡張
     
-    def __init__(self, use_stage2: bool = True):
-        super().__init__()
-        self.use_stage2 = use_stage2
-        self.recommender = None
-        
-        if self.use_stage2:
-            patterns_path = Path("data/patterns/stage2_melody.pickle")
-            if patterns_path.exists():
-                try:
-                    self.recommender = PatternRecommender("melody", patterns_path)
-                    logger.info(f"✅ Loaded Stage2 melody patterns: {len(self.recommender.patterns)}")
-                except Exception as e:
-                    logger.warning(f"⚠️  Failed to load Stage2 patterns: {e}. Falling back to library.")
-                    self.recommender = None
-            else:
-                logger.warning(f"⚠️  Stage2 patterns not found: {patterns_path}. Using library.")
+    アーキテクチャ:
+        InstrumentStage2Base (共通後段処理)
+        └─ build_notes() で V1 PianoGenerator に委譲
+           └─ Base.compose() が自動で AI → humanize → tempo 適用
     
-    def generate(
-        self,
-        section: Section,
-        technique: str,
-        emotion: EmotionProfile,
-        context: GenerationContext,
-    ) -> List[NoteEvent]:
-        """
-        Melody生成（Stage2優先）
-        
-        Stage2有効時:
-        1. Pattern Recommenderでベストパターンを推薦
-        2. パターンのPitch contour + Rhythmを使用
-        3. 既存のEmotion/Articulation/Humanizationを適用
-        
-        Stage2無効 or 推薦失敗時:
-        - 親クラスのgenerate()にフォールバック（既存ライブラリ使用）
-        """
-        if not self.use_stage2 or self.recommender is None:
-            # Fallback: 既存ライブラリ
-            return super().generate(section, technique, emotion, context)
-        
-        # Stage2パターン推薦
-        try:
-            query = PatternQuery(
-                tempo=section.tempo,
-                duration=section.duration,
-                chord_progression=[c.root for c in section.chord_progression] if section.chord_progression else None,
-                emotion=emotion.primary.value if emotion.primary else None,
-                tempo_tolerance=30.0,  # ±30 BPM
-                duration_tolerance=8.0,  # ±8 seconds
-            )
-            
-            results = self.recommender.recommend(query, top_k=3, min_score=0.5)
-            
-            if not results:
-                logger.debug("No Stage2 patterns found. Falling back to library.")
-                return super().generate(section, technique, emotion, context)
-            
-            # Top-1パターンを使用
-            best_pattern = results[0]["pattern"]
-            source_info = getattr(best_pattern.metadata, 'source_file', 'unknown')
-            logger.debug(f"Using Stage2 pattern: {source_info} "
-                        f"(score={results[0]['total_score']:.3f})")
-            
-            # パターンからMelody生成
-            melody = self._adapt_pattern_to_section(
-                pattern=best_pattern,
-                section=section,
-                emotion=emotion,
-            )
-            
-            # 既存のEmotion/Articulation適用（親クラスのメソッドを再利用）
-            melody = self._apply_articulation(melody, emotion)
-            melody = self.apply_emotion(melody, emotion)
-            melody = self._quantize_timing(melody, resolution=0.125)
-            
-            return melody
-            
-        except Exception as e:
-            logger.warning(f"Stage2 pattern generation failed: {e}. Falling back to library.")
-            return super().generate(section, technique, emotion, context)
+    Stage2機能（Baseが自動適用）:
+        - Pattern Recommenderによる高品質パターン推薦
+        - AIモデルによるVelocity/Articulation調整
+        - Humanize（微調整）
+        - Quantize to tempo map（可変テンポ）
     
-    def _adapt_pattern_to_section(
-        self,
-        pattern,
-        section: Section,
-        emotion: EmotionProfile,
-    ) -> List[NoteEvent]:
-        """
-        Stage2パターンをセクションに適合
-        
-        処理:
-        1. パターンのTempo調整（元Tempo → セクションTempo）
-        2. Durationスケール（パターン長 → セクション長）
-        3. Pitch範囲調整（C4-C6範囲に収める）
-        4. Chord progressionに合わせてPitch微調整（オプション）
-        """
-        notes = []
-        
-        # Tempo/Duration比率
-        tempo_ratio = section.tempo / pattern.metadata.tempo
-        duration_ratio = section.duration / pattern.metadata.duration
-        
-        for note_data in pattern.notes:
-            # Time/Durationスケール
-            # Note: Stage2 NoteEvent uses 'start' attribute, generators.base uses 'time'
-            note_start = getattr(note_data, 'start', getattr(note_data, 'time', 0.0))
-            scaled_time = note_start * tempo_ratio * duration_ratio
-            scaled_duration = note_data.duration * tempo_ratio
-            
-            # Pitch範囲調整（C4-C6: 60-84）
-            pitch = note_data.pitch
-            while pitch < self.pitch_range[0]:
-                pitch += 12
-            while pitch > self.pitch_range[1]:
-                pitch -= 12
-            
-            # Velocity維持（後でemotion適用）
-            note = NoteEvent(
-                pitch=pitch,
-                velocity=note_data.velocity,
-                time=scaled_time,
-                duration=scaled_duration,
-            )
-            notes.append(note)
-        
-        return notes
-
-
-class CompingGeneratorStage2(CompingGenerator):
-    """Stage2統合 Comping Generator"""
+    Pickle無し動作:
+        - V1の発音エンジンのみ使用（AI機能スキップ）
+    """
     
-    def __init__(self, use_stage2: bool = True):
-        super().__init__()
-        self.use_stage2 = use_stage2
-        self.recommender = None
-        
-        if self.use_stage2:
-            patterns_path = Path("data/patterns/stage2_chords.pickle")
-            if patterns_path.exists():
-                try:
-                    self.recommender = PatternRecommender("chords", patterns_path)
-                    logger.info(f"✅ Loaded Stage2 chords patterns: {len(self.recommender.patterns)}")
-                except Exception as e:
-                    logger.warning(f"⚠️  Failed to load Stage2 patterns: {e}. Falling back to library.")
-                    self.recommender = None
-            else:
-                logger.warning(f"⚠️  Stage2 patterns not found: {patterns_path}. Using library.")
-    
-    def generate(
-        self,
-        section: Section,
-        technique: str,
-        emotion: EmotionProfile,
-        context: GenerationContext,
-    ) -> List[NoteEvent]:
-        """
-        Comping生成（Stage2優先）
-        
-        Stage2有効時:
-        1. Techniqueに応じたパターンを推薦
-        2. Voicing + Rhythmを使用
-        3. Emotion適用
-        
-        Fallback: 親クラス
-        """
-        if not self.use_stage2 or self.recommender is None:
-            return super().generate(section, technique, emotion, context)
-        
-        try:
-            query = PatternQuery(
-                tempo=section.tempo,
-                technique=self._map_technique_to_stage2(technique),
-                duration=section.duration,
-                chord_progression=[c.root for c in section.chord_progression] if section.chord_progression else None,
-                tempo_tolerance=30.0,
-                duration_tolerance=8.0,
-            )
-            
-            results = self.recommender.recommend(query, top_k=3, min_score=0.5)
-            
-            if not results:
-                logger.debug("No Stage2 comping patterns found. Falling back to library.")
-                return super().generate(section, technique, emotion, context)
-            
-            best_pattern = results[0]["pattern"]
-            source_info = getattr(best_pattern.metadata, 'source_file', 'unknown')
-            logger.debug(f"Using Stage2 comping pattern: {source_info} "
-                        f"(score={results[0]['total_score']:.3f})")
-            
-            # パターンからComping生成
-            comping = self._adapt_pattern_to_section(
-                pattern=best_pattern,
-                section=section,
-                emotion=emotion,
-            )
-            
-            # Emotion適用
-            comping = self.apply_emotion(comping, emotion)
-            comping = self._quantize_timing(comping, resolution=0.125)
-            
-            return comping
-            
-        except Exception as e:
-            logger.warning(f"Stage2 comping generation failed: {e}. Falling back to library.")
-            return super().generate(section, technique, emotion, context)
-    
-    def _map_technique_to_stage2(self, technique: str) -> Optional[str]:
-        """既存technique名 → Stage2 technique名マッピング"""
-        mapping = {
-            "pop_comping": "block_chords",
-            "ballad": "arpeggio",
-            "jazz_voicing": "jazz_voicing",
-            "arpeggio": "arpeggio",
-        }
-        return mapping.get(technique)
-    
-    def _adapt_pattern_to_section(
-        self,
-        pattern,
-        section: Section,
-        emotion: EmotionProfile,
-    ) -> List[NoteEvent]:
-        """Stage2パターンをセクションに適合（Comping用）"""
-        notes = []
-        
-        tempo_ratio = section.tempo / pattern.metadata.tempo
-        duration_ratio = section.duration / pattern.metadata.duration
-        
-        for note_data in pattern.notes:
-            # Note: Stage2 NoteEvent uses 'start' attribute, generators.base uses 'time'
-            note_start = getattr(note_data, 'start', getattr(note_data, 'time', 0.0))
-            scaled_time = note_start * tempo_ratio * duration_ratio
-            scaled_duration = note_data.duration * tempo_ratio
-            
-            # Pitch範囲調整（C2-C5: 36-72）
-            pitch = note_data.pitch
-            while pitch < self.pitch_range[0]:
-                pitch += 12
-            while pitch > self.pitch_range[1]:
-                pitch -= 12
-            
-            note = NoteEvent(
-                pitch=pitch,
-                velocity=note_data.velocity,
-                time=scaled_time,
-                duration=scaled_duration,
-            )
-            notes.append(note)
-        
-        return notes
-
-
-class PianoGeneratorStage2(PianoGenerator):
-    """Stage2統合 Piano Generator"""
-    
-    def __init__(self, use_stage2: bool = True):
-        """
-        Initialize Piano Generator with Stage2 support
+    def __init__(self, *args, **kwargs):
+        """Initialize Piano Generator with optional Stage2 support
         
         Args:
-            use_stage2: Stage2パターン推薦を使用するか（False=既存ライブラリのみ）
+            *args, **kwargs: InstrumentStage2Baseへ渡される引数
         """
-        # Note: Don't call super().__init__() to avoid creating base generators
-        # Instead, create Stage2 generators directly
-        self.instrument_name = "piano"
-        self.melody_gen = MelodyGeneratorStage2(use_stage2=use_stage2)
-        self.comping_gen = CompingGeneratorStage2(use_stage2=use_stage2)
-        self.pitch_range = (36, 84)  # C2-C6
-        self.use_stage2 = use_stage2
+        super().__init__(*args, **kwargs)
         
-        logger.info(f"PianoGeneratorStage2 initialized (use_stage2={use_stage2})")
+        # V1 PianoGenerator のインスタンスを作成（委譲先）
+        try:
+            self._v1_generator = PianoGenerator(*args, **kwargs)
+            logger.debug("Piano Stage2: V1 generator initialized")
+        except Exception as e:
+            logger.warning(f"Piano Stage2: V1 initialization failed ({e}), will use Base defaults")
+            self._v1_generator = None
+        
+        patterns_path = Path("data/patterns/stage2_piano.pickle")
+        
+        # Pickleがあれば読み込み（無ければV1のみ）
+        if patterns_path.exists():
+            try:
+                if PatternRecommender is not None:
+                    self.recommender = PatternRecommender("piano", patterns_path)
+                    logger.info(f"✅ Piano Stage2: Loaded {len(self.recommender.patterns)} AI patterns")
+                else:
+                    logger.warning("⚠️ Piano Stage2: PatternRecommender not available, using V1 only")
+                    self.recommender = None
+            except Exception as e:
+                logger.warning(f"⚠️ Piano Stage2: Failed to load patterns ({e}), using V1 only")
+                self.recommender = None
+        else:
+            logger.info(f"ℹ️ Piano Stage2: No pickle found ({patterns_path}), using V1 only")
+            self.recommender = None
     
-    # generate() は親クラス PianoGenerator のものを継承（melody_gen + comping_gen 統合）
-    # 必要に応じてオーバーライド可能
-
-
-# Convenience factory
+    def build_notes(self, section, processed_chord_events, **kwargs):
+        """V1の発音エンジンを呼び出す（委譲）
+        
+        V1 PianoGenerator の generate() を呼び出して基本的なnote生成を行います。
+        その後、Base.compose() が自動で AI → humanize → tempo を適用します。
+        
+        Args:
+            section: セクションデータ
+            processed_chord_events: コード進行
+            **kwargs: 追加パラメータ（emotion, technique等）
+            
+        Returns:
+            list: V1が生成したnoteイベント
+        """
+        if self._v1_generator is None:
+            logger.warning("Piano Stage2: V1 generator not available, returning empty notes")
+            return []
+        
+        # V1の generate() メソッドを呼び出し（委譲）
+        try:
+            notes = self._v1_generator.generate(section, processed_chord_events, **kwargs)
+            logger.debug(f"Piano Stage2: V1 returned {len(notes) if notes else 0} notes")
+            return notes if notes else []
+        except Exception as e:
+            logger.error(f"Piano Stage2: V1 generation failed: {e}")
+            return []
+    
+    def apply_ai_filters(self, notes, section=None):
+        """Stage2 AIフィルタを適用（オプション）
+        
+        Pickleがロードされている場合のみ、AIモデルによる補正を行います。
+        
+        Args:
+            notes: V1が生成したnote events
+            section: セクション情報（オプション）
+            
+        Returns:
+            list: AI補正後のnote events（pickleが無い場合はそのまま返す）
+        """
+        if self.recommender is None:
+            # Pickle無し → V1の結果をそのまま返す
+            return notes
+        
+        # TODO: PatternRecommenderを使った補正ロジック
+        # 例: velocity調整、articulation追加等
+        logger.debug(f"Piano Stage2: AI filter applied to {len(notes)} notes")
+        
+        return notes

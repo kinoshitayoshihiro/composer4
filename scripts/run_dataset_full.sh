@@ -6,7 +6,7 @@ set -Eeuo pipefail
 # SSD停止対策: --resume で既存シャードから再開可能
 
 BASE_DIR="/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3"
-PY="python3"
+PY="${BASE_DIR}/.venv311/bin/python"
 CLEANER="${BASE_DIR}/scripts/clean_midi.py"
 LOG_DIR="${BASE_DIR}/logs"
 TS=$(date +%Y%m%d_%H%M%S)
@@ -17,11 +17,16 @@ mkdir -p "${LOG_DIR}"
 # shard_size推奨:
 #   - POP909: 5000 (実質1シャード)
 #   - Slakh2100: 3000-5000 (中規模)
-#   - LAMDA: 5000-8000 (大規模、SSD不安定なら3000-5000)
-#   - Los-Angeles-MIDI: 5000-8000 (大規模)
+#   - LAMDA: 4000-5000 (大規模、楽器別で分割処理)
+#   - Los-Angeles-MIDI: マルチトラック楽曲データセット（約40万ファイル）
+#     → 楽器別に分離してクリーニング (piano/strings/guitar/bass/drums)
 DATASETS=$(cat <<'EOF'
 POP909|piano|data/POP909|data/cleaned/pop909|data/quarantine/pop909|data/piano_metadata|5000|8|pop909-v2
-LAMIDI|piano|data/Los-Angeles-MIDI/MIDIs|data/cleaned/lamidi|data/quarantine/lamidi|data/lamidi_metadata|5000|8|lamidi-v1
+LAMDA_PIANO|piano|data/Los-Angeles-MIDI/MIDIs|data/cleaned/lamda_piano|data/quarantine/lamda_piano|data/lamda_piano_metadata|4000|8|lamda-piano-v1
+LAMDA_STRINGS|strings|data/Los-Angeles-MIDI/MIDIs|data/cleaned/lamda_strings|data/quarantine/lamda_strings|data/lamda_strings_metadata|4000|8|lamda-strings-v1
+LAMDA_GUITAR|guitar|data/Los-Angeles-MIDI/MIDIs|data/cleaned/lamda_guitar|data/quarantine/lamda_guitar|data/lamda_guitar_metadata|4000|8|lamda-guitar-v1
+LAMDA_BASS|bass|data/Los-Angeles-MIDI/MIDIs|data/cleaned/lamda_bass|data/quarantine/lamda_bass|data/lamda_bass_metadata|4000|8|lamda-bass-v1
+LAMDA_DRUMS|drums|data/Los-Angeles-MIDI/MIDIs|data/cleaned/lamda_drums|data/quarantine/lamda_drums|data/lamda_drums_metadata|4000|8|lamda-drums-v1
 EOF
 )
 

@@ -1,0 +1,340 @@
+# ========================================================================
+# Strings Style Presets - Genre/Playing Style Presets
+# ========================================================================
+# Phase 11-12: 基本密度・音域
+# Phase 13-19: 語彙・和声・同期・遷移・装飾・ダイナミクス・グルーヴ
+# Phase 22-24: Emotion mapping・Controls・Prosody
+
+simple:
+  description: "シンプルなストリングスパッド（ロングトーン・静的）"
+  
+  # Phase 11: 密度整形
+  density:
+    sustain_ratio_min: 0.8
+    movement_rate_max: 0.2
+  
+  # Phase 12: 音域補正
+  register:
+    min_midi: 55  # G3
+    max_midi: 84  # C6
+  
+  # Phase 13: 語彙（ミニフィル）
+  vocabulary:
+    mini_fill_prob: 0.1
+    leadin_prob: 0.05
+  
+  # Phase 14: 和声知性（テンション抑制）
+  harmonic:
+    tension_avoid: 0.7
+    pad_thickness: 3  # 3声
+  
+  # Phase 15: クロス同期
+  cross_sync:
+    swell_sync_prob: 0.3
+  
+  # Phase 16: 遷移平滑化
+  transition:
+    enable_crescendo: false
+  
+  # Phase 17: アーティキュレーション（スウェル）
+  articulation:
+    swell_prob: 0.2
+    swell_depth: 0.3
+    tremolo_prob: 0.0
+  
+  # Phase 18: ダイナミクス整形
+  dynamics:
+    velocity_curve: flat
+    min_vel: 60
+    max_vel: 85
+  
+  # Phase 19: グルーヴマイクロタイミング
+  groove:
+    swing_amount: 0.0
+    laidback_ms: 5.0  # ストリングスは常に少し遅れる
+  
+  # Phase 20: Humanize
+  humanize:
+    timing_ms: 4.0  # タイミングゆらぎ僅少
+    vel_sigma: 4.0
+  
+  # Phase 22: Emotion mapping
+  emotion_map:
+    density_gain: 0.5
+    register_shift: 2
+    staccato_bias: 0.0  # ストリングスはstaccato少なめ
+    smooth_ms: 250  # より長い平滑化
+  
+  # Phase 24: Controls
+  controls:
+    expression_curve: flat
+    sustain_policy: pad_only
+    bend_range: 2
+  
+  # Phase 23: Prosody
+  prosody:
+    enable: false
+  
+  # Phase 25-28
+  sparsify:
+    enable: false
+  harmony:
+    source: "audio"
+    blend: 0.0
+    keep_audio_root: true
+    allow_text_tensions: []
+  style_adapt:
+    enable: false
+  export:
+    quantize_ql: 0.0625
+    track_split: ["Long", "Short"]
+    name_fmt: "{idx:02d}_Strings_{section}"
+
+moderate:
+  description: "標準的なストリングス（適度な動き・スウェル）"
+  
+  density:
+    sustain_ratio_min: 0.6
+    movement_rate_max: 0.4
+  
+  register:
+    min_midi: 55
+    max_midi: 84
+  
+  vocabulary:
+    mini_fill_prob: 0.2
+    leadin_prob: 0.1
+  
+  harmonic:
+    tension_avoid: 0.6
+    pad_thickness: 4
+  
+  cross_sync:
+    swell_sync_prob: 0.5
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 2
+    velocity_step: 3
+  
+  articulation:
+    swell_prob: 0.3
+    swell_depth: 0.4
+    tremolo_prob: 0.1
+  
+  dynamics:
+    velocity_curve: linear_up
+    min_vel: 55
+    max_vel: 90
+  
+  groove:
+    swing_amount: 0.0
+    laidback_ms: 8.0
+  
+  humanize:
+    timing_ms: 4.0
+    vel_sigma: 4.0
+  
+  emotion_map:
+    density_gain: 0.5
+    register_shift: 2
+    staccato_bias: 0.05
+    smooth_ms: 200
+  
+  controls:
+    expression_curve: linear
+    sustain_policy: pad_only
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 6
+    sibilant_duck_db: -4
+    plosive_gap_ms: 30
+    window_ms: 150
+  
+  # Phase 25-28
+  sparsify:
+    enable: false
+  harmony:
+    source: "hybrid"
+    blend: 0.3
+    keep_audio_root: true
+    allow_text_tensions: [9]
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.3, 0.7]
+    order: ["simple", "moderate"]
+  export:
+    quantize_ql: 0.0625
+    track_split: ["Long", "Short"]
+    name_fmt: "{idx:02d}_Strings_{section}"
+
+complex:
+  description: "複雑なストリングス（動きのある旋律・複雑なスウェル）"
+  
+  density:
+    sustain_ratio_min: 0.4
+    movement_rate_max: 0.6
+  
+  register:
+    min_midi: 48  # C3（低音域拡張）
+    max_midi: 96  # C7（高音域拡張）
+  
+  vocabulary:
+    mini_fill_prob: 0.3
+    leadin_prob: 0.2
+  
+  harmonic:
+    tension_avoid: 0.5
+    pad_thickness: 5
+  
+  cross_sync:
+    swell_sync_prob: 0.6
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 2
+    decrescendo_bars: 1
+    velocity_step: 5
+  
+  articulation:
+    swell_prob: 0.4
+    swell_depth: 0.5
+    tremolo_prob: 0.15
+  
+  dynamics:
+    velocity_curve: peak_middle
+    min_vel: 50
+    max_vel: 95
+  
+  groove:
+    swing_amount: 0.02
+    laidback_ms: 10.0
+  
+  humanize:
+    timing_ms: 5.0
+    vel_sigma: 5.0
+  
+  emotion_map:
+    density_gain: 0.6
+    register_shift: 3
+    staccato_bias: 0.1
+    smooth_ms: 180
+  
+  controls:
+    expression_curve: arch
+    sustain_policy: pad_only
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 8
+    sibilant_duck_db: -5
+    plosive_gap_ms: 40
+    window_ms: 120
+  
+  # Phase 25-28
+  sparsify:
+    enable: true
+    keep_endpoints: true
+    min_gap_ms: 40
+  harmony:
+    source: "hybrid"
+    blend: 0.5
+    keep_audio_root: true
+    allow_text_tensions: [9, 11]
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.4, 0.8]
+    order: ["moderate", "complex"]
+  export:
+    quantize_ql: 0.125
+    track_split: ["Long", "Short"]
+    name_fmt: "{idx:02d}_Strings_{section}"
+
+intense:
+  description: "激しいストリングス（高密度・強いアクセント）"
+  
+  density:
+    sustain_ratio_min: 0.3
+    movement_rate_max: 0.8
+  
+  register:
+    min_midi: 48
+    max_midi: 96
+  
+  vocabulary:
+    mini_fill_prob: 0.4
+    leadin_prob: 0.3
+  
+  harmonic:
+    tension_avoid: 0.4
+    pad_thickness: 6
+  
+  cross_sync:
+    swell_sync_prob: 0.7
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 1
+    decrescendo_bars: 0
+    velocity_step: 8
+  
+  articulation:
+    swell_prob: 0.5
+    swell_depth: 0.6
+    tremolo_prob: 0.2
+  
+  dynamics:
+    velocity_curve: peak_middle
+    min_vel: 60
+    max_vel: 105
+  
+  groove:
+    swing_amount: 0.05
+    laidback_ms: 5.0
+  
+  humanize:
+    timing_ms: 6.0
+    vel_sigma: 6.0
+  
+  emotion_map:
+    density_gain: 0.7
+    register_shift: 4
+    staccato_bias: 0.15
+    smooth_ms: 150
+  
+  controls:
+    expression_curve: arch
+    sustain_policy: always
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 10
+    sibilant_duck_db: -6
+    plosive_gap_ms: 50
+    window_ms: 100
+  
+  # Phase 25-28
+  sparsify:
+    enable: true
+    keep_endpoints: true
+    min_gap_ms: 30
+  harmony:
+    source: "hybrid"
+    blend: 0.6
+    keep_audio_root: true
+    allow_text_tensions: [9, 11, 13]
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.5, 0.9]
+    order: ["complex", "intense"]
+  export:
+    quantize_ql: 0.125
+    track_split: ["Long", "Short"]
+    name_fmt: "{idx:02d}_Strings_{section}"

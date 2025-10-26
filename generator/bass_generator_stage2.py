@@ -136,6 +136,9 @@ class BassGeneratorStage2(BassGenerator):
                         part_specific_humanize_params=part_specific_humanize_params,
                     )
                     
+                    # Phase 31: Mode/Scale制約適用（Bass用）
+                    self._apply_bass_scale_constraint(stage2_part, section_data)
+                    
                     return stage2_part
             
             except Exception as e:
@@ -371,6 +374,116 @@ class BassGeneratorStage2(BassGenerator):
                 logger.debug(f"Advanced kick lock skipped: {e}")
         
         return part
+    
+    def _apply_bass_scale_constraint(
+        self,
+        part: stream.Part,
+        section_data: Dict[str, Any],
+        strength: float = 0.5  # Bass用デフォルト: 控えめ
+    ):
+        """
+        Phase 31: Bass専用 Mode/Scale制約
+        
+        Bassは和声の基礎なので、他楽器より控えめに適用（strength=0.5）
+        
+        Args:
+            part: Bass Part
+            section_data: セクション情報
+            strength: 修正強度（0.0-1.0、デフォルト0.5=50%確率）
+        """
+        try:
+            # ops.scale_modes をインポート
+            try:
+                from ops.scale_modes import scale_mask_for_point
+            except ImportError:
+                logger.debug("scale_modes not available, skipping Phase 31")
+                return
+            
+            # mix_context から sections と chordmap を取得
+            mix_context = getattr(self, '_overrides', {}).get('mix_context')
+            if not mix_context:
+                return
+            
+            sections = mix_context.get('sections')
+            chordmap = mix_context.get('chordmap')
+            if not sections:
+                return
+            
+            # ql_per_bar 取得
+            time_sig = section_data.get('time_signature', '4/4')
+            num, denom = map(int, time_sig.split('/'))
+            ql_per_bar = float(num)
+            
+            import random
+            
+            # 全ノートを走査
+            for n in part.flatten().notes:
+                pitch_midi = n.pitch.midi
+                offset_ql = float(n.offset)
+                
+                # 現在のコード情報取得
+                chord_root = None
+                chord_quality = None
+                if chordmap:
+                    bar_num = int(offset_ql / ql_per_bar)
+                    chord_entry = next((c for c in chordmap if c.get("bar") == bar_num), None)
+                    if chord_entry:
+                        chord_symbol = chord_entry.get("chord", "")
+                        if chord_symbol:
+                            try:
+                                from ops.scale_modes import _parse_chord_root_pc
+                                chord_root = _parse_chord_root_pc(chord_symbol)
+                                # quality判定
+                                cs_lower = chord_symbol.lower()
+                                if "maj7" in cs_lower:
+                                    chord_quality = "maj7"
+                                elif "min7" in cs_lower or "m7" in cs_lower:
+                                    chord_quality = "min7"
+                                elif "7" in chord_symbol:
+                                    chord_quality = "7"
+                                elif "maj" in cs_lower:
+                                    chord_quality = "maj"
+                                elif "min" in cs_lower or "m" in cs_lower:
+                                    chord_quality = "min"
+                            except Exception:
+                                pass
+                
+                # Scale Mask 取得
+                mask = scale_mask_for_point(
+                    t_ql=offset_ql,
+                    sections=sections,
+                    chord_root=chord_root,
+                    chord_quality=chord_quality
+                )
+                
+                if not mask:
+                    continue
+                
+                # スケール外音チェック
+                pc = pitch_midi % 12
+                avg_mask = sum(mask) / len(mask)
+                threshold = avg_mask * 0.70
+                
+                if mask[pc] <= threshold:
+                    # 修正強度に応じて確率的に修正
+                    if random.random() > strength:
+                        continue
+                    
+                    # 最近接スケール内音を探す
+                    candidates = []
+                    for offset in [1, -1, 2, -2]:
+                        new_pc = (pc + offset) % 12
+                        if mask[new_pc] > threshold:
+                            candidates.append((abs(offset), pitch_midi + offset))
+                    
+                    if candidates:
+                        candidates.sort()
+                        new_pitch = candidates[0][1]
+                        n.pitch.midi = new_pitch
+                        logger.debug(f"[Bass] Phase 31: {pitch_midi} → {new_pitch} (strength={strength:.2f})")
+        
+        except Exception as e:
+            logger.debug(f"[Bass] Phase 31 failed: {e}")
 
 
 # Convenience factory

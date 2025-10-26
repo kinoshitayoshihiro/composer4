@@ -1,0 +1,19 @@
+{
+  "total_songs": 3,
+  "successful_tests": 1,
+  "workers": 3,
+  "results": [
+    {
+      "song": "song_001",
+      "metrics": {
+        "root_accuracy": 0.0,
+        "quality_accuracy": 0.0,
+        "full_accuracy": 0.0,
+        "total_matches": 1,
+        "best_transposition": 0
+      },
+      "manual_events": 1,
+      "auto_events": 3
+    }
+  ]
+}

@@ -1,0 +1,417 @@
+# ========================================================================
+# Piano Style Presets - Genre/Playing Style Presets
+# ========================================================================
+# Phase 11-12: 基本密度・音域
+# Phase 13-19: 語彙・和声・同期・遷移・装飾・ダイナミクス・グルーヴ
+# Phase 22-24: Emotion mapping・Controls・Prosody
+
+simple:
+  description: "シンプルなピアノ伴奏（ブロックコード・4分音符中心）"
+  
+  # Phase 11: 密度整形
+  density:
+    chords_per_bar:
+      min: 2
+      max: 4
+    arpeggio_ratio_max: 0.2
+  
+  # Phase 12: 音域補正
+  register:
+    min_midi: 48  # C3
+    max_midi: 84  # C6
+  
+  # Phase 13: 語彙（ターンアラウンド・スケールラン）
+  vocabulary:
+    turnaround_prob: 0.2
+    scale_run_prob: 0.1
+  
+  # Phase 14: 和声知性（ボイシング選択）
+  harmonic:
+    tension_rate: 0.2
+    voicing_spread: 12  # 1オクターブ程度
+    drop_voicing_prob: 0.3
+  
+  # Phase 15: クロス同期（Drums/Guitar影響）
+  cross_sync:
+    accent_sync_prob: 0.5
+    hihat_subdivision_bias: 0.3
+  
+  # Phase 16: 遷移平滑化
+  transition:
+    enable_crescendo: false
+  
+  # Phase 17: アーティキュレーション
+  articulation:
+    staccato_prob: 0.1
+    pedal_prob: 0.3
+  
+  # Phase 18: ダイナミクス整形
+  dynamics:
+    velocity_curve: flat
+    min_vel: 65
+    max_vel: 90
+  
+  # Phase 19: グルーヴマイクロタイミング
+  groove:
+    swing_amount: 0.0
+    laidback_ms: 2.0
+  
+  # Phase 20: Humanize
+  humanize:
+    timing_ms: 8.0
+    vel_sigma: 5.0
+    timing_bias_ms: 2.0  # やや後ろ（laidback）
+  
+  # Phase 22: Emotion mapping
+  emotion_map:
+    density_gain: 0.5
+    register_shift: 2
+    staccato_bias: 0.1
+    smooth_ms: 200
+  
+  # Phase 24: Controls
+  controls:
+    expression_curve: flat
+    sustain_policy: pad_only
+    bend_range: 2
+  
+  # Phase 23: Prosody
+  prosody:
+    enable: false
+  
+  # Phase 25: Sparsify（間引き・衝突回避）
+  sparsify:
+    enable: false
+  
+  # Phase 26: Hybrid Harmony（原曲×創作ブレンド）
+  harmony:
+    source: "audio"  # 原曲重視
+    blend: 0.0
+    keep_audio_root: true
+    allow_text_tensions: []
+  
+  # Phase 27: Style Adaptation（活動度→プリセット切替）
+  style_adapt:
+    enable: false
+  
+  # Phase 28: Export Postprocess（量子化・命名）
+  export:
+    quantize_ql: 0.0625
+    track_split: ["RH", "LH"]
+    name_fmt: "{idx:02d}_Piano_{section}"
+    markers:
+      sections: true
+      lyrics: false
+  
+  # Phase 29: Vocal-Aware Ducking
+  ducking:
+    enable: false
+    amount_db: 0.0
+    shorten_ms: 0.0
+
+moderate:
+  description: "標準的なピアノ伴奏（分散和音・装飾音符）"
+  
+  density:
+    chords_per_bar:
+      min: 3
+      max: 6
+    arpeggio_ratio_max: 0.4
+  
+  register:
+    min_midi: 48
+    max_midi: 84
+  
+  vocabulary:
+    turnaround_prob: 0.3
+    scale_run_prob: 0.2
+  
+  harmonic:
+    tension_rate: 0.3
+    voicing_spread: 14
+    drop_voicing_prob: 0.4
+  
+  cross_sync:
+    accent_sync_prob: 0.6
+    hihat_subdivision_bias: 0.4
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 2
+    velocity_step: 4
+  
+  articulation:
+    staccato_prob: 0.15
+    pedal_prob: 0.5
+  
+  dynamics:
+    velocity_curve: linear_up
+    min_vel: 60
+    max_vel: 95
+  
+  groove:
+    swing_amount: 0.0
+    laidback_ms: 3.0
+  
+  humanize:
+    timing_ms: 8.0
+    vel_sigma: 5.0
+    timing_bias_ms: 2.0
+  
+  emotion_map:
+    density_gain: 0.6
+    register_shift: 3
+    staccato_bias: 0.15
+    smooth_ms: 180
+  
+  controls:
+    expression_curve: linear
+    sustain_policy: pad_only
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 8
+    sibilant_duck_db: -3
+    plosive_gap_ms: 40
+    window_ms: 120
+  
+  # Phase 25: Sparsify（間引き・衝突回避）
+  sparsify:
+    enable: false
+  
+  # Phase 26: Hybrid Harmony（原曲×創作ブレンド）
+  harmony:
+    source: "hybrid"
+    blend: 0.3  # 30%創作を混ぜる
+    keep_audio_root: true
+    allow_text_tensions: [9]  # 9thのみ許可
+  
+  # Phase 27: Style Adaptation（活動度→プリセット切替）
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.3, 0.7]
+    order: ["simple", "moderate"]
+  
+  # Phase 28: Export Postprocess（量子化・命名）
+  export:
+    quantize_ql: 0.0625
+    track_split: ["RH", "LH"]
+    name_fmt: "{idx:02d}_Piano_{section}"
+    markers:
+      sections: true
+      lyrics: false
+  
+  # Phase 29: Vocal-Aware Ducking
+  ducking:
+    enable: true
+    amount_db: 2.0  # moderate では軽めのダッキング
+    shorten_ms: 10.0
+
+complex:
+  description: "複雑なピアノ伴奏（リッチなボイシング・高密度アルペジオ）"
+  
+  density:
+    chords_per_bar:
+      min: 4
+      max: 8
+    arpeggio_ratio_max: 0.6
+  
+  register:
+    min_midi: 36  # C2（低音域拡張）
+    max_midi: 96  # C7（高音域拡張）
+  
+  vocabulary:
+    turnaround_prob: 0.4
+    scale_run_prob: 0.3
+  
+  harmonic:
+    tension_rate: 0.5
+    voicing_spread: 16  # 2オクターブ近く
+    drop_voicing_prob: 0.5
+  
+  cross_sync:
+    accent_sync_prob: 0.7
+    hihat_subdivision_bias: 0.5
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 2
+    decrescendo_bars: 1
+    velocity_step: 6
+  
+  articulation:
+    staccato_prob: 0.2
+    pedal_prob: 0.6
+  
+  dynamics:
+    velocity_curve: peak_middle
+    min_vel: 55
+    max_vel: 100
+  
+  groove:
+    swing_amount: 0.05
+    laidback_ms: 4.0
+  
+  humanize:
+    timing_ms: 10.0
+    vel_sigma: 6.0
+    timing_bias_ms: 3.0
+  
+  emotion_map:
+    density_gain: 0.7
+    register_shift: 4
+    staccato_bias: 0.2
+    smooth_ms: 150
+  
+  controls:
+    expression_curve: arch
+    sustain_policy: pad_only
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 10
+    sibilant_duck_db: -4
+    plosive_gap_ms: 50
+    window_ms: 100
+  
+  # Phase 25: Sparsify（間引き・衝突回避）
+  sparsify:
+    enable: true
+    keep_endpoints: true
+    min_gap_ms: 40  # 40ms未満の間隔を排除
+  
+  # Phase 26: Hybrid Harmony（原曲×創作ブレンド）
+  harmony:
+    source: "hybrid"
+    blend: 0.5  # 50%ブレンド
+    keep_audio_root: true
+    allow_text_tensions: [9, 11]  # 9th, 11th許可
+  
+  # Phase 27: Style Adaptation（活動度→プリセット切替）
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.4, 0.8]
+    order: ["moderate", "complex"]
+  
+  # Phase 28: Export Postprocess（量子化・命名）
+  export:
+    quantize_ql: 0.125  # 8分音符単位（走りすぎ防止）
+    track_split: ["RH", "LH"]
+    name_fmt: "{idx:02d}_Piano_{section}"
+    markers:
+      sections: true
+      lyrics: false
+  
+  # Phase 29: Vocal-Aware Ducking
+  ducking:
+    enable: true
+    amount_db: 3.0  # complex では標準ダッキング
+    shorten_ms: 15.0
+
+intense:
+  description: "激しいピアノ伴奏（高密度・強いアクセント）"
+  
+  density:
+    chords_per_bar:
+      min: 6
+      max: 12
+    arpeggio_ratio_max: 0.7
+  
+  register:
+    min_midi: 36
+    max_midi: 96
+  
+  vocabulary:
+    turnaround_prob: 0.5
+    scale_run_prob: 0.4
+  
+  harmonic:
+    tension_rate: 0.6
+    voicing_spread: 18
+    drop_voicing_prob: 0.6
+  
+  cross_sync:
+    accent_sync_prob: 0.8
+    hihat_subdivision_bias: 0.6
+  
+  transition:
+    enable_crescendo: true
+    crescendo_bars: 1
+    decrescendo_bars: 0
+    velocity_step: 8
+  
+  articulation:
+    staccato_prob: 0.25
+    pedal_prob: 0.7
+  
+  dynamics:
+    velocity_curve: peak_middle
+    min_vel: 65
+    max_vel: 110
+  
+  groove:
+    swing_amount: 0.08
+    laidback_ms: 0.0  # プッシュ気味
+    push_sixteenth_ms: -2.0
+  
+  humanize:
+    timing_ms: 12.0
+    vel_sigma: 8.0
+    timing_bias_ms: 1.0
+  
+  emotion_map:
+    density_gain: 0.8
+    register_shift: 5
+    staccato_bias: 0.25
+    smooth_ms: 120
+  
+  controls:
+    expression_curve: arch
+    sustain_policy: always
+    bend_range: 2
+  
+  prosody:
+    enable: true
+    stress_boost: 12
+    sibilant_duck_db: -5
+    plosive_gap_ms: 60
+    window_ms: 100
+  
+  # Phase 25: Sparsify（間引き・衝突回避）
+  sparsify:
+    enable: true
+    keep_endpoints: true
+    min_gap_ms: 30  # 30ms未満の間隔を排除（密集緩和）
+  
+  # Phase 26: Hybrid Harmony（原曲×創作ブレンド）
+  harmony:
+    source: "hybrid"
+    blend: 0.6  # 60%創作寄り
+    keep_audio_root: true
+    allow_text_tensions: [9, 11, 13]  # 9th, 11th, 13th許可
+  
+  # Phase 27: Style Adaptation（活動度→プリセット切替）
+  style_adapt:
+    enable: true
+    window_bars: 4
+    low_high: [0.5, 0.9]
+    order: ["complex", "intense"]
+  
+  # Phase 28: Export Postprocess（量子化・命名）
+  export:
+    quantize_ql: 0.125  # 8分音符単位
+    track_split: ["RH", "LH"]
+    name_fmt: "{idx:02d}_Piano_{section}"
+    markers:
+      sections: true
+      lyrics: false
+  
+  # Phase 29: Vocal-Aware Ducking
+  ducking:
+    enable: true
+    amount_db: 4.0  # intense では強めのダッキング
+    shorten_ms: 20.0

@@ -18,7 +18,7 @@ from utilities.pretty_midi_safe import new_pm as PrettyMIDI
 
 from .drum_map_registry import GM_DRUM_MAP
 from .midi_utils import safe_end_time
-from .types import Intensity
+from .custom_types import Intensity
 
 logger = logging.getLogger(__name__)
 

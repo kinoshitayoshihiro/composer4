@@ -1,0 +1,24 @@
+INFO: Found 2104 packages in index
+INFO: Sampled 50 songs for A/B test
+INFO:   gold: 38
+INFO:   silver: 12
+INFO: Re-ranking parameters:
+INFO:   conf_thresh: 0.25
+INFO:   weights: proba=0.55, accent=0.3, density=0.1, section=0.05
+INFO: Loading v1 pickle: data/patterns/stage2_guitar.pickle
+INFO: Loading v2 pickle: data/patterns/stage2_guitar_v3_fixed.pickle
+INFO: Initialized SimplePatternRecommender for guitar
+INFO:   Version: 1.0
+INFO:   Total patterns: 2148
+INFO:   Selector type: rule_based
+INFO:   ✓ Loaded ML model from harmony_baseline_xgb_tuned.joblib
+INFO: Initialized SimplePatternRecommender for guitar
+INFO:   Version: 1.0
+INFO:   Total patterns: 2148
+INFO:   Selector type: xgboost
+INFO:   Provider: xgboost
+INFO:   Model: harmony_baseline_xgb_tuned.joblib
+INFO:   Classes: 1119
+INFO: v1 selector type: rule_based
+INFO: v2 selector type: xgboost
+INFO: Generated 3200 test cases

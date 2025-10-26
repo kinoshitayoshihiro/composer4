@@ -1,0 +1,128 @@
+# ========================================
+# ホワイトリスト方式：巨大物を全除外 → 必要なソースだけ戻す
+# ========================================
+
+# 開発環境・キャッシュを丸ごと除外
+.venv*/
+venv*/
+__pycache__/
+*.pyc
+node_modules/
+dist/
+build/
+.eggs/
+*.egg-info/
+
+# データ・成果物（送らない）
+logs/**
+wandb/**
+mlruns/**
+outputs/**
+results/**
+checkpoints/**
+data/**
+datasets/**
+dataset/**
+manifests/**
+reports/**
+
+# output/ 配下も基本除外（正規版 pickle のみ後でホワイトリスト）
+output/**
+
+# 音声・動画・MIDI（送らない）
+*.wav
+*.aif
+*.aiff
+*.flac
+*.mp3
+*.ogg
+*.mp4
+*.mov
+*.m4a
+*.mid
+*.midi
+stems/**
+suno_*/
+
+# モデル・学習ファイル（送らない）
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.pkl
+*.pickle
+*.pckle
+*.npz
+*.npy
+
+# ========================================
+# Stage2 正規版 Pickle のホワイトリスト
+# ========================================
+
+# ただし、本番用Stage2 patternsは含める
+!data/patterns/*.pickle
+!data/patterns/*.pkl
+
+# 正規版 Dataset Pickles (合計26 files, ~32MB)
+# Slakh Dataset (8 files, 365KB)
+!output/slakh/shards/bass/*.pkl
+!output/slakh/shards/drums/*.pkl
+!output/slakh/shards/guitar/*.pkl
+!output/slakh/shards/strings/*.pkl
+
+# POP909 Dataset (6 files, 1.3MB)
+!output/pop909/shards/bass/*.pkl
+!output/pop909/shards/chords/*.pkl
+!output/pop909/shards/melody/*.pkl
+
+# Drums Metadata - LAMDA V2 (12 files, 30.2MB, 51,248 loops)
+!output/drums_metadata/*.pkl
+
+# V1 Generatorが必要とする設定ファイル（YAMLプリセット）
+!data/*.yaml
+!data/*.yml
+
+# パターンディレクトリ（pickle以外も含める）
+!data/patterns/
+
+# 一時・キャッシュ
+.tmp/
+tmp/
+.cache/
+.mypy_cache/
+pytest_cache/
+notebooks/.ipynb_checkpoints/
+
+# Git・IDE・OS
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+.env
+.envrc
+
+# テスト関連（ビルドに不要）
+tests/**
+test_*.py
+*_test.py
+
+# ========================================
+# 必要なファイルだけ再含める（! で戻す）
+# ========================================
+!generator/
+!utilities/
+!ml/
+!realtime/
+!tools/
+!configs/
+!config/
+!scripts/
+!*.yaml
+!*.yml
+!requirements*.txt
+!pyproject.toml
+!setup.cfg
+!setup.py
+!Dockerfile
+!README.md

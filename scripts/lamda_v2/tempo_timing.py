@@ -114,13 +114,63 @@ def build_beat_grid(pm) -> Dict[str, Any]:
 
     downbeats_ql = [sec_to_ql(t, tempo_map) for t in downbeats_sec]
 
-    return {
+    grid = {
         "tempo_map": tempo_map,
         "timesig_map": timesig_map,
         "timesig_map_time": timesig_map_time,
         "downbeats_sec": downbeats_sec,
         "downbeats_ql": downbeats_ql,
     }
+    
+    # --- NEW: timesig sanitization (fix spurious 1/4 -> 4/4) ---
+    try:
+        _maybe_fix_one_four(grid)
+    except Exception:
+        pass
+    
+    return grid
+
+
+def _maybe_fix_one_four(grid: dict, tol_ql: float = 0.65, min_bars: int = 16) -> None:
+    """
+    1/4 が多数出ているが、実際の小節長が ~4.0QL 前後なら 4/4 に補正。
+    
+    ガード条件:
+      - 連続バー数 >= min_bars
+      - 平均小節長QL ≈ 4.0 (±tol_ql)
+      - 他の拍子が混ざっていない
+    
+    Parameters
+    ----------
+    grid : dict
+        build_beat_grid()の出力辞書
+    tol_ql : float
+        許容誤差（デフォルト 0.65 QL）
+    min_bars : int
+        最小小節数（デフォルト 16）
+    """
+    ts_time = [sig for _, sig in grid.get("timesig_map_time", [])]
+    if not ts_time:
+        return
+    # 全て1/4かチェック
+    if not all(s == "1/4" for s in ts_time):
+        return
+    
+    db = grid.get("downbeats_ql", [])
+    if len(db) < (min_bars + 1):
+        return
+    
+    # 小節長の平均を計算
+    bar_ql = [db[i+1] - db[i] for i in range(len(db) - 1)]
+    avg = sum(bar_ql) / max(1, len(bar_ql))
+    
+    # 平均が4.0QL付近でなければスキップ
+    if abs(avg - 4.0) > tol_ql:
+        return
+    
+    # 補正：timesig を 4/4 に置換
+    grid["timesig_map"] = [(b, "4/4") for b, _ in grid.get("timesig_map", [])]
+    grid["timesig_map_time"] = [(t, "4/4") for t, _ in grid.get("timesig_map_time", [])]
 
 
 # ---------- editing utilities ----------

@@ -1,0 +1,91 @@
+# config/song_001_cfg.yml
+# =========================================================
+# song_001用のメイン設定ファイル (modular_composer.py用)
+# =========================================================
+
+global_settings:
+  time_signature: "4/4"
+  tempo_bpm: 120
+  key_tonic: "C"
+  key_mode: "minor"
+  drum_map: "gm"
+  
+  # Prosody制御 (Phase 23)
+  prosody:
+    enable: true
+    anchors_path: "data/suno_ai/suno_themesong/song_001/analysis/lyric_anchors.json"
+    config:
+      sibilant:
+        vel_scale: 0.75
+        hh_reduce: 0.6
+      stress:
+        vel_scale: 1.15
+        cc11_boost: 10
+      plosive:
+        duration_scale: 0.85
+      max_overlaps: 3
+      merge_threshold_ms: 50
+
+paths:
+  chordmap_path: "data/suno_ai/suno_themesong/song_001/analysis/chordmap_unified.json"
+  rhythm_library_path: "data/rhythm_library.yml"
+  output_dir: "data/suno_ai/suno_themesong/song_001/output"
+  output_filename: "song_001_composed.mid"
+
+# 生成するセクション（chordmap_unified.jsonのsectionsキーに対応）
+sections_to_generate:
+  - intro
+  - verse_1
+  - chorus_1
+  - verse_2
+  - chorus_2
+  - bridge
+  - chorus_3
+  - outro
+
+# 楽器パート設定
+part_defaults:
+  piano:
+    role: "pad"
+    velocity_base: 70
+    octave_shift: 0
+    humanize_profile: "piano_subtle"
+    
+  guitar:
+    role: "riff"
+    velocity_base: 75
+    tuning: "standard"
+    humanize_profile: "guitar_subtle"
+    
+  bass:
+    role: "bass"
+    velocity_base: 80
+    octave_shift: -1
+    humanize_profile: "bass_subtle"
+    
+  drums:
+    role: "rhythm"
+    velocity_base: 85
+    humanize_profile: "drums_subtle"
+
+# Humanizer プロファイル
+humanize_profiles:
+  piano_subtle:
+    timing_variance: 0.02
+    velocity_variance: 5
+    duration_variance: 0.05
+    
+  guitar_subtle:
+    timing_variance: 0.03
+    velocity_variance: 7
+    duration_variance: 0.08
+    
+  bass_subtle:
+    timing_variance: 0.015
+    velocity_variance: 4
+    duration_variance: 0.03
+    
+  drums_subtle:
+    timing_variance: 0.025
+    velocity_variance: 6
+    duration_variance: 0.02

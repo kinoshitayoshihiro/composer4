@@ -1,0 +1,19 @@
+scikit-learn version 1.7.2 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+WARNING:root:onnxruntime is not installed. If you plan to use an ONNX Model, reinstall basic-pitch with `pip install 'basic-pitch[onnx]'`
+WARNING:root:Tensorflow is not installed. If you plan to use a TF Saved Model, reinstall basic-pitch with `pip install 'basic-pitch[tf]'`
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+⚠️ suno_wav_to_midi not available
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py", line 479, in <module>
+    main()
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py", line 449, in main
+    integrator = LocalLAMDAIntegrator(
+                 ^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py", line 164, in __init__
+    self._init_database()
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py", line 168, in _init_database
+    conn = sqlite3.connect(self.db_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: unable to open database file

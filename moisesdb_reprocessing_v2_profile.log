@@ -1,0 +1,4111 @@
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_moises_integration.py:260: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  features['tempo'] = float(tempo)
+📋 [Policy] profile=moisesdb v2
+   harmony={bass:0.20,guitar:0.50,other:0.25,other_keys:0.40,other_plucked:0.25,piano:0.50,strings:0.35,wind:0.30}
+   exclude_for_harmony=['mix', 'vocals', 'drums', 'percussion']
+   ✅ Policy validation passed for 'moisesdb'
+
+======================================================================
+LOCAL LAMDA MoisesDB Integration - moisesdb
+======================================================================
+Input dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/CLEANED_WAV/moisesdb_original/moisesdb_v0.1
+Total song directories: 240
+Output DB: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA/local_lamda_registry.db
+Policy: custom
+======================================================================
+
+[1/240]
+
+======================================================================
+Processing: Fight The Feeling - ProRata
+Song ID: 9653a690-c28c-4e8f-962e-ff7ed18b8ee9
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 2ead80e890c4, Duration: 273.0s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 3c3b5fd84bb9, Duration: 546.0s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 19f1a730755d, Duration: 819.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ea6a25ab7130, Duration: 273.0s
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[2/240]
+
+======================================================================
+Processing: Sleep is Easier - The Tainted
+Song ID: 8ba20549-c038-47c0-a808-e38741135911
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 0cb45aa3c246, Duration: 340.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: dcf14352d445, Duration: 170.9s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[3/240]
+
+======================================================================
+Processing: Falling In Falling Out - Firefly
+Song ID: 1a32e987-cae8-458f-9c26-d9a6abf5348d
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: ebb5bd84d678, Duration: 244.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: b323da9d9ba4, Duration: 244.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f61437b7a299, Duration: 244.0s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[4/240]
+
+======================================================================
+Processing: I Gave You Power  - Vinegar Stroke
+Song ID: 4b9f86f4-23e4-458b-839e-8a63b584bea3
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 40801dbd2cae, Duration: 199.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: c05d93af1acb, Duration: 198.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[5/240]
+
+======================================================================
+Processing: Mountains Of Madness - Evolving Habits
+Song ID: 793b98a0-c776-4943-87eb-b7e07e50f531
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 659e09a416d3, Duration: 194.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 707ede5ef554, Duration: 194.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d0a5ce816b0e, Duration: 194.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[6/240]
+
+======================================================================
+Processing: Fine Line - Frank Sermon
+Song ID: 25789239-1075-43b9-bfc9-51dff4a29590
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: a2f3a5a8e5f5, Duration: 171.7s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 9d64abd4384f, Duration: 171.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 303aba371257, Duration: 171.7s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[7/240]
+
+======================================================================
+Processing: 1973 - Ben James
+Song ID: f97e0ccd-e2a1-4da9-b8b8-c58e11adc4d9
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: be6f37f8d9a9, Duration: 240.3s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 0cc697eddb5b, Duration: 240.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 468fd6f4d526, Duration: 240.3s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: dc91274d3785, Duration: 480.7s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 0ed2b20fc60e, Duration: 480.7s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: c21260894215, Duration: 480.7s
+✅ Processed 6 stems: ['piano', 'strings', 'other', 'other_keys', 'guitar', 'bass']
+
+[8/240]
+
+======================================================================
+Processing: Camera - Modified Freq
+Song ID: 169628c5-266d-4e11-993b-440fa5fa2167
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 0a8807347c18, Duration: 346.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 52dd4a0b02e9, Duration: 346.8s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[9/240]
+
+======================================================================
+Processing: Send The Elevator Down - Firefly
+Song ID: 9ac2612b-e25f-4d27-8d43-b957e7e5a74b
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: a5166498e94a, Duration: 431.1s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 656aee5c30ea, Duration: 215.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 944ebe610cac, Duration: 215.6s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[10/240]
+
+======================================================================
+Processing: Perfect Moment - Firefly
+Song ID: 9ce23a79-20eb-431a-80d2-eda3260ef503
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: c91a52221350, Duration: 91.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: aa88f46b6de6, Duration: 91.3s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[11/240]
+
+======================================================================
+Processing: Dreaming 'Bout Being With You - Iain Kerr & Friends
+Song ID: 1e957e76-d7a2-4b84-bc4a-afa87979ff57
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 3dc663c4edb4, Duration: 263.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 4f46d544892e, Duration: 131.8s
+✅ Processed 2 stems: ['piano', 'bass']
+
+[12/240]
+
+======================================================================
+Processing: We Stand Together - Firefly
+Song ID: 312bec8d-1c61-43e0-924a-1fb87ddc3e41
+======================================================================
+🎵 Processing stem: other_plucked → role: other_plucked (1 segments)
+   → File ID: f629e5120cd4, Duration: 228.0s
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 115028f31231, Duration: 228.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 56a300c723e3, Duration: 228.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 0ea067e46b15, Duration: 228.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 539b0598e771, Duration: 456.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d64bf6e7ebb9, Duration: 228.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 6 stems: ['other_plucked', 'piano', 'strings', 'wind', 'guitar', 'bass']
+
+[13/240]
+
+======================================================================
+Processing: Coming Home To You - Firefly
+Song ID: 6b168ae6-9d8a-4dc2-9d27-898e6871bf8b
+======================================================================
+🎵 Processing stem: other_plucked → role: other_plucked (1 segments)
+   → File ID: 795d6ce7d6d8, Duration: 212.8s
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 43b4750671c6, Duration: 212.8s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: be384fae3c47, Duration: 212.8s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 5592d7ac1cbf, Duration: 425.5s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: fb1aaaf81ca0, Duration: 212.8s
+🎵 Processing stem: guitar → role: guitar (4 segments)
+   → File ID: df67ba33a72d, Duration: 851.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 34ca0777f652, Duration: 212.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 7 stems: ['other_plucked', 'piano', 'strings', 'other_keys', 'wind', 'guitar', 'bass']
+
+[14/240]
+
+======================================================================
+Processing: Lost - Violet Sun
+Song ID: 2b4e8304-c92d-4347-b09e-cfb9b3e29bf2
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 1df4eedaeb61, Duration: 373.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 55fcde0757b0, Duration: 186.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[15/240]
+
+======================================================================
+Processing: Nexus - Juniper
+Song ID: 8f36f17f-c033-4c1b-a793-80dce43d507b
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: f90f95c0a12b, Duration: 302.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 46e89e974ad7, Duration: 302.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: b776760bc386, Duration: 302.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 5e1b9f24571c, Duration: 604.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: c7d57c4befe2, Duration: 302.0s
+✅ Processed 5 stems: ['piano', 'strings', 'wind', 'guitar', 'bass']
+
+[16/240]
+
+======================================================================
+Processing: Rock n Roll Junkie - Firefly
+Song ID: bc964128-da16-4e4c-af95-4d1211e78c70
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: a81269395a7a, Duration: 227.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 6b7ac81a9067, Duration: 227.5s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: cb90f9603875, Duration: 455.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b8c158fe7ac5, Duration: 227.5s
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[17/240]
+
+======================================================================
+Processing: Hand Drawn - The Followers
+Song ID: c8f42ad5-5a2f-4398-b9d9-207fd4fcc551
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 6fdf48016ed0, Duration: 135.4s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 34104384df2e, Duration: 135.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 5847cdd4b53e, Duration: 135.4s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[18/240]
+
+======================================================================
+Processing: U Do U - Rivum
+Song ID: 24f8a652-0168-4702-8725-42f9924e6729
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 1e477f1efd13, Duration: 256.8s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 44b88de2a492, Duration: 256.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 82fe39d8b3ce, Duration: 256.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[19/240]
+
+======================================================================
+Processing: The First Noel - Skipsam Soo
+Song ID: 3c3b5fdb-f15e-4ba4-884a-b083ce2426c6
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 7a794b5e7645, Duration: 364.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d31f878612eb, Duration: 182.3s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[20/240]
+
+======================================================================
+Processing: Go Quiet - Rivum
+Song ID: 8042b88a-6179-406b-9ec4-b45a4cdd4a71
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: e265a174aec7, Duration: 254.9s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 66fbdf059da3, Duration: 509.8s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: bbb7ffcbaf7c, Duration: 764.7s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: ed669025f00c, Duration: 509.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[21/240]
+
+======================================================================
+Processing: Snow Queen - Sour Cherry
+Song ID: 4857878a-e44b-4143-90e9-b65d0b704306
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: b71ce54137f8, Duration: 293.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: bdf39be35710, Duration: 587.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: c8c11a460a70, Duration: 294.2s
+✅ Processed 3 stems: ['other', 'guitar', 'bass']
+
+[22/240]
+
+======================================================================
+Processing: Mr Know It All - PaletteFace
+Song ID: ef1510e0-ba23-4b59-ba53-14181d73f213
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 3f6381336524, Duration: 342.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 81aef8448c43, Duration: 171.1s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[23/240]
+
+======================================================================
+Processing: Porridge - Topsoil
+Song ID: 322f4d9d-b0c9-4ab3-9e30-544a25331ffd
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: f87b89332fcf, Duration: 248.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 310e3eb5f8f6, Duration: 248.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[24/240]
+
+======================================================================
+Processing: Love You And Leave You - Drawing Hands
+Song ID: 53808b95-cfe9-461d-a113-ffadf32817a1
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 5d86304672b1, Duration: 206.6s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 67c6d07900a1, Duration: 206.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: e1ecb7fc343d, Duration: 206.6s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[25/240]
+
+======================================================================
+Processing: Rock A Bye Baby - Sunny SIde Up
+Song ID: f9e58f4d-e361-4598-9c9a-d0a83529cc68
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 337825fcf4f4, Duration: 80.8s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 1eb611cacd66, Duration: 80.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 363cb9a93dcb, Duration: 80.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[26/240]
+
+======================================================================
+Processing: Three Little Kittens - Sunny SIde Up
+Song ID: 22ea41a3-1766-4a76-8071-380b27f1869a
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 0e2619fcec4f, Duration: 99.9s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 8360db90196e, Duration: 99.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: c956f41fea29, Duration: 99.9s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[27/240]
+
+======================================================================
+Processing: Ancient Voices - Firefly
+Song ID: dfb0e076-cb6b-4dcc-9934-c60070ff04d7
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: da7b7cc506d4, Duration: 463.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: bc15eaa9d723, Duration: 696.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: c94bd31fe8b1, Duration: 231.8s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[28/240]
+
+======================================================================
+Processing: Crazy - Rivum
+Song ID: 63b68795-0076-476b-a917-dec9e89bf91e
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 7b76c207923c, Duration: 548.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 141031aff293, Duration: 274.2s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 0c1b3730dca8, Duration: 822.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 9f3d4a0c69b4, Duration: 274.2s
+✅ Processed 4 stems: ['piano', 'other', 'guitar', 'bass']
+
+[29/240]
+
+======================================================================
+Processing: The Bench - Ben James
+Song ID: 524ab371-f6c6-4ff7-b896-e83750c8bef7
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: c3ec25cb87f0, Duration: 223.8s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 99d537810f45, Duration: 223.8s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: e2b703827c89, Duration: 223.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 50f39f6501de, Duration: 223.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[30/240]
+
+======================================================================
+Processing: Ring A Roses - Sunny Side Up
+Song ID: 1921a83e-0373-4bf7-8dc9-6cc9401c9309
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: fd005610b172, Duration: 101.7s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 3e4e2d8b804a, Duration: 101.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b3527a6da91f, Duration: 101.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[31/240]
+
+======================================================================
+Processing: Joy To The World - Skipsam Soo
+Song ID: 747d5c98-665b-4470-a696-7a6cf6968ef1
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 52fb06d8f717, Duration: 187.0s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: ed90227dfdb8, Duration: 187.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: a17447e93b26, Duration: 187.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 3ea9920322dd, Duration: 187.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[32/240]
+
+======================================================================
+Processing: Into The Well - Liquid Biscuit
+Song ID: cc3e4991-6cce-40fe-a917-81a4fbb92ea6
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 3ad6929b4428, Duration: 241.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: c2909137f011, Duration: 483.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 7c0376160698, Duration: 241.0s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[33/240]
+
+======================================================================
+Processing: Country Heart - Firefly
+Song ID: ad6c3742-e517-42eb-9dec-e74ed05387cc
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 3d22f765f169, Duration: 220.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: cc2ad378ab77, Duration: 441.8s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: f8f8740d6281, Duration: 441.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 136a1000d574, Duration: 220.9s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[34/240]
+
+======================================================================
+Processing: Thriller - The Followers
+Song ID: 04204031-4f98-44ba-9c47-98c2f2e6b8fc
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 1c411920fe61, Duration: 299.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 5235a93b4423, Duration: 149.7s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[35/240]
+
+======================================================================
+Processing: Sightseers - Mansa Musa
+Song ID: ad9bbefc-8762-46c9-b847-da14b10802b6
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: f99aaf6e570a, Duration: 163.1s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 8effa7d4b5f8, Duration: 163.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 415805aa72f0, Duration: 163.1s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[36/240]
+
+======================================================================
+Processing: Hard To Love You - Firefly
+Song ID: 212bb137-fd01-465e-80f3-a890fb0ebcdd
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 2904a005c7fb, Duration: 300.2s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: ef66b00e90cc, Duration: 300.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 763a19ddc8b7, Duration: 600.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0cf9a27e45aa, Duration: 300.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[37/240]
+
+======================================================================
+Processing: Hold Your Own - Holy Magick
+Song ID: fe3ae408-d35f-4c17-aa33-402238725a9d
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 3ffb1ea5ed57, Duration: 208.2s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: e2128e519321, Duration: 624.7s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 0802458b564b, Duration: 416.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other', 'guitar', 'bass']
+
+[38/240]
+
+======================================================================
+Processing: Yesterday - Ben James
+Song ID: bb6d72a2-63ba-405e-a2c1-c7442b4190bb
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: a6779322603e, Duration: 194.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: cdbca6a6d3c9, Duration: 194.7s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 6c3672d32d67, Duration: 389.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b062974d10e7, Duration: 194.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[39/240]
+
+======================================================================
+Processing: Breed - Violet Sun
+Song ID: 35a19148-49bf-451d-9a0e-5ab8e914c367
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: d59c8b2f4a51, Duration: 184.3s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: d0821a96d743, Duration: 368.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: db6fbe27dce4, Duration: 184.3s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[40/240]
+
+======================================================================
+Processing: Diamond Eyes - Frank Sermon
+Song ID: 7e74ce11-1603-440b-8794-b6e665b917e1
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 3d85026062c0, Duration: 299.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 707b4581efcc, Duration: 299.3s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: eb5842b3a9c2, Duration: 598.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b84dbe7970b2, Duration: 299.3s
+✅ Processed 4 stems: ['piano', 'wind', 'guitar', 'bass']
+
+[41/240]
+
+======================================================================
+Processing: Crackling On The Wire - Fröst
+Song ID: d4262245-3143-4c05-8423-6cbdc6253042
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (3 segments)
+   → File ID: 49a5c551fced, Duration: 730.8s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 2d4828edc085, Duration: 487.2s
+✅ Processed 2 stems: ['other_keys', 'bass']
+
+[42/240]
+
+======================================================================
+Processing: Hypersleep - Ritual Slaughter
+Song ID: b8a79d39-346e-4258-a810-572b3b2c9ab1
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 8f61be19ae7f, Duration: 339.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b9d4f7c25c54, Duration: 339.6s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[43/240]
+
+======================================================================
+Processing: Nothing Lasts Forever  - Firefly
+Song ID: 4cbd6c36-87a2-4d50-86e3-52d39b98fad3
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: d84e07706e5e, Duration: 201.3s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: f7c1cef959ec, Duration: 201.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 2da773ed0980, Duration: 201.3s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 66007588333b, Duration: 603.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 76a7ba52135e, Duration: 201.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'strings', 'other_keys', 'guitar', 'bass']
+
+[44/240]
+
+======================================================================
+Processing: Two Little Dickie Birds - Sunny SIde Up
+Song ID: 378742ba-5ba8-44c2-9cfd-8a609decca57
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 6d8649d739f3, Duration: 183.8s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 3d733349bb0f, Duration: 91.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 315990ce94c7, Duration: 91.9s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[45/240]
+
+======================================================================
+Processing: Can You Hear Me - FNDEF
+Song ID: f0101ed8-7c32-4744-8b2a-1b621cb4833b
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 90fc9a01aad0, Duration: 206.6s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: dc61a71f6dfa, Duration: 206.6s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: e78ebac77faa, Duration: 206.6s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: ac6be3ec713e, Duration: 619.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: c63d92cdeb34, Duration: 206.6s
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[46/240]
+
+======================================================================
+Processing: The Long Way - Firefly
+Song ID: 49ed7cef-8ffb-4833-bc96-6df7b8ff5b43
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 2489e34553f1, Duration: 265.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: d7dd524a5fa5, Duration: 265.3s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 149c38d54083, Duration: 530.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: e86d48b15265, Duration: 265.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[47/240]
+
+======================================================================
+Processing: We're On Again - Firefly
+Song ID: a0b9a4e4-51f5-4c98-a090-0317fb891056
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 4e96df331ac7, Duration: 183.2s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: af92c4fd4ed7, Duration: 183.2s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 9226e729139f, Duration: 366.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ce8f537e4e34, Duration: 183.2s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[48/240]
+
+======================================================================
+Processing: Old Blue Jeans - Firefly
+Song ID: c228818e-eabe-434b-9d60-2fb84a6c5b2a
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: a1d93bc36ec8, Duration: 276.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 7f5a03ea28bd, Duration: 276.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 8571654ba99f, Duration: 276.0s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: b0cc11128002, Duration: 828.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 32988d782d85, Duration: 276.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'strings', 'other_keys', 'guitar', 'bass']
+
+[49/240]
+
+======================================================================
+Processing: Myeloma - Virtual Tongues
+Song ID: bd065894-3521-415f-b39f-5a6980f024fb
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 8f3880973e1b, Duration: 318.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b58f1ac8ad79, Duration: 318.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[50/240]
+
+======================================================================
+Processing: The Last To Know - Firefly
+Song ID: 3f5233cb-57fa-4772-b389-f295a6f416ae
+======================================================================
+🎵 Processing stem: other_plucked → role: other_plucked (1 segments)
+   → File ID: ee1c74941439, Duration: 229.4s
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: b97df917f104, Duration: 458.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 88ea82bb09f1, Duration: 458.9s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 187b59c5b7c2, Duration: 458.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 2e41bdaca3f3, Duration: 229.4s
+✅ Processed 5 stems: ['other_plucked', 'piano', 'other_keys', 'guitar', 'bass']
+
+[51/240]
+
+======================================================================
+Processing: Our Love - James Graydon
+Song ID: d7d28204-a8ac-4c2b-bb3c-c941f4a00b85
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: c3b17541b6be, Duration: 196.4s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: c7f3e27c0083, Duration: 196.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 63278d93f6af, Duration: 196.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 33d388e3a7cf, Duration: 196.4s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[52/240]
+
+======================================================================
+Processing: Gloria's Swan Song - Firefly
+Song ID: 7dd515b0-e218-425d-b8bf-a75056237d6a
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 243f4fb0e13d, Duration: 146.0s
+🔎  Processing (separate): vocals (role: vocals)
+✅ Processed 1 stems: ['piano']
+
+[53/240]
+
+======================================================================
+Processing: We Wish You A Merry Christmas - Skipsam Soo
+Song ID: ea29ab4d-7f72-4331-b2a4-d3945c754211
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 65a662ba1170, Duration: 312.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 2564d1d97a69, Duration: 156.2s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[54/240]
+
+======================================================================
+Processing: Nine In A Bed - Sunny SIde Up
+Song ID: 46bc5393-7753-44ae-913b-bd5fa8f33e98
+======================================================================
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: c57a8eabbe24, Duration: 159.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 98ddb4bfd7c0, Duration: 159.6s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[55/240]
+
+======================================================================
+Processing: Lifeboat - Holy Magick
+Song ID: 6ceda40a-88bc-4e98-87c3-dd5c91725d41
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 2311d72068d1, Duration: 290.0s
+🎵 Processing stem: guitar → role: guitar (5 segments)
+   → File ID: 0d7570143070, Duration: 1449.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 2fa4939f886c, Duration: 290.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[56/240]
+
+======================================================================
+Processing: Robs Song - Vinegar Stroke
+Song ID: ed7576a1-2fed-4736-8368-74ac347a0718
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: cacc48f1f21d, Duration: 598.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 7697b147b23b, Duration: 299.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[57/240]
+
+======================================================================
+Processing: Big Life - Firefly
+Song ID: 1afe1b3b-3e2e-48d3-b859-f50e222cbaf4
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 2a46d221d305, Duration: 236.5s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: c8ee13113bfd, Duration: 236.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 3f353e8eca6e, Duration: 709.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f61b103a820c, Duration: 236.5s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[58/240]
+
+======================================================================
+Processing: La Venus D'Argent  - Fröst
+Song ID: fa46f72c-696d-45bc-bcc5-2b3305800565
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (5 segments)
+   → File ID: 18696b541886, Duration: 1056.5s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 33af3d901c48, Duration: 422.6s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['other_keys', 'bass']
+
+[59/240]
+
+======================================================================
+Processing: Black Mountain - Fröst
+Song ID: 7180bffa-dd48-49b9-bc02-f6e3f7f165b0
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (7 segments)
+   → File ID: 97a7e18c98d7, Duration: 1394.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: fe788472a92d, Duration: 199.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['other_keys', 'bass']
+
+[60/240]
+
+======================================================================
+Processing: The Death Of Me - Holy Magick
+Song ID: e4de8632-6f69-4c63-8081-f4c2b77b40df
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: f3ec51088247, Duration: 175.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: fa00e54da298, Duration: 350.9s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: bbc1bcb781af, Duration: 350.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 89ba1eaac567, Duration: 175.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[61/240]
+
+======================================================================
+Processing: It's Your Money - Holy Magick
+Song ID: ebea0f1d-8e23-469e-8eed-5269a9c684f0
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: cfff63983858, Duration: 205.1s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 7d8a935c6e59, Duration: 410.1s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 60f6921eeb2c, Duration: 615.2s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 590c533173a6, Duration: 410.1s
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[62/240]
+
+======================================================================
+Processing: Here I Stay - Centenary
+Song ID: 7524054e-dc67-47e0-8c26-ea1d4d70d2fb
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 5a8217202a9f, Duration: 196.9s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: c4a56ba8c489, Duration: 196.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: a64ec8066672, Duration: 196.9s
+✅ Processed 3 stems: ['wind', 'guitar', 'bass']
+
+[63/240]
+
+======================================================================
+Processing: Alone At Christmas - Firefly
+Song ID: 4a896cde-57c6-4646-b610-1b0b654d0349
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 084d24ba151a, Duration: 166.7s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: a7b58d15e5a6, Duration: 166.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 5bbc86847184, Duration: 166.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 102eb3b96dd5, Duration: 166.7s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[64/240]
+
+======================================================================
+Processing: Know Without Knowing - Centenary
+Song ID: 78ef22ce-472f-4f82-8656-16df73b9465f
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 76eb300745ff, Duration: 182.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: ab8424472252, Duration: 182.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 68c37bcae882, Duration: 182.0s
+✅ Processed 3 stems: ['wind', 'guitar', 'bass']
+
+[65/240]
+
+======================================================================
+Processing: I Dont Need That Doctor - Iain Kerr & Friends
+Song ID: 25be35fb-ab11-485c-9b71-4fcb46ef3c2a
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 474af772d621, Duration: 318.1s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: abe8ad2ea32c, Duration: 159.0s
+✅ Processed 2 stems: ['piano', 'bass']
+
+[66/240]
+
+======================================================================
+Processing: Auld Lang Syne - Skipsam Soo
+Song ID: 825f697d-5fcd-4429-ba33-23163c726ca7
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 1df2a83606ed, Duration: 174.2s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 5509fa493086, Duration: 348.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 33201371ae27, Duration: 174.2s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[67/240]
+
+======================================================================
+Processing: Feel Low - Rivum
+Song ID: 13f233aa-a2e5-4683-8533-2f1e344b55b4
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 93892c337aa3, Duration: 254.6s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: b0e05da1c8c2, Duration: 254.6s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 2f51246cb7d1, Duration: 254.6s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 4adb740d79fe, Duration: 509.2s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: c9aa1a7ec67d, Duration: 763.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f1cc3c72be5c, Duration: 254.6s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 6 stems: ['piano', 'strings', 'other', 'other_keys', 'guitar', 'bass']
+
+[68/240]
+
+======================================================================
+Processing: Sick Of Waiting - Centenary
+Song ID: b876b54b-6007-4d36-a6f4-efed8829d5fc
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: df87b5355ef4, Duration: 224.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 7f4e58c55da3, Duration: 224.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 88daa63b5845, Duration: 224.0s
+✅ Processed 3 stems: ['wind', 'guitar', 'bass']
+
+[69/240]
+
+======================================================================
+Processing: Wake Up So - Holy Magick
+Song ID: 8ce11544-9a6f-4f1e-ac2f-fc10343f15c8
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 5855896399e4, Duration: 186.5s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: ae81db40d01e, Duration: 186.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 40bdd86b4036, Duration: 186.5s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 383ff49e97cc, Duration: 186.5s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 99dfb43ac280, Duration: 186.5s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 2d3914a7975e, Duration: 372.5s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 6 stems: ['piano', 'strings', 'other_keys', 'wind', 'guitar', 'bass']
+
+[70/240]
+
+======================================================================
+Processing: Hating On Me - Rivum
+Song ID: a199697c-3cdc-47c7-a9c7-c1b07dd6c9dd
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: b0dd9456cf7b, Duration: 222.4s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 608047b5797a, Duration: 222.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: f8ed04626686, Duration: 222.4s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 0b438a592937, Duration: 444.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ba53cc37c0e5, Duration: 222.4s
+✅ Processed 5 stems: ['piano', 'strings', 'other', 'guitar', 'bass']
+
+[71/240]
+
+======================================================================
+Processing: Fire - Modified Freq
+Song ID: dda2c057-6d73-43fa-a130-d7d6562c09ca
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 1d83c89f5189, Duration: 561.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 1b4d647808d8, Duration: 561.5s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[72/240]
+
+======================================================================
+Processing: Cleaner - The Unfortunates
+Song ID: f40ffd10-4e8b-41e6-bd8a-971929ca9138
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: e6bfbb6e87f0, Duration: 216.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: bc25a8eec24e, Duration: 217.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[73/240]
+
+======================================================================
+Processing: Stay or Leave - Centenary
+Song ID: c6d73235-1dd5-4085-a3b3-50a3466c6168
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 6bab4e94be30, Duration: 210.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 39b8f9ed8d05, Duration: 211.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 1167631d8a74, Duration: 210.0s
+✅ Processed 3 stems: ['wind', 'guitar', 'bass']
+
+[74/240]
+
+======================================================================
+Processing: Electric - Firefly
+Song ID: 6ce087b4-e571-4472-9be2-04b5340311c6
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: a1dd6fc40656, Duration: 217.5s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 01e67f3dcf08, Duration: 217.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: f2aebdd2a58b, Duration: 217.5s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: cfd3fa5b1359, Duration: 652.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0851d10d00eb, Duration: 217.5s
+✅ Processed 5 stems: ['piano', 'strings', 'other_keys', 'guitar', 'bass']
+
+[75/240]
+
+======================================================================
+Processing: Horizon - Oberheads
+Song ID: 9eb8bc50-cffb-4c19-be0e-d27423e3e102
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (4 segments)
+   → File ID: 43f5e5dfbaf0, Duration: 1160.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 4e21d783fdd2, Duration: 290.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[76/240]
+
+======================================================================
+Processing: You're The One - FNDEF
+Song ID: 25516a0f-3197-47e4-8fbf-de9500fc68d2
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 6b9b262da8ae, Duration: 187.4s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 8e48630a21ed, Duration: 187.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 57dd1ef86d78, Duration: 187.4s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: e8ddb8b9d8d9, Duration: 187.4s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: d65b7b73be16, Duration: 374.9s
+✅ Processed 5 stems: ['piano', 'strings', 'other', 'guitar', 'bass']
+
+[77/240]
+
+======================================================================
+Processing: Stand Up - Ritual Slaughter
+Song ID: 88b545e5-4d06-4d55-a306-1bd3a2915ee5
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 3d001762638b, Duration: 732.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: db66d3b7d418, Duration: 367.1s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[78/240]
+
+======================================================================
+Processing: Athazagora - Vinegar Stroke
+Song ID: b8d6f3eb-f2d6-4342-af90-6d09f5257b6b
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 2bdc785adaa8, Duration: 238.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d7f3307abf4f, Duration: 238.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[79/240]
+
+======================================================================
+Processing: Old Friends - Holy Magick
+Song ID: c70471f9-9c4a-41c9-b8f8-20ac38847a8e
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: c64e68a746f1, Duration: 270.3s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: b06b54a214ff, Duration: 270.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 38bdec698250, Duration: 540.5s
+🎵 Processing stem: guitar → role: guitar (4 segments)
+   → File ID: 6ec4b2221550, Duration: 1081.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 27bf83ad0210, Duration: 270.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'strings', 'other_keys', 'guitar', 'bass']
+
+[80/240]
+
+======================================================================
+Processing: Write It Down - Firefly
+Song ID: 7efcb55d-c0db-472f-b765-1739ad7536aa
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 66078ed9940b, Duration: 232.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 79e849942747, Duration: 232.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 5d13eb4f3a5f, Duration: 232.5s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[81/240]
+
+======================================================================
+Processing: Still Wont Get Me To Cry - Iain Kerr & Friends
+Song ID: 48c78ca6-18e9-42f2-9f05-fdbee90a7786
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 4786e51a662a, Duration: 178.6s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: d7b0fb776a55, Duration: 178.6s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 24abf02a2b93, Duration: 178.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: fae4a34bce5b, Duration: 178.6s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['other_keys', 'wind', 'guitar', 'bass']
+
+[82/240]
+
+======================================================================
+Processing: Hark The Herald Angels Sing - Skipsam Soo
+Song ID: bbf40b5a-8ef9-4aec-a6c3-8b8706eb2ba0
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: ac6e38d3689e, Duration: 493.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 72da0be6717b, Duration: 164.3s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[83/240]
+
+======================================================================
+Processing: Find Your Smile - Firefly
+Song ID: 7ba734f0-547e-4142-a9b4-01a0c25b9d1f
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: dcb77b6f40a7, Duration: 245.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 38fe32c59f4f, Duration: 736.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 4df1da1e6953, Duration: 245.5s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[84/240]
+
+======================================================================
+Processing: We Were Young - Ben James
+Song ID: fc3c9e48-e2ac-4088-af65-68404baa7f12
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: a81123faf00f, Duration: 212.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (3 segments)
+   → File ID: 926197acaa0e, Duration: 635.9s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: cda7b22899e5, Duration: 212.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 6476dec1e956, Duration: 423.9s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 8ed7c3a98a1e, Duration: 423.9s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'other_keys', 'wind', 'guitar', 'bass']
+
+[85/240]
+
+======================================================================
+Processing: It Was Only Ever You - Iain Kerr & Friends
+Song ID: 6a67c964-4514-4bdd-86d4-e290e67ab593
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 0dd90b2d4f38, Duration: 308.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: cee6224c4ec9, Duration: 154.0s
+✅ Processed 2 stems: ['piano', 'bass']
+
+[86/240]
+
+======================================================================
+Processing: Triangles - Juniper
+Song ID: e62afdcd-0c96-4bee-80c7-1c17b897a6d7
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: ebcfa8e6c10e, Duration: 235.5s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: c7e08cd9e1a4, Duration: 235.5s
+🎵 Processing stem: guitar → role: guitar (4 segments)
+   → File ID: 5960746b24ee, Duration: 942.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 5af6e853fc1c, Duration: 235.5s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['other_keys', 'wind', 'guitar', 'bass']
+
+[87/240]
+
+======================================================================
+Processing: Away In A Manger - Skipsam Soo
+Song ID: 0d528a19-cb0f-4421-b250-444f9343e51c
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 77aeca6fc9c9, Duration: 268.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f07d1f07e870, Duration: 89.4s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[88/240]
+
+======================================================================
+Processing: Utopia - Juniper
+Song ID: 69dff382-cfcb-457c-98e5-978450e1b76a
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 6daaf94783c5, Duration: 360.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: a1da2aa55b4c, Duration: 180.4s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[89/240]
+
+======================================================================
+Processing: Unassuming Truth - Frank Sermon
+Song ID: 7a9f3169-7bdf-483c-9634-8e5b097d50df
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 8bb4d6c4eb49, Duration: 292.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 825747f80aec, Duration: 292.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: cb8805989f82, Duration: 584.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 630065eb7cc3, Duration: 292.0s
+✅ Processed 4 stems: ['piano', 'wind', 'guitar', 'bass']
+
+[90/240]
+
+======================================================================
+Processing: Scars On The Lining - Fröst
+Song ID: d028d7c2-45c1-4846-b7df-4964238fd460
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 951d0ef32bb0, Duration: 306.5s
+🎵 Processing stem: bass → role: bass (4 segments)
+   → File ID: 7b4c378e04e8, Duration: 613.0s
+✅ Processed 2 stems: ['other_keys', 'bass']
+
+[91/240]
+
+======================================================================
+Processing: Back In The Middle - PaletteFace
+Song ID: 58efddfb-04b3-4951-858e-e7dbcfccfc21
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 31518faef8db, Duration: 390.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 1853b48b63a0, Duration: 195.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[92/240]
+
+======================================================================
+Processing: 4 Sets - Frank Sermon
+Song ID: 6cd44645-ed19-4ecc-a57c-58d400005b29
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 90a4244d562a, Duration: 128.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 34ea81a67b87, Duration: 128.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 2621fb6428dd, Duration: 129.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 82d40de56367, Duration: 129.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[93/240]
+
+======================================================================
+Processing: The Best In Me - Firefly
+Song ID: 0e0d57cd-8662-4091-86d4-ed3e35d04ef6
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 7ebd31c40041, Duration: 233.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: ad958495745b, Duration: 233.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 421c0d17de0c, Duration: 233.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[94/240]
+
+======================================================================
+Processing: I Need Your Sunshine - Iain Kerr & Friends
+Song ID: de22c812-b5c3-4c7d-92aa-f62faf8b63f7
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 0063a6509966, Duration: 204.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: b557de2cf6bb, Duration: 204.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: a29dd70c4f32, Duration: 204.3s
+✅ Processed 3 stems: ['piano', 'other_keys', 'bass']
+
+[95/240]
+
+======================================================================
+Processing: So Much More - Firefly
+Song ID: 9f581867-9f63-4ec4-8a43-e62c3c4230a6
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: ef786ed4a427, Duration: 71.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 8ac5ce0479c2, Duration: 71.4s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 84a0ed4ece3d, Duration: 214.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: e43521f3c96c, Duration: 71.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[96/240]
+
+======================================================================
+Processing: Creatures Of The Night - Frank Sermon
+Song ID: d2401d3d-967c-46be-b9a0-3da571105158
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 35aec95dd631, Duration: 271.2s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: a3ec1109c260, Duration: 271.2s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 645b77dd9931, Duration: 813.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b1e4ab016050, Duration: 271.2s
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[97/240]
+
+======================================================================
+Processing: Angel In Waiting - Firefly
+Song ID: 0f5fb60c-51d4-4618-871d-650c9e927b79
+======================================================================
+🎵 Processing stem: other_plucked → role: other_plucked (1 segments)
+   → File ID: 6d84c06f94d2, Duration: 241.5s
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 877ba9586a8c, Duration: 241.5s
+🎵 Processing stem: bowed_strings → role: strings (2 segments)
+   → File ID: 54fb76673313, Duration: 483.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 9ba791887c7f, Duration: 483.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 885aac17db62, Duration: 241.5s
+✅ Processed 5 stems: ['other_plucked', 'piano', 'strings', 'guitar', 'bass']
+
+[98/240]
+
+======================================================================
+Processing: Let's Get Lost - Firefly
+Song ID: fd6e4b4a-f33a-4f3c-aa6e-7c65fd5dc0bc
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 7c698a70fe34, Duration: 438.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 5c83d7404d11, Duration: 438.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 86e06e10470f, Duration: 219.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[99/240]
+
+======================================================================
+Processing: Reach Out - Strugzy
+Song ID: 4999a0bf-a753-4e0e-85b1-690259dabf96
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (2 segments)
+   → File ID: 65ab840688c2, Duration: 427.0s
+🎵 Processing stem: other_keys → role: other_keys (5 segments)
+   → File ID: ab01cacd1804, Duration: 1067.4s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: eec6efeebe68, Duration: 427.0s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 3423a8c17413, Duration: 427.0s
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[100/240]
+
+======================================================================
+Processing: Good King Wenceslas - Skipsam Soo
+Song ID: 046ab651-a333-46e1-9d27-ab14ee036c42
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: edb7a9023e25, Duration: 176.4s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 1c9b19a92f4f, Duration: 352.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 95d20b0ed268, Duration: 176.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other', 'guitar', 'bass']
+
+[101/240]
+
+======================================================================
+Processing: Can't Play The Blues - Iain Kerr & Friends
+Song ID: 04f22a24-b328-47aa-8251-ce3ae8a64c07
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 9873554fcbdc, Duration: 212.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 8822b7372120, Duration: 212.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 6de10d9a7b21, Duration: 212.0s
+✅ Processed 3 stems: ['piano', 'other_keys', 'bass']
+
+[102/240]
+
+======================================================================
+Processing: Crystal Observatory - Holy Magick
+Song ID: d4df499c-e394-4753-b459-e167e6a58bad
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 81747002279a, Duration: 180.0s
+🎵 Processing stem: other_keys → role: other_keys (3 segments)
+   → File ID: f61bfbdf4ec7, Duration: 540.0s
+🎵 Processing stem: guitar → role: guitar (6 segments)
+   → File ID: 70d39dd82222, Duration: 1080.0s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 7415b690e0f8, Duration: 360.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[103/240]
+
+======================================================================
+Processing: I'm Feeling Fine - Firefly
+Song ID: 87a5da23-f17b-44da-accf-c04832f81a14
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: ba92dfeb6a0b, Duration: 224.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: a7270a468204, Duration: 223.5s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 316ca455959e, Duration: 447.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: dfeba3c331d3, Duration: 223.5s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[104/240]
+
+======================================================================
+Processing: Bad News - FNDEF
+Song ID: 21ce1331-6066-4ff4-9a54-f6f62bb5fb0d
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (3 segments)
+   → File ID: 512d29595d32, Duration: 705.4s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 4a3af3443030, Duration: 470.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f20ca3fe864a, Duration: 235.1s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[105/240]
+
+======================================================================
+Processing: God Knows - Juniper
+Song ID: d890ff35-300d-49f2-8054-49ab47262987
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: f5ae4c14603b, Duration: 288.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 78deb009891e, Duration: 288.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: c0637c8f4b0d, Duration: 288.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 9ff5381305c5, Duration: 288.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[106/240]
+
+======================================================================
+Processing: You Can Bring The Sunshine - Firefly
+Song ID: 3e656eec-84d4-4a45-b410-d3817d849f92
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 60c3850ad9b9, Duration: 249.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 9d30ef44ad2f, Duration: 249.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: c2ad6ebc4088, Duration: 249.0s
+🎵 Processing stem: guitar → role: guitar (4 segments)
+   → File ID: c37a000dd43d, Duration: 996.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ec0590c8ea12, Duration: 249.0s
+✅ Processed 5 stems: ['piano', 'strings', 'other_keys', 'guitar', 'bass']
+
+[107/240]
+
+======================================================================
+Processing: Be OK - Strugzy ft. Mr Peabody
+Song ID: 1ee489e8-55ad-4d4a-8277-24051b85c02d
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: dd9d7ea99843, Duration: 192.5s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 53d4b9c5d183, Duration: 192.5s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 50e505a83331, Duration: 192.5s
+🎵 Processing stem: guitar → role: guitar (5 segments)
+   → File ID: 990783d7da2a, Duration: 962.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 322ff67340b4, Duration: 192.5s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[108/240]
+
+======================================================================
+Processing: The Man In The Moon - Sunny SIde Up
+Song ID: 8a6c9c1f-4865-404f-a805-1949de36a33c
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 93c5c77d09ab, Duration: 107.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: ff93c82c41b1, Duration: 107.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 1de6abde9dc2, Duration: 107.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[109/240]
+
+======================================================================
+Processing: Jack In The Box - Sunny SIde Up
+Song ID: 06bfc6e7-e5ac-4827-bf8e-ffaf1675872f
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: c8901c975255, Duration: 56.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: a89bbb689dbb, Duration: 56.5s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[110/240]
+
+======================================================================
+Processing: Thinking It's a Sign - Greenbacks
+Song ID: c2ba72ec-cf74-4155-a7c1-ddd921ac41d3
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 09810b32215d, Duration: 168.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 8d8dcdbeed65, Duration: 168.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[111/240]
+
+======================================================================
+Processing: Ghetto In My Heart - Firefly
+Song ID: 89c515c9-5e93-4cb4-9806-20432d2d074d
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 2cdd2237823a, Duration: 520.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 52bea4fcd946, Duration: 260.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 0594ffb751b9, Duration: 780.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 4a12915d6b0a, Duration: 260.1s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[112/240]
+
+======================================================================
+Processing: What Are The Odds - Frank O Pinions
+Song ID: 0358fd1e-244a-4422-9a42-29b5d68f6e4b
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 8b041aca1888, Duration: 327.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: c45054187c78, Duration: 327.4s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 0897388c31e3, Duration: 654.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'other_keys', 'guitar']
+
+[113/240]
+
+======================================================================
+Processing: The Black Dog - Firefly
+Song ID: 5f04798d-c7be-4b8a-90bd-1fcd9946e875
+======================================================================
+🎵 Processing stem: other_plucked → role: other_plucked (1 segments)
+   → File ID: 85661b04a3ae, Duration: 252.8s
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 30b10f7abaf8, Duration: 252.8s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 8f5fe37a2281, Duration: 252.8s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 8a5a891c0814, Duration: 252.8s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: fe3616bbed28, Duration: 505.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f8f1e597d76b, Duration: 252.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 6 stems: ['other_plucked', 'piano', 'strings', 'other', 'guitar', 'bass']
+
+[114/240]
+
+======================================================================
+Processing: Standin' On My Own Two Feet - Lodestone
+Song ID: 22d265ef-ee2b-4aba-8d60-c3430295cd6d
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 4c7d3065afb5, Duration: 612.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b57791666322, Duration: 204.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[115/240]
+
+======================================================================
+Processing: Distant Eyes - Battlestar
+Song ID: 05e7af85-9721-4b42-952a-ccd34feb6033
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 88b7855001c8, Duration: 353.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 438ebd1bc3aa, Duration: 176.9s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[116/240]
+
+======================================================================
+Processing: Real - Modified Freq
+Song ID: 215391aa-1168-42dd-9cab-f8b0c6ff566b
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: ce4031b086a6, Duration: 214.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 8f578cd6d9ba, Duration: 214.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 5b4be73c2481, Duration: 214.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[117/240]
+
+======================================================================
+Processing: Diddle Dumpling My Son John - Sunny SIde Up
+Song ID: f0c565c5-fc73-4da1-b979-0fac0167f671
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: d6d6c848916b, Duration: 60.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 6fba475fecfb, Duration: 60.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[118/240]
+
+======================================================================
+Processing: Beserker - The Unfortunates
+Song ID: 64549dc5-4104-4f8c-bce1-560d44e94562
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 0d474b9602a8, Duration: 211.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 20d222545b9c, Duration: 211.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[119/240]
+
+======================================================================
+Processing: Remember Me To David - Firefly
+Song ID: 8b83ba75-5e35-48c4-b42f-5419da2e6301
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: d71bc00952cb, Duration: 170.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 286202404230, Duration: 170.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 4573b0462372, Duration: 170.0s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[120/240]
+
+======================================================================
+Processing: Radio - The Followers
+Song ID: 260c431b-72d4-4ac6-bae5-ee49ce5c0fe4
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 43edb5b39f6f, Duration: 203.4s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: f970963ec936, Duration: 203.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 01b37625c02b, Duration: 203.4s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[121/240]
+
+======================================================================
+Processing: A Million Things - Firefly
+Song ID: fcd1937f-2b21-4a78-889a-7b7e63e0ebdd
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: c4dbb5a17ef7, Duration: 229.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 658af96dcf29, Duration: 229.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: fb881490386a, Duration: 459.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 9b12a0e314f3, Duration: 229.0s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[122/240]
+
+======================================================================
+Processing: Power Of Two - Firefly
+Song ID: e2ccbc17-44bf-431a-af2b-4cf2fbd19a72
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: b3a3da297a4d, Duration: 492.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 2504b68fe084, Duration: 246.0s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 2518c2f4faf3, Duration: 246.0s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: f34e4570c34f, Duration: 738.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0cd878c3c6b8, Duration: 246.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'other_keys', 'wind', 'guitar', 'bass']
+
+[123/240]
+
+======================================================================
+Processing: Record Still Spinning - Fröst
+Song ID: 58fa04aa-426f-4e16-a112-29eb6e2f2d3e
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: e0c351eb8318, Duration: 416.0s
+🎵 Processing stem: bass → role: bass (6 segments)
+   → File ID: 13c62868edbd, Duration: 1248.0s
+✅ Processed 2 stems: ['other_keys', 'bass']
+
+[124/240]
+
+======================================================================
+Processing: Last Days Of The Empire - Firefly
+Song ID: aefc1609-976b-423e-8516-f7d588d64ff7
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: f4357d3fcf07, Duration: 255.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: e53c2af0c19d, Duration: 767.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: a62e78103ead, Duration: 255.9s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[125/240]
+
+======================================================================
+Processing: Hungry Mind - Holy Magick
+Song ID: faad432d-6ad0-492d-96f1-321eeb9685b5
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 8bd68974ac12, Duration: 186.3s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 636936f166a6, Duration: 186.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: c7bcb7736c22, Duration: 186.3s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[126/240]
+
+======================================================================
+Processing: You Gotta Have A Plan - Firefly
+Song ID: 43ca388d-3e62-4df2-b72d-abf407a7aa5a
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: f48a897cdea7, Duration: 439.6s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: a5f56431ba17, Duration: 439.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 9340b22e3329, Duration: 219.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[127/240]
+
+======================================================================
+Processing: Time To Show - FNDEF
+Song ID: 9efa702f-c6b1-40bb-93ef-095b34a5b775
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: c42f76c677dc, Duration: 221.4s
+🎵 Processing stem: bowed_strings → role: strings (2 segments)
+   → File ID: 04fe484a9f27, Duration: 442.8s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (2 segments)
+   → File ID: d47c195684dd, Duration: 442.8s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 5f6989db97e4, Duration: 221.4s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 5a781ce3366f, Duration: 664.2s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 5c5dc6d303b9, Duration: 442.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 6 stems: ['piano', 'strings', 'other', 'other_keys', 'guitar', 'bass']
+
+[128/240]
+
+======================================================================
+Processing: Let You Down Again - Andy Bennett
+Song ID: 491c1ff5-1e7b-4046-8029-a82d4a8aefb4
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: a489b77d99bd, Duration: 103.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: d681421841d7, Duration: 103.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 5e41122a14fa, Duration: 103.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 51d564cfa22a, Duration: 103.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[129/240]
+
+======================================================================
+Processing: Stolen Car - Holy Magick
+Song ID: 28748b6e-6125-42f7-998d-2ad734e39b6c
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (3 segments)
+   → File ID: 53075ebf265d, Duration: 607.3s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 161fd81cf5ba, Duration: 404.9s
+🎵 Processing stem: bass → role: bass (5 segments)
+   → File ID: 238e3402534c, Duration: 1012.2s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other', 'other_keys', 'bass']
+
+[130/240]
+
+======================================================================
+Processing: God Rest Ye Merry Gentlemen - Skipsam Soo
+Song ID: 75be2864-8b5f-45a1-ae09-6ba10f070f33
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 51c90c0245eb, Duration: 450.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: fd4008cb008e, Duration: 225.2s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[131/240]
+
+======================================================================
+Processing: Too Late - Horizon
+Song ID: 810d7318-4c9e-4160-b147-bbdb65d41861
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 0599e19af7fe, Duration: 291.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 156002b93e74, Duration: 291.0s
+🎵 Processing stem: other_keys → role: other_keys (4 segments)
+   → File ID: 05ce017e35b2, Duration: 1164.1s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 1a38e67db63b, Duration: 582.1s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other', 'other_keys', 'bass']
+
+[132/240]
+
+======================================================================
+Processing: Paranoid Filter - Topsoil
+Song ID: 16fb6c39-3834-4cfc-abf4-abb4a8d4646c
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 25e66de19071, Duration: 320.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 83c27af68d64, Duration: 640.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 471acedbcdc4, Duration: 320.0s
+✅ Processed 3 stems: ['other', 'guitar', 'bass']
+
+[133/240]
+
+======================================================================
+Processing: Enouement - Calculus
+Song ID: fac94d9a-59da-4f83-9027-3eafe082ad16
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 5117fa189e69, Duration: 240.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 9b59863a0192, Duration: 240.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[134/240]
+
+======================================================================
+Processing: Up In The Air - Horizon
+Song ID: b207da3d-4baf-485a-98e1-657602479b3a
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: acd2266351a7, Duration: 291.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: b82833e18027, Duration: 291.0s
+🎵 Processing stem: other_keys → role: other_keys (3 segments)
+   → File ID: d25167f43d05, Duration: 873.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b52061ede4ea, Duration: 291.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other', 'other_keys', 'bass']
+
+[135/240]
+
+======================================================================
+Processing: Demise Of Bruno - Modified Freq
+Song ID: 1f98fe4d-26c7-460f-9f68-33964bc4d8d3
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 29759e3af7ae, Duration: 200.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: bb96e0923d3e, Duration: 200.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[136/240]
+
+======================================================================
+Processing: At Night - Centenary
+Song ID: 125fc63d-9b69-4170-a46a-42c91bc28446
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 2b93f19cf740, Duration: 188.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 1ae738b19ad0, Duration: 188.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 806d0bc50f77, Duration: 188.0s
+✅ Processed 3 stems: ['wind', 'guitar', 'bass']
+
+[137/240]
+
+======================================================================
+Processing: Silver Screen - The Followers
+Song ID: afca84b2-0277-4b1b-8696-5f14543f338c
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 450f8906c207, Duration: 712.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 3025e07a5dbb, Duration: 237.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[138/240]
+
+======================================================================
+Processing: Echoing - Frank Sermon
+Song ID: 3e7985e5-408f-4cf8-92b9-b9f62f738dd3
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: f850e0774f0a, Duration: 456.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d3020f9d8d0f, Duration: 228.9s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[139/240]
+
+======================================================================
+Processing: Over The Hills & Far Away - Sunny SIde Up
+Song ID: 2973adc9-6bf8-4422-9f7a-6fd0038eb565
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 4e92ed0b39a7, Duration: 75.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 9655f3ac9206, Duration: 75.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 5caa150f9d24, Duration: 75.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[140/240]
+
+======================================================================
+Processing: Glory Days - Firefly
+Song ID: cc7f7675-d3c8-4a49-a2d7-a8959b694004
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 8e110b6c6d0a, Duration: 197.6s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 9aa70ca70d23, Duration: 197.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 79fd801effa2, Duration: 197.6s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[141/240]
+
+======================================================================
+Processing: Panic! - Holy Magick
+Song ID: 0a589d65-50a3-4999-8f16-b5b6199bceee
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 9af5daf0f59e, Duration: 243.2s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 3ff5c00dc48c, Duration: 486.5s
+🎵 Processing stem: guitar → role: guitar (7 segments)
+   → File ID: a23b5a5b84d9, Duration: 1702.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 49ee87523bbd, Duration: 243.2s
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[142/240]
+
+======================================================================
+Processing: Baby Let Me Hold You Tonight - Andy Bennett
+Song ID: f4d79498-4ba0-4813-9b9e-986374242573
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: c3c05d3de6c8, Duration: 230.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: a8cba94c5d50, Duration: 230.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: ae1b829613be, Duration: 230.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f56acaf5dd22, Duration: 230.0s
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[143/240]
+
+======================================================================
+Processing: Never Say Never - Firefly
+Song ID: 8804c154-6294-481a-ad63-bc61162cae2f
+======================================================================
+🎵 Processing stem: other_plucked → role: other_plucked (1 segments)
+   → File ID: f0e6dd7ecddb, Duration: 218.7s
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 30f55c8790f5, Duration: 437.4s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 768d257630de, Duration: 218.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (4 segments)
+   → File ID: 0399d02cb33b, Duration: 874.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: c4b55608079c, Duration: 218.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['other_plucked', 'piano', 'strings', 'guitar', 'bass']
+
+[144/240]
+
+======================================================================
+Processing: Nice To Be Home - Juniper
+Song ID: bc1f2967-f834-43bd-aadc-95afc897cfe7
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 2c75238288bc, Duration: 272.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 8e7bf773d104, Duration: 542.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 8a05861e00ce, Duration: 271.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[145/240]
+
+======================================================================
+Processing: Resistance -  Ritual Slaughter
+Song ID: 6b48c9de-fa34-4635-9718-04e01a03a0fe
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 6a81e55253f3, Duration: 284.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 03a87c188fc7, Duration: 284.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[146/240]
+
+======================================================================
+Processing: Rain - FNDEF
+Song ID: 33b1d4e9-96d7-4b18-9ffc-199c579aad78
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 11adf0b35130, Duration: 235.2s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 8869fb796182, Duration: 235.2s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 25a66a10c2a4, Duration: 235.2s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 5371e4e3a42e, Duration: 470.4s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: de0296d57d5a, Duration: 470.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[147/240]
+
+======================================================================
+Processing: Embarrassment - Sour Cherry
+Song ID: f76e2c13-9a9a-4cac-b6dd-45b5111aac6d
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: e8e602b329bb, Duration: 196.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 7a36d335ddfa, Duration: 196.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[148/240]
+
+======================================================================
+Processing: Doors - Halos On Hooligans
+Song ID: 8a307c5d-9d65-4f1c-a024-5eaeff1faa34
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 96502a7facc9, Duration: 244.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 90e9d5ff9809, Duration: 244.9s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: e5fc513cd4ac, Duration: 489.9s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 94ddf214b179, Duration: 489.9s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 85abb4ad85d5, Duration: 489.9s
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[149/240]
+
+======================================================================
+Processing: Any Human Heart - Firefly
+Song ID: 6031b120-f6e2-4999-96ba-a1e31be68ea8
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 12daf67a15c1, Duration: 248.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: d18ac99543b2, Duration: 744.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: fd377a88548c, Duration: 248.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[150/240]
+
+======================================================================
+Processing: Take You Away - Modified Freq
+Song ID: dc61c44e-a771-47a9-8934-a0eb8f3e08ac
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: f6613e1e2c02, Duration: 192.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: e95b917854cc, Duration: 192.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f925d1d31ccb, Duration: 192.0s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[151/240]
+
+======================================================================
+Processing: Kryptonite - The Followers
+Song ID: d624037a-1a76-4dd9-9e60-4ba380748a0b
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: d5bbc8e6b237, Duration: 243.1s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: d6109692e703, Duration: 243.1s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: d1aca47e130c, Duration: 486.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 7e4a414797b4, Duration: 243.1s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[152/240]
+
+======================================================================
+Processing: Share It With You - Firefly
+Song ID: bdcc429e-ed95-40d3-a1af-bad268d66b25
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 6f0220714bd0, Duration: 116.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: d037549ce4fe, Duration: 116.4s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 2d4923777671, Duration: 116.4s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 17170c6d6461, Duration: 232.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 607b5daba517, Duration: 116.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[153/240]
+
+======================================================================
+Processing: Old Mother Hubbard - Sunny SIde Up
+Song ID: e9336d31-c0df-4c91-be2b-7c4420c9cd34
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 8a13560b3c60, Duration: 185.6s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 7557b3dc8011, Duration: 185.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 4a6d56b4498c, Duration: 185.6s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[154/240]
+
+======================================================================
+Processing: Dragons - Ritual Slaughter
+Song ID: 3e41f238-7c48-4a42-ba70-5ee39824a844
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 848eba6e4eda, Duration: 208.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0a2675ef8969, Duration: 208.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[155/240]
+
+======================================================================
+Processing: GOD Soulja - Rivum
+Song ID: 3a6023c3-4cd8-46c0-a376-d353743648a9
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: fdfc0e93f5bb, Duration: 244.7s
+🎵 Processing stem: bowed_strings → role: strings (3 segments)
+   → File ID: 9ed8fba56c82, Duration: 734.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 49710bc2af40, Duration: 244.7s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: ce6432270f7e, Duration: 734.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 8e2d08387961, Duration: 244.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'strings', 'other', 'guitar', 'bass']
+
+[156/240]
+
+======================================================================
+Processing: Seattle - The Unfortunates 
+Song ID: 07c17c22-a321-4a98-a486-ef7ee1bae50e
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 1eb856e9364c, Duration: 512.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 4e075b9e16b1, Duration: 256.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[157/240]
+
+======================================================================
+Processing: Island Time - Firefly
+Song ID: e37cdb09-e648-4e9b-bc06-d178a964161c
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: fe15c83afd0b, Duration: 489.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 35a20cd6f639, Duration: 244.2s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 73f4ec05c464, Duration: 733.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 544e13991228, Duration: 244.2s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[158/240]
+
+======================================================================
+Processing: Here We Go Loopty Loo - Sunny SIde Up
+Song ID: 152d4f5d-4093-4fa4-a4a4-8a9b3502d89d
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 8b2d90251ad2, Duration: 161.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 7fb3b40943d9, Duration: 322.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ac5ef3df5873, Duration: 161.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[159/240]
+
+======================================================================
+Processing: Search And You Shall Find - Firefly
+Song ID: 4380ad97-2620-4419-a011-ddfa29a87f54
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 3b6af66bfe3e, Duration: 428.8s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 3f1c0baf6bfd, Duration: 214.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 932ee55560b5, Duration: 214.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d83beb2952fa, Duration: 214.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[160/240]
+
+======================================================================
+Processing: Five Little Ducks - Sunny SIde Up
+Song ID: aaf0fc7b-d7f5-412c-b3b9-313a7c483666
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: debcba74d1a1, Duration: 126.3s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 64a0f09b0f21, Duration: 252.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d282fd3e80b1, Duration: 126.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[161/240]
+
+======================================================================
+Processing: Up Close And Personal - Firefly
+Song ID: 72c6f013-11ea-4bf7-93b2-c6ef2c117718
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: d9d07ee21a04, Duration: 265.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 822879eb234b, Duration: 265.3s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 8cd94ebed965, Duration: 530.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 2ad9dc221331, Duration: 265.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[162/240]
+
+======================================================================
+Processing: Casual Users - The Unfortunates
+Song ID: 763641c7-488f-4959-a554-fdbce9582644
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: d077ceddfe8d, Duration: 172.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d4065148aa3d, Duration: 172.4s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[163/240]
+
+======================================================================
+Processing: King Of Horror - Oberheads
+Song ID: 9c8a5c66-f6d8-4425-8671-6b7aa6a2663b
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 3c0579f914fb, Duration: 172.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: a2fcbec35673, Duration: 172.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 32d93fee8dfb, Duration: 172.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[164/240]
+
+======================================================================
+Processing: Divisions - Frank Sermon
+Song ID: 6681f493-c996-424a-9bdb-c671912ea9db
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 647696c9cf49, Duration: 584.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 53f4261d96de, Duration: 292.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[165/240]
+
+======================================================================
+Processing: Neptunus - Ritual Slaughter
+Song ID: 3c557409-3a34-43c2-9159-5421bbad5ecb
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 60b901b2c835, Duration: 598.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 84f58d5a6f0d, Duration: 598.3s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[166/240]
+
+======================================================================
+Processing: Ding Dong Bell - Sunny SIde Up
+Song ID: 06114cc2-e34d-4f8f-82d3-cf6981572f2f
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: b52e67038f2a, Duration: 122.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 58542d8420e2, Duration: 122.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: cb210b47a2df, Duration: 122.0s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[167/240]
+
+======================================================================
+Processing: Reluctant Auteur - Frank O Pinions
+Song ID: b92cb1ca-baa9-4c74-b6dc-36389671ed76
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 53588af9fe8e, Duration: 208.0s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: e938d9bbec4b, Duration: 208.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['wind', 'guitar']
+
+[168/240]
+
+======================================================================
+Processing: Straight To The Heart - Firefly
+Song ID: c2330200-ad8e-4848-8c2b-b70612f4b80e
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 14d7332af0c7, Duration: 206.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 613b60b3058b, Duration: 206.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: cec7161c455f, Duration: 206.0s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[169/240]
+
+======================================================================
+Processing: Home - Ben James
+Song ID: 2d39a32d-5993-4f66-89ff-bf9dabb8e45b
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 82595822e906, Duration: 217.1s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: fe0a53909e81, Duration: 217.1s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 005c20260fc5, Duration: 217.1s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 4817191aa828, Duration: 434.1s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: d058aa4af3b8, Duration: 434.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 9db6bea486fe, Duration: 217.1s
+✅ Processed 6 stems: ['piano', 'strings', 'other', 'other_keys', 'guitar', 'bass']
+
+[170/240]
+
+======================================================================
+Processing: Get It Together - Horizon
+Song ID: 01c8ba69-8eee-485b-bab0-41a76f9e8892
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: ee2421690dde, Duration: 248.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 00b12c5db512, Duration: 497.8s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 5451986f5e40, Duration: 248.9s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 624c86b4eabd, Duration: 497.8s
+✅ Processed 4 stems: ['piano', 'other_keys', 'wind', 'bass']
+
+[171/240]
+
+======================================================================
+Processing: This Town - Battlestar
+Song ID: d8f0e410-5761-4d4a-9000-effe11089bbd
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: db2cd32aaf92, Duration: 596.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: a3be21e49fe4, Duration: 298.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[172/240]
+
+======================================================================
+Processing: Never Go Back - Battlestar
+Song ID: 36ee7fc6-604c-4a75-b4f0-0a9ceef3b9cb
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: d4e8a47a6414, Duration: 490.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0e538e1c08e7, Duration: 245.3s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[173/240]
+
+======================================================================
+Processing: Up On The Hill - Firefly
+Song ID: 02ee37da-eea3-42b4-83bf-ab7f243afa13
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: d5c0fa6690c1, Duration: 463.7s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: ccaaf60ed97f, Duration: 231.8s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 2e34e95159c5, Duration: 463.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 6579b377f8ae, Duration: 231.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[174/240]
+
+======================================================================
+Processing: Too Much Information - Holy Magick
+Song ID: 737356b2-ce9c-448b-877b-e42b3ed94563
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (5 segments)
+   → File ID: f9ffa55d3e8c, Duration: 1051.3s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 88866476bc31, Duration: 630.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 8d907f7cf3d7, Duration: 210.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[175/240]
+
+======================================================================
+Processing: O Come All Ye Faithful - Skipsam Soo
+Song ID: ea898682-08e7-4818-b516-8c0e10a4c20a
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 83539654f6ae, Duration: 182.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d3e529d612e5, Duration: 182.1s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[176/240]
+
+======================================================================
+Processing: Stand Down, Stand Down - Vinegar Stroke
+Song ID: 95378cf3-e939-42e0-b486-ebf2ca951664
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 7c1bae2a7546, Duration: 199.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 61e1a7091edb, Duration: 199.9s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[177/240]
+
+======================================================================
+Processing: Perpetual Fright - Halos On Hooligans
+Song ID: f9a1d21b-bfc7-45e1-b744-c57d0a0880c3
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 5f91037f9142, Duration: 240.4s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 08c0ab693b39, Duration: 240.4s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: c2f5628a306b, Duration: 240.4s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: f3df1a68ac8d, Duration: 480.7s
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[178/240]
+
+======================================================================
+Processing: Lifes Changes - FNDEF
+Song ID: dbb07bdc-2706-4e67-8b59-43f98cf1608a
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: e344c0f84936, Duration: 206.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 44b6a1306d5d, Duration: 206.5s
+🎵 Processing stem: other_keys → role: other_keys (6 segments)
+   → File ID: 862d84a4b1f6, Duration: 1237.6s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 8fb40b1a9a03, Duration: 619.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 91b0db65c57b, Duration: 206.5s
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[179/240]
+
+======================================================================
+Processing: Is It All On Me - Holy Magick
+Song ID: 3e389000-8fdc-4b63-b8b8-ab044273790d
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 16fcbcb710f2, Duration: 228.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 18755459996a, Duration: 228.3s
+🎵 Processing stem: guitar → role: guitar (5 segments)
+   → File ID: cdae57cf8927, Duration: 1141.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 6f1fb681f1cf, Duration: 228.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[180/240]
+
+======================================================================
+Processing: You - Kuehnel
+Song ID: ee082817-dbda-4fbf-b5aa-8dce2320ae35
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 0259264ce748, Duration: 260.1s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: d41a96e50624, Duration: 260.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: f746b0246edf, Duration: 260.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 64cad61f6adc, Duration: 520.0s
+✅ Processed 4 stems: ['piano', 'strings', 'other_keys', 'guitar']
+
+[181/240]
+
+======================================================================
+Processing: Closer - Firefly
+Song ID: 8e2d0c5c-6764-4d74-a740-391d7931ffd7
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 0002a38b7d1c, Duration: 153.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 23bc8077958b, Duration: 153.7s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 0da9ecfadce1, Duration: 307.3s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: d6c4a273e8c7, Duration: 153.7s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 369bb0031370, Duration: 153.7s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 045639179c1f, Duration: 307.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 6 stems: ['piano', 'other', 'other_keys', 'wind', 'guitar', 'bass']
+
+[182/240]
+
+======================================================================
+Processing: Keratin - Fröst
+Song ID: 664cc931-4e00-441e-9a78-e7a292515cea
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (4 segments)
+   → File ID: a7ba7f3c9b2c, Duration: 896.0s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 966140bbec3f, Duration: 448.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['other_keys', 'bass']
+
+[183/240]
+
+======================================================================
+Processing: Seize The Day - Firefly
+Song ID: ed90a89a-bf22-444d-af3d-d9ac3896ebd2
+======================================================================
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: a9c35f0dfb91, Duration: 228.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 109f6d7fb35f, Duration: 228.9s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: c6c018e35438, Duration: 686.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 09222ca32300, Duration: 228.9s
+✅ Processed 4 stems: ['strings', 'other_keys', 'guitar', 'bass']
+
+[184/240]
+
+======================================================================
+Processing: Grace - Andy Bennett
+Song ID: 606e3380-b062-4b74-88ac-b60d6f4d0a37
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 72dbf698e91d, Duration: 254.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 23fd49a91d88, Duration: 254.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[185/240]
+
+======================================================================
+Processing: Pontiac - Virtual Tongues
+Song ID: 73efd911-79c3-4235-a4ae-45b41d6997b9
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 8b68e34814f3, Duration: 215.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 74414b6d7e23, Duration: 215.6s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[186/240]
+
+======================================================================
+Processing: Darkest Heart - Holy Magick
+Song ID: 93dda0e8-dd76-49e4-b08f-54a82387cdf6
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 6ab7964d7029, Duration: 205.9s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 8f7ac61621fe, Duration: 205.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 623b4bfa05be, Duration: 411.8s
+🎵 Processing stem: guitar → role: guitar (7 segments)
+   → File ID: cce45d9eecc7, Duration: 1441.3s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: f0411115f7dd, Duration: 411.8s
+✅ Processed 5 stems: ['piano', 'strings', 'other_keys', 'guitar', 'bass']
+
+[187/240]
+
+======================================================================
+Processing: Salvage - Frank Sermon
+Song ID: 6de41c50-0c49-4528-b60b-75c45d3630f4
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: bef4329cda2f, Duration: 289.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b7209257c87d, Duration: 289.4s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[188/240]
+
+======================================================================
+Processing: Places - Firefly
+Song ID: 3a047d1a-f56d-4bf4-9910-f4f77206e53d
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: bfbdbcc0b92e, Duration: 260.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 7afe63670676, Duration: 260.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (2 segments)
+   → File ID: 6f71ce52cd51, Duration: 520.0s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 43d1f6887e21, Duration: 780.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 00df6f7b1305, Duration: 260.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'strings', 'wind', 'guitar', 'bass']
+
+[189/240]
+
+======================================================================
+Processing: Little Tommy Tucker - Sunny SIde Up
+Song ID: 334ed0e5-1761-4ee9-9d39-a555eb9b64a0
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: ebb8ec4817ff, Duration: 91.8s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 017556d799fb, Duration: 91.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: eccd154f2f52, Duration: 91.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[190/240]
+
+======================================================================
+Processing: End Of The Affair - Andy Bennett
+Song ID: 11845abc-8ca3-4fb2-bd84-521aeeff56f4
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 7692da162cc9, Duration: 214.3s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 62e726add12d, Duration: 229.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 846b30a68eeb, Duration: 229.3s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[191/240]
+
+======================================================================
+Processing: Fixed - Battlestar
+Song ID: 1ade22ad-99bc-4954-b2b9-fb9e8fa06d41
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 05939f08755a, Duration: 207.6s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 14eac5db88ba, Duration: 622.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0a979e0878b5, Duration: 207.6s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[192/240]
+
+======================================================================
+Processing: Long Live Rock And Roll - The Followers
+Song ID: 704f1de9-1d02-4c2b-af05-107a7700a51d
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: a0eba1abeafe, Duration: 287.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 428139387bca, Duration: 287.5s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[193/240]
+
+======================================================================
+Processing: Broken - ProRata
+Song ID: 35983cdd-3903-46cb-b184-f96274ced57b
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 73a39217c65f, Duration: 213.6s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 8bc715ce2611, Duration: 213.3s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 3a554cf37ee7, Duration: 213.6s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: d7aa2910c57b, Duration: 427.1s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 2464be178e71, Duration: 426.9s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[194/240]
+
+======================================================================
+Processing: Best Of Times - Firefly
+Song ID: 553048ce-7afd-4e0e-b4cb-4896620287a1
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: dacea1601b17, Duration: 253.2s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: fa7faac39246, Duration: 253.2s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: cb6533e2d71e, Duration: 506.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: cfb511059b60, Duration: 253.2s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[195/240]
+
+======================================================================
+Processing: Incommunicado - Firefly
+Song ID: aa600069-0a98-45e6-94fa-4000bfe46c25
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: dc520bf0aea4, Duration: 233.3s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: d443e9895d0c, Duration: 233.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 161bb19d21fa, Duration: 233.3s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: ee0b52b3e853, Duration: 466.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: dae8731b462b, Duration: 233.3s
+✅ Processed 5 stems: ['piano', 'strings', 'wind', 'guitar', 'bass']
+
+[196/240]
+
+======================================================================
+Processing: Invasion - Battlestar
+Song ID: 05b0ab77-2495-438d-8831-e3d81f96c16d
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 23b508388528, Duration: 676.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 7920e3fbb029, Duration: 225.4s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[197/240]
+
+======================================================================
+Processing: 1,2,3,4,5,6 Pick Up Sticks - Sunny Side Up
+Song ID: baea951d-526a-49aa-8329-c8de676341fb
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 80939d32303c, Duration: 100.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 70193a10e01b, Duration: 100.9s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[198/240]
+
+======================================================================
+Processing: Live Together - Firefly
+Song ID: cff5bcde-6a15-4c5b-b529-e1c528c46335
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 6c086e5a8f52, Duration: 268.4s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: a7e77e84b888, Duration: 268.4s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: d6ad32f115fb, Duration: 268.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: b234c4aa4186, Duration: 268.4s
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[199/240]
+
+======================================================================
+Processing: Make My Day - Firefly
+Song ID: 6c70d5e0-5972-444a-86f8-a558dbb92d92
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 7bb7111931bd, Duration: 197.8s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: a8b8a2510907, Duration: 197.8s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: a1fccd0fb868, Duration: 197.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 089ba3579c9f, Duration: 197.8s
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[200/240]
+
+======================================================================
+Processing: Below - Holy Magick
+Song ID: 731893c6-67b9-42f0-aea6-d1f70c2c9870
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 45b780c10455, Duration: 234.0s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: c3adfc7521b2, Duration: 468.0s
+🎵 Processing stem: guitar → role: guitar (7 segments)
+   → File ID: 15695dd76251, Duration: 1638.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 9e7c93b23c72, Duration: 234.0s
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[201/240]
+
+======================================================================
+Processing: Take Another Line - Holy Magick
+Song ID: 97b07e0e-274e-4212-a66b-44210a48724d
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 6a835d5d645d, Duration: 524.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (7 segments)
+   → File ID: 57f19da2c021, Duration: 1836.5s
+🎵 Processing stem: guitar → role: guitar (4 segments)
+   → File ID: 846420ce4562, Duration: 1049.4s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ee44b1cd6a5e, Duration: 262.4s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other_keys', 'guitar', 'bass']
+
+[202/240]
+
+======================================================================
+Processing: Boys & Girls Come Out To Play - Sunny SIde Up
+Song ID: d45bb3a6-eb80-44b3-b2ef-56cc9d5b4914
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 1ec8a554ed28, Duration: 75.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: a994d876afd8, Duration: 75.9s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[203/240]
+
+======================================================================
+Processing: Hold Me - The Followers
+Song ID: ca080447-fe99-4f6d-98c9-c69b68dacba3
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 0f21ea0f8154, Duration: 496.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 34755d0f8584, Duration: 248.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[204/240]
+
+======================================================================
+Processing: Music Makes Me - Firefly
+Song ID: d4fe2408-c123-4739-93bb-22f558ae99d7
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: b1f90209d19e, Duration: 412.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: f0626d416210, Duration: 206.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 257cceb3d30e, Duration: 412.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 1216cba2f01e, Duration: 206.0s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[205/240]
+
+======================================================================
+Processing: Little Boy Blue - Sunny SIde Up
+Song ID: a56d9450-3a26-485c-8ac3-24b6b54e2c1d
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 63941e7d2083, Duration: 78.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ff53d0d4e1fe, Duration: 78.5s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[206/240]
+
+======================================================================
+Processing: I Had A Little Pony - Sunny SIde Up
+Song ID: cda46831-26d1-4dd8-ac50-6004d27d45dd
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 5acd465f629c, Duration: 101.7s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: d5ce7e507482, Duration: 101.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 71da973ec577, Duration: 101.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[207/240]
+
+======================================================================
+Processing: Ladybid Ladybird, Fly Away Home - Sunny SIde Up
+Song ID: 94fafb2a-9f4e-4a01-bee9-998008f95f41
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 4b6cbbec1310, Duration: 117.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ec588d9903cf, Duration: 117.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[208/240]
+
+======================================================================
+Processing: Golden Times - Firefly
+Song ID: 1fc37390-1769-452d-9bea-19025be4c467
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 26c9adb5f664, Duration: 210.5s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 78b14c346c72, Duration: 211.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 75b9a988407c, Duration: 632.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: fadd9954d3c9, Duration: 211.0s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[209/240]
+
+======================================================================
+Processing: Cruising - Firefly
+Song ID: 5a6df5c7-a58a-479e-bdfb-c5946c221933
+======================================================================
+🎵 Processing stem: other_plucked → role: other_plucked (1 segments)
+   → File ID: 54d37d15bf2f, Duration: 186.3s
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 4f797d83483e, Duration: 186.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 0983bf5db241, Duration: 372.6s
+🎵 Processing stem: wind → role: wind (2 segments)
+   → File ID: 52b957252b1e, Duration: 372.6s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 9eab0c8fdcc0, Duration: 372.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 4ab034faddc8, Duration: 186.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 6 stems: ['other_plucked', 'piano', 'other_keys', 'wind', 'guitar', 'bass']
+
+[210/240]
+
+======================================================================
+Processing: Everything Ends - The Unfortunates
+Song ID: 89f2c781-5c67-4508-a2d6-236744b8c197
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: c6186ff0a334, Duration: 184.3s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 570172c26017, Duration: 368.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: bba3acce9484, Duration: 184.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[211/240]
+
+======================================================================
+Processing: Not A Day Goes By - Firefly
+Song ID: 07fb2df2-91d6-458d-9230-9638b4edac08
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 3fa98d8e4c1f, Duration: 206.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 371b732a3ea4, Duration: 206.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 062075fe1d0d, Duration: 412.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0b298fd0f2f3, Duration: 206.0s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[212/240]
+
+======================================================================
+Processing: Trail Away - Fröst
+Song ID: 2a3fd99d-c86f-4275-9321-ad7146364503
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: e61f54d2e257, Duration: 224.4s
+🎵 Processing stem: bass → role: bass (3 segments)
+   → File ID: fa8da56fce03, Duration: 673.3s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['other_keys', 'bass']
+
+[213/240]
+
+======================================================================
+Processing: Even Though - Holy Magick
+Song ID: 5640831d-7853-4d06-8166-988e2844b652
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (5 segments)
+   → File ID: 1360dd4c79c3, Duration: 948.6s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 71dc8d721b80, Duration: 189.7s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 09ac4e76576f, Duration: 379.4s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[214/240]
+
+======================================================================
+Processing: Black Coffee - Firefly
+Song ID: 390b4fea-92be-4fe3-9576-86529f80b4ae
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 260bd96b58e8, Duration: 198.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 87640ac9aee1, Duration: 198.9s
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 877ba6cac9fc, Duration: 198.9s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 5d61e9ba0884, Duration: 397.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 35587ad59a58, Duration: 198.9s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'other_keys', 'wind', 'guitar', 'bass']
+
+[215/240]
+
+======================================================================
+Processing: Home - Firefly
+Song ID: 2e5d996d-43f3-4359-b7c5-afebe9997556
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: ad709e69f4e3, Duration: 218.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: c264b0294529, Duration: 218.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: dda66975621f, Duration: 218.0s
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[216/240]
+
+======================================================================
+Processing: I'm A Mess - Fake Eyes
+Song ID: bacbb01f-b877-4d62-8050-992f1d85543a
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 8c9c0928457c, Duration: 150.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: fa2797939021, Duration: 150.1s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[217/240]
+
+======================================================================
+Processing: East To West - Firefly
+Song ID: bb45cf1a-4c58-4fe3-88ea-97ef27527507
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 6a0476cfed70, Duration: 194.3s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: f4f39b12717d, Duration: 194.3s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 2b99b6fc6dad, Duration: 388.6s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 21c8bc7e878c, Duration: 194.3s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 443780f30da9, Duration: 194.3s
+✅ Processed 5 stems: ['piano', 'strings', 'other_keys', 'guitar', 'bass']
+
+[218/240]
+
+======================================================================
+Processing: Aarons House - Firefly
+Song ID: 174a115f-3688-45dc-8c39-9d05f21758e1
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: f9cc5ac96820, Duration: 240.7s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 9d7db55ab890, Duration: 240.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 7163c59b206e, Duration: 722.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: aaccd133d149, Duration: 240.0s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[219/240]
+
+======================================================================
+Processing: Where The Lightning Lives - Firefly
+Song ID: 30cfc60a-5a57-4000-a05e-65006c8f6f74
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: eca39bfc02a9, Duration: 461.9s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: fe29ca0c451b, Duration: 461.9s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 142bf582282b, Duration: 230.9s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['piano', 'guitar', 'bass']
+
+[220/240]
+
+======================================================================
+Processing: Snake Eyes - PaletteFace
+Song ID: 04798708-6915-4dbc-842e-d394d545d4eb
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: bfb760fce54c, Duration: 204.9s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 5bc57f7b093f, Duration: 409.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0cc003334caa, Duration: 204.9s
+✅ Processed 3 stems: ['other_keys', 'guitar', 'bass']
+
+[221/240]
+
+======================================================================
+Processing: False Black Bear - The Unfortunates
+Song ID: 045dcfd1-e960-4332-80cc-fdacc4a7c6a7
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 77a7c445600d, Duration: 354.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f074ee58f0b6, Duration: 177.4s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[222/240]
+
+======================================================================
+Processing: Chaos Engine - Ritual Slaughter
+Song ID: 2c020edb-5947-4fa7-afea-ebc592cea683
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 2ba42bb4c09c, Duration: 314.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 35ff0847d962, Duration: 314.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[223/240]
+
+======================================================================
+Processing: Song For Anyone - Firefly
+Song ID: 7bfa233c-24ed-4c7a-9096-11e3aa00c55d
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: c2c3fd4db9f1, Duration: 312.2s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 945e1abee88f, Duration: 312.2s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (2 segments)
+   → File ID: 3a248fb80eb5, Duration: 624.4s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: f875874f604f, Duration: 936.6s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f410c80c2607, Duration: 312.2s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'strings', 'wind', 'guitar', 'bass']
+
+[224/240]
+
+======================================================================
+Processing: A Tisket a Tasket - Sunny SIde Up
+Song ID: 8427760a-b82e-4136-8f12-dfd53cad9bc9
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 6560d1999586, Duration: 64.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 6673a7c09379, Duration: 64.5s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[225/240]
+
+======================================================================
+Processing: RW - Strugzy
+Song ID: 765d5131-afd9-4ad7-8786-8bef5705c1c2
+======================================================================
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 166d28d5c12f, Duration: 187.2s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 05c78c17c4bf, Duration: 187.2s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: f4ec40b44814, Duration: 374.5s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 3d1dc3a8d852, Duration: 561.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f92ec475b125, Duration: 187.2s
+✅ Processed 5 stems: ['strings', 'other', 'other_keys', 'guitar', 'bass']
+
+[226/240]
+
+======================================================================
+Processing: Spicy - Vinegar Stroke
+Song ID: a1dcaeb2-f4e6-4818-b490-09f44d624afc
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 3a7704f6be8b, Duration: 248.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: d9927f83938f, Duration: 248.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[227/240]
+
+======================================================================
+Processing: Try Anything - The Followers
+Song ID: c8752696-4ae5-4e47-b2ad-622496966fa9
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 1298dbdfb1df, Duration: 389.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: ccfc39a3aff0, Duration: 194.9s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[228/240]
+
+======================================================================
+Processing: By Now - Centenary
+Song ID: e3ab3975-033b-40e2-b538-09396b3d4244
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: bf86d0bf3c17, Duration: 216.5s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 6d575c08edfb, Duration: 216.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 0ebf4e47971a, Duration: 216.5s
+✅ Processed 3 stems: ['wind', 'guitar', 'bass']
+
+[229/240]
+
+======================================================================
+Processing: Songbird - Ben James
+Song ID: 92ba4404-76ff-4523-a787-652057e06c13
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 1df75d08224b, Duration: 276.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 246fafa31ce1, Duration: 276.0s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 629cc396ccd6, Duration: 552.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: a7342f1f47fe, Duration: 552.0s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 66b4ccd03a0c, Duration: 552.0s
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[230/240]
+
+======================================================================
+Processing: Dear You - HoundedSoul
+Song ID: e1108928-9776-434c-bc57-c32dfdb7839c
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: db73ff3c0f5c, Duration: 250.0s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: c36cb9678aca, Duration: 250.0s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: b33104fb9377, Duration: 500.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 25d790eee0a4, Duration: 250.0s
+✅ Processed 4 stems: ['piano', 'strings', 'guitar', 'bass']
+
+[231/240]
+
+======================================================================
+Processing: Nature Of - Drawing Hands
+Song ID: f4b735de-14b1-4091-a9ba-c8b30c0740a7
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: ce5d196d27cc, Duration: 289.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: f9c570919ede, Duration: 289.0s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[232/240]
+
+======================================================================
+Processing: Killing Science - Vinegar Stroke
+Song ID: 49478a32-483f-48d2-a594-d272b44bf587
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: cfee9e88bf1b, Duration: 256.8s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: fbefd1da9027, Duration: 256.8s
+✅ Processed 2 stems: ['guitar', 'bass']
+
+[233/240]
+
+======================================================================
+Processing: Can I Get A Minute - Holy Magick
+Song ID: 2dc237cd-1637-46f0-8f58-ca68dc6f6031
+======================================================================
+🎵 Processing stem: piano → role: piano (1 segments)
+   → File ID: 753b1eac2827, Duration: 186.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 72e28a27fb4c, Duration: 186.7s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: df8e45118cb6, Duration: 373.3s
+🎵 Processing stem: guitar → role: guitar (7 segments)
+   → File ID: a9b0cdcfd0e5, Duration: 1306.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 639f211d636b, Duration: 186.7s
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[234/240]
+
+======================================================================
+Processing: Never Gonna Stop -  Rivum
+Song ID: adb5e3fd-d039-42e4-b09b-fd0784fa0c82
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: f2fb0abea5b8, Duration: 445.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 000acd275e64, Duration: 222.8s
+🎵 Processing stem: other_keys → role: other_keys (2 segments)
+   → File ID: 19b2652d208b, Duration: 445.7s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: 630f6bd45398, Duration: 445.7s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: e2fe19f76726, Duration: 222.8s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'other', 'other_keys', 'guitar', 'bass']
+
+[235/240]
+
+======================================================================
+Processing: Sunspot - Modified Freq
+Song ID: 014f3712-293b-42af-9f29-0ed1785be792
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: a87d9ec141a9, Duration: 344.0s
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: dea8cc882a0c, Duration: 688.0s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 1260d71ba324, Duration: 344.0s
+✅ Processed 3 stems: ['wind', 'guitar', 'bass']
+
+[236/240]
+
+======================================================================
+Processing: Life On Earth - Firefly
+Song ID: 444fcc6d-1ad1-4584-b3e5-bf3f4f613c8f
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: d8f6dac7e582, Duration: 501.4s
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 093d122b110f, Duration: 250.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: 902a8f781502, Duration: 250.7s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: 8f8f41e81529, Duration: 752.1s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: 7d9053097023, Duration: 250.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 5 stems: ['piano', 'strings', 'other_keys', 'guitar', 'bass']
+
+[237/240]
+
+======================================================================
+Processing: Scream And Shout - Halos On Hooligans
+Song ID: 028c6f6a-f4f6-4795-84f2-a81222b38e7e
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: da62b6c8bba4, Duration: 240.4s
+🎵 Processing stem: other_keys → role: other_keys (1 segments)
+   → File ID: f0e902d40def, Duration: 240.4s
+🎵 Processing stem: guitar → role: guitar (3 segments)
+   → File ID: e52f28f0160f, Duration: 721.3s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: a7956093cc73, Duration: 480.8s
+✅ Processed 4 stems: ['other', 'other_keys', 'guitar', 'bass']
+
+[238/240]
+
+======================================================================
+Processing: What It Takes - Centenary
+Song ID: 6e50565e-8179-4913-af54-a2a7f0dcab2f
+======================================================================
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: wind → role: wind (1 segments)
+   → File ID: 07bcd1971edc, Duration: 186.2s
+🎵 Processing stem: guitar → role: guitar (1 segments)
+   → File ID: 56200edd1c27, Duration: 186.2s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: bbb4991bd4bb, Duration: 186.2s
+✅ Processed 3 stems: ['wind', 'guitar', 'bass']
+
+[239/240]
+
+======================================================================
+Processing: Éternelle - Fröst
+Song ID: e2e4ce50-cd0d-4144-809d-4cf8c8e4912e
+======================================================================
+🎵 Processing stem: piano → role: piano (2 segments)
+   → File ID: 96756da3a804, Duration: 446.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: other → role: other (1 segments)
+   → File ID: 17a7797a9723, Duration: 223.4s
+🎵 Processing stem: other_keys → role: other_keys (6 segments)
+   → File ID: a54dd514afe5, Duration: 1340.1s
+🎵 Processing stem: bass → role: bass (2 segments)
+   → File ID: 7a7d623db8b1, Duration: 446.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 4 stems: ['piano', 'other', 'other_keys', 'bass']
+
+[240/240]
+
+======================================================================
+Processing: All I Want - Juniper
+Song ID: bdd109ec-d5dd-4d91-92ad-66b679518026
+======================================================================
+🎵 Processing stem: bowed_strings → role: strings (1 segments)
+   → File ID: 9cdb38a74967, Duration: 270.7s
+⏭️  Skipping: drums (excluded: drums)
+🔎  Processing (separate): vocals (role: vocals)
+🎵 Processing stem: guitar → role: guitar (2 segments)
+   → File ID: bcbf88ac6605, Duration: 541.5s
+🎵 Processing stem: bass → role: bass (1 segments)
+   → File ID: db30792eb723, Duration: 270.7s
+⏭️  Skipping: percussion (excluded: percussion)
+✅ Processed 3 stems: ['strings', 'guitar', 'bass']
+
+======================================================================
+Processing Summary - moisesdb
+======================================================================
+✅ Songs processed: 240
+⏭️  Skipped (already done): 0
+🎵 Total stems: 795
+❌ Failed: 0
+======================================================================
+📄 Metadata: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA/local_lamda_registry.jsonl

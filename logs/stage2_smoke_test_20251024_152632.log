@@ -1,0 +1,19 @@
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+🔗 Initializing LAMDA integration...
+✓ LAMDA sources (origin) loaded:
+  - KILO:       602MB (chords catalog)
+  - META:       4.1GB (5 shards, patches/groove/controls)
+  - SIGNATURES: 290MB (timesig rescue)
+  - TOTALS:     33MB (outlier stats)
+✓ LOCAL LAMDA sources loaded:
+  - LOCAL_KILO: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA_v2/LOCAL_KILO_CHORDS_DATA.pickle
+  - LOCAL_META: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA_v2
+  - LOCAL_SIGNATURES: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA_v2/LOCAL_SIGNATURES_DATA.pickle
+  - LOCAL_TOTALS: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA_v2/LOCAL_TOTALS.pickle
+⚠️  Preference: LOCAL > origin
+📂 Collecting MIDI files from /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/output/stage1_test50...
+✓ Found 50 MIDI files
+
+🚀 Starting batch processing...
+Stage2 Processing:   0%|          | 0/50 [00:00<?, ?file/s]

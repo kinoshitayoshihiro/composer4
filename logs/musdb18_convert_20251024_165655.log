@@ -1,0 +1,8 @@
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/stempeg/__init__.py:30: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+📂 Found 150 .stem.mp4 files
+🎵 Output: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_decoded
+🔊 Mono: False
+
+Decoding stems:   0%|          | 0/150 [00:00<?, ?it/s]/opt/homebrew/Cellar/python@3.11/3.11.13/Frameworks/Python.framework/Versions/3.11/lib/python3.11/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

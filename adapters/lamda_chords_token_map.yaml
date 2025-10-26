@@ -1,0 +1,70 @@
+version: 1.0
+description: >
+  Mapping from LAMDA-side chord tokens (int codes / aliases) to music21.harmony.ChordSymbol
+  canonical labels. Root accidentals: use '#' and '-' (flat) as per project guideline.
+
+roots:
+  int_to_name: ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+  aliases:
+    "Db": "C#"
+    "Eb": "D#"
+    "Gb": "F#"
+    "Ab": "G#"
+    "Bb": "A#"
+    "Cb": "B"
+    "E#": "F"
+    "B#": "C"
+    # 受け入れ（小文字/全角のゆれも吸収）
+    "bb": "A#"
+    "gb": "F#"
+    "ｅ♭": "D#"
+
+qualities:
+  code_map:
+    0:  "maj"     # major triad
+    1:  "m"       # minor triad
+    2:  "dim"     # diminished triad
+    3:  "aug"     # augmented triad
+    4:  "7"       # dominant seventh
+    5:  "maj7"    # major seventh
+    6:  "m7"      # minor seventh
+    7:  "sus2"
+    8:  "sus4"
+    9:  "power"   # 5 (omit3)
+    10: "mM7"     # minor-major seventh
+    11: "dim7"    # fully diminished seventh
+    12: "m7b5"    # half-diminished
+
+  aliases:
+    "":        "maj"
+    "M":       "maj"
+    "maj":     "maj"
+    "major":   "maj"
+    "ionian":  "maj"
+    "min":     "m"
+    "minor":   "m"
+    "aeolian": "m"
+    "dom":     "7"
+    "dominant7": "7"
+    "sus":     "sus4"
+    "s4":      "sus4"
+    "s2":      "sus2"
+    "hdim7":   "m7b5"
+    "ø7":      "m7b5"
+    "halfdim": "m7b5"
+    "dim":     "dim"
+    "o":       "dim"
+    "o7":      "dim7"
+    "+":       "aug"
+    "aug":     "aug"
+    "mM":      "mM7"
+
+extensions:
+  allowed: [7, 9, 11, 13]
+  allowed_add: ["add6","add9","add11","add13"]
+  allowed_omit: ["omit3","omit5"]
+  allowed_alter: ["#5","b5","#9","b9","#11","b11","#13","b13"]
+
+fallbacks:
+  on_error: "N"     # "N" = No-Chord
+  min_step_ql: 2.0  # 直列同一コードの最短結合（QL）

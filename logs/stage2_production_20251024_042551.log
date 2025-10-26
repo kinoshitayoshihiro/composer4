@@ -1,0 +1,8 @@
+2025-10-24 04:25:51,898 - INFO - ============================================================
+2025-10-24 04:25:51,909 - INFO - 本番Stage2バッチ処理開始
+2025-10-24 04:25:51,909 - INFO -   Input:  /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/output/stage1
+2025-10-24 04:25:51,909 - INFO -   Output: output/stage2_production_20251024_042551_lamda
+2025-10-24 04:25:51,910 - INFO -   Log:    logs/stage2_production_20251024_042551.log
+2025-10-24 04:25:51,910 - INFO -   LAMDA:  ENABLED
+2025-10-24 04:25:51,910 - INFO - ============================================================
+2025-10-24 04:25:51,917 - INFO - ✓ LAMDA integration initialized

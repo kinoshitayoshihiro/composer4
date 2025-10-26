@@ -1,0 +1,221 @@
+# Phase 30/31 YAMLプリセット例
+# 各楽器のスタイルプリセットに追加可能
+
+# ============================================================================
+# Piano (configs/piano_style_presets.yaml)
+# ============================================================================
+piano_moderate:
+  style: moderate
+  density:
+    chords_per_bar: { min: 3, max: 5 }
+    arpeggio_ratio_max: 0.3
+  
+  # ... 既存設定 ...
+  
+  # Phase 30: Cross-Instrument Balance（楽器間バランス）
+  xinst_balance:
+    vs_bass:
+      enable: true
+      threshold: 0.7    # Bassの活動度が0.7を超えたら譲歩
+      vel_cut: 6        # Velocity を -6 減算
+    vs_guitar:
+      enable: false     # Guitar には譲歩しない
+  
+  # Phase 31: Voice-Leading Guard（ボイスリーディング保護）
+  voice_leading:
+    enable: true
+    max_leap: 7                      # 完全5度（7半音）までの跳躍を許容
+    scale_constraint_strength: 0.8   # Mode/Scale修正強度（0.0-1.0）
+                                     # 1.0 = 必ず修正、0.5 = 50%確率、0.0 = 修正なし
+
+# ============================================================================
+# Guitar (configs/guitar_style_presets.yaml)
+# ============================================================================
+guitar_complex:
+  style: complex
+  density:
+    strum_rate: 0.7
+    arpeggio_ratio: 0.4
+  
+  # ... 既存設定 ...
+  
+  # Phase 30: Cross-Instrument Balance
+  xinst_balance:
+    vs_piano:
+      enable: true
+      threshold: 0.75   # Piano高活動時に譲歩
+      vel_cut: 5
+  
+  # Phase 31: Voice-Leading Guard
+  voice_leading:
+    enable: true
+    max_leap: 9                      # 長6度（9半音）まで（ギターらしい跳躍）
+    scale_constraint_strength: 0.75  # Guitar: やや控えめ（コード外音でテンション表現）
+
+# ============================================================================
+# Strings (configs/strings_style_presets.yaml)
+# ============================================================================
+strings_simple:
+  style: simple
+  density:
+    sustain_ratio_min: 0.7
+    movement_rate_max: 0.3
+  
+  # ... 既存設定 ...
+  
+  # Phase 30: Cross-Instrument Balance
+  xinst_balance:
+    vs_piano:
+      enable: true
+      threshold: 0.8    # 高閾値（控えめに譲歩）
+      vel_cut: 8        # Stringsは大きく減衰
+  
+  # Phase 31: Voice-Leading Guard
+  voice_leading:
+    enable: true
+    max_leap: 5                       # 完全4度（5半音）まで（保守的なレガート）
+    scale_constraint_strength: 0.85   # Strings: 強め（滑らかなレガート優先）
+
+# ============================================================================
+# Bass (configs/bass_style_presets.yaml)
+# ============================================================================
+bass_tight_pop:
+  style: tight_pop
+  density:
+    notes_per_bar: { min: 4, max: 8 }
+    syncopation: 0.3
+  
+  # ... 既存設定 ...
+  
+  # Phase 30: Cross-Instrument Balance
+  xinst_balance:
+    vs_drums:
+      enable: true
+      threshold: 0.7
+      vel_cut: 4        # Kick高活動時に軽く減衰
+  
+  # Phase 31: Bass用 Mode/Scale制約（新実装）
+  voice_leading:
+    enable: false                     # Voice-Leading Guardは不要
+    scale_constraint_strength: 0.5    # Mode/Scale修正のみ、控えめに適用
+                                      # Bassは和声基盤なので、0.5推奨（50%確率で修正）
+
+# ============================================================================
+# 楽器別推奨強度まとめ
+# ============================================================================
+#
+# scale_constraint_strength 推奨値:
+#   - Piano:   0.8  （和声の中心、しっかり修正）
+#   - Strings: 0.85 （レガート優先、より強く修正）
+#   - Guitar:  0.75 （テンション許容、やや控えめ）
+#   - Bass:    0.5  （和声基盤、控えめに修正）
+#   - Melody:  0.9  （歌メロ、最優先で修正）
+#
+# strength=0.0: 修正なし（コード外音を完全許容）
+# strength=0.5: 50%の確率で修正（適度なバランス）
+# strength=1.0: 必ず修正（厳密なスケール遵守）
+
+# ============================================================================
+# 使用例（Pythonコード）
+# ============================================================================
+
+"""
+from generator.piano_params_stage2 import PianoParamsStage2
+from pathlib import Path
+import yaml
+
+# プリセット読み込み
+preset_path = Path("configs/piano_style_presets.yaml")
+with open(preset_path) as f:
+    presets = yaml.safe_load(f)
+
+# Phase 30/31を含むパラメータ生成
+params = presets["piano_moderate"]
+
+# mix_contextの準備（Phase 30用）
+mix_context = {
+    "beat_grid": {"bpm": 120.0},
+    "activity": {
+        "bass": [(0, 0.9), (1, 0.3), (2, 0.7), (3, 0.5)],  # bar別活動度
+        "guitar": [(0, 0.5), (1, 0.8), (2, 0.4), (3, 0.6)]
+    },
+    "audio_chordmap": [...],  # Phase 26用（オプション）
+    "sections": [...]          # Phase 28/32用
+}
+
+# 適用
+gen = PianoParamsStage2()
+result = gen.apply(
+    section_meta={"label": "verse", "bar": 0, "tempo": 120.0},
+    mix_context=mix_context,
+    params=params,
+    seed=42
+)
+
+# Phase実行順序（自動ソート後）:
+# 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 31, 27, 30, 28, 29
+# ※ 26（Harmony）→ 31（Voice-Leading）→ 27（Style）→ 30（Balance）→ 28（Export）
+"""
+
+# ============================================================================
+# 活動度データの準備（Phase 30用）
+# ============================================================================
+
+"""
+# 手動設定例
+activity_manual = {
+    "bass": [(0, 0.85), (1, 0.3), (2, 0.7), (3, 0.5)],
+    "guitar": [(0, 0.5), (1, 0.9), (2, 0.4), (3, 0.6)]
+}
+
+# 自動計算例（将来実装）
+def calculate_activity(part, bar_range):
+    activity = []
+    for bar in bar_range:
+        notes_in_bar = [n for n in part.notes if n.bar == bar]
+        level = min(1.0, len(notes_in_bar) / 16.0)  # 16音符で飽和
+        activity.append((bar, level))
+    return activity
+
+activity_auto = {
+    "bass": calculate_activity(bass_part, range(4)),
+    "guitar": calculate_activity(guitar_part, range(4))
+}
+"""
+
+# ============================================================================
+# 和声情報の準備（Phase 31用）
+# ============================================================================
+
+"""
+# Phase 26（Hybrid Harmony）の結果として part.hints に自動設定される
+
+part = {
+    "notes": [...],
+    "hints": {
+        "blend_harmony": {
+            "tones_midi": [60, 64, 67],  # C major
+            "root": 60,
+            "quality": "major"
+        }
+    }
+}
+
+# Phase 31 はこの情報を使って強拍で非和声音を半音寄せ
+"""
+
+# ============================================================================
+# デバッグ用設定（効果を強調）
+# ============================================================================
+
+debug_balance_strong:
+  xinst_balance:
+    vs_bass:
+      enable: true
+      threshold: 0.5    # 低閾値（頻繁に譲歩）
+      vel_cut: 12       # 大きく減衰
+
+debug_voice_leading_strict:
+  voice_leading:
+    enable: true
+    max_leap: 3         # 短3度（3半音）まで（非常に保守的）

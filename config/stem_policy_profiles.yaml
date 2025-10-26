@@ -1,0 +1,119 @@
+version: 2
+updated: 2025-10-25
+description: "Multi-profile stem policy for different datasets (Moises vs MUSDB18)"
+
+# ==============================================================================
+# プロファイル定義（データセット別）
+# ==============================================================================
+profiles:
+  # MoisesDB: 細粒度ステム（guitar/piano/other_keys/strings/...）
+  moisesdb:
+    alias_map:
+      mix:           ["mix", "mixture"]
+      vocals:        ["vocals", "vox", "lead_vocal", "singer"]
+      drums:         ["drums", "drum", "kit"]
+      percussion:    ["percussion", "perc"]
+      bass:          ["bass", "bass_guitar"]
+      guitar:        ["guitar", "gtr", "elec_guitar", "ac_guitar"]
+      piano:         ["piano", "keys_piano"]
+      other_keys:    ["keys", "synth", "pad", "organ", "ep"]
+      strings:       ["strings", "string", "orch", "bowed_strings"]
+      wind:          ["wind", "brass", "woodwind", "sax", "trumpet", "flute"]
+      other_plucked: ["other_plucked", "plucked", "harp", "banjo"]
+      other:         ["other", "accomp", "band"]
+    
+    roles_priority:
+      harmony: ["guitar", "piano", "other_keys", "strings", "wind", "other_plucked", "other", "bass"]
+      beat:    ["drums", "percussion", "mix", "other"]
+      energy:  ["drums", "percussion", "other", "bass"]
+    
+    exclude_for_harmony: ["mix", "vocals", "drums", "percussion"]
+    
+    weights:
+      harmony:
+        guitar: 0.50
+        piano: 0.50
+        other_keys: 0.40
+        strings: 0.35
+        wind: 0.30
+        other_plucked: 0.25
+        other: 0.25
+        bass: 0.20
+      beat:
+        drums: 1.0
+        percussion: 0.6
+        mix: 0.2
+        other: 0.2
+      energy:
+        drums: 0.4
+        percussion: 0.3
+        other: 0.2
+        bass: 0.1
+    
+    preprocess:
+      guitar:
+        hpss: harmonic
+      piano:
+        hpss: harmonic
+      other_keys:
+        hpss: harmonic
+        denoise_db: 18
+      strings:
+        hpss: harmonic
+      wind:
+        hpss: harmonic
+        denoise_db: 15
+      other_plucked:
+        hpss: harmonic
+      other:
+        hpss: harmonic
+        denoise_db: 18
+      bass:
+        lowpass_hz: 220
+        hpss: harmonic
+
+  # MUSDB18: 4ステム（vocals/drums/bass/other）
+  # otherにギター/鍵盤/ストリングスが全部入っているのでハーモニー主体
+  musdb18:
+    alias_map:
+      mix:    ["mixture", "mix"]
+      vocals: ["vocals"]
+      drums:  ["drums"]
+      bass:   ["bass"]
+      other:  ["other"]  # ← ギター/鍵盤/ストリングス全部入り
+    
+    roles_priority:
+      harmony: ["other", "bass", "mix"]  # otherが主力、bassで補助、mixは最終手段
+      beat:    ["drums", "mix", "other"]  # drumsが最優先
+      energy:  ["drums", "other", "bass"]
+    
+    exclude_for_harmony: ["mix", "vocals", "drums"]
+    
+    weights:
+      harmony:
+        other: 0.65  # otherに和声情報が集中
+        bass: 0.25   # bassで低音部を補強
+        mix: 0.10    # 最終手段
+      beat:
+        drums: 1.0   # drums最優先
+        mix: 0.2
+        other: 0.2
+      energy:
+        drums: 0.5
+        other: 0.3
+        bass: 0.2
+    
+    preprocess:
+      other:
+        hpss: harmonic       # otherから和声成分を強調
+        denoise_db: 15
+      bass:
+        lowpass_hz: 220
+        hpss: harmonic
+      mix:
+        hpss: harmonic
+
+# ==============================================================================
+# デフォルトプロファイル（--source-nameが未知の場合）
+# ==============================================================================
+default_profile: moisesdb

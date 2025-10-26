@@ -1,0 +1,40 @@
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/stempeg/__init__.py:30: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+📂 Found 150 .stem.mp4 files
+🎵 Output: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_decoded
+🔊 Mono: False
+
+[1/150] The Easton Ellises (Baumi) - SDRNR.stem.mp4
+[5/150] We Fell From The Sky - Not You.stem.mp4
+[10/150] Georgia Wonder - Siren.stem.mp4
+[15/150] Motor Tapes - Shore.stem.mp4
+[20/150] BKS - Bulldozer.stem.mp4
+[25/150] The Doppler Shift - Atrophy.stem.mp4
+[30/150] Signe Jakobsen - What Have You Done To Me.stem.mp4
+[35/150] Punkdisco - Oral Hygiene.stem.mp4
+[40/150] Detsky Sad - Walkie Talkie.stem.mp4
+[45/150] Nerve 9 - Pray For The Rain.stem.mp4
+[50/150] The Sunshine Garcia Band - For I Am The Moon.stem.mp4
+[55/150] Leaf - Come Around.stem.mp4
+[60/150] Young Griffo - Pennies.stem.mp4
+[65/150] Fergessen - Nos Palpitants.stem.mp4
+[70/150] Secret Mountains - High Horse.stem.mp4
+[75/150] James May - All Souls Moon.stem.mp4
+[80/150] Hezekiah Jones - Borrowed Heart.stem.mp4
+[85/150] Aimee Norwich - Child.stem.mp4
+[90/150] Music Delta - Reggae.stem.mp4
+[95/150] Clara Berry And Wooldog - Air Traffic.stem.mp4
+[100/150] Jokers, Jacks & Kings - Sea Of Leaves.stem.mp4
+[105/150] Jay Menon - Through My Eyes.stem.mp4
+[110/150] AvaLuna - Waterduct.stem.mp4
+[115/150] Young Griffo - Blood To Bone.stem.mp4
+[120/150] The So So Glos - Emergency.stem.mp4
+[125/150] ANiMAL - Rockshow.stem.mp4
+[130/150] The Long Wait - Back Home To Blue.stem.mp4
+[135/150] St Vitus - Word Gets Around.stem.mp4
+[140/150] Hop Along - Sister Cities.stem.mp4
+[145/150] Triviul - Angelsaint.stem.mp4
+[150/150] Actions - Devil's Words.stem.mp4
+
+✅ Conversion complete: 150 tracks
+📁 Output directory: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_decoded

@@ -1,0 +1,10 @@
+INFO: Found 2104 packages in index
+INFO: Sampled 50 songs for A/B test
+INFO:   gold: 38
+INFO:   silver: 12
+INFO: Loading v1 pickle: data/patterns/stage2_guitar.pickle
+INFO: Loading v2 pickle: data/patterns/stage2_guitar_v3.pickle
+INFO: Initialized SimplePatternRecommender for guitar
+INFO:   Version: 1.0
+INFO:   Total patterns: 2148
+INFO:   Selector type: rule_based

@@ -1,0 +1,65 @@
+# LAMDA SIGNATURES_DATA の ID → 拍子マッピング
+#
+# **目的**:
+# - SIGNATURES_DATA の sig_id を実際の拍子表記に変換
+# - 1/4 → 4/4 自動補正の裏取りに使用
+# - timesig救済の信頼度向上
+#
+# **フォーマット**:
+# sig_id: "time_signature"
+#
+# **主要ID（LAMDA v2.3 ベース）**:
+# - 155: 4/4（最頻）
+# - 211: 3/4
+# - 279: 6/8
+# - 347: 2/4
+# - 415: 5/4
+# - 483: 7/8
+# - 551: 12/8
+# - 619: 9/8
+#
+# **使用例**:
+# ```python
+# import yaml
+# sig_map = yaml.safe_load(open("configs/lamda/signature_id_map.yaml"))
+# sigs = [[155, 48], [211, 8]]  # 4/4が48小節、3/4が8小節
+# labels = [sig_map.get(sid, f"unknown:{sid}") for sid, _ in sigs]
+# # → ["4/4", "3/4"]
+# ```
+#
+# **拡張方針**:
+# - 不明IDは "unknown:<id>" として扱い、ログ出力
+# - 運用中に頻出する不明IDを手動追加
+# - SIGNATURESの更新時に同期
+
+# ========================================
+# Common Time Signatures
+# ========================================
+155: "4/4"   # Common time（最頻、全体の85%以上）
+211: "3/4"   # Waltz time
+279: "6/8"   # Compound duple
+347: "2/4"   # March time
+415: "2/2"   # Cut time
+
+# ========================================
+# Uncommon Time Signatures
+# ========================================
+483: "5/4"   # Dave Brubeck "Take Five"
+551: "7/4"   # Progressive rock
+619: "3/8"   # Fast waltz
+687: "9/8"   # Compound triple
+755: "12/8"  # Slow blues
+
+# ========================================
+# Rare Time Signatures
+# ========================================
+823: "5/8"   # Bulgarian rhythm
+891: "7/8"   # Balkan rhythm
+959: "11/8"  # Complex meter
+1027: "13/8" # Extremely rare
+
+# ========================================
+# Default Fallback
+# ========================================
+# 不明IDは f"unknown:{sig_id}" として扱う
+# 例: 9999 → "unknown:9999"

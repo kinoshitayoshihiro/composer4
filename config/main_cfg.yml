@@ -70,6 +70,9 @@ part_defaults:
     articulation: "sustain"
     anticipatory_chord: false
     ml_velocity_model_path: "outputs/checkpoints/last.ckpt"
+    # 🎹 Stage2機能（AI推薦必須 - pickle必要）
+    stage2_min_score: 0.5
+    scale_constraint_strength: 0.75
 
   guitar:
     rhythm_key: "guitar_ballad_arpeggio"
@@ -90,6 +93,9 @@ part_defaults:
     dynamics_profile: ""
     articulation: "finger"
     ml_velocity_model_path: "outputs/checkpoints/last.ckpt"
+    # 🎸 Stage2機能（AI推薦必須 - pickle必要）
+    stage2_min_score: 0.5
+    scale_constraint_strength: 0.5
 
   drums:
     style_key: "ballad_soft_kick_snare_8th_hat"
@@ -99,6 +105,7 @@ part_defaults:
     dynamics_profile: ""
     cond: { style: funk }
     ml_velocity_model_path: "outputs/checkpoints/last.ckpt"
+    # 🥁 Stage2機能（AI推薦必須 - pickle必要）
 
   strings:
     role: "pad"
@@ -107,10 +114,10 @@ part_defaults:
     humanize_profile: "gentle_push"
     ml_velocity_model_path: "outputs/checkpoints/last.ckpt"
 
-  percussion:
-    cond: { style: lofi }
-    backend: perc_ngram
-    model_path: models/perc_ngram.pkl
+  # percussion:  # ← 未実装のため一時的に無効化
+  #   cond: { style: lofi }
+  #   backend: perc_ngram
+  #   model_path: models/perc_ngram.pkl
 
 # ---------- 4. Section Overrides (拍子/テンポ/HZ) ----------
 # processed_chordmap_with_emotion.yaml でセクションを定義している場合、
@@ -153,20 +160,13 @@ section_overrides:
 
 # ---------------- 2. Sections to Generate ----------------
 sections_to_generate:
-  - "Verse 1"
-  - "Pre-Chorus 1"
-  - "Chorus 1"
-  - "Verse 2"
-  - "Chorus 2"
-  - "Interlude"
-  - "Bridge 1"
-  - "Verse 3"
-  - "Pre-Chorus 2"
-  - "Chorus 3"
-  - "Bridge 2"
-  - "Verse 4"
-  - "Chorus 4"
-  - "Sax Solo"
+  - "intro"
+  - "verse"
+  - "pre_chorus"
+  - "chorus"
+  - "post_chorus"
+  - "bridge"
+  - "outro"
 
 # ------ 5. Humanize Profiles (central registry) ------
 # humanizer.py で参照される辞書キーと対応。ここにまとめて記述しておくと

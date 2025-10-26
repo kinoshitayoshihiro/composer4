@@ -13,7 +13,7 @@ score:
   aliases_path: "../aliases/axes.yaml"
   
   velocity:
-    target_histograms_path: "configs/thresholds/velocity_guitar.yaml"
+    target_histograms_path: "../thresholds/velocity_targets.yaml"  # 汎用版を使用（Guitar専用は今後作成）
     nbins: 16
     prefill_window_beats: 0.5
     normalize_dynamic_range: true
@@ -83,7 +83,7 @@ score:
     detect_downstroke: true     # ダウンストローク検出
   
   articulation:
-    thresholds_path: "configs/thresholds/articulation_guitar.yaml"
+    thresholds_path: "../thresholds/articulation_guitar.yaml"
     techniques:
       - hammer_on               # ハンマリング
       - pull_off                # プリング
@@ -117,9 +117,9 @@ metrics:
   min_base_step: 1
   max_breakpoints: 3
   round_digits: 4
-  pitch_range:
-    min: 40   # E2 (低音弦)
-    max: 88   # E6 (高音弦)
+  # pitch_range: # 今後MetricConfigで対応予定
+  #   min: 40   # E2 (低音弦)
+  #   max: 88   # E6 (高音弦)
 
 retry_presets:
   - reason: arpeggio_quality

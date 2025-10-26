@@ -1,0 +1,2041 @@
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py:103: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  features['tempo'] = float(tempo)
+
+======================================================================
+LOCAL LAMDA WAV Integration - musdb18
+======================================================================
+Input dir: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_decoded
+Total song directories: 150
+Output DB: data/musdb18_wav_unified.db
+======================================================================
+
+[1/150]
+
+======================================================================
+Processing: Creepoid - OldTree
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 465
+   Chord candidates: ['G', 'E', 'B']
+   Song ID: Creepoid - OldTree
+   File ID: 6548a2707f98
+
+[2/150]
+
+======================================================================
+Processing: Angels In Amplifiers - I'm Alright
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 666
+   Chord candidates: ['D', 'D#', 'C']
+   Song ID: Angels In Amplifiers - I'm Alright
+   File ID: f6a1b2110095
+
+[3/150]
+
+======================================================================
+Processing: The Doppler Shift - Atrophy
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1210
+   Chord candidates: ['E', 'A', 'B']
+   Song ID: The Doppler Shift - Atrophy
+   File ID: fe6eb35a1ff1
+
+[4/150]
+
+======================================================================
+Processing: Girls Under Glass - We Feel Alright
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1421
+   Chord candidates: ['A', 'D', 'A#']
+   Song ID: Girls Under Glass - We Feel Alright
+   File ID: 912df5b9e025
+
+[5/150]
+
+======================================================================
+Processing: Black Bloc - If You Want Success
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1186
+   Chord candidates: ['A', 'G#', 'D']
+   Song ID: Black Bloc - If You Want Success
+   File ID: 740613b06374
+
+[6/150]
+
+======================================================================
+Processing: Jay Menon - Through My Eyes
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 493
+   Chord candidates: ['E', 'A', 'D']
+   Song ID: Jay Menon - Through My Eyes
+   File ID: 57281d5cd4d0
+
+[7/150]
+
+======================================================================
+Processing: Bobby Nobody - Stitch Up
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 613
+   Chord candidates: ['D', 'E', 'F#']
+   Song ID: Bobby Nobody - Stitch Up
+   File ID: 3988baf36fc7
+
+[8/150]
+
+======================================================================
+Processing: Arise - Run Run Run
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 983
+   Chord candidates: ['E', 'G', 'B']
+   Song ID: Arise - Run Run Run
+   File ID: d3e0c2bf1531
+
+[9/150]
+
+======================================================================
+Processing: Remember December - C U Next Time
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 285
+   Chord candidates: ['A', 'B', 'E']
+   Song ID: Remember December - C U Next Time
+   File ID: 3e660d913d4b
+
+[10/150]
+
+======================================================================
+Processing: Swinging Steaks - Lost My Way
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 599
+   Chord candidates: ['C#', 'G#', 'F#']
+   Song ID: Swinging Steaks - Lost My Way
+   File ID: 02c85e6e45d6
+
+[11/150]
+
+======================================================================
+Processing: Buitraker - Revo X
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 695
+   Chord candidates: ['D#', 'C#', 'D']
+   Song ID: Buitraker - Revo X
+   File ID: 6b0c61262afe
+
+[12/150]
+
+======================================================================
+Processing: Music Delta - Reggae
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 62
+   Chord candidates: ['G', 'A', 'F#']
+   Song ID: Music Delta - Reggae
+   File ID: 81b8ae5350e9
+
+[13/150]
+
+======================================================================
+Processing: North To Alaska - All The Same
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 574
+   Chord candidates: ['E', 'B', 'D']
+   Song ID: North To Alaska - All The Same
+   File ID: c0362b76b205
+
+[14/150]
+
+======================================================================
+Processing: Mu - Too Bright
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 967
+   Chord candidates: ['E', 'G', 'D']
+   Song ID: Mu - Too Bright
+   File ID: b1cd7a4f5f80
+
+[15/150]
+
+======================================================================
+Processing: PR - Oh No
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 386
+   Chord candidates: ['G', 'F#', 'G#']
+   Song ID: PR - Oh No
+   File ID: a98aa51fbe8f
+
+[16/150]
+
+======================================================================
+Processing: Timboz - Pony
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 464
+   Chord candidates: ['C', 'G', 'C#']
+   Song ID: Timboz - Pony
+   File ID: a0c59636afb6
+
+[17/150]
+
+======================================================================
+Processing: Fergessen - Nos Palpitants
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 573
+   Chord candidates: ['D', 'A', 'F#']
+   Song ID: Fergessen - Nos Palpitants
+   File ID: 875ba6fa4221
+
+[18/150]
+
+======================================================================
+Processing: James May - If You Say
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 606
+   Chord candidates: ['C#', 'D', 'B']/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/local_lamda_wav_integration.py:103: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  features['tempo'] = float(tempo)
+
+======================================================================
+LOCAL LAMDA WAV Integration - musdb18
+======================================================================
+Input dir: data/Los-Angeles-MIDI/LOCAL_LAMDA/wav_version/musdb18_decoded
+Total song directories: 150
+Output DB: data/musdb18_wav_unified.db
+======================================================================
+
+[1/150]
+
+======================================================================
+Processing: Creepoid - OldTree
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 465
+   Chord candidates: ['G', 'E', 'B']
+   Song ID: Creepoid - OldTree
+   File ID: 6548a2707f98
+
+[2/150]
+
+======================================================================
+Processing: Angels In Amplifiers - I'm Alright
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 666
+   Chord candidates: ['D', 'D#', 'C']
+   Song ID: Angels In Amplifiers - I'm Alright
+   File ID: f6a1b2110095
+
+[3/150]
+
+======================================================================
+Processing: The Doppler Shift - Atrophy
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1210
+   Chord candidates: ['E', 'A', 'B']
+   Song ID: The Doppler Shift - Atrophy
+   File ID: fe6eb35a1ff1
+
+[4/150]
+
+======================================================================
+Processing: Girls Under Glass - We Feel Alright
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1421
+   Chord candidates: ['A', 'D', 'A#']
+   Song ID: Girls Under Glass - We Feel Alright
+   File ID: 912df5b9e025
+
+[5/150]
+
+======================================================================
+Processing: Black Bloc - If You Want Success
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1186
+   Chord candidates: ['A', 'G#', 'D']
+   Song ID: Black Bloc - If You Want Success
+   File ID: 740613b06374
+
+[6/150]
+
+======================================================================
+Processing: Jay Menon - Through My Eyes
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 493
+   Chord candidates: ['E', 'A', 'D']
+   Song ID: Jay Menon - Through My Eyes
+   File ID: 57281d5cd4d0
+
+[7/150]
+
+======================================================================
+Processing: Bobby Nobody - Stitch Up
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 613
+   Chord candidates: ['D', 'E', 'F#']
+   Song ID: Bobby Nobody - Stitch Up
+   File ID: 3988baf36fc7
+
+[8/150]
+
+======================================================================
+Processing: Arise - Run Run Run
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 983
+   Chord candidates: ['E', 'G', 'B']
+   Song ID: Arise - Run Run Run
+   File ID: d3e0c2bf1531
+
+[9/150]
+
+======================================================================
+Processing: Remember December - C U Next Time
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 285
+   Chord candidates: ['A', 'B', 'E']
+   Song ID: Remember December - C U Next Time
+   File ID: 3e660d913d4b
+
+[10/150]
+
+======================================================================
+Processing: Swinging Steaks - Lost My Way
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 599
+   Chord candidates: ['C#', 'G#', 'F#']
+   Song ID: Swinging Steaks - Lost My Way
+   File ID: 02c85e6e45d6
+
+[11/150]
+
+======================================================================
+Processing: Buitraker - Revo X
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 695
+   Chord candidates: ['D#', 'C#', 'D']
+   Song ID: Buitraker - Revo X
+   File ID: 6b0c61262afe
+
+[12/150]
+
+======================================================================
+Processing: Music Delta - Reggae
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 62
+   Chord candidates: ['G', 'A', 'F#']
+   Song ID: Music Delta - Reggae
+   File ID: 81b8ae5350e9
+
+[13/150]
+
+======================================================================
+Processing: North To Alaska - All The Same
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 574
+   Chord candidates: ['E', 'B', 'D']
+   Song ID: North To Alaska - All The Same
+   File ID: c0362b76b205
+
+[14/150]
+
+======================================================================
+Processing: Mu - Too Bright
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 967
+   Chord candidates: ['E', 'G', 'D']
+   Song ID: Mu - Too Bright
+   File ID: b1cd7a4f5f80
+
+[15/150]
+
+======================================================================
+Processing: PR - Oh No
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 386
+   Chord candidates: ['G', 'F#', 'G#']
+   Song ID: PR - Oh No
+   File ID: a98aa51fbe8f
+
+[16/150]
+
+======================================================================
+Processing: Timboz - Pony
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 464
+   Chord candidates: ['C', 'G', 'C#']
+   Song ID: Timboz - Pony
+   File ID: a0c59636afb6
+
+[17/150]
+
+======================================================================
+Processing: Fergessen - Nos Palpitants
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 573
+   Chord candidates: ['D', 'A', 'F#']
+   Song ID: Fergessen - Nos Palpitants
+   File ID: 875ba6fa4221
+
+[18/150]
+
+======================================================================
+Processing: James May - If You Say
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 606
+   Chord candidates: ['C#', 'D', 'B']
+   Song ID: James May - If You Say
+   File ID: fd83cf18960a
+
+[19/150]
+
+======================================================================
+Processing: Music Delta - Country1
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 124
+   Chord candidates: ['G', 'D', 'A']
+   Song ID: Music Delta - Country1
+   File ID: 0206cb237602
+
+[20/150]
+
+======================================================================
+Processing: Patrick Talbot - Set Me Free
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1385
+   Chord candidates: ['D#', 'F', 'C#']
+   Song ID: Patrick Talbot - Set Me Free
+   File ID: be09aff15953
+
+[21/150]
+
+======================================================================
+Processing: Wall Of Death - Femme
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1082
+   Chord candidates: ['C', 'C#', 'G']
+   Song ID: Wall Of Death - Femme
+   File ID: 0326d49eef3d
+
+[22/150]
+
+======================================================================
+Processing: Speak Softly - Like Horses
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1463
+   Chord candidates: ['F', 'G#', 'C#']
+   Song ID: Speak Softly - Like Horses
+   File ID: 4f12c79eed1b
+
+[23/150]
+
+======================================================================
+Processing: Music Delta - Beatles
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 131
+   Chord candidates: ['G', 'G#', 'A']
+   Song ID: Music Delta - Beatles
+   File ID: e32454bcc15d
+
+[24/150]
+
+======================================================================
+Processing: Giselle - Moss
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 820
+   Chord candidates: ['G', 'D', 'F#']
+   Song ID: Giselle - Moss
+   File ID: 2a872544b9d2
+
+[25/150]
+
+======================================================================
+Processing: Louis Cressy Band - Good Time
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 687
+   Chord candidates: ['E', 'D', 'A']
+   Song ID: Louis Cressy Band - Good Time
+   File ID: d7a2934e55e2
+
+[26/150]
+
+======================================================================
+Processing: AvaLuna - Waterduct
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 563
+   Chord candidates: ['E', 'F#', 'A']
+   Song ID: AvaLuna - Waterduct
+   File ID: e0e1f9d0ae0d
+
+[27/150]
+
+======================================================================
+Processing: The Sunshine Garcia Band - For I Am The Moon
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1413
+   Chord candidates: ['A#', 'A', 'G#']
+   Song ID: The Sunshine Garcia Band - For I Am The Moon
+   File ID: 100d4f843365
+
+[28/150]
+
+======================================================================
+Processing: Cnoc An Tursa - Bannockburn
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 234
+   Chord candidates: ['G#', 'G', 'B']
+   Song ID: Cnoc An Tursa - Bannockburn
+   File ID: 6aa999f0ced5
+
+[29/150]
+
+======================================================================
+Processing: Moosmusic - Big Dummy Shake
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 504
+   Chord candidates: ['B', 'G#', 'F#']
+   Song ID: Moosmusic - Big Dummy Shake
+   File ID: dc04105cd5e3
+
+[30/150]
+
+======================================================================
+Processing: Music Delta - Hendrix
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 77
+   Chord candidates: ['G', 'G#', 'F#']
+   Song ID: Music Delta - Hendrix
+   File ID: 9df92427e767
+
+[31/150]
+
+======================================================================
+Processing: Auctioneer - Our Future Faces
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 835
+   Chord candidates: ['G', 'D', 'A']
+   Song ID: Auctioneer - Our Future Faces
+   File ID: 30bd131a6535
+
+[32/150]
+
+======================================================================
+Processing: Speak Softly - Broken Man
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 990
+   Chord candidates: ['D', 'A', 'G']
+   Song ID: Speak Softly - Broken Man
+   File ID: 8e558393592e
+
+[33/150]
+
+======================================================================
+Processing: Alexander Ross - Goodbye Bolero
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1075
+   Chord candidates: ['G', 'F#', 'A']
+   Song ID: Alexander Ross - Goodbye Bolero
+   File ID: f25ffedc04bf
+
+[34/150]
+
+======================================================================
+Processing: Dreamers Of The Ghetto - Heavy Love
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 799
+   Chord candidates: ['E', 'G', 'B']
+   Song ID: Dreamers Of The Ghetto - Heavy Love
+   File ID: 2058d669c1e7
+
+[35/150]
+
+======================================================================
+Processing: Georgia Wonder - Siren
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 2298
+   Chord candidates: ['C', 'F', 'D#']
+   Song ID: Georgia Wonder - Siren
+   File ID: f18afd0c4016
+
+[36/150]
+
+======================================================================
+Processing: Secretariat - Borderline
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 980
+   Chord candidates: ['A', 'D', 'G']
+   Song ID: Secretariat - Borderline
+   File ID: 4363fe8af140
+
+[37/150]
+
+======================================================================
+Processing: James May - On The Line
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 969
+   Chord candidates: ['D', 'E', 'A']
+   Song ID: James May - On The Line
+   File ID: 2e827a76f6ea
+
+[38/150]
+
+======================================================================
+Processing: Music Delta - 80s Rock
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 169
+   Chord candidates: ['D', 'E', 'G']
+   Song ID: Music Delta - 80s Rock
+   File ID: bb648449a48c
+
+[39/150]
+
+======================================================================
+Processing: Lushlife - Toynbee Suite
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1451
+   Chord candidates: ['G', 'A', 'D']
+   Song ID: Lushlife - Toynbee Suite
+   File ID: 5fd0fcfe460c
+
+[40/150]
+
+======================================================================
+Processing: Johnny Lokke - Whisper To A Scream
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 504
+   Chord candidates: ['E', 'B', 'C#']
+   Song ID: Johnny Lokke - Whisper To A Scream
+   File ID: 0866445e1265
+
+[41/150]
+
+======================================================================
+Processing: Detsky Sad - Walkie Talkie
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 507
+   Chord candidates: ['B', 'A', 'G#']
+   Song ID: Detsky Sad - Walkie Talkie
+   File ID: 1e258b83e32e
+
+[42/150]
+
+======================================================================
+Processing: Chris Durban - Celebrate
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 773
+   Chord candidates: ['G', 'G#', 'F#']
+   Song ID: Chris Durban - Celebrate
+   File ID: e5646a4212e8
+
+[43/150]
+
+======================================================================
+Processing: Triviul - Angelsaint
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 461
+   Chord candidates: ['F#', 'G', 'F']
+   Song ID: Triviul - Angelsaint
+   File ID: 88846a41a261
+
+[44/150]
+
+======================================================================
+Processing: James Elder & Mark M Thompson - The English Actor
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 604
+   Chord candidates: ['A', 'E', 'C#']
+   Song ID: James Elder & Mark M Thompson - The English Actor
+   File ID: 9275c69e22f2
+
+[45/150]
+
+======================================================================
+Processing: Titanium - Haunted Age
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 505
+   Chord candidates: ['C', 'G', 'C#']
+   Song ID: Titanium - Haunted Age
+   File ID: 08a63c164a3e
+
+[46/150]
+
+======================================================================
+Processing: Aimee Norwich - Child
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 604
+   Chord candidates: ['F#', 'B', 'G']
+   Song ID: Aimee Norwich - Child
+   File ID: 67cf392a6770
+
+[47/150]
+
+======================================================================
+Processing: Bill Chudziak - Children Of No-one
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 468
+   Chord candidates: ['E', 'D', 'B']
+   Song ID: Bill Chudziak - Children Of No-one
+   File ID: e70d8c962e0b
+
+[48/150]
+
+======================================================================
+Processing: Phre The Eon - Everybody's Falling Apart
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 674
+   Chord candidates: ['G', 'F#', 'A']
+   Song ID: Phre The Eon - Everybody's Falling Apart
+   File ID: 873c2a6b6b2a
+
+[49/150]
+
+======================================================================
+Processing: Strand Of Oaks - Spacestation
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 646
+   Chord candidates: ['D', 'G', 'A']
+   Song ID: Strand Of Oaks - Spacestation
+   File ID: c5413d5a33df
+
+[50/150]
+
+======================================================================
+Processing: Triviul feat. The Fiend - Widow
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 789
+   Chord candidates: ['D#', 'F#', 'F']
+   Song ID: Triviul feat. The Fiend - Widow
+   File ID: 80f7415e89c3
+
+[51/150]
+
+======================================================================
+Processing: The Easton Ellises - Falcon 69
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 917
+   Chord candidates: ['G#', 'F#', 'A#']
+   Song ID: The Easton Ellises - Falcon 69
+   File ID: fdd35716eb36
+
+[52/150]
+
+======================================================================
+Processing: Ben Carrigan - We'll Talk About It All Tonight
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 630
+   Chord candidates: ['D', 'E', 'G']
+   Song ID: Ben Carrigan - We'll Talk About It All Tonight
+   File ID: 08eab2232bb3
+
+[53/150]
+
+======================================================================
+Processing: Leaf - Come Around
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 859
+   Chord candidates: ['E', 'B', 'D']
+   Song ID: Leaf - Come Around
+   File ID: d136ea03b6ee
+
+[54/150]
+
+======================================================================
+Processing: Matthew Entwistle - Dont You Ever
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 252
+   Chord candidates: ['G', 'B', 'F#']
+   Song ID: Matthew Entwistle - Dont You Ever
+   File ID: bf67eaa04201
+
+[55/150]
+
+======================================================================
+Processing: Juliet's Rescue - Heartbeats
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1008
+   Chord candidates: ['G', 'E', 'F#']
+   Song ID: Juliet's Rescue - Heartbeats
+   File ID: 1bf1638c5260
+
+[56/150]
+
+======================================================================
+Processing: Music Delta - Disco
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 723
+   Chord candidates: ['G', 'F#', 'F']
+   Song ID: Music Delta - Disco
+   File ID: e614342b61ba
+
+[57/150]
+
+======================================================================
+Processing: The Scarlet Brand - Les Fleurs Du Mal
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 490
+   Chord candidates: ['D', 'C#', 'F']
+   Song ID: The Scarlet Brand - Les Fleurs Du Mal
+   File ID: 54aeee688dad
+
+[58/150]
+
+======================================================================
+Processing: Port St Willow - Stay Even
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1170
+   Chord candidates: ['D', 'F', 'A#']
+   Song ID: Port St Willow - Stay Even
+   File ID: c0b2ab01ab0c
+
+[59/150]
+
+======================================================================
+Processing: BigTroubles - Phantom
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 260
+   Chord candidates: ['A', 'D', 'B']
+   Song ID: BigTroubles - Phantom
+   File ID: 1028a527c976
+
+[60/150]
+
+======================================================================
+Processing: Dark Ride - Burning Bridges
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 319
+   Chord candidates: ['G#', 'G', 'A#']
+   Song ID: Dark Ride - Burning Bridges
+   File ID: 1e555d291a5f
+
+[61/150]
+
+======================================================================
+Processing: Fergessen - Back From The Start
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 482
+   Chord candidates: ['E', 'D', 'B']
+   Song ID: Fergessen - Back From The Start
+   File ID: ae8e9bef6343
+
+[62/150]
+
+======================================================================
+Processing: Spike Mullings - Mike's Sulking
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 571
+   Chord candidates: ['G', 'D', 'B']
+   Song ID: Spike Mullings - Mike's Sulking
+   File ID: 61d6a6cb0e41
+
+[63/150]
+
+======================================================================
+Processing: Triviul - Dorothy
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 396
+   Chord candidates: ['G', 'E', 'D']
+   Song ID: Triviul - Dorothy
+   File ID: fb55aa0992df
+
+[64/150]
+
+======================================================================
+Processing: Snowmine - Curfews
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1310
+   Chord candidates: ['A', 'F#', 'D']
+   Song ID: Snowmine - Curfews
+   File ID: c15a25185cbd
+
+[65/150]
+
+======================================================================
+Processing: The Long Wait - Back Home To Blue
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 800
+   Chord candidates: ['B', 'D', 'C']
+   Song ID: The Long Wait - Back Home To Blue
+   File ID: f1eb574d9b67
+
+[66/150]
+
+======================================================================
+Processing: The Mountaineering Club - Mallory
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 905
+   Chord candidates: ['A#', 'D', 'F']
+   Song ID: The Mountaineering Club - Mallory
+   File ID: 6efc8c928a77
+
+[67/150]
+
+======================================================================
+Processing: James May - All Souls Moon
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 716
+   Chord candidates: ['B', 'E', 'F#']
+   Song ID: James May - All Souls Moon
+   File ID: 338eee938e67
+
+[68/150]
+
+======================================================================
+Processing: A Classic Education - NightOwl
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 273
+   Chord candidates: ['F', 'A#', 'E']
+   Song ID: A Classic Education - NightOwl
+   File ID: c27e76a7fce2
+
+[69/150]
+
+======================================================================
+Processing: Punkdisco - Oral Hygiene
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 836
+   Chord candidates: ['G', 'F#', 'G#']
+   Song ID: Punkdisco - Oral Hygiene
+   File ID: a981efadd79b
+
+[70/150]
+
+======================================================================
+Processing: Cristina Vane - So Easy
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 782
+   Chord candidates: ['G', 'F', 'E']
+   Song ID: Cristina Vane - So Easy
+   File ID: 3eb2c71eaca5
+
+[71/150]
+
+======================================================================
+Processing: Actions - Devil's Words
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 395
+   Chord candidates: ['G#', 'A#', 'G']
+   Song ID: Actions - Devil's Words
+   File ID: cc578a9986e2
+
+[72/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Waltz For My Victims
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 408
+   Chord candidates: ['G', 'D', 'E']
+   Song ID: Clara Berry And Wooldog - Waltz For My Victims
+   File ID: 71d1858a0acb
+
+[73/150]
+
+======================================================================
+Processing: Al James - Schoolboy Facination
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 554
+   Chord candidates: ['A', 'D', 'C']
+   Song ID: Al James - Schoolboy Facination
+   File ID: fad8fc676ecf
+
+[74/150]
+
+======================================================================
+Processing: Leaf - Summerghost
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 557
+   Chord candidates: ['F', 'C#', 'C']
+   Song ID: Leaf - Summerghost
+   File ID: d29385585f71
+
+[75/150]
+
+======================================================================
+Processing: Tom McKenzie - Directions
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 728
+   Chord candidates: ['C', 'F', 'D']
+   Song ID: Tom McKenzie - Directions
+   File ID: 157deb3cc1e7
+
+[76/150]
+
+======================================================================
+Processing: Helado Negro - Mitad Del Mundo
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 635
+   Chord candidates: ['G#', 'F#', 'G']
+   Song ID: Helado Negro - Mitad Del Mundo
+   File ID: d4e4e4ef16fd
+
+[77/150]
+
+======================================================================
+Processing: BKS - Bulldozer
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1113
+   Chord candidates: ['E', 'A', 'G']
+   Song ID: BKS - Bulldozer
+   File ID: 9d29c7fb0855
+
+[78/150]
+
+======================================================================
+Processing: ANiMAL - Rockshow
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 602
+   Chord candidates: ['B', 'F#', 'C']
+   Song ID: ANiMAL - Rockshow
+   File ID: a5e74666ead0
+
+[79/150]
+
+======================================================================
+Processing: James May - Dont Let Go
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 852
+   Chord candidates: ['D#', 'A#', 'G#']
+   Song ID: James May - Dont Let Go
+   File ID: a97bfdad477d
+
+[80/150]
+
+======================================================================
+Processing: Carlos Gonzalez - A Place For Us
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 697
+   Chord candidates: ['C', 'G', 'F']
+   Song ID: Carlos Gonzalez - A Place For Us
+   File ID: 7a712085883f
+
+[81/150]
+
+======================================================================
+Processing: Secret Mountains - High Horse
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 930
+   Chord candidates: ['A', 'F#', 'C#']
+   Song ID: Secret Mountains - High Horse
+   File ID: d6e6582aeb54
+
+[82/150]
+
+======================================================================
+Processing: Music Delta - Britpop
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 151
+   Chord candidates: ['G', 'F#', 'E']
+   Song ID: Music Delta - Britpop
+   File ID: b5a45ed15b6e
+
+[83/150]
+
+======================================================================
+Processing: Music Delta - Grunge
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 143
+   Chord candidates: ['G', 'F', 'F#']
+   Song ID: Music Delta - Grunge
+   File ID: 36ec8287f68e
+
+[84/150]
+
+======================================================================
+Processing: Side Effects Project - Sing With Me
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1078
+   Chord candidates: ['E', 'F', 'A']
+   Song ID: Side Effects Project - Sing With Me
+   File ID: 475139f20924
+
+[85/150]
+
+======================================================================
+Processing: Grants - PunchDrunk
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 952
+   Chord candidates: ['A', 'F#', 'A#']
+   Song ID: Grants - PunchDrunk
+   File ID: eef03e7e5622
+
+[86/150]
+
+======================================================================
+Processing: Night Panther - Fire
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 640
+   Chord candidates: ['F#', 'A#', 'G#']
+   Song ID: Night Panther - Fire
+   File ID: e292c999060d
+
+[87/150]
+
+======================================================================
+Processing: Young Griffo - Facade
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 446
+   Chord candidates: ['C#', 'G#', 'B']
+   Song ID: Young Griffo - Facade
+   File ID: 448375d557cf
+
+[88/150]
+
+======================================================================
+Processing: Sweet Lights - You Let Me Down
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 644
+   Chord candidates: ['G', 'E', 'B']
+   Song ID: Sweet Lights - You Let Me Down
+   File ID: fd59ab58bd41
+
+[89/150]
+
+======================================================================
+Processing: Traffic Experiment - Once More (With Feeling)
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 997
+   Chord candidates: ['G', 'D', 'A']
+   Song ID: Traffic Experiment - Once More (With Feeling)
+   File ID: cca3fbda1d35
+
+[90/150]
+
+======================================================================
+Processing: Skelpolu - Together Alone
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1544
+   Chord candidates: ['E', 'A', 'B']
+   Song ID: Skelpolu - Together Alone
+   File ID: 1ca01dc6ef30
+
+[91/150]
+
+======================================================================
+Processing: Music Delta - Country2
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 121
+   Chord candidates: ['G', 'D', 'G#']
+   Song ID: Music Delta - Country2
+   File ID: 0c97e57e812f
+
+[92/150]
+
+======================================================================
+Processing: Celestial Shore - Die For Us
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 564
+   Chord candidates: ['E', 'B', 'D#']
+   Song ID: Celestial Shore - Die For Us
+   File ID: 34d3389609bc
+
+[93/150]
+
+======================================================================
+Processing: Lyndsey Ollard - Catching Up
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 585
+   Chord candidates: ['G', 'C', 'A']
+   Song ID: Lyndsey Ollard - Catching Up
+   File ID: def010b17c2a
+
+[94/150]
+
+======================================================================
+Processing: Invisible Familiars - Disturbing Wildlife
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 784
+   Chord candidates: ['C#', 'D#', 'F']
+   Song ID: Invisible Familiars - Disturbing Wildlife
+   File ID: 396dc2b21a31
+
+[95/150]
+
+======================================================================
+Processing: Atlantis Bound - It Was My Fault For Waiting
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 516
+   Chord candidates: ['C#', 'E', 'D#']
+   Song ID: Atlantis Bound - It Was My Fault For Waiting
+   File ID: e51f59275ae7
+
+[96/150]
+
+======================================================================
+Processing: The Wrong'Uns - Rothko
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 309
+   Chord candidates: ['B', 'A', 'D']
+   Song ID: The Wrong'Uns - Rothko
+   File ID: 744e4e88a4b7
+
+[97/150]
+
+======================================================================
+Processing: Patrick Talbot - A Reason To Leave
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 912
+   Chord candidates: ['A', 'E', 'G']
+   Song ID: Patrick Talbot - A Reason To Leave
+   File ID: b81996316411
+
+[98/150]
+
+======================================================================
+Processing: Music Delta - Rockabilly
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 102
+   Chord candidates: ['G', 'F#', 'A']
+   Song ID: Music Delta - Rockabilly
+   File ID: d641604fc804
+
+[99/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Stella
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 568
+   Chord candidates: ['G', 'D', 'A']
+   Song ID: Clara Berry And Wooldog - Stella
+   File ID: 53b107a339f0
+
+[100/150]
+
+======================================================================
+Processing: Young Griffo - Pennies
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 386
+   Chord candidates: ['C#', 'G#', 'A']
+   Song ID: Young Griffo - Pennies
+   File ID: 98856f677e86
+
+[101/150]
+
+======================================================================
+Processing: Hop Along - Sister Cities
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1066
+   Chord candidates: ['E', 'B', 'F#']
+   Song ID: Hop Along - Sister Cities
+   File ID: 474349a3fab1
+
+[102/150]
+
+======================================================================
+Processing: Jokers, Jacks & Kings - Sea Of Leaves
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 659
+   Chord candidates: ['E', 'G', 'C']
+   Song ID: Jokers, Jacks & Kings - Sea Of Leaves
+   File ID: 99932b03e17b
+
+[103/150]
+
+======================================================================
+Processing: Secretariat - Over The Top
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 570
+   Chord candidates: ['G', 'D', 'A']
+   Song ID: Secretariat - Over The Top
+   File ID: ddf0729b4b6a
+
+[104/150]
+
+======================================================================
+Processing: The Long Wait - Dark Horses
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 852
+   Chord candidates: ['B', 'F#', 'C#']
+   Song ID: The Long Wait - Dark Horses
+   File ID: 3b3087696e84
+
+[105/150]
+
+======================================================================
+Processing: Skelpolu - Resurrection
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1307
+   Chord candidates: ['C', 'G#', 'G']
+   Song ID: Skelpolu - Resurrection
+   File ID: 6fef78f2f598
+
+[106/150]
+
+======================================================================
+Processing: Skelpolu - Human Mistakes
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1355
+   Chord candidates: ['A', 'F', 'G#']
+   Song ID: Skelpolu - Human Mistakes
+   File ID: dc7e966b1c64
+
+[107/150]
+
+======================================================================
+Processing: Motor Tapes - Shore
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 687
+   Chord candidates: ['A', 'E', 'D']
+   Song ID: Motor Tapes - Shore
+   File ID: 740d1f17997d
+
+[108/150]
+
+======================================================================
+Processing: Alexander Ross - Velvet Curtain
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1197
+   Chord candidates: ['G', 'D', 'F#']
+   Song ID: Alexander Ross - Velvet Curtain
+   File ID: 55d324d43ab7
+
+[109/150]
+
+======================================================================
+Processing: Faces On Film - Waiting For Ga
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 980
+   Chord candidates: ['D#', 'G#', 'A#']
+   Song ID: Faces On Film - Waiting For Ga
+   File ID: 01fd3d3bedc1
+
+[110/150]
+
+======================================================================
+Processing: Hezekiah Jones - Borrowed Heart
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1036
+   Chord candidates: ['D#', 'E', 'B']
+   Song ID: Hezekiah Jones - Borrowed Heart
+   File ID: 036f95c1cf77
+
+[111/150]
+
+======================================================================
+Processing: The Districts - Vermont
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 569
+   Chord candidates: ['D#', 'C#', 'A#']
+   Song ID: The Districts - Vermont
+   File ID: 2ef35d075ac5
+
+[112/150]
+
+======================================================================
+Processing: Nerve 9 - Pray For The Rain
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 884
+   Chord candidates: ['G', 'A', 'D']
+   Song ID: Nerve 9 - Pray For The Rain
+   File ID: df769c51028a
+
+[113/150]
+
+======================================================================
+Processing: Zeno - Signs
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 411
+   Chord candidates: ['C', 'D#', 'D']
+   Song ID: Zeno - Signs
+   File ID: 44b4f46267ed
+
+[114/150]
+
+======================================================================
+Processing: Young Griffo - Blood To Bone
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 597
+   Chord candidates: ['A', 'E', 'C']
+   Song ID: Young Griffo - Blood To Bone
+   File ID: 4fea68db0e1b
+
+[115/150]
+
+======================================================================
+Processing: ANiMAL - Clinic A
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 818
+   Chord candidates: ['D#', 'E', 'B']
+   Song ID: ANiMAL - Clinic A
+   File ID: e88fe22bfe72
+
+[116/150]
+
+======================================================================
+Processing: Signe Jakobsen - What Have You Done To Me
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 429
+   Chord candidates: ['G', 'D', 'G#']
+   Song ID: Signe Jakobsen - What Have You Done To Me
+   File ID: 8df274d20d7c
+
+[117/150]
+
+======================================================================
+Processing: Tim Taler - Stalker
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 633
+   Chord candidates: ['A', 'E', 'B']
+   Song ID: Tim Taler - Stalker
+   File ID: 9bad7c974d5f
+
+[118/150]
+
+======================================================================
+Processing: Actions - One Minute Smile
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 349
+   Chord candidates: ['C#', 'G#', 'F#']
+   Song ID: Actions - One Minute Smile
+   File ID: f8fe4acf3e0c
+
+[119/150]
+
+======================================================================
+Processing: Angela Thomas Wade - Milk Cow Blues
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 607
+   Chord candidates: ['F#', 'D', 'A']
+   Song ID: Angela Thomas Wade - Milk Cow Blues
+   File ID: 2d6cc1385553
+
+[120/150]
+
+======================================================================
+Processing: Leaf - Wicked
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 698
+   Chord candidates: ['E', 'B', 'F#']
+   Song ID: Leaf - Wicked
+   File ID: 7bbbf753ebc2
+
+[121/150]
+
+======================================================================
+Processing: Drumtracks - Ghost Bitch
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 956
+   Chord candidates: ['D', 'F', 'C']
+   Song ID: Drumtracks - Ghost Bitch
+   File ID: 05ad692b2eb8
+
+[122/150]
+
+======================================================================
+Processing: AM Contra - Heart Peripheral
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 529
+   Chord candidates: ['G#', 'F#', 'C#']
+   Song ID: AM Contra - Heart Peripheral
+   File ID: afe4c256e69b
+
+[123/150]
+
+======================================================================
+Processing: Actions - South Of The Water
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 333
+   Chord candidates: ['B', 'F#', 'E']
+   Song ID: Actions - South Of The Water
+   File ID: fac7cd19b9d6
+
+[124/150]
+
+======================================================================
+Processing: Hollow Ground - Left Blind
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 327
+   Chord candidates: ['C#', 'G#', 'C']
+   Song ID: Hollow Ground - Left Blind
+   File ID: b2679731d0aa
+
+[125/150]
+
+======================================================================
+Processing: M.E.R.C. Music - Knockout
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 479
+   Chord candidates: ['A#', 'G#', 'D#']
+   Song ID: M.E.R.C. Music - Knockout
+   File ID: 80e950dee657
+
+[126/150]
+
+======================================================================
+Processing: Music Delta - Gospel
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 278
+   Chord candidates: ['G', 'D', 'E']
+   Song ID: Music Delta - Gospel
+   File ID: 8abd9ee4ea4c
+
+[127/150]
+
+======================================================================
+Processing: Meaxic - Take A Step
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1083
+   Chord candidates: ['C', 'E', 'G']
+   Song ID: Meaxic - Take A Step
+   File ID: 89d26e9fead4
+
+[128/150]
+
+======================================================================
+Processing: The So So Glos - Emergency
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 323
+   Chord candidates: ['A', 'D', 'F#']
+   Song ID: The So So Glos - Emergency
+   File ID: dc6f235ac92f
+
+[129/150]
+
+======================================================================
+Processing: PR - Happy Daze
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 648
+   Chord candidates: ['A', 'G', 'G#']
+   Song ID: PR - Happy Daze
+   File ID: 0806fdd34a25
+
+[130/150]
+
+======================================================================
+Processing: Raft Monk - Tiring
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 563
+   Chord candidates: ['F#', 'C#', 'E']
+   Song ID: Raft Monk - Tiring
+   File ID: 7cbe4b11e8e1
+
+[131/150]
+
+======================================================================
+Processing: Traffic Experiment - Sirens
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1204
+   Chord candidates: ['E', 'A', 'G']
+   Song ID: Traffic Experiment - Sirens
+   File ID: 9ceeffdf1461
+
+[132/150]
+
+======================================================================
+Processing: Forkupines - Semantics
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 629
+   Chord candidates: ['F', 'G', 'D']
+   Song ID: Forkupines - Semantics
+   File ID: 80d7df8c3f11
+
+[133/150]
+
+======================================================================
+Processing: ANiMAL - Easy Tiger
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 725
+   Chord candidates: ['C', 'D#', 'E']
+   Song ID: ANiMAL - Easy Tiger
+   File ID: 57fcc12524c8
+
+[134/150]
+
+======================================================================
+Processing: Clara Berry And Wooldog - Air Traffic
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 553
+   Chord candidates: ['C#', 'A#', 'G#']
+   Song ID: Clara Berry And Wooldog - Air Traffic
+   File ID: 8656e9d5015c
+
+[135/150]
+
+======================================================================
+Processing: We Fell From The Sky - Not You
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 572
+   Chord candidates: ['D', 'E', 'G']
+   Song ID: We Fell From The Sky - Not You
+   File ID: 2f812b47a5f0
+
+[136/150]
+
+======================================================================
+Processing: Music Delta - Rock
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 72
+   Chord candidates: ['G', 'E', 'F#']
+   Song ID: Music Delta - Rock
+   File ID: 8b459c04d26c
+
+[137/150]
+
+======================================================================
+Processing: Sambasevam Shanmugam - Kaathaadi
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 924
+   Chord candidates: ['G', 'C', 'G#']
+   Song ID: Sambasevam Shanmugam - Kaathaadi
+   File ID: 63ff0f2029f9
+
+[138/150]
+
+======================================================================
+Processing: Meaxic - You Listen
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1345
+   Chord candidates: ['C', 'G', 'A#']
+   Song ID: Meaxic - You Listen
+   File ID: d1a221f3f937
+
+[139/150]
+
+======================================================================
+Processing: Little Chicago's Finest - My Own
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1020
+   Chord candidates: ['C', 'D', 'G']
+   Song ID: Little Chicago's Finest - My Own
+   File ID: f9f6a2fd69ac
+
+[140/150]
+
+======================================================================
+Processing: Voelund - Comfort Lives In Belief
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 566
+   Chord candidates: ['G', 'D', 'C']
+   Song ID: Voelund - Comfort Lives In Belief
+   File ID: d684f46e12c6
+
+[141/150]
+
+======================================================================
+Processing: The Easton Ellises (Baumi) - SDRNR
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 516
+   Chord candidates: ['G', 'G#', 'D#']
+   Song ID: The Easton Ellises (Baumi) - SDRNR
+   File ID: 5d40bb2563f8
+
+[142/150]
+
+======================================================================
+Processing: Fergessen - The Wind
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 625
+   Chord candidates: ['C#', 'G#', 'E']
+   Song ID: Fergessen - The Wind
+   File ID: 269729039319
+
+[143/150]
+
+======================================================================
+Processing: Johnny Lokke - Promises & Lies
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 499
+   Chord candidates: ['D#', 'C', 'E']
+   Song ID: Johnny Lokke - Promises & Lies
+   File ID: 6db8d2e9747c
+
+[144/150]
+
+======================================================================
+Processing: St Vitus - Word Gets Around
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 732
+   Chord candidates: ['D', 'G', 'A']
+   Song ID: St Vitus - Word Gets Around
+   File ID: 60fde93ef540
+
+[145/150]
+
+======================================================================
+Processing: BKS - Too Much
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 721
+   Chord candidates: ['E', 'F#', 'D']
+   Song ID: BKS - Too Much
+   File ID: 8a5a668d8300
+
+[146/150]
+
+======================================================================
+Processing: Music Delta - Punk
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 81
+   Chord candidates: ['G', 'E', 'D']
+   Song ID: Music Delta - Punk
+   File ID: 96d41ffff7bd
+
+[147/150]
+
+======================================================================
+Processing: Hollow Ground - Ill Fate
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 360
+   Chord candidates: ['C#', 'G#', 'A']
+   Song ID: Hollow Ground - Ill Fate
+   File ID: 97cb465415bf
+
+[148/150]
+
+======================================================================
+Processing: Steven Clark - Bounty
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 428
+   Chord candidates: ['G#', 'C#', 'F#']
+   Song ID: Steven Clark - Bounty
+   File ID: 35bf07507b51
+
+[149/150]
+
+======================================================================
+Processing: Enda Reilly - Cur An Long Ag Seol
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 773
+   Chord candidates: ['D', 'A', 'D#']
+   Song ID: Enda Reilly - Cur An Long Ag Seol
+   File ID: 499fba02c76e
+
+[150/150]
+
+======================================================================
+Processing: Flags - 54
+======================================================================
+🎵 Extracting features from: mix.wav
+   ⚠️ Beat detection failed: unsupported format string passed to numpy.ndarray.__format__
+   Onsets: 1113
+   Chord candidates: ['C#', 'A', 'D']
+   Song ID: Flags - 54
+   File ID: e12707fe126c
+
+======================================================================
+Processing Summary - musdb18
+======================================================================
+✅ Success: 150
+❌ Failed: 0
+======================================================================
+📄 Metadata: data/musdb18_wav_unified.jsonl

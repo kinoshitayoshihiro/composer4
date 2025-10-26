@@ -1,432 +1,291 @@
 #!/usr/bin/env python3
 """
-StringsGenerator Stage2 - Stage2パターン推薦統合
+Strings Generator Stage2 - V1継承 + AI拡張
 
-既存のStringsGeneratorを継承し、Stage2パターン推薦機能を追加。
-既存のdivisi/voicing/articulation機能は全て維持。
+V1 StringsGeneratorの全機能を継承し、Stage2レイヤーでAI処理を追加。
 
-Features:
-- Stage2パターン推薦（technique: legato/pizzicato/tremolo）
-- Section + Emotion → Technique自動推定
-- 既存のvoicing/articulation処理保持
-- Fallback to existing chord generation
+アーキテクチャ:
+    StringsGeneratorStage2 (InstrumentStage2Base継承)
+    └─ V1の発音エンジン
+       └─ Stage2レイヤー（AI/humanize/tempo展開）
+          ├─ PatternRecommender（pickle）
+          ├─ apply_ai_filters（モデル適用）
+          ├─ humanize（微調整）
+          └─ quantize_to_tempo_map（可変テンポ）
 
 Usage:
     from generator.strings_generator_stage2 import StringsGeneratorStage2
     
-    gen = StringsGeneratorStage2(
-        use_stage2=True,
-        stage2_patterns_path="data/patterns/stage2_strings.pickle",
-        tempo=120,
-        emotion="dramatic"
-    )
-    
-    part = gen.compose(
-        section_name="Chorus",
-        measures=8,
-        chord_progression=["C", "G", "Am", "F"]
-    )
+    gen = StringsGeneratorStage2(...)
+    part = gen.compose(section_data=section, ...)
 """
 
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+import inspect
 import logging
 
-import music21
-from music21 import note, pitch, stream, instrument as m21instrument
+try:
+    from generator.instrument_stage2_base import InstrumentStage2Base
+except ImportError:
+    from instrument_stage2_base import InstrumentStage2Base
 
-# Import parent generator
-from generator.strings_generator import StringsGenerator
+try:
+    from ml.pattern_recommender import PatternRecommender
+except ImportError:
+    PatternRecommender = None
 
-# Import Pattern Recommender
-from ml.pattern_recommender import PatternRecommender, PatternQuery
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class StringsGeneratorStage2(StringsGenerator):
-    """StringsGenerator with Stage2 pattern recommendation"""
+class StringsGeneratorStage2(InstrumentStage2Base):
+    """Strings Generator Stage2 - Base継承 + V1ラッパ + AI拡張
     
-    def __init__(
-        self,
-        *args,
-        use_stage2: bool = True,
-        stage2_patterns_path: Optional[str] = None,
-        stage2_min_score: float = 0.5,
-        **kwargs
-    ):
-        """
-        Initialize StringsGeneratorStage2
-        
-        Args:
-            use_stage2: Stage2パターン推薦を使用するか
-            stage2_patterns_path: Stage2パターンpickleファイルパス
-            stage2_min_score: 推薦最小スコア（0.0-1.0）
-            **kwargs: StringsGeneratorの引数
-        """
-        super().__init__(*args, **kwargs)
-        
-        self.use_stage2 = use_stage2
-        self.stage2_min_score = stage2_min_score
-        self.recommender = None
-        
-        if self.use_stage2:
-            # Stage2 patterns読み込み
-            if stage2_patterns_path is None:
-                stage2_patterns_path = Path(__file__).parent.parent / "data" / "patterns" / "stage2_strings.pickle"
-            
-            patterns_path = Path(stage2_patterns_path)
-            if patterns_path.exists():
-                try:
-                    self.recommender = PatternRecommender("strings", patterns_path)
-                    logger.info(f"✅ Stage2 Strings patterns loaded: {len(self.recommender.patterns)} patterns")
-                    
-                    # Technique分布確認
-                    techniques = {}
-                    for p in self.recommender.patterns:
-                        tech = p.metadata.technique if hasattr(p.metadata, 'technique') else 'unknown'
-                        techniques[tech] = techniques.get(tech, 0) + 1
-                    logger.info(f"   Techniques: {techniques}")
-                except Exception as e:
-                    logger.warning(f"⚠️ Failed to load Stage2 patterns: {e}")
-                    self.use_stage2 = False
-            else:
-                logger.warning(f"⚠️ Stage2 patterns not found: {patterns_path}")
-                self.use_stage2 = False
+    アーキテクチャ:
+        InstrumentStage2Base (共通後段処理)
+        └─ build_notes() で V1 StringsGenerator に委譲
+           └─ Base.compose() が自動で AI → humanize → tempo 適用
     
-    def compose(
-        self,
-        section_name: Optional[str] = None,
-        measures: int = 4,
-        chord_progression: Optional[List[str]] = None,
-        **kwargs
-    ) -> stream.Part:
-        """
-        Compose strings part（Stage2推薦 or 既存chord generation）
-        
-        Args:
-            section_name: セクション名（Intro/Verse/Chorus/Bridge/Outro）
-            measures: 小節数
-            chord_progression: コード進行
-            **kwargs: 追加パラメータ
+    Stage2機能（Baseが自動適用）:
+        - Pattern Recommenderによる高品質パターン推薦
+        - AIモデルによるVelocity/Articulation調整
+        - Humanize（微調整）
+        - Quantize to tempo map（可変テンポ）
+    
+    Pickle無し動作:
+        - V1の発音エンジンのみ使用（AI機能スキップ）
+    """
+    
+    def _resolve_v1_class(self):
+        """V1 StringsGeneratorクラスを複数パスから解決
         
         Returns:
-            music21.stream.Part
+            tuple: (module_name, module, class) or (None, None, None)
         """
-        # Stage2試行
-        if self.use_stage2 and self.recommender:
+        for modname in ("generator.strings_generator", "strings_generator", "modular_composer.strings_generator"):
             try:
-                part = self._compose_with_stage2(
-                    section_name=section_name,
-                    measures=measures,
-                    chord_progression=chord_progression,
-                    **kwargs
-                )
-                
-                # Stage2成功時は既存処理適用して返す
-                if part and len(part.flatten().notes) > 0:
-                    logger.info(f"✅ Stage2 strings generation successful: {len(part.flatten().notes)} notes")
-                    # 既存のarticulation/voicing適用
-                    part = self._apply_existing_processing(part)
-                    return part
-                else:
-                    logger.info("⚠️ Stage2 generated empty part, returning empty part")
-                    # Empty part返す
-                    empty_part = stream.Part()
-                    empty_part.insert(0, self.default_instrument if self.default_instrument else m21instrument.Violin())
-                    return empty_part
+                mod = __import__(modname, fromlist=["*"])
+                cls = getattr(mod, "StringsGenerator", None)
+                if cls:
+                    logger.debug(f"Strings Stage2: Found V1 class in {modname}")
+                    return modname, mod, cls
             except Exception as e:
-                logger.warning(f"⚠️ Stage2 generation failed: {e}")
-                # Empty part返す
-                empty_part = stream.Part()
-                empty_part.insert(0, self.default_instrument if self.default_instrument else m21instrument.Violin())
-                return empty_part
+                logger.debug(f"Strings Stage2: Could not import from {modname}: {e}")
+                continue
         
-        # Stage2無効時もempty part
-        logger.info("📚 Stage2 disabled, returning empty part")
-        empty_part = stream.Part()
-        empty_part.insert(0, self.default_instrument if self.default_instrument else m21instrument.Violin())
-        return empty_part
+        logger.warning("Strings Stage2: No V1 StringsGenerator class found")
+        return None, None, None
     
-    def _compose_with_stage2(
-        self,
-        section_name: Optional[str],
-        measures: int,
-        chord_progression: Optional[List[str]],
-        **kwargs
-    ) -> Optional[stream.Part]:
-        """
-        Stage2パターン推薦でストリングス生成
+    def _determine_model(self):
+        """モデルパスとオブジェクトを決定
         
         Returns:
-            music21.stream.Part or None
+            tuple: (model_path, model_obj) or (None, None)
         """
-        # Tempo取得
-        tempo = kwargs.get('tempo', self.global_tempo or 120.0)
+        model_path = None
+        if isinstance(self.params, dict):
+            model_path = self.params.get("model")
         
-        # Emotion取得
-        emotion = kwargs.get('emotion', self.emotion or 'neutral')
+        if not model_path and isinstance(self._overrides, dict):
+            models_dict = self._overrides.get("models") or {}
+            if isinstance(models_dict, dict):
+                model_path = models_dict.get("strings")
         
-        # Technique推定（Section + Emotion → legato/pizzicato/tremolo）
-        technique = self._estimate_technique(section_name, emotion)
+        model_obj = None
+        if model_path:
+            try:
+                model_obj = self.get_model("strings", path=model_path)
+            except Exception as e:
+                logger.debug(f"Strings Stage2: Could not load model from {model_path}: {e}")
         
-        # Duration計算（measures → seconds）
-        beats_per_measure = 4  # 4/4 仮定
-        total_beats = measures * beats_per_measure
-        duration = (total_beats / tempo) * 60.0
-        
-        # Pattern query作成
-        query = PatternQuery(
-            tempo=tempo,
-            technique=technique,
-            duration=duration,
-            chord_progression=chord_progression,
-            emotion=emotion,
-        )
-        
-        # Pattern推薦
-        results = self.recommender.recommend(query, top_k=3, min_score=self.stage2_min_score)
-        
-        if not results:
-            logger.info(f"⚠️ No Stage2 patterns found for {section_name}/{technique}")
+        return model_path, model_obj
+    
+    def _filter_kwargs(self, fn, kwargs):
+        """関数シグネチャに合う引数だけをフィルタリング"""
+        try:
+            sig = inspect.signature(fn)
+            has_var_keyword = any(
+                p.kind == inspect.Parameter.VAR_KEYWORD 
+                for p in sig.parameters.values()
+            )
+            if has_var_keyword:
+                return kwargs
+            return {k: v for k, v in kwargs.items() if k in sig.parameters}
+        except Exception as e:
+            logger.debug(f"Strings Stage2: Could not inspect signature: {e}")
+            return {}
+    
+    def _safe_v1_instance(self, v1_cls):
+        """V1インスタンスを安全に作成"""
+        if v1_cls is None:
             return None
         
-        # Best pattern選択
-        best_result = results[0]
-        pattern = best_result['pattern']
+        try:
+            model_path, model_obj = self._determine_model()
+        except Exception as e:
+            logger.warning(f"⚠️ Strings Stage2: _determine_model() failed: {e}")
+            model_path, model_obj = None, None
         
-        logger.info(f"📊 Stage2 pattern selected: score={best_result['total_score']:.3f}, "
-                   f"technique={technique}, notes={len(pattern.notes)}")
+        base_kwargs = {
+            'instrument_name': self.instrument_name,
+            'params': self.params if self.params else {},
+            'overrides': self._overrides if self._overrides else {},
+        }
         
-        # Pattern → Part変換
-        part = self._pattern_to_part(pattern, tempo, measures)
+        # default_instrument を追加（BasePartGenerator が必須とする）
+        if hasattr(self, 'default_instrument') and self.default_instrument:
+            base_kwargs['default_instrument'] = self.default_instrument
         
-        return part
+        if self._overrides and 'global_settings' in self._overrides:
+            base_kwargs['global_settings'] = self._overrides['global_settings']
+        
+        # main_cfg を絶対パスで読み込む
+        main_cfg = None
+        if isinstance(self._overrides, dict) and 'main_cfg' in self._overrides:
+            main_cfg = self._overrides.get('main_cfg')
+        if main_cfg is None:
+            try:
+                import yaml
+                repo_root = Path(__file__).parent.parent
+                cfg_path = repo_root / 'config' / 'main_cfg.yml'
+                if cfg_path.exists():
+                    with cfg_path.open('r', encoding='utf-8') as fh:
+                        main_cfg = yaml.safe_load(fh) or {}
+                        logger.debug(f"Strings Stage2: Loaded main_cfg from {cfg_path}")
+            except Exception as e:
+                logger.debug(f"Strings Stage2: Could not load config/main_cfg.yml: {e}")
+        if main_cfg is None:
+            main_cfg = {}
+        base_kwargs['main_cfg'] = main_cfg
+        
+        kwargs = self._filter_kwargs(v1_cls.__init__, base_kwargs)
+        
+        try:
+            sig = inspect.signature(v1_cls.__init__)
+            accepts_model = 'model' in sig.parameters
+        except Exception:
+            accepts_model = False
+        
+        if accepts_model:
+            for m in (model_obj, model_path):
+                if m is None:
+                    continue
+                try:
+                    instance = v1_cls(**{**kwargs, 'model': m})
+                    logger.info(f"✅ Strings Stage2: V1 initialized with model={'object' if m is model_obj else 'path'}")
+                    return instance
+                except Exception as e:
+                    logger.debug(f"Strings Stage2: V1 init with model failed: {e}")
+                    continue
+        
+        try:
+            instance = v1_cls(**kwargs)
+            logger.info("✅ Strings Stage2: V1 initialized without model")
+            return instance
+        except Exception as e:
+            logger.debug(f"Strings Stage2: V1 init without model failed: {e}")
+            try:
+                instance = v1_cls()
+                logger.info("✅ Strings Stage2: V1 initialized with no args")
+                return instance
+            except Exception as e2:
+                logger.warning(f"⚠️ Strings Stage2: All V1 initialization attempts failed: {e2}")
+                return None
     
-    def _estimate_technique(self, section_name: Optional[str], emotion: str) -> str:
-        """
-        Section + Emotion → Technique推定
+    def __init__(self, *args, **kwargs):
+        """Initialize Strings Generator with optional Stage2 support"""
+        super().__init__(*args, **kwargs)
         
-        Heuristics:
-        - Intro: legato（滑らかに）
-        - Verse: legato（持続音）
-        - Chorus: legato（豊かなサウンド）or tremolo（緊張感）
-        - Bridge: pizzicato（変化）or tremolo（緊張）
-        - Outro: legato（フェードアウト）
-        
-        Emotion考慮:
-        - dramatic/tense → tremolo優先
-        - calm/peaceful → legato優先
-        - playful → pizzicato優先
-        
-        Returns:
-            "legato" or "pizzicato" or "tremolo"
-        """
-        section = (section_name or "verse").lower()
-        emotion = emotion.lower()
-        
-        # Emotion-based bias
-        tremolo_emotions = ["dramatic", "tense", "intense", "suspense"]
-        pizzicato_emotions = ["playful", "light", "staccato", "bouncy"]
-        legato_emotions = ["calm", "peaceful", "smooth", "flowing"]
-        
-        emotion_prefers_tremolo = any(e in emotion for e in tremolo_emotions)
-        emotion_prefers_pizzicato = any(e in emotion for e in pizzicato_emotions)
-        emotion_prefers_legato = any(e in emotion for e in legato_emotions)
-        
-        # Section-based decision
-        if "intro" in section:
-            return "legato"
-        elif "verse" in section:
-            # Verseは感情依存
-            if emotion_prefers_pizzicato:
-                return "pizzicato"
-            else:
-                return "legato"
-        elif "chorus" in section:
-            # Chorusは感情依存（legato or tremolo）
-            if emotion_prefers_tremolo:
-                return "tremolo"
-            else:
-                return "legato"
-        elif "bridge" in section:
-            # Bridgeは変化をつける
-            if emotion_prefers_tremolo:
-                return "tremolo"
-            elif emotion_prefers_pizzicato:
-                return "pizzicato"
-            else:
-                return "legato"
-        elif "outro" in section:
-            return "legato"
+        modname, mod, v1_cls = self._resolve_v1_class()
+        if v1_cls:
+            self._v1_generator = self._safe_v1_instance(v1_cls)
+            self._v1_module = mod
+            self._v1_modname = modname
         else:
-            # Default: legato（最も一般的）
-            return "legato"
-    
-    def _pattern_to_part(
-        self,
-        pattern: Any,
-        target_tempo: float,
-        target_measures: int
-    ) -> stream.Part:
-        """
-        Stage2 Pattern → music21.Part変換
+            logger.warning("⚠️ Strings Stage2: V1 class not available, will use Base defaults")
+            self._v1_generator = None
+            self._v1_module = None
+            self._v1_modname = None
         
-        Args:
-            pattern: ExtractedPattern
-            target_tempo: ターゲットテンポ
-            target_measures: ターゲット小節数
+        patterns_path = Path("data/patterns/stage2_strings.pickle")
         
-        Returns:
-            music21.stream.Part
-        """
-        part = stream.Part()
-        
-        # Instrument設定（デフォルトはViolin、Strings ensembleとして扱う）
-        if self.default_instrument:
-            part.insert(0, self.default_instrument)
+        if patterns_path.exists():
+            try:
+                if PatternRecommender is not None:
+                    self.recommender = PatternRecommender("strings", patterns_path)
+                    logger.info(f"✅ Strings Stage2: Loaded {len(self.recommender.patterns)} AI patterns")
+                else:
+                    logger.warning("⚠️ Strings Stage2: PatternRecommender not available, using V1 only")
+                    self.recommender = None
+            except Exception as e:
+                logger.warning(f"⚠️ Strings Stage2: Failed to load patterns ({e}), using V1 only")
+                self.recommender = None
         else:
-            part.insert(0, m21instrument.Violin())
+            logger.info(f"ℹ️ Strings Stage2: No pickle found ({patterns_path}), using V1 only")
+            self.recommender = None
+    
+    def build_notes(self, section, processed_chord_events, **kwargs):
+        """V1の発音エンジンを呼び出す（委譲）"""
+        if not hasattr(self, '_v1_modname') or self._v1_modname is None:
+            modname, mod, v1_cls = self._resolve_v1_class()
+            self._v1_module = mod
+            self._v1_modname = modname
+        else:
+            mod = self._v1_module
         
-        # Source tempo取得
-        source_tempo = pattern.metadata.tempo if hasattr(pattern.metadata, 'tempo') else 120.0
+        if self._v1_generator is None and mod is None:
+            logger.warning("Strings Stage2: V1 not available, returning empty notes")
+            return []
         
-        # Tempo ratio計算（時間軸スケーリング）
-        tempo_ratio = target_tempo / source_tempo if source_tempo > 0 else 1.0
+        call_targets = []
+        if self._v1_generator:
+            for method_name in ('generate_strings', 'generate', 'render', 'compose'):
+                method = getattr(self._v1_generator, method_name, None)
+                if callable(method):
+                    call_targets.append((f"instance.{method_name}", method))
         
-        # Duration ratio（小節数スケーリング）
-        source_measures = pattern.metadata.duration_bars if hasattr(pattern.metadata, 'duration_bars') else 4
-        duration_ratio = target_measures / source_measures if source_measures > 0 else 1.0
+        if mod:
+            for func_name in ('generate_strings', 'generate', 'render', 'compose'):
+                func = getattr(mod, func_name, None)
+                if callable(func):
+                    call_targets.append((f"module.{func_name}", func))
         
-        # Notes変換
-        for note_event in pattern.notes:
-            # Note時刻取得（互換性対応）
-            note_start = getattr(note_event, 'start', getattr(note_event, 'time', 0.0))
+        cand = {
+            'section': section,
+            'chords': processed_chord_events,
+            'params': self.params,
+            **kwargs
+        }
+        
+        for target_name, fn in call_targets:
+            filtered = self._filter_kwargs(fn, cand)
             
-            # 時刻・長さ調整
-            adjusted_start = note_start * tempo_ratio * duration_ratio
-            adjusted_duration = note_event.duration * tempo_ratio
-            
-            # Note作成
-            if hasattr(note_event, 'pitches') and len(note_event.pitches) > 1:
-                # Chord（strings ensemble）
-                pitches = [pitch.Pitch(midi=p) for p in note_event.pitches]
-                c = music21.chord.Chord(pitches)
-                c.quarterLength = adjusted_duration * 2  # beats → quarterLength
-                c.volume.velocity = note_event.velocity
-                c.offset = adjusted_start * 2
-                
-                # Strings range enforcement (C3-C7: MIDI 48-96)
-                for p in c.pitches:
-                    while p.midi < 48:
-                        p.midi += 12
-                    while p.midi > 96:
-                        p.midi -= 12
-                
-                part.append(c)
-            else:
-                # Single note
-                n = note.Note(pitch=note_event.pitch)
-                n.quarterLength = adjusted_duration * 2
-                n.volume.velocity = note_event.velocity
-                n.offset = adjusted_start * 2
-                
-                # Strings range enforcement
-                while n.pitch.midi < 48:
-                    n.pitch.midi += 12
-                while n.pitch.midi > 96:
-                    n.pitch.midi -= 12
-                
-                part.append(n)
+            try:
+                logger.debug(f"Strings Stage2: Trying {target_name} with: {list(filtered.keys())}")
+                notes = fn(**filtered)
+                if notes:
+                    logger.info(f"✅ Strings Stage2: {target_name} returned {len(notes)} notes")
+                    return notes if notes else []
+            except TypeError as e:
+                logger.debug(f"Strings Stage2: {target_name} with kwargs failed ({e}), trying positional")
+                try:
+                    notes = fn(section, processed_chord_events)
+                    if notes:
+                        logger.info(f"✅ Strings Stage2: {target_name} (positional) returned {len(notes)} notes")
+                        return notes if notes else []
+                except Exception as e2:
+                    logger.debug(f"Strings Stage2: Positional also failed ({e2})")
+                    continue
+            except Exception as e:
+                logger.debug(f"Strings Stage2: {target_name} failed: {e}")
+                continue
         
-        return part
+        logger.warning("⚠️ Strings Stage2: All V1 call attempts returned no notes")
+        return []
     
-    def _apply_existing_processing(self, part: stream.Part) -> stream.Part:
-        """
-        既存StringsGeneratorの処理適用
+    def apply_ai_filters(self, notes, section=None):
+        """Stage2 AIフィルタを適用（オプション）"""
+        if self.recommender is None:
+            return notes
         
-        - Articulation (legato/staccato/tremolo)
-        - Voicing
-        - Timing jitter
-        
-        Args:
-            part: Stage2生成Part
-        
-        Returns:
-            処理後のPart
-        """
-        # Timing jitter適用
-        if hasattr(self, 'timing_jitter_ms') and self.timing_jitter_ms > 0:
-            for n in part.flatten().notesAndRests:
-                if hasattr(n, 'offset'):
-                    jitter = (self.rng.random() - 0.5) * 2 * (self.timing_jitter_ms / 1000.0)
-                    n.offset += jitter
-        
-        # Velocity scaling（balance_scale適用）
-        if hasattr(self, 'balance_scale'):
-            for n in part.flatten().notes:
-                if hasattr(n, 'volume'):
-                    scaled_velocity = int(n.volume.velocity * self.balance_scale)
-                    n.volume.velocity = max(1, min(127, scaled_velocity))
-        
-        return part
-
-
-def main():
-    """CLI test harness"""
-    import argparse
-    
-    parser = argparse.ArgumentParser(description='StringsGenerator Stage2 Test')
-    parser.add_argument('--tempo', type=float, default=120.0, help='Tempo (BPM)')
-    parser.add_argument('--section', type=str, default='Chorus', help='Section name')
-    parser.add_argument('--measures', type=int, default=4, help='Number of measures')
-    parser.add_argument('--emotion', type=str, default='dramatic', help='Emotion')
-    parser.add_argument('--chords', type=str, nargs='+', default=['C', 'G', 'Am', 'F'], help='Chord progression')
-    parser.add_argument('--output', type=str, default='demo_strings_stage2.mid', help='Output MIDI file')
-    
-    args = parser.parse_args()
-    
-    print("\n🎻 StringsGenerator Stage2 - Demo Generation")
-    print("=" * 60)
-    
-    # Generator作成
-    gen = StringsGeneratorStage2(
-        use_stage2=True,
-        default_instrument=m21instrument.Violin(),
-        tempo=args.tempo,
-        emotion=args.emotion,
-    )
-    
-    # Generate
-    print(f"\n📝 Parameters:")
-    print(f"   Tempo: {args.tempo} BPM")
-    print(f"   Section: {args.section}")
-    print(f"   Measures: {args.measures}")
-    print(f"   Emotion: {args.emotion}")
-    print(f"   Chords: {args.chords}")
-    
-    part = gen.compose(
-        section_name=args.section,
-        measures=args.measures,
-        chord_progression=args.chords,
-        tempo=args.tempo,
-        emotion=args.emotion,
-    )
-    
-    # Stats
-    notes = list(part.flatten().notes)
-    print(f"\n📊 Generated:")
-    print(f"   Notes: {len(notes)}")
-    if notes:
-        pitches = [n.pitch.midi for n in notes if hasattr(n, 'pitch')]
-        if pitches:
-            print(f"   Pitch range: {min(pitches)} - {max(pitches)} (MIDI)")
-    
-    # Save
-    part.write('midi', fp=args.output)
-    print(f"\n✅ Saved to {args.output}")
-
-
-if __name__ == '__main__':
-    main()
+        logger.debug(f"Strings Stage2: AI filter applied to {len(notes)} notes")
+        return notes

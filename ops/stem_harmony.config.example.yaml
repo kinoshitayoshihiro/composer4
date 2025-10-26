@@ -1,0 +1,52 @@
+# ops/stem_harmony.config.yaml (example)
+# YAML設定でセクション別のコード推定パラメータをカスタマイズ
+
+global_key:
+  gamma: 0.15   # グローバルキー prior の強さ (0..0.5 推奨)
+
+HMM:
+  stay: 0.93    # 和音の「留まりやすさ」(自己遷移確率)
+  near: 0.03    # 4度/5度への小遷移確率
+
+local_key:
+  win_beats: 8         # 局所キーの拍窓サイズ
+  mode: gaussian       # mean|max|gaussian (gaussian: 中心重み付け)
+  gamma: 0.35          # ローカルキー prior の強さ
+  per_section:
+    # セクション別にパラメータ上書き可能
+    chorus:
+      win_beats: 4     # コーラスは短い窓（モジュレーション対応）
+      gamma: 0.55      # より強いローカルキー prior
+    verse:
+      win_beats: 12    # ヴァースは長い窓（安定）
+      gamma: 0.25
+    bridge:
+      win_beats: 6
+      mode: mean
+      gamma: 0.40
+
+N_state:
+  enable: true           # No-Chord 状態を有効化
+  energy_gamma: 1.0      # 低エネルギーを好む度合い
+  conf_gamma: 2.0        # 低確信度(1-max cos)を好む度合い
+  stay: 0.96             # N の「留まりやすさ」
+  out:  0.02             # N -> 各和音への出やすさ
+  per_section:
+    # イントロ/アウトロで N 検出を強化
+    intro:
+      energy_gamma: 1.2
+      conf_gamma: 2.2
+    outro:
+      energy_gamma: 1.2
+      conf_gamma: 2.2
+    bridge:
+      energy_gamma: 0.8  # ブリッジでは N を抑制
+      conf_gamma: 1.5
+
+stem_weight:
+  # ステム別の重み（音源名に含まれる文字列でマッチング）
+  - "bass=1.3"         # ベースを重視
+  - "keys=1.2"         # キーボード/ピアノを重視
+  - "guitar=1.0"       # ギター標準
+  - "strings=0.9"      # ストリングス軽め
+  - "fx=0.6"           # FX軽め

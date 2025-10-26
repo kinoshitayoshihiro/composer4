@@ -1,0 +1,3424 @@
+#!/usr/bin/env python3
+"""
+Drums Generator Stage2 - リズム生成（kick/snare/hihat/crash/ride対応）
+
+SLAKH/LAMDA等のドラムMIDIから高品質なリズムパターンを抽出し、
+新しい曲に適用できる形で保存・推薦します。
+
+GMドラムマップ:
+    Bass Drum (Kick):  35, 36
+    Side Stick/Rimshot: 37
+    Snare:             38, 40
+    Hi-Hat Closed:     42
+    Hi-Hat Pedal:      44
+    Hi-Hat Open:       46
+    Crash Cymbal:      49, 57
+    Ride Cymbal:       51, 59
+    Ride Bell:         53
+
+使用方法:
+    from generator.drums_generator_stage2 import DrumsGeneratorStage2
+    
+    gen = DrumsGeneratorStage2(
+        patterns_pickle="data/patterns/stage2_drums.pickle",
+        default_instrument=music21.instrument.Percussion()
+    )
+    
+    # パターン推薦
+    pattern = gen.recommend_pattern(
+        tempo=120,
+        emotion="energetic",
+        section="Chorus",
+        technique="rock_basic"
+    )
+    
+    # ドラムパート生成
+    drum_part = gen.generate(
+        bars=8,
+        chords=["C", "G", "Am", "F"],
+        tempo=120,
+        emotion="energetic",
+        technique="rock_basic"
+    )
+"""
+
+import music21
+from music21 import note, stream, instrument, duration, meter
+import numpy as np
+import pickle
+import logging
+from pathlib import Path
+from typing import Optional, List, Dict, Any
+
+logger = logging.getLogger(__name__)
+import random
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
+from dataclasses import dataclass
+
+
+# GMドラムマップ
+GM_DRUM_MAP = {
+    'kick': [35, 36],           # Bass Drum 1, Bass Drum 2
+    'snare': [38, 40],          # Acoustic Snare, Electric Snare
+    'hihat_closed': [42],       # Closed Hi-Hat
+    'hihat_open': [46],         # Open Hi-Hat
+    'crash': [49, 57],          # Crash Cymbal 1, Crash Cymbal 2
+    'ride': [51, 59],           # Ride Cymbal 1, Ride Cymbal 2
+    'tom_low': [41, 43, 45],    # Low Floor Tom, High Floor Tom, Low Tom
+    'tom_mid': [47, 48],        # Low-Mid Tom, Hi-Mid Tom
+    'tom_high': [50],           # High Tom
+}
+
+
+@dataclass
+class DrumPattern:
+    """ドラムパターンデータ"""
+    id: str
+    instrument: str  # 'drums'
+    technique: str   # 'rock_basic', 'jazz_swing', 'edm_four_on_floor' etc.
+    tempo: float
+    bars: int
+    emotion: str
+    
+    # リズムデータ（小節内の相対位置 0.0-4.0）
+    kick_hits: List[float]        # キック打点
+    snare_hits: List[float]       # スネア打点
+    hihat_hits: List[float]       # ハイハット打点
+    crash_hits: List[float]       # クラッシュ打点
+    ride_hits: List[float]        # ライド打点
+    
+    # ベロシティ情報
+    kick_velocities: List[int]
+    snare_velocities: List[int]
+    hihat_velocities: List[int]
+    crash_velocities: List[int]
+    ride_velocities: List[int]
+    
+    # メタ情報
+    density: float               # 密度（hits per bar）
+    complexity: float            # 複雑度（0.0-1.0）
+    syncopation_rate: float      # シンコペーション率
+    
+    # 品質スコア
+    quality_score: float = 0.0
+    
+    # MIDI Pitch情報（Todo #7: ハイハット開閉整合性チェック用）
+    hihat_pitches: List[int] = None  # 各ハイハットヒットのMIDI pitch（42=Closed, 46=Open, 44=Pedal）
+    
+    # Duration情報（Todo #7: クラッシュチョーク長制限チェック用）
+    crash_durations: List[float] = None  # 各クラッシュノートの長さ（quarter beats）
+
+
+class DrumsGeneratorStage2:
+    """ドラムトラック生成（Stage2: パターンベース）"""
+    
+    def __init__(
+        self,
+        *args,
+        patterns_pickle: Optional[Path] = None,
+        default_instrument: Optional[music21.instrument.Instrument] = None,
+        **kwargs  # Factory互換性のため（global_settings等を無視）
+    ):
+        """
+        Args:
+            patterns_pickle: Stage2パターンPickleファイル
+            default_instrument: デフォルト楽器（Percussion）
+            *args, **kwargs: Factory互換性のため（無視される）
+        """
+        # Factory から渡される引数を無視（Drums Stage2は独立実装）
+        self.patterns: List[DrumPattern] = []
+        self.default_instrument = default_instrument or instrument.Percussion()
+        
+        if patterns_pickle and Path(patterns_pickle).exists():
+            self.load_patterns(patterns_pickle)
+        
+        # ★A+ upgrade: overrides infrastructure
+        self._overrides: Optional[Dict[str, Any]] = None
+        self._rnd = random.Random()
+        
+        # ドラムピッチマップ（新機能用）
+        self._DRUM_PITCH = {
+            "kick": 36,
+            "snare": 38,
+            "rimshot": 37,
+            "hihat_closed": 42,
+            "hihat_open": 46,
+            "hihat_pedal": 44,
+            "crash1": 49,
+            "ride1": 51,
+            "ride_bell": 53,
+        }
+    
+    def load_patterns(self, pickle_path: Path) -> None:
+        """パターンをロード"""
+        with open(pickle_path, 'rb') as f:
+            self.patterns = pickle.load(f)
+        logger.info(f"Loaded {len(self.patterns)} drum patterns from {pickle_path}")
+    
+    def set_overrides(self, extra_intent: Optional[Dict[str, Any]]) -> None:
+        """
+        extra_intentから drums_params / drums_style / drummer_profile をマージ
+        （suno_stem_arranger から呼ばれる）
+        """
+        if not extra_intent:
+            self._overrides = None
+            return
+        
+        # drums_params をベースにコピー
+        drums_params = (extra_intent.get("drums_params") or {}).copy()
+        
+        # drums_style が指定されていればマージ
+        style_name = extra_intent.get("drums_style")
+        if style_name:
+            self._merge_style_preset(drums_params, style_name)
+        
+        # drummer_profile が指定されていればマージ（スタイルの後に適用）
+        drummer_prof = extra_intent.get("drummer_profile")
+        if drummer_prof:
+            self._merge_drummer_profile(drums_params, drummer_prof)
+        
+        # extra_intent全体を保持（mix_context等も含む）
+        self._overrides = extra_intent.copy()
+        self._overrides["drums_params"] = drums_params
+    
+    def set_seed(self, seed: Optional[int]) -> None:
+        """乱数シード設定（パート毎決定論的RNG）"""
+        if seed is not None:
+            self._rnd.seed(seed)
+    
+    def _merge_style_preset(self, params: Dict[str, Any], style_name: str) -> None:
+        """
+        drums_style_presets.yaml からスタイルプリセットをマージ
+        （見つからなければ built-in fallback を適用）
+        """
+        preset_data = None
+        
+        # YAML ロード試行
+        if yaml:
+            preset_path = Path("configs/drums_style_presets.yaml")
+            if preset_path.exists():
+                try:
+                    with open(preset_path, "r", encoding="utf-8") as f:
+                        all_presets = yaml.safe_load(f)
+                        preset_data = all_presets.get(style_name)
+                except Exception:
+                    pass
+        
+        # fallback: built-in preset
+        if not preset_data:
+            preset_data = self._get_builtin_style_preset(style_name)
+        
+        if preset_data:
+            self._deep_merge_dicts(params, preset_data)
+    
+    def _get_builtin_style_preset(self, style_name: str) -> Optional[Dict[str, Any]]:
+        """Built-in スタイルプリセット（YAML未提供時）"""
+        presets = {
+            "tight_rock": {
+                "density_multipliers": {"kick": 1.0, "snare": 1.0, "hihat": 1.0},
+                "drums_params": {
+                    "open_ratio": {"weak_beat": 0.2, "off_beat": 0.5},
+                    "vel_curve": "compress",
+                    "rimshot_rate": 0.1,
+                }
+            },
+            "loose_indie": {
+                "density_multipliers": {"kick": 0.9, "snare": 1.0, "hihat": 1.1},
+                "drums_params": {
+                    "open_ratio": {"weak_beat": 0.3, "off_beat": 0.6},
+                    "vel_curve": "natural",
+                }
+            },
+        }
+        return presets.get(style_name)
+    
+    def _deep_merge_dicts(self, base: Dict[str, Any], overlay: Dict[str, Any]) -> None:
+        """辞書の再帰的マージ（overlay を base に上書き）"""
+        for key, val in overlay.items():
+            if key in base and isinstance(base[key], dict) and isinstance(val, dict):
+                self._deep_merge_dicts(base[key], val)
+            else:
+                base[key] = val
+    
+    def _merge_drummer_profile(self, params: Dict[str, Any], drummer_prof: Dict[str, Any]) -> None:
+        """
+        ドラマー個性プリセットをマージ
+        drummer_prof: { preset_name: "laidback", presets_file: "configs/drummer_profiles.yaml" }
+        drums_params / swing / density_multipliers 等を浅→深マージ（任意・無ければNO-OP）
+        """
+        try:
+            name = drummer_prof.get("preset_name")
+            fpath = drummer_prof.get("presets_file")
+            if not name:
+                return
+            
+            preset_dict = None
+            
+            # YAMLファイルから読み込み
+            if fpath and yaml:
+                p = Path(fpath)
+                if p.exists():
+                    try:
+                        data = yaml.safe_load(p.read_text()) or {}
+                        preset_dict = (data.get("presets") or {}).get(name)
+                    except Exception:
+                        pass
+            
+            # Built-in fallback
+            if preset_dict is None:
+                builtin = {
+                    "laidback": {
+                        "swing": {"eighth": 0.0, "eighth_ramp": {"start": 0.00, "end": 0.04}},
+                        "push_pull": {"snare_ms": 8},
+                        "vel_curve": {"shift": -1, "scale": 1.08},
+                        "ghost_caps": {"vel_thresh": 38, "max_per_quarter": 2}
+                    },
+                    "on_top": {
+                        "swing": {"eighth": 0.0, "eighth_ramp": {"start": -0.02, "end": 0.00}},
+                        "push_pull": {"snare_ms": -8},
+                        "vel_curve": {"shift": 2, "scale": 1.02}
+                    },
+                    "ghosty": {
+                        "ghost_caps": {"vel_thresh": 42, "max_per_quarter": 3},
+                        "accent_map": {"strong_boost": 4, "weak_cut": -1}
+                    },
+                    "heavy_hitter": {
+                        "vel_curve": {"shift": 6, "scale": 1.05},
+                        "ghost_caps": {"vel_thresh": 34, "max_per_quarter": 1}
+                    }
+                }
+                preset_dict = builtin.get(name)
+            
+            if preset_dict:
+                # 再帰マージ
+                self._deep_merge_dicts(params, preset_dict)
+        except Exception:
+            pass
+    
+    def recommend_pattern(
+        self,
+        tempo: float,
+        emotion: str,
+        section: str,
+        technique: Optional[str] = None,
+        top_k: int = 5
+    ) -> Optional[DrumPattern]:
+        """
+        最適なドラムパターンを推薦
+        
+        Args:
+            tempo: テンポ (BPM)
+            emotion: 感情タグ
+            section: セクション名
+            technique: 奏法（rock_basic, jazz_swing, edm_four_on_floor等）
+            top_k: 候補数
+        
+        Returns:
+            推薦されたパターン
+        """
+        if not self.patterns:
+            return None
+        
+        scores = []
+        for pattern in self.patterns:
+            score = 0.0
+            
+            # テンポ適合度（±10 BPM以内で最高スコア）
+            tempo_diff = abs(pattern.tempo - tempo)
+            tempo_score = max(0.0, 1.0 - tempo_diff / 30.0)
+            score += tempo_score * 0.4
+            
+            # 感情適合度
+            if pattern.emotion == emotion:
+                score += 0.3
+            
+            # 奏法適合度
+            if technique and pattern.technique == technique:
+                score += 0.2
+            
+            # 品質スコア
+            score += pattern.quality_score * 0.1
+            
+            scores.append(score)
+        
+        # Top-K選択
+        top_indices = np.argsort(scores)[-top_k:][::-1]
+        best_pattern = self.patterns[top_indices[0]]
+        
+        return best_pattern
+    
+    def generate(
+        self,
+        bars: int,
+        chords: List[str],
+        tempo: float,
+        emotion: str,
+        section: str = "Verse",
+        technique: Optional[str] = None,
+        time_signature: str = "4/4",
+        seed: Optional[int] = None
+    ) -> music21.stream.Part:
+        """
+        ドラムトラックを生成
+        
+        Args:
+            bars: 小節数
+            chords: コード進行（参考用、ドラムには直接影響なし）
+            tempo: テンポ
+            emotion: 感情タグ
+            section: セクション名
+            technique: 奏法
+            time_signature: 拍子記号（現在4/4のみ対応、将来3/4, 6/8拡張予定）
+            seed: 乱数シード
+        
+        Returns:
+            生成されたドラムパート
+            
+        Note:
+            ★拍子対応状況:
+            - 4/4: 全機能対応
+            - 3/4, 6/8: 将来対応予定（HH Open/Push Pull等は軽度制限）
+        """
+        if seed is not None:
+            np.random.seed(seed)
+        
+        # パターン推薦
+        pattern = self.recommend_pattern(
+            tempo=tempo,
+            emotion=emotion,
+            section=section,
+            technique=technique
+        )
+        
+        if pattern is None:
+            # フォールバック: 基本的な4つ打ち
+            return self._generate_fallback_drums(bars, tempo, time_signature)
+        
+        # パート作成
+        drum_part = stream.Part()
+        drum_part.insert(0, self.default_instrument)
+        
+        # パターンを繰り返し配置
+        current_offset = 0.0
+        for bar_idx in range(bars):
+            self._add_bar_from_pattern(
+                drum_part,
+                pattern,
+                current_offset,
+                tempo
+            )
+            current_offset += 4.0  # 4/4拍子前提
+        
+        # ★A+ upgrade: postprocess density hook
+        try:
+            if self._overrides:
+                self._postprocess_density(drum_part, bars, tempo, chords)
+        except Exception as e:
+            logger.warning(f"postprocess_density failed: {e}")
+        
+        return drum_part
+    
+    def _add_bar_from_pattern(
+        self,
+        drum_part: music21.stream.Part,
+        pattern: DrumPattern,
+        start_offset: float,
+        tempo: float
+    ) -> None:
+        """パターンから1小節分のドラムノートを追加"""
+        
+        # Kick
+        for i, pos in enumerate(pattern.kick_hits):
+            vel = pattern.kick_velocities[i] if i < len(pattern.kick_velocities) else 90
+            kick_note = note.Note(GM_DRUM_MAP['kick'][0])
+            kick_note.volume.velocity = vel
+            kick_note.duration = duration.Duration(0.25)  # 16分音符長
+            drum_part.insert(start_offset + pos, kick_note)
+        
+        # Snare
+        for i, pos in enumerate(pattern.snare_hits):
+            vel = pattern.snare_velocities[i] if i < len(pattern.snare_velocities) else 95
+            snare_note = note.Note(GM_DRUM_MAP['snare'][0])
+            snare_note.volume.velocity = vel
+            snare_note.duration = duration.Duration(0.25)
+            drum_part.insert(start_offset + pos, snare_note)
+        
+        # Hi-Hat
+        for i, pos in enumerate(pattern.hihat_hits):
+            vel = pattern.hihat_velocities[i] if i < len(pattern.hihat_velocities) else 70
+            hihat_note = note.Note(GM_DRUM_MAP['hihat_closed'][0])
+            hihat_note.volume.velocity = vel
+            hihat_note.duration = duration.Duration(0.25)
+            drum_part.insert(start_offset + pos, hihat_note)
+        
+        # Crash (小節の最初のみ)
+        for i, pos in enumerate(pattern.crash_hits):
+            vel = pattern.crash_velocities[i] if i < len(pattern.crash_velocities) else 100
+            crash_note = note.Note(GM_DRUM_MAP['crash'][0])
+            crash_note.volume.velocity = vel
+            crash_note.duration = duration.Duration(1.0)  # 全音符長
+            drum_part.insert(start_offset + pos, crash_note)
+        
+        # Ride
+        for i, pos in enumerate(pattern.ride_hits):
+            vel = pattern.ride_velocities[i] if i < len(pattern.ride_velocities) else 75
+            ride_note = note.Note(GM_DRUM_MAP['ride'][0])
+            ride_note.volume.velocity = vel
+            ride_note.duration = duration.Duration(0.5)  # 8分音符長
+            drum_part.insert(start_offset + pos, ride_note)
+    
+    def _generate_fallback_drums(
+        self,
+        bars: int,
+        tempo: float,
+        time_signature: str
+    ) -> music21.stream.Part:
+        """
+        フォールバック: 基本的な4つ打ちドラムパターン
+        
+        パターン:
+            Kick:  1拍目, 3拍目
+            Snare: 2拍目, 4拍目
+            HH:    全8分音符
+        """
+        drum_part = stream.Part()
+        drum_part.insert(0, self.default_instrument)
+        
+        current_offset = 0.0
+        for bar_idx in range(bars):
+            # Kick (1拍目, 3拍目)
+            for beat in [0.0, 2.0]:
+                kick = note.Note(GM_DRUM_MAP['kick'][0])
+                kick.volume.velocity = 90
+                kick.duration = duration.Duration(0.25)
+                drum_part.insert(current_offset + beat, kick)
+            
+            # Snare (2拍目, 4拍目)
+            for beat in [1.0, 3.0]:
+                snare = note.Note(GM_DRUM_MAP['snare'][0])
+                snare.volume.velocity = 95
+                snare.duration = duration.Duration(0.25)
+                drum_part.insert(current_offset + beat, snare)
+            
+            # Hi-Hat (全8分音符)
+            for eighth in np.arange(0.0, 4.0, 0.5):
+                hihat = note.Note(GM_DRUM_MAP['hihat_closed'][0])
+                hihat.volume.velocity = 70
+                hihat.duration = duration.Duration(0.25)
+                drum_part.insert(current_offset + eighth, hihat)
+            
+            current_offset += 4.0
+        
+        return drum_part
+    
+    # ========================================================================
+    # ★A+ upgrade: Postprocessing methods for drums enhancement
+    # ========================================================================
+    
+    def _postprocess_density(
+        self,
+        part: stream.Part,
+        bars: int,
+        tempo: float,
+        chords: List[str]
+    ) -> None:
+        """
+        全ドラム後処理のエントリーポイント
+        各機能メソッドを順次実行（NO-OP safe）
+        
+        ★適用順序の推奨（後段で上書きされない順番）:
+          1. Accent → 2. Velocity圧縮 → 3. Ghost → 4. HH Open/長さ → 
+          5. PedalHH → 6. Crash/Ride/Choke → 7. Push/Pull → 8. Fill（最後）
+          
+        ★Fillは最後: 他処理で位置/長さが変わらないように
+        ★拍子: 現在4/4拍子前提（将来3/4, 6/8対応時は分岐追加予定）
+        """
+        if not self._overrides:
+            return
+        
+        ql_per_bar = 4.0  # 4/4拍子前提（TODO: time_signature対応）
+        
+        # ★バリデーション: 確率・閾値の範囲チェック（早期警告）
+        validation_warnings = self._validate_params(self._overrides)
+        if validation_warnings:
+            logger.warning(f"Drums params validation warnings: {'; '.join(validation_warnings)}")
+        
+        # ★メトリクス収集用（ワンショットログ）
+        metrics = {
+            "open_hh_count": 0,
+            "ghost_count": 0,
+            "rimshot_count": 0,
+            "fill_bars": [],
+            "push_pull_applied": False
+        }
+        
+        try:
+            # ========================================================================
+            # Phase 0: Swing（最初に適用）
+            # ========================================================================
+            
+            # 0. Swingランプ（任意）
+            try:
+                swing_cfg = self._overrides.get("swing") or {}
+                sr = swing_cfg.get("eighth_ramp", None)
+                if isinstance(sr, dict):
+                    self._apply_swing_ramp(part, sr, bars, tempo)
+            except Exception as e:
+                logger.warning(f"Swing ramp failed: {e}")
+            
+            # ========================================================================
+            # Phase 1: Accent & Velocity（ベース設定、後段で上書きされない）
+            # ========================================================================
+            
+            # 1. Accent map（accent_map）
+            self._apply_accent_map(part, self._overrides.get("accent_map"), ql_per_bar)
+            
+            # 2. Dynamics compression（dynamics）
+            self._compress_velocity(part, self._overrides.get("dynamics"))
+            
+            # ========================================================================
+            # Phase 2: Note Generation（Ghost, HH変換、追加ノート）
+            # ========================================================================
+            
+            # 3. ゴースト・ノート追加（ghost_notes）
+            ghost_added = self._apply_ghost_notes(part, self._overrides.get("ghost_notes"), ql_per_bar)
+            metrics["ghost_count"] = ghost_added
+            
+            # 4. Ghost caps（ghost_caps）- Ghost追加直後に制限
+            self._cap_ghost_density(part, self._overrides.get("ghost_caps"), ql_per_bar)
+            
+            # 5. HH密度調整（density_multipliers）
+            self._adjust_hihat_density(part, self._overrides.get("density_multipliers"))
+            
+            # 6. HH Open比率・長さ（open_ratio, open_length）
+            open_count = self._adjust_hihat_open_ratio(
+                part,
+                self._overrides.get("open_ratio"),
+                self._overrides.get("open_length"),
+                tempo,
+                ql_per_bar
+            )
+            metrics["open_hh_count"] = open_count
+            
+            # 7. Pedal HH挿入（pedal_hh）
+            self._insert_pedal_hh(part, self._overrides.get("pedal_hh"), ql_per_bar)
+            
+            # 8. Rimshot混合（rimshot_rate）
+            rimshot_count = self._mix_rimshot(part, self._overrides.get("rimshot_rate"))
+            metrics["rimshot_count"] = rimshot_count
+            
+            # 9. Rim/Snare交替（rim_snare_alternate_rate）
+            self._apply_rim_snare_alternate(part, self._overrides.get("rim_snare_alternate_rate"))
+            
+            # ========================================================================
+            # Phase 3: Cymbal & Ride（シンバル系変更）
+            # ========================================================================
+            
+            # 10. Crash downbeat + kick協調（crash）
+            self._apply_crash_downbeats(
+                part,
+                bars,
+                self._overrides.get("crash"),
+                ql_per_bar
+            )
+            
+            # 11. Ride切替（ride）
+            self._switch_to_ride(part, bars, self._overrides.get("ride"), tempo, ql_per_bar)
+            
+            # 12. Cymbal choke（choke）
+            self._apply_cymbal_choke(part, self._overrides.get("choke"))
+            
+            # ========================================================================
+            # Phase 4: Timing Adjustment（タイミング微調整）
+            # ========================================================================
+            
+            # 13. Push/Pull feel（push_pull）
+            push_pull_cfg = self._overrides.get("push_pull")
+            if push_pull_cfg:
+                self._apply_push_pull(part, push_pull_cfg, ql_per_bar)
+                metrics["push_pull_applied"] = True
+            
+            # 14. Kick on chord change（kick_on_change）
+            self._kick_on_chord_change(part, chords, self._overrides.get("kick_on_change"), ql_per_bar)
+            
+            # ========================================================================
+            # Phase 5: Fill（最後: 他処理で位置/長さが変わらないように）
+            # ========================================================================
+            
+            # 15. フィル適用（fills）
+            fill_bars = self._apply_fills(part, bars, self._overrides.get("fills"), ql_per_bar)
+            metrics["fill_bars"] = fill_bars
+            
+            # 16. Kick⇄Bass unison（任意・mix_contextがあればbass_onsets_qlを使用）
+            try:
+                drums_params = self._overrides.get("drums_params") or {}
+                kick_bass_cfg = drums_params.get("kick_bass_unison")
+                if kick_bass_cfg:
+                    mix_ctx = self._overrides.get("mix_context") or {}
+                    bass_onsets = mix_ctx.get("bass_onsets_ql") or []
+                    if bass_onsets:
+                        self._align_kick_with_bass(part, kick_bass_cfg, bass_onsets)
+            except Exception as e:
+                logger.warning(f"Kick⇄Bass unison failed: {e}")
+            
+            # 17. Vocalとのコンフリクト回避（任意）
+            try:
+                vcfg = (self._overrides.get("drums_params") or {}).get("vocal_conflict")
+                if vcfg:
+                    mx = self._overrides.get("mix_context") or {}
+                    v_onsets = mx.get("vocal_onsets_ql") or []
+                    v_phr = mx.get("vocal_phrases") or []
+                    if v_onsets or v_phr:
+                        self._avoid_vocal_conflicts(part, vcfg, v_onsets, v_phr, tempo)
+            except Exception as e:
+                logger.warning(f"Vocal conflict avoidance failed: {e}")
+            
+            # 18. Vocal中のドラムDucking（任意）
+            try:
+                dcfg = (self._overrides.get("drums_params") or {}).get("ducking")
+                if dcfg:
+                    mx = self._overrides.get("mix_context") or {}
+                    v_phr = mx.get("vocal_phrases") or []
+                    if v_phr:
+                        self._duck_during_vocals(part, dcfg, v_phr)
+            except Exception as e:
+                logger.warning(f"Ducking failed: {e}")
+            
+            # 19. Vocalピッチに追従したスネア調整（任意）
+            try:
+                sfm = (self._overrides.get("drums_params") or {}).get("snare_follow_melody")
+                if isinstance(sfm, dict):
+                    mix = self._overrides.get("mix_context") or {}
+                    vpe = mix.get("vocal_pitch_events") or []  # [[off, midi], ...]
+                    ksegs = mix.get("key_segments") or []
+                    if vpe:
+                        self._snare_follow_melody(part, sfm, vpe, ksegs, tempo)
+            except Exception as e:
+                logger.warning(f"Snare follow melody failed: {e}")
+            
+            # 20. セクション戦略（任意）
+            try:
+                sst = (self._overrides.get("drums_params") or {}).get("section_strategy")
+                if isinstance(sst, dict):
+                    mix = self._overrides.get("mix_context") or {}
+                    sections = mix.get("sections") or []
+                    if sections:
+                        self._apply_section_strategy(part, sst, sections, bars, tempo)
+            except Exception as e:
+                logger.warning(f"Section strategy failed: {e}")
+            
+            # 21. HH tip/shank（任意）
+            try:
+                hh_art = (self._overrides.get("drums_params") or {}).get("hh_articulation")
+                if isinstance(hh_art, dict):
+                    self._apply_hh_tip_shank(part, hh_art, bars, tempo)
+            except Exception as e:
+                logger.warning(f"HH tip/shank failed: {e}")
+            
+            # 22. セクション遷移語彙（任意）
+            try:
+                trans = (self._overrides.get("drums_params") or {}).get("section_transitions")
+                if isinstance(trans, dict):
+                    mix = self._overrides.get("mix_context") or {}
+                    secs = mix.get("sections") or []
+                    if secs:
+                        self._apply_section_transitions(part, trans, secs, bars, tempo)
+            except Exception as e:
+                logger.warning(f"Section transitions failed: {e}")
+            
+            # 23. Drummer"日内変動"カーブ（任意）
+            try:
+                dcurve = None
+                # どこに書かれていても拾う（柔軟な参照）
+                if isinstance((self._overrides or {}).get("drummer_diurnal"), dict):
+                    dcurve = (self._overrides or {}).get("drummer_diurnal")
+                elif isinstance(((self._overrides or {}).get("drums_params") or {}).get("drummer_diurnal"), dict):
+                    dcurve = ((self._overrides or {}).get("drums_params") or {}).get("drummer_diurnal")
+                elif isinstance(((self._overrides or {}).get("drummer_profile") or {}).get("diurnal"), dict):
+                    dcurve = ((self._overrides or {}).get("drummer_profile") or {}).get("diurnal")
+                if isinstance(dcurve, dict):
+                    self._apply_diurnal_curve(part, dcurve, bars, tempo)
+            except Exception as e:
+                logger.warning(f"Drummer diurnal curve failed: {e}")
+            
+            # 24. Verse限定：リムクリック⇄スネア切替（任意）
+            try:
+                rcfg = (self._overrides.get("drums_params") or {}).get("snare_rimclick")
+                if isinstance(rcfg, dict):
+                    mix = self._overrides.get("mix_context") or {}
+                    sections = mix.get("sections") or []
+                    if sections:
+                        self._apply_snare_rimclick_mode(part, rcfg, sections)
+            except Exception as e:
+                logger.warning(f"Snare rimclick mode failed: {e}")
+            
+            # ★ワンショットメトリクスログ
+            self._log_metrics(metrics, bars, tempo)
+            
+        except Exception as e:
+            logger.warning(f"_postprocess_density error: {e}")
+    
+    def _validate_params(self, params: Dict[str, Any]) -> List[str]:
+        """
+        パラメータ範囲の軽量バリデーション（確率・閾値・velocity）
+        
+        Returns:
+            警告メッセージのリスト
+        """
+        warnings = []
+        
+        # 確率チェック（0.0-1.0）
+        prob_keys = [
+            ("open_ratio", ["strong_beat", "weak_beat", "off_beat"]),
+            ("crash", ["downbeat_prob"]),
+            ("pedal_hh", ["off_beat_rate"]),
+            ("choke", ["crash_choke_prob"]),
+            ("kick_on_change", ["emphasis_prob"]),
+            ("kick_bass_unison", ["unison_prob"]),
+            ("ghost_notes", ["snare_rate"]),
+            ("rimshot_rate", None),
+            ("rim_snare_alternate_rate", None),
+        ]
+        
+        for key, subkeys in prob_keys:
+            if key not in params:
+                continue
+            
+            if subkeys is None:
+                # 直接値
+                val = params[key]
+                if isinstance(val, (int, float)) and not (0.0 <= val <= 1.0):
+                    warnings.append(f"{key}={val} out of [0.0, 1.0]")
+            else:
+                # ネスト辞書
+                for subkey in subkeys:
+                    val = params.get(key, {}).get(subkey)
+                    if val is not None and not (0.0 <= val <= 1.0):
+                        warnings.append(f"{key}.{subkey}={val} out of [0.0, 1.0]")
+        
+        # Velocity範囲チェック（1-127）
+        if "dynamics" in params:
+            dyn = params["dynamics"]
+            threshold = dyn.get("threshold", 80)
+            makeup = dyn.get("makeup_gain", 5)
+            if not (1 <= threshold <= 127):
+                warnings.append(f"dynamics.threshold={threshold} out of [1, 127]")
+            if not (-50 <= makeup <= 50):
+                warnings.append(f"dynamics.makeup_gain={makeup} out of [-50, 50]")
+        
+        # Accent map velocity boost範囲
+        if "accent_map" in params:
+            for pos, boost in params["accent_map"].items():
+                if not (-50 <= boost <= 50):
+                    warnings.append(f"accent_map[{pos}]={boost} out of [-50, 50]")
+        
+        # Fill insert_bars範囲チェック（将来bars引数を渡す場合）
+        if "fills" in params:
+            insert_bars = params["fills"].get("insert_bars", [])
+            if insert_bars and any(b < 0 for b in insert_bars):
+                warnings.append(f"fills.insert_bars has negative values: {insert_bars}")
+        
+        return warnings
+    
+    def _log_metrics(self, metrics: Dict[str, Any], bars: int, tempo: float) -> None:
+        """
+        ワンショットメトリクスログ（効果量の可視化）
+        """
+        ghost_cap = self._overrides.get("ghost_caps", {}).get("max_per_bar", "N/A")
+        push_ms = "N/A"
+        
+        if metrics["push_pull_applied"]:
+            push_cfg = self._overrides.get("push_pull", {})
+            push_amt = push_cfg.get("push_amount", 0.0)
+            pull_amt = push_cfg.get("pull_amount", 0.0)
+            # quarter beats → ms変換（approx）
+            beat_ms = (60.0 / tempo) * 1000
+            push_ms = f"push={push_amt * beat_ms:.1f}ms, pull={pull_amt * beat_ms:.1f}ms"
+        
+        fill_info = f"bars={metrics['fill_bars']}" if metrics['fill_bars'] else "none"
+        
+        print(f"🥁 Drums metrics: "
+              f"Open HH={metrics['open_hh_count']}, "
+              f"Ghost={metrics['ghost_count']}/{ghost_cap}, "
+              f"Rimshot={metrics['rimshot_count']}, "
+              f"Fill={fill_info}, "
+              f"Push/Pull={push_ms}")
+
+    
+    def _adjust_hihat_density(self, part: stream.Part, cfg: Optional[Dict[str, float]]) -> None:
+        """HH密度調整（density_multipliers.hihat）"""
+        if not cfg:
+            return
+        mult = cfg.get("hihat", 1.0)
+        if abs(mult - 1.0) < 0.01:
+            return
+        
+        all_notes = list(part.flatten().notes)
+        hh_pitches = {42, 46, 44}  # closed/open/pedal
+        
+        for n in all_notes:
+            if n.pitch.midi in hh_pitches:
+                if self._rnd.random() > mult:
+                    part.remove(n)
+    
+    def _apply_ghost_notes(self, part: stream.Part, cfg: Optional[Dict[str, Any]], ql_per_bar: float) -> int:
+        """
+        ゴースト・ノート追加（snare ghost率）
+        
+        Returns:
+            追加したGhost数
+        """
+        if not cfg:
+            return 0
+        rate = cfg.get("snare_rate", 0.0)
+        if rate <= 0.0:
+            return 0
+        
+        all_notes = list(part.flatten().notes)
+        snare_pitch = self._DRUM_PITCH["snare"]
+        
+        # 既存スネア以外の位置に低ベロシティノート追加
+        snare_offsets = {n.offset for n in all_notes if n.pitch.midi == snare_pitch}
+        
+        ghost_count = 0
+        # 裏拍（off-beat）を候補にする
+        for n in all_notes:
+            beat_pos = n.offset % ql_per_bar
+            is_offbeat = (beat_pos % 0.5) > 0.25
+            
+            if is_offbeat and n.offset not in snare_offsets:
+                if self._rnd.random() < rate:
+                    ghost = note.Note(snare_pitch)
+                    ghost.volume.velocity = self._rnd.randint(30, 50)
+                    ghost.duration = duration.Duration(0.25)
+                    part.insert(n.offset, ghost)
+                    ghost_count += 1
+        
+        return ghost_count
+    
+    def _apply_fills(self, part: stream.Part, bars: int, cfg: Optional[Dict[str, Any]], ql_per_bar: float) -> List[int]:
+        """
+        フィル適用（fill_vocab）
+        
+        Returns:
+            挿入した小節番号のリスト
+        """
+        if not cfg:
+            return []
+        
+        fill_vocab = cfg.get("patterns", {})
+        intensity = cfg.get("intensity", "medium")
+        insert_bars = cfg.get("insert_bars", [])
+        
+        if not fill_vocab or not insert_bars:
+            return []
+        
+        pattern_list = fill_vocab.get(intensity, [])
+        if not pattern_list:
+            return []
+        
+        inserted = []
+        for bar_idx in insert_bars:
+            if bar_idx >= bars or bar_idx < 0:
+                continue
+            
+            # 最後の1拍をフィルに置き換え
+            fill_start = bar_idx * ql_per_bar + 3.0
+            fill_end = (bar_idx + 1) * ql_per_bar
+            
+            # 既存ノートを削除
+            all_notes = list(part.flatten().notes)
+            for n in all_notes:
+                if fill_start <= n.offset < fill_end:
+                    part.remove(n)
+            
+            # フィルパターン挿入
+            pattern = self._rnd.choice(pattern_list)
+            for hit in pattern:
+                drum_type = hit.get("drum", "snare")
+                pitch = self._DRUM_PITCH.get(drum_type, 38)
+                offset_delta = hit.get("offset", 0.0)
+                vel = hit.get("velocity", 80)
+                
+                n = note.Note(pitch)
+                n.volume.velocity = vel
+                n.duration = duration.Duration(0.25)
+                part.insert(fill_start + offset_delta, n)
+            
+            inserted.append(bar_idx)
+        
+        return inserted
+    
+    def _adjust_hihat_open_ratio(
+        self,
+        part: stream.Part,
+        ratio_cfg: Optional[Dict[str, float]],
+        length_cfg: Optional[Dict[str, Any]],
+        tempo: float,
+        ql_per_bar: float
+    ) -> int:
+        """
+        HH Open化（BPM・position factor適用）
+        
+        Returns:
+            Open化したHH数
+        """
+        if not ratio_cfg:
+            return 0
+        
+        all_notes = list(part.flatten().notes)
+        closed_pitch = self._DRUM_PITCH["hihat_closed"]
+        open_pitch = self._DRUM_PITCH["hihat_open"]
+        
+        # BPM factor (140 BPMを基準)
+        bpm_factor = 1.0
+        if tempo < 100:
+            bpm_factor = 1.3
+        elif tempo > 160:
+            bpm_factor = 0.7
+        
+        open_count = 0
+        for n in all_notes:
+            if n.pitch.midi != closed_pitch:
+                continue
+            
+            beat_pos = n.offset % ql_per_bar
+            
+            # Position factor
+            if beat_pos in [0.0, 2.0]:  # 強拍
+                base_prob = ratio_cfg.get("strong_beat", 0.1)
+            elif beat_pos in [1.0, 3.0]:  # 弱拍
+                base_prob = ratio_cfg.get("weak_beat", 0.2)
+            else:  # 裏拍
+                base_prob = ratio_cfg.get("off_beat", 0.4)
+            
+            prob = base_prob * bpm_factor
+            
+            if self._rnd.random() < prob:
+                n.pitch.midi = open_pitch
+                open_count += 1
+                
+                # Open length調整
+                if length_cfg:
+                    base_dur = length_cfg.get("base_duration", 0.5)
+                    n.duration = duration.Duration(base_dur)
+        
+        return open_count
+    
+    def _mix_rimshot(self, part: stream.Part, rate: Optional[float]) -> int:
+        """
+        Rimshot混合（snare → rimshot置換）
+        
+        Returns:
+            置換したRimshot数
+        """
+        if not rate or rate <= 0.0:
+            return 0
+        
+        all_notes = list(part.flatten().notes)
+        snare_pitch = self._DRUM_PITCH["snare"]
+        rimshot_pitch = self._DRUM_PITCH["rimshot"]
+        
+        rimshot_count = 0
+        for n in all_notes:
+            if n.pitch.midi == snare_pitch:
+                if self._rnd.random() < rate:
+                    n.pitch.midi = rimshot_pitch
+                    rimshot_count += 1
+        
+        return rimshot_count
+    
+    def _apply_crash_downbeats(
+        self,
+        part: stream.Part,
+        bars: int,
+        cfg: Optional[Dict[str, Any]],
+        ql_per_bar: float
+    ) -> None:
+        """Crash downbeat + kick協調"""
+        if not cfg:
+            return
+        
+        downbeat_prob = cfg.get("downbeat_prob", 0.0)
+        with_kick = cfg.get("with_kick", False)
+        cooldown = int(cfg.get("cooldown_bars", 0))
+        
+        if downbeat_prob <= 0.0:
+            return
+        
+        crash_pitch = self._DRUM_PITCH["crash1"]
+        kick_pitch = self._DRUM_PITCH["kick"]
+        last_crash_bar = -9999
+        
+        for bar_idx in range(bars):
+            if cooldown > 0 and (bar_idx - last_crash_bar) < cooldown:
+                continue
+            
+            offset = bar_idx * ql_per_bar
+            
+            if self._rnd.random() < downbeat_prob:
+                crash = note.Note(crash_pitch)
+                crash.volume.velocity = 100
+                crash.duration = duration.Duration(2.0)
+                part.insert(offset, crash)
+                last_crash_bar = bar_idx
+                
+                if with_kick:
+                    # 既存kickを探す
+                    existing_kick = None
+                    for n in part.flatten().notes:
+                        if n.offset == offset and n.pitch.midi == kick_pitch:
+                            existing_kick = n
+                            break
+                    
+                    if not existing_kick:
+                        kick = note.Note(kick_pitch)
+                        kick.volume.velocity = 90
+                        kick.duration = duration.Duration(0.25)
+                        part.insert(offset, kick)
+    
+    def _insert_pedal_hh(self, part: stream.Part, cfg: Optional[Dict[str, float]], ql_per_bar: float) -> None:
+        """Pedal HH挿入（off-beat率）"""
+        if not cfg:
+            return
+        
+        off_beat_rate = cfg.get("off_beat_rate", 0.0)
+        if off_beat_rate <= 0.0:
+            return
+        
+        pedal_pitch = self._DRUM_PITCH["hihat_pedal"]
+        all_notes = list(part.flatten().notes)
+        
+        # 既存ノート位置を収集
+        existing_offsets = {n.offset for n in all_notes}
+        
+        # 裏拍候補を抽出
+        for n in all_notes:
+            beat_pos = n.offset % ql_per_bar
+            is_offbeat = (beat_pos % 0.5) > 0.25
+            
+            if is_offbeat:
+                candidate_offset = n.offset + 0.125  # 微妙にずらす
+                
+                if candidate_offset not in existing_offsets:
+                    if self._rnd.random() < off_beat_rate:
+                        pedal = note.Note(pedal_pitch)
+                        pedal.volume.velocity = 60
+                        pedal.duration = duration.Duration(0.125)
+                        part.insert(candidate_offset, pedal)
+    
+    def _apply_rim_snare_alternate(self, part: stream.Part, rate: Optional[float]) -> None:
+        """Rim/Snare交替（連続スネアの2打目を rim化）"""
+        if not rate or rate <= 0.0:
+            return
+        
+        all_notes = sorted(part.flatten().notes, key=lambda x: x.offset)
+        snare_pitch = self._DRUM_PITCH["snare"]
+        rimshot_pitch = self._DRUM_PITCH["rimshot"]
+        
+        prev_snare = None
+        for n in all_notes:
+            if n.pitch.midi == snare_pitch:
+                if prev_snare and (n.offset - prev_snare.offset) < 1.0:
+                    # 連続snare
+                    if self._rnd.random() < rate:
+                        n.pitch.midi = rimshot_pitch
+                prev_snare = n
+    
+    def _switch_to_ride(
+        self,
+        part: stream.Part,
+        bars: int,
+        cfg: Optional[Dict[str, Any]],
+        tempo: float,
+        ql_per_bar: float
+    ) -> None:
+        """
+        Ride切替（時間経過で HH→Ride）+ Bell配分制御（拍子記号対応）
+        + Markovエネルギー依存ブレンド + 子音クラス連動 + スペクトル衝突ガード
+        """
+        if not cfg:
+            return
+        
+        switch_after_sec = cfg.get("switch_after_seconds", 0.0)
+        decay_curve = cfg.get("decay_curve", "exp")
+        bell_prob = float(cfg.get("bell_prob", 0.0))
+        
+        # Bell比率関連の拡張設定
+        bell_cfg = cfg.get("bell_ratio", {}) or {}
+        br_base = float(bell_cfg.get("base", bell_prob))
+        
+        # mix_context取得
+        mx = (self._overrides or {}).get("mix_context") or {}
+        sections = mx.get("sections") or []
+        v_energy = mx.get("vocal_energy") or []
+        v_ph = mx.get("vocal_phonemes") or []
+        v_phr = mx.get("vocal_phrases") or []
+        
+        ts = next((e for e in part.recurse().getElementsByClass(meter.TimeSignature)), None)
+        sec_per_ql = 60.0 / max(1.0, float(tempo))
+        
+        # 拍子記号ごとの上書き（by_timesig）
+        try:
+            tsig = f"{int(ts.numerator)}/{int(ts.denominator)}" if ts else "4/4"
+        except Exception:
+            tsig = "4/4"
+        byts = (bell_cfg.get("by_timesig") or {})
+        if isinstance(byts, dict) and tsig in byts:
+            bell_cfg = self._deep_merge_dicts(bell_cfg.copy(), byts.get(tsig) or {})
+        
+        # セクションラベル取得ヘルパー（簡易キャッシュで長尺曲の線形走査を軽減）
+        _lab_cache: Dict[int, str] = {}
+        def section_label_for_bar(b: int) -> str:
+            if not sections:
+                return ""
+            if b in _lab_cache:
+                return _lab_cache[b]
+            lab = ""
+            for s in sections:
+                try:
+                    if b >= int(s.get("bar", 0)):
+                        lab = str(s.get("label", "")).lower()
+                except Exception:
+                    continue
+            _lab_cache[b] = lab
+            return lab
+        
+        # === Markov遷移システム（ride1↔ride2↔china） ===
+        mkv = cfg.get("ride_markov", {}) or {}  # { ...既存..., state_cooldown:{...}, transition_costs:{...}, latch:{...}, prob_momentum:{...}, local_modes:{...}, phoneme_blend:{...} }
+        mk_en = bool(mkv.get("enable", False))
+        mk_states = mkv.get("states") or {}
+        mk_start = str(mkv.get("start", "ride1")).lower()
+        mk_cd_ch = int(mkv.get("cooldown_china_hits", 0))
+        mk_sections_blend = mkv.get("sections_blend", {}) or {}
+        
+        # === prob_bounds: フロア/キャップ（未設定はNO-OP） ===
+        mk_bounds = mkv.get("prob_bounds", {}) or {}
+        mk_floor = (mk_bounds.get("floor") or {})
+        mk_cap = (mk_bounds.get("cap") or {})
+        mk_bounds_sect = (mk_bounds.get("per_section") or {})
+        
+        # === preempt: セクション直前プリエンプト（未設定はNO-OP） ===
+        mk_pre = mkv.get("preempt", {}) or {}
+        mk_pre_en = bool(mk_pre.get("enable", False))
+        mk_pre_ms = float(mk_pre.get("ahead_ms", 0.0))
+        mk_pre_ql = float(mk_pre.get("ahead_ql", 0.0))
+        mk_pre_mode = str(mk_pre.get("mode", "add")).lower()
+        mk_pre_map = (mk_pre.get("sections") or {})
+        _fo = mk_pre.get("falloff", {}) or {}
+        fo_mode = str(_fo.get("mode", "linear")).lower()
+        fo_ms = float(_fo.get("window_ms", 0.0))
+        fo_ql = float(_fo.get("window_ql", 0.0))
+        
+        # === sticky: 滞在バイアス（未設定はNO-OP） ===
+        mk_sticky = mkv.get("sticky", {}) or {}
+        mk_sticky_en = bool(mk_sticky.get("enable", False))
+        mk_min_hits = int(mk_sticky.get("min_hits", 0))
+        mk_self_boost = float(mk_sticky.get("self_boost", 0.0))
+        mk_sticky_head = mk_sticky.get("per_head", {}) or {}
+        mk_sticky_state = mk_sticky.get("per_state", {}) or {}
+        
+        # === seed: 決定論的シード（Markovのみ、未設定はNO-OP） ===
+        mk_seed = (mkv.get("seed") or {})
+        mk_seed_base = mk_seed.get("base", None)
+        mk_seed_persec = bool(mk_seed.get("per_section", False))
+        
+        mk_eb = mkv.get("energy_blend", {}) or {}
+        eb_mode = str(mk_eb.get("mode", "mul")).lower()
+        eb_alpha = float(mk_eb.get("alpha", 0.0))
+        eb_bias = float(mk_eb.get("bias", 0.0))
+        eb_clip = mk_eb.get("clamp", [0.0, 3.0])
+        eb_sens_global = (mk_eb.get("sensitivity") or {})
+        eb_sens_byhead = (mk_eb.get("per_head") or {})
+        eb_bysect = (mk_eb.get("per_section") or {})
+        eb_smooth = (mk_eb.get("smooth") or {})
+        eb_w_ms = float(eb_smooth.get("window_ms", 0.0))
+        eb_w_ql = float(eb_smooth.get("window_ql", 0.0))
+        eb_smode = str(eb_smooth.get("mode", "mean")).lower()
+        
+        mk_state = mk_start
+        mk_china_streak = 0
+        mk_dwell_state = mk_start
+        mk_dwell_hits = 0
+        
+        # === パッチ第三弾: 状態別クールダウン・遷移コスト・ラッチ・慣性用の状態変数 ===
+        # クールダウン用の記憶（状態→バー/ヒット数）
+        if not hasattr(self, "_ride_markov_last_bar"):
+            self._ride_markov_last_bar = {}
+        if not hasattr(self, "_ride_markov_last_hit"):
+            self._ride_markov_last_hit = {}
+        if not hasattr(self, "_ride_markov_hit_counter"):
+            self._ride_markov_hit_counter = 0
+        # 慣性用の前回分布
+        if not hasattr(self, "_ride_markov_prev"):
+            self._ride_markov_prev = {}
+        # ヘッド切替コスト用
+        if not hasattr(self, "_ride_last_head"):
+            self._ride_last_head = ""
+        
+        def _energy_at(off: float) -> float:
+            if not v_energy: return 0.0
+            try:
+                cand = min(v_energy, key=lambda t: abs(float(t[0]) - off))
+                return max(0.0, min(1.0, float(cand[1])))
+            except Exception:
+                return 0.0
+        
+        def _energy_at_smooth(off: float) -> float:
+            def _raw(off_: float) -> float:
+                if not v_energy: return 0.0
+                try:
+                    cand = min(v_energy, key=lambda t: abs(float(t[0]) - off_))
+                    return max(0.0, min(1.0, float(cand[1])))
+                except Exception:
+                    return 0.0
+            if (eb_w_ms <= 0.0 and eb_w_ql <= 0.0) or not v_energy:
+                return _raw(off)
+            try:
+                win_ql = 0.0
+                if eb_w_ms > 0.0:
+                    win_ql = max(win_ql, (eb_w_ms/1000.0) / sec_per_ql)
+                if eb_w_ql > 0.0:
+                    win_ql = max(win_ql, eb_w_ql)
+                lo = off - 0.5*win_ql
+                hi = off + 0.5*win_ql
+                vals = [max(0.0, min(1.0, float(E))) for (t,E) in v_energy if lo <= float(t) <= hi]
+                if not vals:
+                    return _raw(off)
+                if eb_smode == "max":
+                    return max(vals)
+                return sum(vals)/len(vals)
+            except Exception:
+                return _raw(off)
+        
+        def _sample_from_dict(pmap: Dict[str, float], rng) -> str:
+            items = [(k, max(0.0, float(v))) for k,v in pmap.items()]
+            s = sum(v for _,v in items)
+            if s <= 0.0: 
+                return items[0][0] if items else mk_start
+            r = rng.random() * s
+            acc = 0.0
+            for k,v in items:
+                acc += v
+                if r <= acc: return k
+            return items[-1][0]
+        
+        def _rng_for(off: float, head: str):
+            """決定論的シード用の乱数生成器（未設定時はself._rnd）"""
+            if mk_seed_base is None:
+                return self._rnd
+            try:
+                import random as _rndmod
+                b = int(off // ql_per_bar)
+                lab = section_label_for_bar(b)
+                sig = int(mk_seed_base) ^ (b << 7) ^ (0xBE11 if head == "bell" else 0xB0E)
+                if mk_seed_persec and lab:
+                    sig ^= sum(ord(c) for c in str(lab))
+                return _rndmod.Random(sig)
+            except Exception:
+                return self._rnd
+        
+        def _apply_section_blend(pmap: Dict[str, float], lab: str) -> Dict[str, float]:
+            if not (isinstance(mk_sections_blend, dict) and lab in mk_sections_blend):
+                return pmap
+            out = dict(pmap)
+            try:
+                for st, delta in (mk_sections_blend.get(lab) or {}).items():
+                    out[st] = max(0.0, float(out.get(st, 0.0)) + float(delta))
+            except Exception:
+                return pmap
+            return out
+        
+        def _apply_floor_cap(pmap: Dict[str, float], lab: str = "") -> Dict[str, float]:
+            """フロア/キャップ適用（セクション別対応、未設定はNO-OP）"""
+            if not (mk_floor or mk_cap or (isinstance(mk_bounds_sect, dict) and lab in mk_bounds_sect)):
+                return pmap
+            out = dict(pmap)
+            try:
+                sf = dict(mk_floor)
+                sc = dict(mk_cap)
+                # セクション別上書き
+                if isinstance(mk_bounds_sect, dict) and lab in mk_bounds_sect:
+                    bs = mk_bounds_sect.get(lab) or {}
+                    if isinstance(bs.get("floor"), dict):
+                        sf.update(bs["floor"])
+                    if isinstance(bs.get("cap"), dict):
+                        sc.update(bs["cap"])
+                for st, val in list(out.items()):
+                    lo = float(sf.get(st, 0.0)) if st in sf else 0.0
+                    hi = float(sc.get(st, float("inf"))) if st in sc else float("inf")
+                    out[st] = max(lo, min(hi, float(val)))
+            except Exception:
+                return pmap
+            return out
+        
+        def _shape01(r: float) -> float:
+            """距離比例のウェイト形状（linear/ease/exp）"""
+            r = max(0.0, min(1.0, r))
+            if fo_mode == "ease":
+                return (3*r*r - 2*r*r*r)
+            if fo_mode == "exp":
+                return r**2.0
+            return r
+        
+        def _upcoming_section(off: float):
+            """次のセクション境界を検出（プリエンプト用）"""
+            if not (sections and mk_pre_en and (mk_pre_ms > 0 or mk_pre_ql > 0)):
+                return None, None
+            try:
+                pre_ql = max((mk_pre_ms/1000.0) / sec_per_ql if mk_pre_ms > 0 else 0.0,
+                             mk_pre_ql if mk_pre_ql > 0 else 0.0)
+                b_now = int(off // ql_per_bar)
+                nexts = sorted([(int(s.get("bar", 0)), str(s.get("label", "")).lower()) for s in sections])
+                for b0, lab in nexts:
+                    if b0 > b_now:
+                        start_off = b0 * ql_per_bar
+                        if 0.0 <= (start_off - off) <= pre_ql:
+                            return b0, lab
+                        break
+            except Exception:
+                pass
+            return None, None
+        
+        def _apply_preempt_blend(pmap: Dict[str, float], head: str, off: float) -> Dict[str, float]:
+            """セクション直前のプリエンプト（距離比例）"""
+            b0, lab = _upcoming_section(off)
+            if b0 is None or not isinstance(mk_pre_map, dict) or lab not in mk_pre_map:
+                return pmap
+            spec = mk_pre_map.get(lab) or {}
+            want_head = str(spec.get("head", "any")).lower()
+            if want_head != "any" and want_head != head:
+                return pmap
+            addmap = spec.get("add") or {}
+            if not isinstance(addmap, dict) or not addmap:
+                return pmap
+            # 距離に比例してブレンド（境界に近いほど強く）
+            try:
+                start_off = b0 * ql_per_bar
+                dist = max(0.0, start_off - off)
+                win = max(fo_ql, (fo_ms/1000.0)/sec_per_ql) if (fo_ql > 0 or fo_ms > 0) else max((mk_pre_ms/1000.0)/sec_per_ql, mk_pre_ql)
+                w = 1.0 - min(1.0, dist / max(1e-6, win))
+                w = _shape01(w)
+            except Exception:
+                w = 1.0
+            out = dict(pmap)
+            try:
+                for st, d in addmap.items():
+                    if mk_pre_mode == "mul":
+                        out[st] = max(0.0, float(out.get(st, 0.0)) * (1.0 + (float(d) - 1.0) * w))
+                    else:
+                        out[st] = max(0.0, float(out.get(st, 0.0)) + float(d) * w)
+            except Exception:
+                return pmap
+            return out
+        
+        def _apply_energy_blend(pmap: Dict[str, float], head: str, off: float) -> Dict[str, float]:
+            if eb_alpha == 0.0:
+                return pmap
+            lab = section_label_for_bar(int(off // ql_per_bar))
+            a, base_bias, clip = eb_alpha, eb_bias, eb_clip
+            sens = dict(eb_sens_global)
+            try:
+                if isinstance(eb_sens_byhead, dict) and head in eb_sens_byhead:
+                    sens = dict(sens, **(eb_sens_byhead.get(head) or {}))
+            except Exception:
+                pass
+            try:
+                if isinstance(eb_bysect, dict) and lab in eb_bysect:
+                    spec = eb_bysect.get(lab) or {}
+                    if "alpha" in spec: a = float(spec.get("alpha", a))
+                    if "bias" in spec: base_bias = float(spec.get("bias", base_bias))
+                    if "clamp" in spec and isinstance(spec["clamp"], (list,tuple)) and len(spec["clamp"])>=2:
+                        clip = [float(spec["clamp"][0]), float(spec["clamp"][1])]
+                    if "sensitivity" in spec and isinstance(spec["sensitivity"], dict):
+                        sens = dict(sens, **spec["sensitivity"])
+                    ph = spec.get("per_head") or {}
+                    if isinstance(ph, dict) and head in ph and isinstance(ph[head], dict):
+                        sens = dict(sens, **ph[head])
+            except Exception:
+                pass
+            E = _energy_at_smooth(off)
+            out = dict(pmap)
+            for st, val in list(out.items()):
+                try:
+                    g = float(sens.get(st, 0.0))
+                    if eb_mode == "add":
+                        addv = float(val) + a * (g*E + base_bias)
+                        # 追加：任意クリップ（clamp_add指定時のみ適用。未指定は完全NO-OP）
+                        ca = mk_eb.get("clamp_add", None)
+                        if isinstance(ca, (list, tuple)) and len(ca) >= 2:
+                            try:
+                                lo, hi = float(ca[0]), float(ca[1])
+                                addv = max(lo, min(hi, addv))
+                            except Exception:
+                                pass
+                        out[st] = max(0.0, addv)
+                    else:
+                        scale = 1.0 + a * (g*E + base_bias)
+                        lo = float(clip[0]) if isinstance(clip,(list,tuple)) and len(clip)>=2 else 0.0
+                        hi = float(clip[1]) if isinstance(clip,(list,tuple)) and len(clip)>=2 else 3.0
+                        scale = max(lo, min(hi, scale))
+                        out[st] = max(0.0, float(val) * scale)
+                except Exception:
+                    continue
+            return out
+        
+        def _markov_next(head: str, off: float) -> str:
+            nonlocal mk_state, mk_china_streak
+            nonlocal mk_dwell_state, mk_dwell_hits
+            
+            # ===== パッチ第三弾: 追加設定読み込み =====
+            # 1) 状態別クールダウン（bars/hits、セクション別上書き）
+            mk_sc = mkv.get("state_cooldown", {}) or {}  # { ride1:{bars:1,hits:0}, ..., per_head:{ bell:{china:{hits:2}} }, per_section:{ chorus:{china:{bars:2}} } }
+            mk_sc_sect = (mk_sc.get("per_section") or {})
+            
+            # 2) 遷移コスト（エネルギー・プリエンプト・ヘッド切替連動）
+            mk_tc = mkv.get("transition_costs", {}) or {}  # { mode:"mul|exp", base:{cur:{next:cost}}, per_head:{bell:{...}}, energy_alpha:0.0, bias:0.0, preempt:{alpha:0.4, prefer:{ chorus:{ride2:-0.2,china:-0.05 }}, head:"any"}, head_switch:{enable:true, cost:0.08} }
+            tc_mode = str(mk_tc.get("mode","mul")).lower()
+            tc_base = (mk_tc.get("base") or {})
+            tc_head = (mk_tc.get("per_head") or {})
+            tc_ea   = float(mk_tc.get("energy_alpha", 0.0))
+            tc_bias = float(mk_tc.get("bias", 0.0))
+            tc_pre  = (mk_tc.get("preempt") or {})
+            tc_pre_alpha = float(tc_pre.get("alpha", 0.0))
+            tc_pre_pref  = (tc_pre.get("prefer") or {})  # { section:{ state: delta_cost } }  ※負値でコスト低減
+            tc_pre_head  = str(tc_pre.get("head", "any")).lower()
+            tc_hs   = (mk_tc.get("head_switch") or {})    # { enable:true, cost:0.05 }
+            tc_hs_en= bool(tc_hs.get("enable", False))
+            tc_hs_c = float(tc_hs.get("cost", 0.0))
+            
+            # 3) セクション終端ラッチ（開始側グレース追加）
+            mk_latch = mkv.get("latch", {}) or {}         # { enable:true, beats:2.0, mode:"hold|prefer|force", prefer_boost:0.4, sections:[...], state:"ride2", grace_beats:0.0 }
+            lt_en   = bool(mk_latch.get("enable", False))
+            lt_beats= float(mk_latch.get("beats", 0.0))
+            lt_mode = str(mk_latch.get("mode","hold")).lower()
+            lt_pref = float(mk_latch.get("prefer_boost", 0.3))
+            lt_secs = [str(x).lower() for x in (mk_latch.get("sections") or [])]
+            lt_state= str(mk_latch.get("state","")).lower()
+            lt_grace = float(mk_latch.get("grace_beats", 0.0))
+            
+            # 4) 確率の慣性（モメンタム平滑）
+            mk_pm   = mkv.get("prob_momentum", {}) or {}   # { enable:true, alpha:0.4 }
+            pm_en   = bool(mk_pm.get("enable", False))
+            pm_a    = float(mk_pm.get("alpha", 0.0))
+            if pm_a < 0.0: pm_a = 0.0
+            if pm_a > 1.0: pm_a = 1.0
+            
+            # 5) セクション限定ローカル行列
+            mk_local = mkv.get("local_modes", {}) or {}  # { chorus:{...}, by_range:[{from:8,to:16,states:{...},head:"any",inherit:true,mix:0.6}], ... }
+            
+            # 6) 音素連動ブレンド（クラス別ウィンドウ対応）
+            mk_ph    = mkv.get("phoneme_blend", {}) or {} # { enable:true, mode:"add|mul", alpha:0.5, energy_alpha:0.5, head:"any|bell|bow", sections:[...], window_ms:120|window_ql:0.5, falloff:"linear|ease|exp", classes:{ sibilant:{ states:{...}, window_ms:140, window_ql:0.5, head:"any", sections:[...], falloff:"ease" }, ... } }
+            pb_en    = bool(mk_ph.get("enable", False))
+            pb_mode  = str(mk_ph.get("mode","add")).lower()
+            pb_alpha = float(mk_ph.get("alpha", 0.0))
+            pb_ea    = float(mk_ph.get("energy_alpha", 0.0))
+            pb_head  = str(mk_ph.get("head","any")).lower()
+            pb_secs  = [str(x).lower() for x in (mk_ph.get("sections") or [])]
+            pb_w_ms  = float(mk_ph.get("window_ms", 0.0))
+            pb_w_ql  = float(mk_ph.get("window_ql", 0.0))
+            pb_fo    = str(mk_ph.get("falloff","linear")).lower()
+            pb_cls   = (mk_ph.get("classes") or {})  # phoneme class → { states: {...}, window_ms:..., ... }
+            v_ph_mb  = (mx.get("vocal_phonemes") or [])  # [[offset, "class"], ...]
+            
+            # ===== ヘルパー関数群 =====
+            def _shape_pb(r: float) -> float:
+                """音素連動の距離ウェイト形状（linear/ease/exp）"""
+                r = max(0.0, min(1.0, r))
+                if pb_fo == "ease": return (3*r*r - 2*r*r*r)
+                if pb_fo == "exp":  return r**2.0
+                return r
+            
+            def _in_bar_ranges(bnow: int, ranges) -> bool:
+                """barレンジ判定"""
+                try:
+                    if isinstance(ranges, list):
+                        for r in ranges:
+                            if isinstance(r, (list,tuple)) and len(r)>=2:
+                                if int(r[0]) <= bnow < int(r[1]): return True
+                            else:
+                                if bnow == int(r): return True
+                except Exception:
+                    pass
+                return False
+            
+            def _apply_local_mode(base_map: Dict[str,float], cur_state: str, head_: str, lab: str, bnow: int) -> Dict[str,float]:
+                """セクション/レンジ限定ローカル行列で置換/ブレンド"""
+                out = dict(base_map)
+                # 1) セクションキー指定
+                if isinstance(mk_local, dict) and lab in mk_local:
+                    spec = mk_local.get(lab) or {}
+                    # オプション: セクション内でも bars で限定可能
+                    bars = spec.get("bars", None)
+                    if bars is None or _in_bar_ranges(bnow, bars):
+                        st_over = (((spec.get("states") or {}).get(cur_state) or {}).get(head_) or {})
+                        if st_over:
+                            inherit = bool(spec.get("inherit", True))
+                            mix = float(spec.get("mix", 1.0))
+                            if not inherit or mix >= 1.0:
+                                out = dict(st_over)
+                            else:
+                                for k,v in st_over.items():
+                                    try:
+                                        out[k] = max(0.0, (1.0-mix)*float(out.get(k,0.0)) + mix*float(v))
+                                    except Exception:
+                                        continue
+                # 2) barレンジ直接指定（by_range）
+                try:
+                    for rs in (mk_local.get("by_range") or []):
+                        f = int(rs.get("from", rs.get("from_bar", -1)))
+                        t = int(rs.get("to",   rs.get("to_bar",   -1)))
+                        if not (f <= bnow < t): 
+                            continue
+                        want_head = str(rs.get("head","any")).lower()
+                        secs = [str(x).lower() for x in (rs.get("sections") or [])]
+                        if want_head not in ("any", head_): 
+                            continue
+                        if secs and lab not in secs:
+                            continue
+                        st_over = (((rs.get("states") or {}).get(cur_state) or {}).get(head_) or {})
+                        if not st_over:
+                            continue
+                        inherit = bool(rs.get("inherit", True))
+                        mix = float(rs.get("mix", 1.0))
+                        if not inherit or mix >= 1.0:
+                            out = dict(st_over)
+                        else:
+                            for k,v in st_over.items():
+                                try:
+                                    out[k] = max(0.0, (1.0-mix)*float(out.get(k,0.0)) + mix*float(v))
+                                except Exception:
+                                    continue
+                except Exception:
+                    pass
+                return out
+            
+            def _apply_phoneme_blend(pmap: Dict[str,float], head_: str, off_: float, lab: str, bnow: int) -> Dict[str,float]:
+                """音素連動ブレンド（クラス別ウィンドウ対応）"""
+                if not (pb_en and pb_alpha != 0.0 and v_ph_mb):
+                    return pmap
+                if pb_head not in ("any", head_):
+                    return pmap
+                if pb_secs and lab not in pb_secs:
+                    return pmap
+                try:
+                    # 累積デルタ（state→重み）
+                    acc: Dict[str, float] = {}
+                    for (po, cls) in v_ph_mb:
+                        t = float(po)
+                        c = str(cls).lower()
+                        cspec = pb_cls.get(c) or {}
+                        # 旧形式（state→delta）の互換
+                        if "states" in cspec and isinstance(cspec["states"], dict):
+                            cmap = cspec["states"]
+                        else:
+                            cmap = cspec if isinstance(cspec, dict) else {}
+                        if not cmap:
+                            continue
+                        # クラス別ウィンドウ/適用条件
+                        w_ms = float(cspec.get("window_ms", pb_w_ms))
+                        w_ql = float(cspec.get("window_ql", pb_w_ql))
+                        win_ql = 0.0
+                        if w_ms and w_ms > 0.0:
+                            win_ql = max(win_ql, (w_ms/1000.0)/sec_per_ql)
+                        if w_ql and w_ql > 0.0:
+                            win_ql = max(win_ql, w_ql)
+                        if win_ql <= 0.0:
+                            continue
+                        lo = off_ - 0.5*win_ql
+                        hi = off_ + 0.5*win_ql
+                        if not (lo <= t <= hi):
+                            continue
+                        c_head = str(cspec.get("head","any")).lower()
+                        if c_head not in ("any", head_):
+                            continue
+                        c_secs = [str(x).lower() for x in (cspec.get("sections") or [])]
+                        if c_secs and lab not in c_secs:
+                            continue
+                        # クラス別 falloff 形
+                        fo = str(cspec.get("falloff", pb_fo)).lower()
+                        # 距離に応じた三角ウェイト（→ falloff 形状に変換）
+                        w = 1.0 - abs((t - off_) / max(1e-6, 0.5*win_ql))
+                        if fo == "ease": 
+                            w = (3*w*w - 2*w*w*w)
+                        elif fo == "exp":
+                            w = w**2.0
+                        w = max(0.0, min(1.0, w))
+                        for st, d in cmap.items():
+                            try:
+                                acc[st] = acc.get(st, 0.0) + float(d)*w
+                            except Exception:
+                                continue
+                    if not acc:
+                        return pmap
+                    # エネルギーでスケーリング（0..1）
+                    E = _energy_at_smooth(off_) if ('_energy_at_smooth' in globals() or '_energy_at_smooth' in dir()) else _energy_at(off_)
+                    out = dict(pmap)
+                    for st, val in list(out.items()):
+                        delta = float(acc.get(st, 0.0))
+                        if delta == 0.0:
+                            continue
+                        if pb_mode == "mul":
+                            # 1 + α * delta * (1 + pb_ea*E)
+                            scale = 1.0 + pb_alpha * delta * (1.0 + pb_ea*E)
+                            out[st] = max(0.0, float(val) * max(0.0, scale))
+                        else:
+                            # add: val += α * delta * (E係数)
+                            out[st] = max(0.0, float(val) + pb_alpha * delta * (1.0 + pb_ea*E))
+                    return out
+                except Exception:
+                    return pmap
+            
+            # ===== メイン処理開始 =====
+            cur = str(mk_state).lower()
+            trans = ((mk_states.get(cur) or {}).get(head) or {})
+            if not trans:
+                return cur
+            
+            lab = section_label_for_bar(int(off // ql_per_bar))
+            bnow = int(off // ql_per_bar)
+            
+            # 0) セクション/レンジ限定ローカル行列で置換/ブレンド（あれば）
+            trans2 = _apply_local_mode(trans, cur, head, lab, bnow)
+            
+            # 1) セクション一般ブレンド（既存）
+            trans2 = _apply_section_blend(trans2, lab)
+            trans2 = _apply_energy_blend(trans2, head, off)
+            # セクションプリエンプト（境界直前で次状態を押す）
+            trans2 = _apply_preempt_blend(trans2, head, off)
+            # スティッキー：最小滞在ヒット数 or 自己ブースト（Head/State別）
+            if mk_sticky_en:
+                if cur == mk_dwell_state:
+                    # Head/State別の閾値
+                    local_min = mk_min_hits
+                    local_boost = mk_self_boost
+                    try:
+                        if head in mk_sticky_head and isinstance(mk_sticky_head[head], dict):
+                            if "min_hits" in mk_sticky_head[head]:
+                                local_min = int(mk_sticky_head[head]["min_hits"])
+                            if "self_boost" in mk_sticky_head[head]:
+                                local_boost = float(mk_sticky_head[head]["self_boost"])
+                        if cur in mk_sticky_state and isinstance(mk_sticky_state[cur], dict):
+                            if "min_hits" in mk_sticky_state[cur]:
+                                local_min = int(mk_sticky_state[cur]["min_hits"])
+                            if "self_boost" in mk_sticky_state[cur]:
+                                local_boost = float(mk_sticky_state[cur]["self_boost"])
+                    except Exception:
+                        pass
+                    # まだ滞在中
+                    if local_min > 0 and mk_dwell_hits < (local_min - 1):
+                        # 強制的に現状態に固定
+                        trans2 = {cur: 1.0}
+                    elif local_boost > 0.0:
+                        try:
+                            trans2 = dict(trans2)
+                            trans2[cur] = max(0.0, float(trans2.get(cur, 0.0)) + local_boost)
+                        except Exception:
+                            pass
+                else:
+                    mk_dwell_state = cur
+                    mk_dwell_hits = 0
+            
+            # ---- 追加: 状態別クールダウン（セクション別上書き） ----
+            try:
+                total_hits = int(getattr(self, "_ride_markov_hit_counter", 0))
+                def _cd_for(state: str) -> tuple:
+                    cfgs = dict(mk_sc.get(state, {}) or {})
+                    # head別
+                    ph = mk_sc.get("per_head", {}) or {}
+                    if head in ph and isinstance(ph[head], dict) and state in ph[head]:
+                        try: cfgs.update(ph[head][state] or {})
+                        except Exception: pass
+                    # セクション別
+                    if isinstance(mk_sc_sect, dict) and lab in mk_sc_sect:
+                        secmap = mk_sc_sect.get(lab) or {}
+                        if isinstance(secmap.get(state), dict):
+                            try: cfgs.update(secmap.get(state) or {})
+                            except Exception: pass
+                    return int(cfgs.get("bars", 0)), int(cfgs.get("hits", 0))
+                out_cd = dict(trans2)
+                for st in list(out_cd.keys()):
+                    cb, ch = _cd_for(st)
+                    if cb>0:
+                        lastb = int(getattr(self, "_ride_markov_last_bar", {}).get(st, -9999))
+                        if (bnow - lastb) < cb:
+                            out_cd[st] = 0.0
+                            continue
+                    if ch>0:
+                        lasth = int(getattr(self, "_ride_markov_last_hit", {}).get(st, -999999))
+                        if (total_hits - lasth) < ch:
+                            out_cd[st] = 0.0
+                trans2 = out_cd
+            except Exception:
+                pass
+            
+            # ---- 追加: 遷移コスト（エネルギー・プリエンプト・ヘッド切替） ----
+            try:
+                out = dict(trans2)
+                # プリエンプトの距離重み w（0..1）
+                try:
+                    b0_u, lab_u = _upcoming_section(off)
+                    if b0_u is not None:
+                        start_off = b0_u * ql_per_bar
+                        # _apply_preempt_blend と同等のfalloff推定
+                        win  = max( (mk_pre.get("falloff",{}).get("window_ql",0.0) or 0.0),
+                                    (mk_pre.get("falloff",{}).get("window_ms",0.0) or 0.0)/1000.0/sec_per_ql,
+                                    (mk_pre.get("ahead_ql",0.0) or 0.0),
+                                    (mk_pre.get("ahead_ms",0.0) or 0.0)/1000.0/sec_per_ql )
+                        dist = max(0.0, start_off - off)
+                        w_pre = 1.0 - min(1.0, dist / max(1e-6, win)) if win>0 else 0.0
+                    else:
+                        lab_u, w_pre = None, 0.0
+                except Exception:
+                    lab_u, w_pre = None, 0.0
+                E = _energy_at_smooth(off) if ('_energy_at_smooth' in globals() or '_energy_at_smooth' in dir()) else _energy_at(off)
+                cost_head = (tc_head.get(head) or {})
+                # 前ヘッドとの差で切替コスト
+                hs_cost = 0.0
+                try:
+                    if tc_hs_en and str(getattr(self, "_ride_last_head", head)) != str(head):
+                        hs_cost = max(0.0, tc_hs_c)
+                except Exception:
+                    hs_cost = 0.0
+                for st, val in list(out.items()):
+                    base_cost = float(((tc_base.get(cur) or {}).get(st, 0.0)))
+                    head_add  = float(((cost_head.get(cur, {}) or {}).get(st, 0.0))) if isinstance(cost_head.get(cur, {}), dict) else 0.0
+                    cost = max(0.0, base_cost + head_add + tc_bias + hs_cost)
+                    if tc_ea != 0.0:
+                        cost *= max(0.0, (1.0 + tc_ea * E))
+                    if tc_pre_alpha != 0.0 and w_pre > 0.0 and lab_u:
+                        # 近い境界ではコストを緩める／またはセクション別に特定状態のコストをさらに変更
+                        cost *= (1.0 - tc_pre_alpha * w_pre)
+                        if isinstance(tc_pre_pref, dict) and lab_u in tc_pre_pref:
+                            try:
+                                dmap = tc_pre_pref.get(lab_u) or {}
+                                cost += float(dmap.get(st, 0.0)) * w_pre
+                            except Exception:
+                                pass
+                    # コスト→確率減衰
+                    if tc_mode == "exp":
+                        import math as _m
+                        mul = _m.exp(-max(0.0, cost))
+                    else:
+                        mul = max(0.0, 1.0 - max(0.0, cost))
+                    out[st] = max(0.0, float(val) * mul)
+                trans2 = out
+            except Exception:
+                pass
+            
+            # ---- 追加: 音素連動ブレンド（子音クラス×エネルギー） ----
+            trans2 = _apply_phoneme_blend(trans2, head, off, lab, bnow)
+            
+            # ---- 追加: セクション終端ラッチ（先頭グレースも） ----
+            if lt_en and sections:
+                try:
+                    # 節内 [b0,b1)
+                    labs_sorted = sorted([(int(s.get("bar",0)), str(s.get("label","")).lower()) for s in sections], key=lambda x:x[0])
+                    for i,(b0s, lab_s) in enumerate(labs_sorted):
+                        b1s = labs_sorted[i+1][0] if i+1 < len(labs_sorted) else bars
+                        if not (b0s <= bnow < b1s): 
+                            continue
+                        if lt_secs and lab_s not in lt_secs:
+                            break
+                        beat_ql = 4.0/float(ts.denominator) if ts else 1.0
+                        win_end = lt_beats * beat_ql
+                        win_start = lt_grace * beat_ql
+                        # セクション終端に近い場合
+                        rem = (b1s*ql_per_bar) - off
+                        if win_end > 1e-9 and rem <= max(1e-6, win_end):
+                            if lt_mode == "force" and lt_state:
+                                trans2 = { lt_state: 1.0 }
+                            elif lt_mode == "prefer" and lt_state:
+                                try:
+                                    trans2 = dict(trans2); trans2[lt_state] = max(0.0, float(trans2.get(lt_state,0.0)) + lt_pref)
+                                except Exception:
+                                    pass
+                            else:
+                                trans2 = { cur: 1.0 }
+                            break
+                        # セクション開始直後（グレース）：急な切替を抑制
+                        if win_start > 1e-9 and (off - b0s*ql_per_bar) <= max(1e-6, win_start):
+                            trans2 = { cur: 1.0 }
+                            break
+                except Exception:
+                    pass
+            
+            # China 連発のクールダウン
+            if mk_cd_ch > 0 and mk_china_streak >= mk_cd_ch:
+                if "china" in trans2:
+                    trans2 = dict(trans2); trans2["china"] = 0.0
+            # フロア＆キャップ（セクション別対応）
+            trans2 = _apply_floor_cap(trans2, lab)
+            
+            # ---- 追加: 確率の慣性（モメンタム平滑） ----
+            if pm_en and pm_a>0.0:
+                prev = self._ride_markov_prev if isinstance(self._ride_markov_prev, dict) else {}
+                keys = set(list(trans2.keys()) + list(prev.keys()))
+                out_m = {}
+                for k in keys:
+                    v0 = float(trans2.get(k, 0.0))
+                    v1 = float(prev.get(k, 0.0))
+                    out_m[k] = max(0.0, (1.0 - pm_a)*v0 + pm_a*v1)
+                trans2 = out_m
+            
+            # ---- 最後にゼロ割れ対策（全ゼロ時は現状態へフォールバック） ----
+            if sum(float(v) for v in trans2.values()) <= 1e-12:
+                trans2 = { cur: 1.0 }
+            
+            # サンプリング（決定論的シード対応）
+            rng_loc = _rng_for(off, head)
+            nxt = _sample_from_dict(trans2, rng_loc)
+            
+            # ---- 状態更新: ヒット/バー記録＆総ヒット数・前回分布・前ヘッド ----
+            try:
+                self._ride_markov_last_bar[nxt] = bnow
+                self._ride_markov_hit_counter = int(getattr(self, "_ride_markov_hit_counter", 0)) + 1
+                if not hasattr(self, "_ride_markov_last_hit"):
+                    self._ride_markov_last_hit = {}
+                self._ride_markov_last_hit[nxt] = int(self._ride_markov_hit_counter)
+                self._ride_markov_prev = dict(trans2)
+                self._ride_last_head = head
+            except Exception:
+                pass
+            
+            # 滞在カウンタ更新
+            if nxt == cur:
+                mk_dwell_hits += 1
+            else:
+                mk_dwell_state = nxt
+                mk_dwell_hits = 1
+            if nxt == "china":
+                mk_china_streak += 1
+            else:
+                mk_china_streak = 0
+            mk_state = nxt
+            return mk_state
+        
+        # === Bell比率の拡張機能 ===
+        br_secmap = (bell_cfg.get("section_map") or {})
+        br_ecurve = (bell_cfg.get("energy_curve") or {})
+        br_alpha = float(br_ecurve.get("alpha", 0.0))
+        br_bias = float(br_ecurve.get("bias", 0.0))
+        br_clamp = bell_cfg.get("clamp", [0.0, 1.0])
+        max_bell_per_bar = int(bell_cfg.get("max_bell_per_bar", 9999))
+        bell_cool_hits = int(bell_cfg.get("bell_cooldown_hits", 0))
+        
+        # 子音クラス影響（Bell比率）
+        cinf = (bell_cfg.get("class_influence") or {})
+        
+        # スペクトル衝突ガード（Bell/China減衰）
+        scoll = bell_cfg.get("spec_collision", {}) or {}
+        sc_enable = bool(scoll.get("enable", False))
+        sc_map = scoll.get("class_map", {}) or {}
+        sc_bands = scoll.get("bands", {}) or {}
+        sc_band_of = scoll.get("band_of_class", {}) or {}
+        sc_combine = str(scoll.get("combine", "min")).lower()
+        
+        def _collision_scale(off: float, is_bell: bool, is_china: bool) -> float:
+            if not (sc_enable and v_ph and (sc_map or (sc_bands and sc_band_of))):
+                return 1.0
+            scales = []
+            for (po, cls) in v_ph:
+                try:
+                    c = str(cls).lower()
+                    cfgc = sc_map.get(c) or {}
+                    if not cfgc and sc_bands and sc_band_of:
+                        bname = str(sc_band_of.get(c,"")).lower()
+                        cfgc = sc_bands.get(bname, {})
+                    prew = float(cfgc.get("pre_ql", 0.0))
+                    postw = float(cfgc.get("post_ql", 0.0))
+                    if "pre_ms" in cfgc:
+                        prew = max(prew, float(cfgc["pre_ms"]) / 1000.0 / sec_per_ql)
+                    if "post_ms" in cfgc:
+                        postw = max(postw, float(cfgc["post_ms"]) / 1000.0 / sec_per_ql)
+                    if (po - prew) <= off <= (po + postw):
+                        if is_bell:
+                            s = float(cfgc.get("bell_scale", 1.0))
+                        elif is_china:
+                            s = float(cfgc.get("china_scale", 1.0))
+                        else:
+                            s = float(cfgc.get("ride_scale", 1.0))
+                        scales.append(max(0.0, min(1.0, s)))
+                except Exception:
+                    continue
+            if not scales:
+                return 1.0
+            if sc_combine == "max":
+                return max(scales)
+            if sc_combine == "mean":
+                return sum(scales)/len(scales)
+            return min(scales)
+        
+        def bell_ratio_for_off(off: float) -> float:
+            b = int(off // ql_per_bar)
+            ratio = br_base
+            lab = section_label_for_bar(b)
+            if lab in br_secmap:
+                try:
+                    ratio += float(br_secmap.get(lab, 0.0))
+                except Exception:
+                    pass
+            if br_alpha != 0.0:
+                ratio += br_alpha * _energy_at(off) + br_bias
+            if v_ph and isinstance(cinf, dict) and cinf:
+                for (po, cls) in v_ph:
+                    c = str(cls).lower()
+                    cdef = cinf.get(c)
+                    if not isinstance(cdef, dict): continue
+                    prew = float(cdef.get("pre_ql", 0.0)); postw = float(cdef.get("post_ql", 0.0))
+                    if "pre_ms" in cdef:
+                        try: prew = max(prew, float(cdef["pre_ms"])/1000.0/sec_per_ql)
+                        except Exception: pass
+                    if "post_ms" in cdef:
+                        try: postw = max(postw, float(cdef["post_ms"])/1000.0/sec_per_ql)
+                        except Exception: pass
+                    if (po - prew) <= off <= (po + postw):
+                        try: ratio += float(cdef.get("delta", 0.0))
+                        except Exception: pass
+            ratio = max(float(br_clamp[0]) if len(br_clamp)>=2 else 0.0,
+                        min(float(br_clamp[1]) if len(br_clamp)>=2 else 1.0, ratio))
+            return ratio
+        
+        # 拍位置ルール（トリプレット/grid auto対応）
+        pos_rule = bell_cfg.get("position_rule", {}) or {}
+        mode_pr = str(pos_rule.get("mode", "any")).lower()
+        grid = pos_rule.get("grid", "eighth")
+        auto_grid = (str(grid).lower() == "auto")
+        auto_eps = float(pos_rule.get("auto_eps", 0.03))
+        
+        if isinstance(grid, str) and not auto_grid:
+            if grid == "eighth": step = 0.5
+            elif grid == "quarter": step = 1.0
+            elif grid == "sixteenth": step = 0.25
+            elif grid.startswith("triplet"): step = 1.0/3.0
+            else: step = 0.5
+        else:
+            try: step = float(grid) if not auto_grid else 0.5
+            except Exception: step = 0.5
+        eps = float(pos_rule.get("eps", 0.04))
+        
+        def _allow_bell(off: float) -> bool:
+            if mode_pr == "any":
+                return True
+            barpos = off % ql_per_bar
+            if mode_pr == "triplet" or step == 1.0/3.0:
+                frac = (barpos % 1.0)
+                is_mid = abs(frac - (1.0/3.0)) <= eps
+                is_last = abs(frac - (2.0/3.0)) <= eps
+                allow = pos_rule.get("allow", ["any"])
+                allow = [str(x).lower() for x in allow]
+                if "any" in allow: return is_mid or is_last
+                ok = False
+                if "middle" in allow: ok = ok or is_mid
+                if "last" in allow: ok = ok or is_last
+                return ok
+            pos_in_step = (barpos % step)
+            if mode_pr == "offbeat_only":
+                return abs(pos_in_step - step * 0.5) <= eps
+            if mode_pr == "downbeat_only":
+                return pos_in_step <= eps or abs(pos_in_step - step) <= eps
+            if mode_pr == "weak_beats_only":
+                frac = barpos % 1.0
+                return abs(frac-0.0) > eps and abs(frac-0.5) > eps
+            return True
+        
+        if switch_after_sec <= 0.0:
+            return
+        
+        # 秒 → quarter length変換
+        beat_per_sec = tempo / 60.0
+        switch_ql = switch_after_sec * beat_per_sec
+        
+        all_notes = list(part.flatten().notes)
+        hh_closed_pitch = self._DRUM_PITCH["hh_closed"]
+        ride_pitch = self._DRUM_PITCH["ride1"]
+        ride_bell_pitch = self._DRUM_PITCH["ride_bell"]
+        
+        # バーごとのBell数追跡
+        cool_streak = 0
+        bells_in_bar = 0
+        current_bar = 0
+        
+        for n in all_notes:
+            if n.pitch.midi != hh_closed_pitch:
+                continue
+            
+            if n.offset < switch_ql:
+                continue
+            
+            # Decay curve適用
+            elapsed = n.offset - switch_ql
+            if decay_curve == "exp":
+                prob = 1.0 - np.exp(-elapsed / 8.0)
+            else:  # linear
+                prob = min(1.0, elapsed / 16.0)
+            
+            if self._rnd.random() < prob:
+                n.pitch.midi = ride_pitch
+                n.duration = duration.Duration(0.5)
+                
+                # バー遷移チェック
+                bar_idx = int(n.offset // ql_per_bar)
+                if bar_idx != current_bar:
+                    current_bar = bar_idx
+                    bells_in_bar = 0
+                
+                off = float(n.offset)
+                br = bell_ratio_for_off(off)
+                
+                # Bell振り分け（上限/クールダウン + 位置ルール考慮）
+                if br > 1e-9 and _allow_bell(off) and bells_in_bar < max_bell_per_bar and (bell_cool_hits <= 0 or cool_streak < bell_cool_hits):
+                    if self._rnd.random() < br:
+                        try:
+                            n.pitch.midi = ride_bell_pitch
+                            cool_streak += 1
+                            bells_in_bar += 1
+                        except Exception:
+                            pass
+                    else:
+                        cool_streak = 0
+                else:
+                    cool_streak = 0
+                
+                # Markov遷移でボイス切替（ride1/ride2/china）
+                try:
+                    if mk_en:
+                        head = "bell" if (n.pitch.midi == ride_bell_pitch) else "bow"
+                        state = _markov_next(head, off)
+                        if state == "ride2":
+                            tgt = self._DRUM_PITCH.get("ride2", self._DRUM_PITCH.get("ride1"))
+                        elif state == "china":
+                            tgt = self._DRUM_PITCH.get("china", self._DRUM_PITCH.get("crash1"))
+                        else:
+                            tgt = ride_bell_pitch if head=="bell" else self._DRUM_PITCH.get("ride1")
+                        if tgt is not None:
+                            n.pitch.midi = tgt
+                except Exception:
+                    pass
+                
+                # スペクトル衝突ガード（Vel調整）
+                try:
+                    is_bell = (n.pitch.midi == ride_bell_pitch)
+                    is_china = (n.pitch.midi == self._DRUM_PITCH.get("china"))
+                    scl = _collision_scale(off, is_bell=is_bell, is_china=bool(is_china))
+                    if scl < 0.999:
+                        v0 = int(getattr(n.volume, "velocity", 96) or 96)
+                        n.volume.velocity = max(1, int(round(v0 * scl)))
+                except Exception:
+                    pass
+    
+    def _apply_cymbal_choke(self, part: stream.Part, cfg: Optional[Dict[str, float]]) -> None:
+        """Cymbal choke（crash/ride duration短縮）"""
+        if not cfg:
+            return
+        
+        choke_prob = cfg.get("crash_choke_prob", 0.0)
+        if choke_prob <= 0.0:
+            return
+        
+        cymbal_pitches = {self._DRUM_PITCH["crash1"], self._DRUM_PITCH["ride1"]}
+        all_notes = list(part.flatten().notes)
+        
+        for n in all_notes:
+            if n.pitch.midi in cymbal_pitches:
+                if self._rnd.random() < choke_prob:
+                    n.duration = duration.Duration(0.25)  # 短縮
+    
+    def _apply_push_pull(self, part: stream.Part, cfg: Optional[Dict[str, float]], ql_per_bar: float) -> None:
+        """Push/Pull feel（微小タイミング調整）"""
+        if not cfg:
+            return
+        
+        push_amount = cfg.get("push_amount", 0.0)
+        pull_amount = cfg.get("pull_amount", 0.0)
+        
+        if push_amount == 0.0 and pull_amount == 0.0:
+            return
+        
+        all_notes = list(part.flatten().notes)
+        snare_pitch = self._DRUM_PITCH["snare"]
+        
+        for n in all_notes:
+            beat_pos = n.offset % ql_per_bar
+            
+            # Push: snareを微妙に前にずらす
+            if n.pitch.midi == snare_pitch and push_amount != 0.0:
+                if beat_pos in [1.0, 3.0]:  # 2,4拍目
+                    n.offset -= push_amount
+            
+            # Pull: kickを微妙に後ろにずらす
+            if n.pitch.midi == self._DRUM_PITCH["kick"] and pull_amount != 0.0:
+                if beat_pos in [0.0, 2.0]:  # 1,3拍目
+                    n.offset += pull_amount
+    
+    def _apply_accent_map(self, part: stream.Part, cfg: Optional[Dict[str, int]], ql_per_bar: float) -> None:
+        """Accent map（拍位置ごとのvelocity boost）"""
+        if not cfg:
+            return
+        
+        all_notes = list(part.flatten().notes)
+        
+        for n in all_notes:
+            beat_pos = n.offset % ql_per_bar
+            beat_idx = int(beat_pos * 2)  # 8分音符単位
+            
+            boost = cfg.get(str(beat_idx), 0)
+            if boost != 0:
+                new_vel = n.volume.velocity + boost
+                n.volume.velocity = max(1, min(127, new_vel))
+    
+    def _cap_ghost_density(self, part: stream.Part, cfg: Optional[Dict[str, Any]], ql_per_bar: float) -> None:
+        """Ghost caps（低velocity密度制限）"""
+        if not cfg:
+            return
+        
+        max_per_bar = cfg.get("max_per_bar", 4)
+        vel_threshold = cfg.get("velocity_threshold", 50)
+        
+        all_notes = sorted(part.flatten().notes, key=lambda x: x.offset)
+        
+        current_bar = 0
+        bar_ghost_count = 0
+        
+        for n in all_notes:
+            bar_idx = int(n.offset // ql_per_bar)
+            
+            if bar_idx != current_bar:
+                current_bar = bar_idx
+                bar_ghost_count = 0
+            
+            if n.volume.velocity < vel_threshold:
+                if bar_ghost_count >= max_per_bar:
+                    part.remove(n)
+                else:
+                    bar_ghost_count += 1
+    
+    def _kick_on_chord_change(
+        self,
+        part: stream.Part,
+        chords: List[str],
+        cfg: Optional[Dict[str, float]],
+        ql_per_bar: float
+    ) -> None:
+        """Kick on chord change（コード変化時にkick強調）"""
+        if not cfg or not chords:
+            return
+        
+        emphasis_prob = cfg.get("emphasis_prob", 0.0)
+        vel_boost = cfg.get("velocity_boost", 10)
+        
+        if emphasis_prob <= 0.0:
+            return
+        
+        kick_pitch = self._DRUM_PITCH["kick"]
+        
+        # コード変化位置を検出
+        change_offsets = []
+        prev_chord = None
+        for i, ch in enumerate(chords):
+            if ch != prev_chord:
+                change_offsets.append(i * ql_per_bar)
+                prev_chord = ch
+        
+        all_notes = list(part.flatten().notes)
+        
+        for offset in change_offsets:
+            # 既存kickを探す
+            for n in all_notes:
+                if abs(n.offset - offset) < 0.1 and n.pitch.midi == kick_pitch:
+                    n.volume.velocity = min(127, n.volume.velocity + vel_boost)
+                    break
+            else:
+                # なければ追加
+                if self._rnd.random() < emphasis_prob:
+                    kick = note.Note(kick_pitch)
+                    kick.volume.velocity = 95
+                    kick.duration = duration.Duration(0.25)
+                    part.insert(offset, kick)
+    
+    def _align_kick_with_bass(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        bass_onsets_ql: List[float]
+    ) -> None:
+        """
+        Kick⇄Bass unison（ベースオンセットとkickのタイミング同期）
+        - bass_onsets_ql: Bassのオンセット位置リスト（QL単位）
+        - cfg: kick_bass_unison設定
+          {
+            "prob": float,
+            "velocity": int,
+            "dedupe_eps": float,
+            "merge": "boost" | "skip" | "stack",
+            "double_hit": bool,
+            "double_gap_ql": float,
+            "velocity_by_strength": {"mode": "add"|"scale", "gain": float, "min": int, "max": int},
+            "degree_prob_map": {"0": 1.25, "7": 1.10, ...},
+            "degree_vel_gain_map": {"0": 6, "7": 4, ...}
+          }
+        """
+        if not cfg or not bass_onsets_ql:
+            return
+        
+        prob = float(cfg.get("prob", 0.0))
+        if prob <= 0.0:
+            return
+        
+        vel = int(cfg.get("velocity", 112))
+        eps = float(cfg.get("dedupe_eps", 0.02))
+        dbl = bool(cfg.get("double_hit", False))
+        gap = float(cfg.get("double_gap_ql", 0.25))
+        kick = self._DRUM_PITCH["kick"]
+        
+        # 任意: 度数強度（offset→strength≒1.0基準）を受け取り、Velに反映
+        mix_ctx = (self._overrides or {}).get("mix_context") or {}
+        strengths_kv = mix_ctx.get("bass_onset_strengths") or []  # [[off, s], ...]
+        strength_map = {}
+        try:
+            for pair in strengths_kv:
+                off, s = float(pair[0]), float(pair[1])
+                strength_map[off] = s
+        except Exception:
+            strength_map = {}
+        vel_map = cfg.get("velocity_by_strength", None)  # 例: {"mode":"add","gain":12,"min":1,"max":127}
+        if isinstance(vel_map, dict):
+            vs_mode = str(vel_map.get("mode", "add"))
+            vs_gain = float(vel_map.get("gain", 8.0))
+            vs_min = int(vel_map.get("min", 1))
+            vs_max = int(vel_map.get("max", 127))
+        else:
+            vs_mode, vs_gain, vs_min, vs_max = ("add", 0.0, 1, 127)
+
+        # 追加: 相対度数ごとの確率/Velマップ、キー分節
+        deg_prob = cfg.get("degree_prob_map", None)  # {"0":1.2, "7":1.1, ...} ←確率倍率
+        deg_vadd = cfg.get("degree_vel_gain_map", None)  # {"0":+6, "7":+4, ...}
+        key_segs = mix_ctx.get("key_segments") or []
+        # ベースのPC（相対度数判定用）
+        pc_kv = mix_ctx.get("bass_onset_pcs") or []  # [[off, pc], ...]
+        pc_map = {}
+        try:
+            for off_val, pc_val in pc_kv:
+                pc_map[float(off_val)] = int(pc_val) % 12
+        except Exception:
+            pc_map = {}
+        ts = next((e for e in part.recurse().getElementsByClass(meter.TimeSignature)), None)
+        ql_per_bar = float(ts.numerator) if ts else 4.0
+        
+        def tonic_pc_for_off(off: float) -> int:
+            if not key_segs:
+                return 0
+            bar = int(off // ql_per_bar)
+            cur = None
+            for seg in key_segs:
+                try:
+                    if bar >= int(seg.get("bar", 0)):
+                        cur = seg
+                except Exception:
+                    continue
+            try:
+                tn = cur.get("tonic", "C") if cur else "C"
+                if isinstance(tn, int):
+                    return tn % 12
+                from music21 import pitch as m21pitch
+                return m21pitch.Pitch(str(tn)).pitchClass
+            except Exception:
+                return 0
+
+        merge_strategy = str(cfg.get("merge", "boost"))  # "boost" | "skip" | "stack"
+        
+        existing = [n for n in part.recurse().notes if isinstance(n, note.Note) and n.pitch.midi == kick]
+        
+        def has_kick_at(off: float) -> bool:
+            return any(abs(n.offset - off) < eps for n in existing)
+        
+        def strength_at(off: float) -> float:
+            # 近傍一致（eps内）のstrengthを探す。なければ1.0
+            for k in strength_map.keys():
+                if abs(k - off) < eps:
+                    return float(strength_map[k])
+            return 1.0
+        
+        def apply_strength(v_base: int, s: float) -> int:
+            if vs_gain == 0.0:
+                return v_base
+            if vs_mode == "scale":
+                vv = int(round(v_base * max(0.5, 1.0 + vs_gain * (s - 1.0))))
+            else:  # "add"
+                vv = int(round(v_base + vs_gain * (s - 1.0)))
+            return max(vs_min, min(vs_max, vv))
+        
+        for off in bass_onsets_ql:
+            prob_eff = prob
+            # 相対度数による確率倍率
+            try:
+                if deg_prob and off in pc_map:
+                    tpc = tonic_pc_for_off(off)
+                    deg = str((pc_map[off] - tpc) % 12)
+                    prob_eff = prob * float(deg_prob.get(deg, 1.0))
+            except Exception:
+                pass
+            if self._rnd.random() >= prob_eff:
+                continue
+            
+            s = strength_at(off)
+            # 相対度数によるVel加算
+            deg_add = 0
+            try:
+                if deg_vadd and off in pc_map:
+                    tpc = tonic_pc_for_off(off)
+                    deg = str((pc_map[off] - tpc) % 12)
+                    deg_add = int(deg_vadd.get(deg, 0))
+            except Exception:
+                deg_add = 0
+            
+            if not has_kick_at(off):
+                k = note.Note(kick)
+                try:
+                    base = apply_strength(vel, s)
+                    k.volume.velocity = max(1, min(127, base + deg_add))
+                except Exception:
+                    pass
+                try:
+                    k.duration = duration.Duration(0.25)
+                except Exception:
+                    pass
+                try:
+                    part.insert(max(0.0, off), k)
+                except Exception:
+                    pass
+                existing.append(k)
+            elif has_kick_at(off):
+                # 既存キックがあるときのマージ戦略
+                if merge_strategy == "boost":
+                    for n in existing:
+                        if abs(n.offset - off) < eps:
+                            try:
+                                v0 = int(getattr(n.volume, "velocity", 64) or 64)
+                                n.volume.velocity = max(1, min(127, v0 + max(4, deg_add)))
+                            except Exception:
+                                pass
+                elif merge_strategy == "stack":
+                    # わずかに前後に重ねる
+                    k = note.Note(kick)
+                    try:
+                        k.volume.velocity = max(1, min(127, (vel + deg_add)))
+                    except Exception:
+                        pass
+                    jitter = self._rnd.uniform(-0.03, 0.03)
+                    try:
+                        k.duration = duration.Duration(0.25)
+                    except Exception:
+                        pass
+                    try:
+                        part.insert(max(0.0, off + jitter), k)
+                    except Exception:
+                        pass
+            
+            if dbl and not has_kick_at(off + gap):
+                k2 = note.Note(kick)
+                try:
+                    base = apply_strength(vel, s) + deg_add
+                    k2.volume.velocity = max(1, min(127, base - 8))
+                except Exception:
+                    pass
+                try:
+                    k2.duration = duration.Duration(0.25)
+                except Exception:
+                    pass
+                try:
+                    part.insert(max(0.0, off + gap), k2)
+                except Exception:
+                    pass
+                existing.append(k2)
+    
+    def _compress_velocity(self, part: stream.Part, cfg: Optional[Dict[str, Any]]) -> None:
+        """Dynamics compression（velocity圧縮）"""
+        if not cfg:
+            return
+        
+        threshold = cfg.get("threshold", 80)
+        ratio = cfg.get("ratio", 2.0)
+        makeup = cfg.get("makeup_gain", 5)
+        
+        all_notes = list(part.flatten().notes)
+        
+        for n in all_notes:
+            vel = n.volume.velocity
+            
+            if vel > threshold:
+                over = vel - threshold
+                compressed = threshold + (over / ratio)
+                new_vel = compressed + makeup
+            else:
+                new_vel = vel + makeup
+            
+            n.volume.velocity = max(1, min(127, int(new_vel)))
+    
+    def _avoid_vocal_conflicts(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        v_on: List[float],
+        v_phr: List[List[float]],
+        tempo: float
+    ) -> None:
+        """
+        Vocalとのコンフリクト回避
+        vocal_conflict:
+          cymbal_reduce_prob: 0.6   # Vocalオンセット近傍のCymを間引く確率
+          cymbal_near_eps: 0.08     # 近傍判定（QL）
+          snare_shift_ms: -8        # Vocalオンセット近傍のスネアを微Push/Pull（ms）
+          prephrase_fill:
+            enable: true
+            window_ql: 1.0
+            velocity: 96
+          sibilance_guard:  # 追加：子音クラス別シビランス・ガード
+            pre_lookahead_ql: 0.12
+            hh_scale: 0.85
+            cym_scale: 0.80
+            class_scales:
+              sibilant: { hh: 0.75, cym: 0.70 }
+              fricative:{ hh: 0.85, cym: 0.80 }
+              plosive:  { hh: 0.90, cym: 0.85 }
+        """
+        cym_reduce = float(cfg.get("cymbal_reduce_prob", 0.0))
+        cym_eps = float(cfg.get("cymbal_near_eps", 0.08))
+        sn_ms = float(cfg.get("snare_shift_ms", 0.0))
+        prefill = cfg.get("prephrase_fill", {}) or {}
+        # 追加：シビランス・ガード（子音直前の高域縮退）
+        sguard = cfg.get("sibilance_guard", {}) or {}
+        pre_look = float(sguard.get("pre_lookahead_ql", 0.12))  # 直前この範囲を抑制
+        hh_scale = float(sguard.get("hh_scale", 0.85))
+        cym_scale = float(sguard.get("cym_scale", 0.80))
+        # 追加：発音長カット/アタック微シフト（ms指定、テンポ→QL自動変換）
+        sec_per_ql = 60.0 / max(1.0, float(tempo))
+        cut_ms = float(sguard.get("sustain_cut_ms", 0.0))
+        atk_ms = float(sguard.get("attack_shift_ms", 0.0))
+        cut_ql = (cut_ms / 1000.0) / sec_per_ql if abs(cut_ms) > 1e-9 else 0.0
+        atk_ql = (atk_ms / 1000.0) / sec_per_ql if abs(atk_ms) > 1e-9 else 0.0
+        # 追加：子音クラス別スケーリング（vocal_phonemes: [[off,"class"], ...] がある場合のみ）
+        mx = (self._overrides or {}).get("mix_context") or {}
+        v_ph = mx.get("vocal_phonemes") or []    # [[off, "class"], ...]
+        cls_map = (sguard.get("class_scales") or {})  # 例: {"sibilant": {"hh":0.75,"cym":0.70}, "plosive":{"cym":0.9}}
+        
+        cym_ids = {self._DRUM_PITCH["crash1"], self._DRUM_PITCH["ride1"], self._DRUM_PITCH["ride_bell"]}
+        
+        # 1) Cym近傍間引き
+        if cym_reduce > 1e-6 and v_on:
+            notes_list = list(part.recurse().notes)
+            for n in notes_list:
+                if not isinstance(n, note.Note) or n.pitch.midi not in cym_ids:
+                    continue
+                if any(abs(n.offset - vo) <= cym_eps for vo in v_on):
+                    if self._rnd.random() < cym_reduce:
+                        try:
+                            n.activeSite.remove(n)
+                        except Exception:
+                            pass
+        
+        # 2) Snare微シフト
+        if abs(sn_ms) > 1e-6 and v_on:
+            ql_shift = (sn_ms / 1000.0) / (60.0 / max(1.0, float(tempo)))
+            for n in part.recurse().notes:
+                if isinstance(n, note.Note) and n.pitch.midi == self._DRUM_PITCH["snare"]:
+                    if any(abs(n.offset - vo) <= cym_eps for vo in v_on):
+                        try:
+                            n.offset = max(0.0, n.offset + ql_shift)
+                        except Exception:
+                            pass
+        
+        # 3) フレーズ直前に軽いフィルを挿入
+        if bool(prefill.get("enable", False)) and v_phr:
+            ts = next((e for e in part.recurse().getElementsByClass(meter.TimeSignature)), None)
+            ql_per_bar = float(ts.numerator) if ts else 4.0
+            vel = int(prefill.get("velocity", 96))
+            win = float(prefill.get("window_ql", 1.0))
+            for s, _e in v_phr:
+                off = max(0.0, s - max(0.25, win))
+                seq = [self._DRUM_PITCH["tom_mid"], self._DRUM_PITCH["tom_low"], self._DRUM_PITCH["snare"]]
+                for i, p in enumerate(seq):
+                    n = note.Note(p)
+                    try:
+                        n.volume.velocity = max(1, vel - (2 * (len(seq) - i)))
+                    except Exception:
+                        pass
+                    try:
+                        n.duration = duration.Duration(0.25)
+                    except Exception:
+                        pass
+                    jitter = self._rnd.uniform(-0.01, 0.01)
+                    try:
+                        part.insert(off + i * (win / max(3, len(seq))) + jitter, n)
+                    except Exception:
+                        pass
+        
+        # 4) シビランス・ガード：オンセット直前のHH/シンバルを縮退
+        if v_on and (hh_scale < 0.999 or cym_scale < 0.999 or (v_ph and cls_map) or cut_ql or atk_ql):
+            ids_hh = {self._DRUM_PITCH["hh_closed"], self._DRUM_PITCH["hh_open"], self._DRUM_PITCH["hh_pedal"]}
+            ids_cy = {self._DRUM_PITCH["crash1"], self._DRUM_PITCH["ride1"], self._DRUM_PITCH["ride_bell"]}
+            for n in part.recurse().notes:
+                if not isinstance(n, note.Note):
+                    continue
+                tag = "hh" if n.pitch.midi in ids_hh else ("cym" if n.pitch.midi in ids_cy else None)
+                if not tag:
+                    continue
+                # 対象オンセットを探索
+                targets = [vo for vo in v_on if (vo - pre_look) <= n.offset < vo]
+                if not targets:
+                    continue
+                # 基本スケール
+                try:
+                    v0 = int(getattr(n.volume, "velocity", 64) or 64)
+                    scale = hh_scale if tag == "hh" else cym_scale
+                    # 子音クラス最優先：近傍で最初に見つかったクラスを適用
+                    if v_ph and cls_map:
+                        near_cls = None
+                        for (off, cls) in v_ph:
+                            if (off - pre_look) <= n.offset < off:
+                                near_cls = str(cls).lower()
+                                break
+                        if near_cls and isinstance(cls_map.get(near_cls), dict):
+                            scale = float(cls_map[near_cls].get(tag, scale))
+                    n.volume.velocity = max(1, int(round(v0 * scale)))
+                except Exception:
+                    pass
+                # 追加：発音長カット/アタック微シフト（任意）
+                if cut_ql or atk_ql:
+                    try:
+                        if abs(atk_ql) > 1e-9:
+                            n.offset = max(0.0, float(n.offset) + atk_ql)
+                        if abs(cut_ql) > 1e-9:
+                            ql_now = float(getattr(n.duration, "quarterLength", 0.25))
+                            ql_new = max(0.04, ql_now - cut_ql)
+                            n.duration = duration.Duration(ql_new)
+                    except Exception:
+                        pass
+    
+    def _duck_during_vocals(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        v_phr: List[List[float]]
+    ) -> None:
+        """
+        Vocalフレーズ中のDucking（Velスケール）
+        ducking:
+          hh_scale: 0.85
+          snare_scale: 0.95
+          tom_scale: 0.9
+          cym_scale: 0.8
+          kick_scale: 1.0
+          energy_curve: { enable: true, alpha: 0.5 }  # 追加：エネルギー連動
+        """
+        scales = {
+            "kick": float(cfg.get("kick_scale", 1.0)),
+            "snare": float(cfg.get("snare_scale", 1.0)),
+            "tom": float(cfg.get("tom_scale", 1.0)),
+            "hh": float(cfg.get("hh_scale", 1.0)),
+            "cym": float(cfg.get("cym_scale", 1.0)),
+        }
+        ids = {
+            "kick": {self._DRUM_PITCH["kick"]},
+            "snare": {self._DRUM_PITCH["snare"], self._DRUM_PITCH["rimshot"]},
+            "tom": {self._DRUM_PITCH["tom_hi"], self._DRUM_PITCH["tom_mid"], self._DRUM_PITCH["tom_low"]},
+            "hh": {self._DRUM_PITCH["hh_closed"], self._DRUM_PITCH["hh_open"], self._DRUM_PITCH["hh_pedal"]},
+            "cym": {self._DRUM_PITCH["crash1"], self._DRUM_PITCH["ride1"], self._DRUM_PITCH["ride_bell"]},
+        }
+        
+        # 追加：エネルギー連動（mix_context.vocal_energy = [[off, energy(0..1)], ...]）
+        mx = (self._overrides or {}).get("mix_context") or {}
+        v_energy = mx.get("vocal_energy") or []   # optional
+        
+        def energy_at(off: float) -> float:
+            # 近傍の点を探索（単純に最も近い点）、なければ0
+            if not v_energy:
+                return 0.0
+            try:
+                cand = min(v_energy, key=lambda t: abs(float(t[0]) - off))
+                return max(0.0, min(1.0, float(cand[1])))
+            except Exception:
+                return 0.0
+        
+        ecurve = (cfg.get("energy_curve") or {})  # {"enable":true,"alpha":0.5} → scaleを更に(1 - αE)で押し下げ
+        use_energy = bool(ecurve.get("enable", False))
+        alpha = float(ecurve.get("alpha", 0.5))
+        
+        def in_phrase(x: float) -> bool:
+            for s, e in v_phr:
+                if s <= x <= e:
+                    return True
+            return False
+        
+        for n in part.recurse().notes:
+            if not isinstance(n, note.Note):
+                continue
+            if not in_phrase(float(n.offset)):
+                continue
+            tag = None
+            for k, s in ids.items():
+                if n.pitch.midi in s:
+                    tag = k
+                    break
+            if not tag:
+                continue
+            try:
+                v0 = int(getattr(n.volume, "velocity", 64) or 64)
+                base_scale = scales[tag]
+                if use_energy:
+                    E = energy_at(float(n.offset))
+                    base_scale = max(0.0, 1.0 - alpha * E) * base_scale
+                v1 = int(round(v0 * base_scale))
+                n.volume.velocity = max(1, min(127, v1))
+            except Exception:
+                pass
+    
+    # ---- Swingランプ（曲全体で徐々にスウィングを強める/弱める） ----
+    def _apply_swing_ramp(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        bars: int,
+        tempo: float
+    ) -> None:
+        """
+        swing.eighth_ramp: { start: 0.00, end: 0.06 }  # 0.06 ≈ 6%（8分裏を後ろへ）
+        """
+        try:
+            s = float(cfg.get("start", 0.0))
+            e = float(cfg.get("end", 0.0))
+        except Exception:
+            return
+        if abs(s-e) < 1e-6:
+            return
+        ql_per_bar = 4.0  # 4/4前提
+        all_notes = list(part.recurse().notes)
+        if not all_notes:
+            return
+        # バー位置で線形補間したswingを適用（8分裏=0.5, 1.5, 2.5,... のみオフセット）
+        for n in all_notes:
+            if not isinstance(n, note.Note):
+                continue
+            bar = int(n.offset // ql_per_bar)
+            t = max(0.0, min(1.0, bar / max(1, bars-1)))
+            sw = s + (e - s) * t
+            frac = n.offset % 1.0
+            is_off = abs(frac - 0.5) < 1e-3
+            if not is_off:
+                continue
+            # 8分裏を後ろへシフト
+            shift_ql = sw * 0.5  # 8分基準
+            try:
+                n.offset = max(0.0, n.offset + shift_ql)
+            except Exception:
+                pass
+    
+    # ---- スネアの"メロ追従"：Vocalのピッチ度数でVel/位置を可変 ----
+    def _snare_follow_melody(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        vocal_pitch_events: List[List[float]],
+        key_segments: List[Dict[str, Any]],
+        tempo: float
+    ) -> None:
+        """
+        snare_follow_melody:
+          near_eps_ql: 0.08       # Vocalピッチ近傍のスネアを対象
+          backbeat_only: true     # 2拍目/4拍目中心に限定
+          vel_gain_map: {"0":+6,"7":+4}    # 相対度数→Vel加算
+          shift_ms_map: {"2":-6,"5":+4}    # 相対度数→オフセット微調整(ms)
+        """
+        eps = float(cfg.get("near_eps_ql", 0.08))
+        back_only = bool(cfg.get("backbeat_only", True))
+        vmap = cfg.get("vel_gain_map", {}) or {}
+        smap = cfg.get("shift_ms_map", {}) or {}
+        ql_per_bar = 4.0  # 4/4前提
+        
+        def tonic_pc_for_off(off: float) -> int:
+            if not key_segments:
+                return 0
+            bar = int(off // ql_per_bar)
+            cur = None
+            for seg in key_segments:
+                try:
+                    if bar >= int(seg.get("bar", 0)):
+                        cur = seg
+                except Exception:
+                    continue
+            try:
+                tn = cur.get("tonic", "C") if cur else "C"
+                import music21 as m21
+                return (m21.pitch.Pitch(str(tn)).pitchClass) % 12
+            except Exception:
+                return 0
+        
+        # Vocalピッチ→度数テーブル
+        vdeg: List[tuple[float, int]] = []
+        for off, midi in vocal_pitch_events:
+            try:
+                pc = int(midi) % 12
+                tpc = tonic_pc_for_off(float(off))
+                vdeg.append((float(off), (pc - tpc) % 12))
+            except Exception:
+                continue
+        if not vdeg:
+            return
+        
+        snares = [n for n in part.recurse().notes if isinstance(n, note.Note) and n.pitch.midi == self._DRUM_PITCH["snare"]]
+        for sn in snares:
+            frac = sn.offset % 1.0
+            if back_only and not (abs(frac-0.5)<1e-3 or abs(frac-0.0)<1e-3):  # 簡易：2拍/4拍中心（1小節=1.0QL*4前提）
+                continue
+            # 近傍のVocal度数を探す
+            near = [deg for off, deg in vdeg if abs(off - float(sn.offset)) <= eps]
+            if not near:
+                continue
+            deg = str(int(near[0]))
+            # Vel加算
+            try:
+                add = int(vmap.get(deg, 0))
+                v0 = int(getattr(sn.volume, "velocity", 64) or 64)
+                sn.volume.velocity = max(1, min(127, v0 + add))
+            except Exception:
+                pass
+            # 位置微調整
+            try:
+                ms = float(smap.get(deg, 0.0))
+                if abs(ms) > 1e-6:
+                    ql_shift = (ms / 1000.0) / (60.0 / max(1.0, float(tempo)))
+                    sn.offset = max(0.0, sn.offset + ql_shift)
+            except Exception:
+                pass
+    
+    # ---- セクション戦略：セクション毎にクラッシュ/ライド/HH開き強化 ----
+    def _apply_section_strategy(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        sections: List[Dict[str, Any]],
+        bars: int,
+        tempo: float
+    ) -> None:
+        """
+        section_strategy:
+          chorus: { crash_on_downbeat: 0.9, ride_boost: 0.4, open_ratio_target: 0.22 }
+          verse:  { crash_on_downbeat: 0.2, ride_boost: 0.0, open_ratio_target: 0.10 }
+          bridge: { crash_on_downbeat: 0.5, ride_boost: 0.2, open_ratio_target: 0.18 }
+        """
+        if not sections:
+            return
+        ql_per_bar = 4.0  # 4/4前提
+        
+        # 1) セクション頭クラッシュ（確率）
+        cym = self._DRUM_PITCH["crash1"]
+        for sec in sections:
+            try:
+                b = int(sec.get("bar", 0)); lab = str(sec.get("label","")).lower()
+                sconf = cfg.get(lab) or {}
+                p = float(sconf.get("crash_on_downbeat", 0.0))
+                if p > 0.0 and self._rnd.random() < p:
+                    off = b * ql_per_bar
+                    n = note.Note(cym)
+                    try:
+                        n.volume.velocity = int(sconf.get("velocity", 110))
+                    except Exception:
+                        pass
+                    jitter = self._rnd.uniform(-0.01, 0.01)
+                    try:
+                        part.insert(max(0.0, off + jitter), n)
+                    except Exception:
+                        pass
+            except Exception:
+                continue
+        
+        # 2) ライド化のブースト：当該バーのHHをRideに置換
+        ride_boost_map = {str(k).lower(): float((cfg.get(k) or {}).get("ride_boost", 0.0)) for k in cfg.keys()}
+        if any(v > 1e-6 for v in ride_boost_map.values()):
+            hh = self._DRUM_PITCH["hh_closed"]; ride = self._DRUM_PITCH["ride1"]
+            for n in part.recurse().notes:
+                if not isinstance(n, note.Note) or n.pitch.midi != hh:
+                    continue
+                b = int(n.offset // ql_per_bar)
+                lab = None
+                for s in sections:
+                    if int(s.get("bar",0)) <= b:
+                        lab = str(s.get("label","")).lower()
+                if not lab:
+                    continue
+                boost = float(ride_boost_map.get(lab, 0.0))
+                if boost > 0.0 and self._rnd.random() < min(1.0, boost):
+                    try:
+                        n.pitch.midi = ride
+                    except Exception:
+                        pass
+        
+        # 3) HH開き率ターゲットをセクションごとに上書き（簡易）
+        for sec in sections:
+            try:
+                lab = str(sec.get("label","")).lower()
+                sconf = cfg.get(lab) or {}
+                target = sconf.get("open_ratio_target", None)
+                if target is not None:
+                    self._boost_open_ratio_in_bars(part, float(target), [int(sec.get("bar",0))], ql_per_bar, tempo)
+            except Exception:
+                pass
+    
+    def _compute_open_len_ql(
+        self,
+        tempo: float,
+        base_ql: float = 0.25,
+        barpos_ql: Optional[float] = None
+    ) -> float:
+        """
+        HHオープン長をテンポ/ジャンル曲線で自動補間
+        drums_params.open_length:
+          ref_bpm: 120
+          base_ql: 0.28
+          min_ql: 0.10
+          max_ql: 0.60
+          position_factors: { strong: 0.85, weak: 1.00, off: 1.15 }
+          auto: { points: [[80,1.2],[120,1.0],[160,0.85]], clamp_min: 0.7, clamp_max: 1.4 }
+        """
+        cfg = ((self._overrides or {}).get("drums_params") or {}).get("open_length", {}) or {}
+        ref_bpm = float(cfg.get("ref_bpm", 120.0))
+        base = float(cfg.get("base_ql", base_ql))
+        min_ql = float(cfg.get("min_ql", 0.10))
+        max_ql = float(cfg.get("max_ql", 0.60))
+        
+        # 追加：ジャンル×テンポの自動曲線（piecewise linear）
+        auto = cfg.get("auto", None)  # {"points":[[80,1.2],[120,1.0],[160,0.85]], "clamp_min":0.7, "clamp_max":1.4}
+        if isinstance(auto, dict):
+            pts = auto.get("points") or []
+            if isinstance(pts, list) and len(pts) >= 2:
+                t = float(tempo)
+                pts2 = sorted([[float(a), float(b)] for a,b in pts], key=lambda x: x[0])
+                if t <= pts2[0][0]:
+                    mult = pts2[0][1]
+                elif t >= pts2[-1][0]:
+                    mult = pts2[-1][1]
+                else:
+                    mult = 1.0
+                    for i in range(len(pts2)-1):
+                        x0,y0 = pts2[i]; x1,y1 = pts2[i+1]
+                        if x0 <= t <= x1:
+                            r = (t-x0)/max(1e-9,(x1-x0))
+                            mult = y0 + (y1-y0)*r
+                            break
+                mult = max(float(auto.get("clamp_min", 0.5)), min(float(auto.get("clamp_max", 1.5)), mult))
+                base *= mult
+        
+        # 例：tempo=240 → 0.5倍、tempo=60 → 2倍（クランプあり）
+        scale = max(0.25, min(2.5, ref_bpm / max(1.0, float(tempo))))
+        ql = base * scale
+        
+        # 位置ファクター（強拍/弱拍/オフビート）
+        if barpos_ql is not None:
+            pf = cfg.get("position_factors") or {}
+            frac = float(barpos_ql) % 1.0
+            if abs(frac - 0.0) < 1e-3:
+                ql *= float(pf.get("strong", 1.0))
+            elif abs(frac - 0.5) < 1e-3:
+                ql *= float(pf.get("off", 1.0))
+            else:
+                ql *= float(pf.get("weak", 1.0))
+        
+        return max(min_ql, min(max_ql, ql))
+    
+    def _boost_open_ratio_in_bars(
+        self,
+        part: stream.Part,
+        target_ratio: float,
+        bars_list: List[int],
+        ql_per_bar: float,
+        tempo: float
+    ) -> None:
+        hh_closed = self._DRUM_PITCH["hh_closed"]; hh_open = self._DRUM_PITCH["hh_open"]
+        for b in bars_list:
+            hh = [n for n in part.recurse().notes
+                  if isinstance(n, note.Note) and n.pitch.midi in (hh_closed, hh_open)
+                  and (int(n.offset // ql_per_bar) == b)]
+            if not hh:
+                continue
+            now_open = sum(1 for n in hh if n.pitch.midi == hh_open) / float(len(hh))
+            if target_ratio <= now_open + 1e-6:
+                continue
+            need = int((target_ratio - now_open) * len(hh))
+            idxs = list(range(len(hh))); self._rnd.shuffle(idxs)
+            changed = 0
+            for i in idxs:
+                n = hh[i]
+                if n.pitch.midi != hh_closed:
+                    continue
+                try:
+                    n.pitch.midi = hh_open
+                    n.duration = duration.Duration(self._compute_open_len_ql(tempo, base_ql=float(n.duration.quarterLength),
+                                                                              barpos_ql=float(n.offset % ql_per_bar)))
+                    changed += 1
+                except Exception:
+                    pass
+                if changed >= need:
+                    break
+    
+    # ---- HH tip/shank（奏法のニュアンスをVelで表現） ----
+    def _apply_hh_tip_shank(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        bars: int,
+        tempo: float
+    ) -> None:
+        """
+        hh_articulation:
+          enable: true
+          shank_on_downbeats: 0.6   # ダウンビートをシャンク化する確率
+          shank_vel_boost: 8        # シャンク時のVel加算
+          random_shank_prob: 0.05   # ランダムでシャンク化
+          timeline: [{bar_from, bar_to, params}, ...]  # 任意
+          class_influence:  # 子音クラス連動（追加）
+            sibilant:       {shank_boost: 0.2, vel_boost: 5, pre_ms: 50, post_ms: 100}
+            plosive:        {shank_boost:-0.1, vel_boost:-3, pre_ms: 30, post_ms: 80}
+            nasal:          {shank_boost: 0.0, vel_boost: 2, pre_ms: 40, post_ms: 60}
+        * GMでは同一ピッチ(42)だが、Velで質感差をエミュレート
+        """
+        if not bool(cfg.get("enable", True)):
+            return
+        p_down_base = float(cfg.get("shank_on_downbeats", 0.0))
+        p_rand_base = float(cfg.get("random_shank_prob", 0.0))
+        v_boost_base = int(cfg.get("shank_vel_boost", 8))
+        # 追加：タイムライン [{bar_from:int, bar_to:int, params: {...}}]
+        timeline = cfg.get("timeline") or []  # 任意
+        ql_per_bar = 4.0  # 4/4前提
+        hh = self._DRUM_PITCH["hh_closed"]
+        
+        # 子音クラス影響設定
+        class_inf = (cfg.get("class_influence") or {})
+        mx = (self._overrides or {}).get("mix_context") or {}
+        phonemes = mx.get("vocal_phonemes") or []
+        sec_per_ql = 60.0 / max(1.0, tempo)
+        
+        def near_class_delta(off: float) -> tuple[float, int]:
+            """時間窓内の子音クラスの影響を返す（shank確率増分, vel増分）"""
+            if not class_inf or not phonemes:
+                return (0.0, 0)
+            try:
+                off_sec = off * sec_per_ql
+                p_add = 0.0
+                v_add = 0
+                for ph in phonemes:
+                    ph_start = float(ph.get("start", 0))
+                    ph_class = str(ph.get("class", "")).lower()
+                    if ph_class not in class_inf:
+                        continue
+                    rule = class_inf[ph_class]
+                    pre_ms = float(rule.get("pre_ms", 50))
+                    post_ms = float(rule.get("post_ms", 100))
+                    pre_sec = pre_ms / 1000.0
+                    post_sec = post_ms / 1000.0
+                    if ph_start - pre_sec <= off_sec <= ph_start + post_sec:
+                        p_add += float(rule.get("shank_boost", 0.0))
+                        v_add += int(rule.get("vel_boost", 0))
+                return (p_add, v_add)
+            except Exception:
+                return (0.0, 0)
+        
+        def params_for_bar(b: int) -> tuple[float, float, int]:
+            p_down, p_rand, v_boost = p_down_base, p_rand_base, v_boost_base
+            try:
+                for seg in timeline:
+                    bf = int(seg.get("bar_from", -999))
+                    bt = int(seg.get("bar_to",  999999))
+                    if bf <= b <= bt:
+                        prm = seg.get("params") or {}
+                        p_down = float(prm.get("shank_on_downbeats", p_down))
+                        p_rand = float(prm.get("random_shank_prob", p_rand))
+                        v_boost = int(prm.get("shank_vel_boost", v_boost))
+            except Exception:
+                pass
+            return p_down, p_rand, v_boost
+        
+        for n in part.recurse().notes:
+            if not isinstance(n, note.Note) or n.pitch.midi != hh:
+                continue
+            frac_bar = n.offset % ql_per_bar
+            is_down = abs(frac_bar - 0.0) < 1e-3 or abs(frac_bar - 1.0) < 1e-3 or abs(frac_bar - 2.0) < 1e-3 or abs(frac_bar - 3.0) < 1e-3
+            b = int(n.offset // ql_per_bar)
+            p_down, p_rand, v_boost = params_for_bar(b)
+            
+            # 子音クラス影響を適用
+            p_delta, v_delta = near_class_delta(float(n.offset))
+            p_rand_final = max(0.0, min(1.0, p_rand + p_delta))
+            v_boost_final = v_boost + v_delta
+            
+            shank = False
+            if is_down and self._rnd.random() < p_down:
+                shank = True
+            elif self._rnd.random() < p_rand_final:
+                shank = True
+            if shank:
+                try:
+                    v0 = int(getattr(n.volume, "velocity", 64) or 64)
+                    n.volume.velocity = max(1, min(127, v0 + v_boost_final))
+                except Exception:
+                    pass
+    
+    # ---- セクション遷移：to_label 直前バーに語彙を挿入 ----
+    def _apply_section_transitions(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        sections: List[Dict[str, Any]],
+        bars: int,
+        tempo: float
+    ) -> None:
+        """
+        section_transitions:
+          to: { chorus: { fill_prob:0.8, fill_kind:"tom_run", cym_swell_prob:0.4, velocity:96 } }
+          use_yaml: { file:"configs/transition_vocab.yaml", name:"pop_default" }  # 任意
+          cooldown:  # 追加：遷移イベント抑制（撃ち過ぎ防止）
+            fill_bars: 2         # フィル連続禁止（最低間隔）
+            swell_bars: 1        # スウェル連続禁止（最低間隔）
+            min_gap_to_prev: 1   # 前セクション終了からの最低バー数
+        """
+        ql_per_bar = 4.0  # 4/4前提
+        
+        # クールダウン設定
+        cd = cfg.get("cooldown") or {}
+        fill_cd = int(cd.get("fill_bars", 0))
+        swell_cd = int(cd.get("swell_bars", 0))
+        min_gap = int(cd.get("min_gap_to_prev", 0))
+        last_fill_bar = -9999
+        last_swell_bar = -9999
+        last_section_bar = -9999
+        
+        # 外部YAML：{ use_yaml: { file:"configs/transition_vocab.yaml", name:"pop_default" } }
+        try:
+            uy = (cfg.get("use_yaml") or {})
+            if yaml and isinstance(uy, dict):
+                from pathlib import Path
+                p = Path(str(uy.get("file","")))
+                nm = str(uy.get("name",""))
+                if p.exists() and nm:
+                    data = yaml.safe_load(p.read_text()) or {}
+                    ext = (data.get("presets") or {}).get(nm) or {}
+                    if isinstance(ext, dict):
+                        cfg = self._deep_merge_dicts(cfg.copy(), ext)
+        except Exception:
+            pass
+        
+        for i in range(1, len(sections)):
+            to_lab = str(sections[i].get("label","")).lower()
+            conf = (cfg.get("to") or {}).get(to_lab) or {}
+            if not conf:
+                continue
+            prev_bar = max(0, int(sections[i]["bar"]) - 1)
+            
+            # クールダウンチェック（前セクション終了からの最低間隔）
+            if min_gap > 0 and prev_bar < last_section_bar + min_gap:
+                continue
+            
+            p = float(conf.get("fill_prob", 0.0))
+            vel = int(conf.get("velocity", 96))
+            kind = str(conf.get("fill_kind", "tom_run"))
+            seq = []
+            
+            # フィル挿入（クールダウン適用）
+            if p > 0.0 and (fill_cd <= 0 or prev_bar >= last_fill_bar + fill_cd) and self._rnd.random() < p:
+                start = prev_bar * ql_per_bar + (ql_per_bar - 1.0)
+                if kind == "snare_roll":
+                    seq = [self._DRUM_PITCH["snare"]]*6
+                elif kind == "tom_run":
+                    seq = [self._DRUM_PITCH["tom_mid"], self._DRUM_PITCH["tom_low"], self._DRUM_PITCH["snare"]]
+                else:
+                    # 任意：外部プリセットからseqを解釈（ドラム名→ピッチ）
+                    try:
+                        seq_names = conf.get("seq", None)
+                        if isinstance(seq_names, list) and seq_names:
+                            seq = [self._DRUM_PITCH.get(x, self._DRUM_PITCH["snare"]) for x in seq_names]
+                    except Exception:
+                        pass
+                if seq:
+                    for j, pitch in enumerate(seq):
+                        n = note.Note(pitch)
+                        try:
+                            n.volume.velocity = max(1, vel - 2*(len(seq)-j))
+                        except Exception:
+                            pass
+                        jitter = self._rnd.uniform(-0.008, 0.008)
+                        try:
+                            part.insert(max(0.0, start + j*(1.0/max(3,len(seq))) + jitter), n)
+                        except Exception:
+                            pass
+                    last_fill_bar = prev_bar
+            
+            # シンバル・スウェル（クールダウン適用）
+            sp = float(conf.get("cym_swell_prob", 0.0))
+            if sp > 0.0 and (swell_cd <= 0 or prev_bar >= last_swell_bar + swell_cd) and self._rnd.random() < sp:
+                hh = self._DRUM_PITCH["hh_open"]
+                for j in range(3):
+                    n = note.Note(hh)
+                    try:
+                        n.volume.velocity = min(127, vel + 4*j)
+                    except Exception:
+                        pass
+                    pos = prev_bar * ql_per_bar + (ql_per_bar - 0.75 + 0.25*j)
+                    try:
+                        part.insert(max(0.0, pos + self._rnd.uniform(-0.01, 0.01)), n)
+                    except Exception:
+                        pass
+                last_swell_bar = prev_bar
+            
+            last_section_bar = int(sections[i].get("bar", 0))
+
+    # ---- Drummer"日内変動"カーブ ----
+    def _apply_diurnal_curve(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        bars: int,
+        tempo: float
+    ) -> None:
+        """
+        drummer_diurnal:
+          timing_ms:   { start:-3, end:+6 }   # 全体のタイミング微シフト
+          vel_scale:   { start:0.98, end:1.06 } # ベロシティ倍率
+          ghost_scale: { start:0.9,  end:1.2 }  # ゴースト（低Vel）を増減
+          swing_add:   { start:0.00, end:0.02 } # 追加スウィング（裏を後ろへ）
+          ghost_thresh: 40                      # しきい値
+          per_instrument: { snare: {...}, hh: {...} }  # 楽器別上書き
+          noise: { timing_ms: 2.5, velocity: 3 }       # 微小ノイズ
+        """
+        ts = next((e for e in part.recurse().getElementsByClass(meter.TimeSignature)), None)
+        ql_per_bar = float(ts.numerator) if ts else 4.0
+        sec_per_ql = 60.0 / max(1.0, float(tempo))
+        gthr = int(cfg.get("ghost_thresh", 40))
+        
+        # 楽器別の上書き（kick/snare/tom/hh/cym）
+        perinst = cfg.get("per_instrument") or {}
+        noise = cfg.get("noise") or {}  # {"timing_ms":2.0,"velocity":3}
+        t_noise = float(noise.get("timing_ms", 0.0))
+        v_noise = float(noise.get("velocity", 0.0))
+        
+        def _curve(name: str, b: int, default_start: float, default_end: float, inst_obj: Optional[Dict[str, Any]] = None) -> float:
+            obj = (inst_obj.get(name) if isinstance(inst_obj, dict) and name in inst_obj else None) or (cfg.get(name) or {})
+            if not isinstance(obj, dict):
+                return default_start
+            s = float(obj.get("start", default_start))
+            e = float(obj.get("end", default_end))
+            t = 0.0 if bars <= 1 else (b / float(bars - 1))
+            return s + (e - s) * max(0.0, min(1.0, t))
+        
+        for n in part.recurse().notes:
+            if not isinstance(n, note.Note):
+                continue
+            # 0..1 の楽曲内位置
+            b = int(n.offset // ql_per_bar)
+            # 楽器タグ
+            tag = None
+            if n.pitch.midi == self._DRUM_PITCH["kick"]: tag = "kick"
+            elif n.pitch.midi in {self._DRUM_PITCH["snare"], self._DRUM_PITCH["rimshot"]}: tag = "snare"
+            elif n.pitch.midi in {self._DRUM_PITCH["tom_hi"], self._DRUM_PITCH["tom_mid"], self._DRUM_PITCH["tom_low"]}: tag = "tom"
+            elif n.pitch.midi in {self._DRUM_PITCH["hh_closed"], self._DRUM_PITCH["hh_open"], self._DRUM_PITCH["hh_pedal"]}: tag = "hh"
+            elif n.pitch.midi in {self._DRUM_PITCH["crash1"], self._DRUM_PITCH["ride1"], self._DRUM_PITCH["ride_bell"]}: tag = "cym"
+            icfg = perinst.get(tag) if tag and isinstance(perinst, dict) else None
+            # タイミング
+            ms = _curve("timing_ms", b, 0.0, 0.0, icfg)
+            if abs(ms) > 1e-6:
+                try:
+                    n.offset = max(0.0, float(n.offset) + (ms / 1000.0) / sec_per_ql)
+                except Exception:
+                    pass
+            # ベロシティスケール
+            try:
+                v0 = int(getattr(n.volume, "velocity", 64) or 64)
+            except Exception:
+                v0 = 64
+            v1 = int(round(v0 * _curve("vel_scale", b, 1.0, 1.0, icfg)))
+            # ゴースト強調/抑制（低Velのみに作用）
+            if v0 <= gthr:
+                v1 = int(round(v1 * _curve("ghost_scale", b, 1.0, 1.0, icfg)))
+            try:
+                n.volume.velocity = max(1, min(127, v1))
+            except Exception:
+                pass
+            # 追加スウィング（8分裏のみ）
+            sw = _curve("swing_add", b, 0.0, 0.0, icfg)
+            if abs(sw) > 1e-6:
+                frac = (float(n.offset) % 1.0)
+                if abs(frac - 0.5) < 1e-3:
+                    try:
+                        n.offset = max(0.0, float(n.offset) + sw * 0.5)
+                    except Exception:
+                        pass
+            # 微小ノイズ（再現性あり）
+            if abs(t_noise) > 1e-6:
+                try:
+                    jitter = (self._rnd.uniform(-1.0, 1.0)) * (t_noise/1000.0) / sec_per_ql
+                    n.offset = max(0.0, float(n.offset) + jitter)
+                except Exception:
+                    pass
+            if abs(v_noise) > 1e-6:
+                try:
+                    jv = int(round(self._rnd.uniform(-1.0, 1.0) * v_noise))
+                    v2 = int(getattr(n.volume, "velocity", 64) or 64) + jv
+                    n.volume.velocity = max(1, min(127, v2))
+                except Exception:
+                    pass
+
+    def _apply_snare_rimclick_mode(
+        self,
+        part: stream.Part,
+        cfg: Dict[str, Any],
+        sections: List[Dict[str, Any]]
+    ) -> None:
+        """
+        snare_rimclick:
+          target_sections: [verse]   # 省略時は ["verse"]
+          mode: "rim"                # "rim"=スネア→リムクリック / "snare"=リム→スネア
+          prob: 0.90
+          only_backbeat: true
+          exclude_sections: [pre-chorus]        # 対象から除外
+          override_mode_map: { pre-chorus: snare }  # セクション別に強制モード
+          prob_override_map: { pre-chorus: 0.15 }  # セクション別に確率上書き
+          bar_whitelist: [0,1,2,3]                 # 指定バーのみ適用（省略可）
+          energy_snare_threshold: 0.6              # 0.6以上の歌エネルギー/フレーズ中はスネア優先
+        """
+        tgt = [str(x).lower() for x in (cfg.get("target_sections") or ["verse"])]
+        mode = str(cfg.get("mode", "rim")).lower()
+        prob = float(cfg.get("prob", 1.0))
+        back = bool(cfg.get("only_backbeat", True))
+        sn = self._DRUM_PITCH["snare"]
+        rc = self._DRUM_PITCH["rimshot"]
+        
+        ts = next((e for e in part.recurse().getElementsByClass(meter.TimeSignature)), None)
+        ql_per_bar = float(ts.numerator) if ts else 4.0
+        
+        # ラベル正規化（intro/outro等の別名補強）
+        def _norm_label(raw: str) -> str:
+            aliases = {
+                "intro": "intro",
+                "outro": "outro",
+                "prechorus": "pre-chorus",
+                "pre-chorus": "pre-chorus",
+                "postchorus": "post-chorus",
+                "post-chorus": "post-chorus"
+            }
+            return aliases.get(raw.lower(), raw.lower())
+        
+        # 該当バー集合
+        bars_set = set()
+        labs = [(int(s.get("bar", 0)), _norm_label(str(s.get("label","")))) for s in sections]
+        labs.sort(key=lambda x: x[0])
+        for i, (b, lab) in enumerate(labs):
+            if lab not in tgt:
+                continue
+            b_end = labs[i+1][0] if i+1 < len(labs) else 10**9
+            bars_set.update(range(b, b_end))
+        if not bars_set:
+            return
+        
+        # ラベル取得のため、bar→label を準備
+        def label_for_bar(b:int) -> str:
+            cur = ""
+            for bb, lab in labs:
+                if b >= bb: cur = lab
+            return cur
+        
+        excl = [str(x).lower() for x in (cfg.get("exclude_sections") or [])]
+        ovr = {str(k).lower(): str(v).lower() for k,v in (cfg.get("override_mode_map") or {}).items()}
+        # 追加：確率上書き・バー指定・フレーズ/エネルギー条件
+        prob_map = {str(k).lower(): float(v) for k,v in (cfg.get("prob_override_map") or {}).items()}
+        bar_whitelist = set(int(x) for x in (cfg.get("bar_whitelist") or []))
+        bar_blacklist = set(int(x) for x in (cfg.get("bar_blacklist") or []))
+        mx = (self._overrides or {}).get("mix_context") or {}
+        vphr = mx.get("vocal_phrases") or []   # [[s,e],...]
+        venergy = mx.get("vocal_energy") or [] # [[off,E],...]
+        en_thr = float(cfg.get("energy_snare_threshold", 1.1))  # >1.0で無効（既定）
+        
+        def energy_at(off: float) -> float:
+            if not venergy: return 0.0
+            try:
+                cand = min(venergy, key=lambda t: abs(float(t[0]) - off))
+                return max(0.0, min(1.0, float(cand[1])))
+            except Exception:
+                return 0.0
+        
+        def in_phrase(off: float) -> bool:
+            for s,e in vphr:
+                if s <= off <= e: return True
+            return False
+        
+        for n in part.recurse().notes:
+            if not isinstance(n, note.Note):
+                continue
+            if mode == "rim" and n.pitch.midi != sn:
+                continue
+            if mode == "snare" and n.pitch.midi != rc:
+                continue
+            b = int(float(n.offset) // ql_per_bar)
+            if b not in bars_set:
+                continue
+            lab = label_for_bar(b)
+            if lab in excl:
+                continue
+            local_mode = ovr.get(lab, mode)
+            # セクション別の確率上書き
+            p_local = prob_map.get(lab, prob)
+            # バー指定（優先）
+            if bar_whitelist and b not in bar_whitelist:
+                continue
+            if bar_blacklist and b in bar_blacklist:
+                continue
+            # エネルギー/フレーズ条件：しきい値以下のときのみ切替（例：強い歌ではスネア維持）
+            off = float(n.offset)
+            if en_thr <= 1.0 and (energy_at(off) >= en_thr or in_phrase(off)):
+                continue
+            if back:
+                frac = (float(n.offset) % 1.0)
+                # 簡易: 2拍/4拍（4/4前提）。他拍子でも"強拍"の近傍に限定される傾向
+                if not (abs(frac-0.5)<1e-3 or abs(frac-0.0)<1e-3):
+                    continue
+            if self._rnd.random() <= p_local:
+                try:
+                    n.pitch.midi = rc if local_mode == "rim" else sn
+                except Exception:
+                    pass
+
+
+# デモ実行
+if __name__ == '__main__':
+    print("=" * 60)
+    print("  Drums Generator Stage2 Demo")
+    print("=" * 60)
+    
+    # ジェネレーター作成
+    gen = DrumsGeneratorStage2()
+    
+    # フォールバックドラム生成
+    print("\n🥁 Generating fallback drums (4 bars, 120 BPM)...")
+    drum_part = gen.generate(
+        bars=4,
+        chords=["C", "G", "Am", "F"],
+        tempo=120,
+        emotion="energetic",
+        section="Verse",
+        seed=42
+    )
+    
+    # 統計情報
+    all_notes = list(drum_part.flatten().notes)
+    print(f"✅ Generated {len(all_notes)} drum notes")
+    
+    # MIDI出力
+    output_path = Path("out/demo_drums.mid")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    drum_part.write('midi', fp=output_path)
+    print(f"💾 Saved to: {output_path}")
+    
+    print("\n" + "=" * 60)
+    print("Demo complete!")
+    print("=" * 60)

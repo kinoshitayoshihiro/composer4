@@ -24,6 +24,11 @@ echo "  Input Directory: ${MIDI_DIR}"
 echo "  Total MIDI Files: ${MIDI_COUNT}"
 echo ""
 
+# 総数をファイルに保存（monitor_lamda.shが自動読込）
+echo "${MIDI_COUNT}" > "${BASE_DIR}/data/lamda_expected_total.txt"
+echo "  → Saved to data/lamda_expected_total.txt (for monitor)"
+echo ""
+
 if [ ${MIDI_COUNT} -eq 0 ]; then
     echo "⚠️  No MIDI files found!"
     echo ""
@@ -41,7 +46,8 @@ else
     echo "  ./scripts/run_lamidi_full.sh"
     echo ""
     echo "  # 進捗モニター（別ターミナルで）"
-    echo "  ./scripts/monitor_lamidi.sh"
+    echo "  ./scripts/monitor_lamda.sh"
     echo ""
-    echo "Note: monitor_lamidi.sh の EXPECTED_TOTAL を ${MIDI_COUNT} に更新してください"
+    echo "Note: Total file count (${MIDI_COUNT}) saved to data/lamda_expected_total.txt"
+    echo "      monitor_lamda.sh will automatically use this value."
 fi

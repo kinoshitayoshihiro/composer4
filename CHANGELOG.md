@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 ### Added
+- **Phase 29-32 Usability Enhancement**: Practical optimization for production workflow (2025-10-19)
+  - **Phase 29 Vocal-Aware Ducking**: Automatic velocity/duration reduction during vocal-dense moments
+    - emotion_curve-driven Velocity reduction (max 3dB equivalent)
+    - Duration shortening (max 20ms) for vocal clarity
+    - Applied to Piano/Guitar/Strings (NO-OP default)
+  - **Phase 32 Export Markers**: MIDI meta markers for DAW/VOCALOID/SynthV integration
+    - Section markers (INTRO/VERSE/CHORUS) for quick navigation
+    - Optional lyric markers for phoneme alignment
+    - Embedded in part.comment for exporter processing
+  - Phase 30/31 proposals documented (Cross-Instrument Balance, Voice-Leading Guard)
+  - Implementation report: `PHASE_29_32_IMPLEMENTATION.md`
+- **Phase 25-28 Post-Processing**: Advanced final-stage optimization (2025-10-19)
+  - **Phase 25 Sparsify**: Note over-density reduction with endpoint preservation and min-gap control
+  - **Phase 26 Hybrid Harmony**: Audio chordmap × creative chordmap blending with tension injection
+  - **Phase 27 Style Adaptation**: Activity-driven preset interpolation (simple↔moderate↔complex↔intense)
+  - **Phase 28 Export Postprocess**: Quantization, track splitting (RH/LH, Clean/FX), unified naming
+  - Drums-specific HH over-density prevention (min_gap_ms: 18-30ms)
+  - All instruments support Phase 25/27/28; Piano/Guitar/Strings add Phase 26
+  - YAML presets updated for all styles (simple/moderate/complex/intense)
+  - Comprehensive test suite `test_phase_25_28.py` (6/6 passing)
+  - Regression test suite `test_phase_25_28_regression.py` (10/11 passing)
+  - Full implementation report: `PHASE_25_28_IMPLEMENTATION.md`
+  - Final validation report: `PHASE_25_28_FINAL_VALIDATION.md`
+- **Phase 24/28 Validation Tests**: Control integrity and export meta verification (2025-10-19)
+  - `test_export_split_and_controls.py`: RH/LH split meta & RPN/PB/CC11 integrity (6/6 passing)
+  - `test_export_split_internal_threshold_optional.py`: Future internal split detection (1 skip)
+  - RPN emission guard (max 1 per track), PB ±8191 range, CC11 0-127 range validation
 - **Phase 4.3 External Benchmark Polish**: Schema versioning (1.1), fileset hash, threshold flags, provenance propagation to history, and PNG threshold visualization for long-term operational excellence (100% backward compatible)
 - Lightweight module stubs for tests in `tests/_stubs.py`
 - Instrument filtering for duration CSV via `--instrument` flag

@@ -1,0 +1,156 @@
+# ========================================================================
+# Drums Style Presets - Genre/Drummer Personality Presets
+# ========================================================================
+# これらのプリセットは emotion_profile.yaml の drums_style で参照できます
+# 使用例: drums_style: "tight_rock"
+
+tight_rock:
+  description: "タイトなロックドラム（高精度、rimshot多用）"
+  density_multipliers:
+    kick: 1.0
+    snare: 1.0
+    hihat: 1.0
+  drums_params:
+    open_ratio:
+      strong_beat: 0.15
+      weak_beat: 0.25
+      off_beat: 0.5
+    vel_curve: "compress"
+    rimshot_rate: 0.2
+    rim_snare_alternate_rate: 0.4
+    crash:
+      downbeat_prob: 0.2
+      with_kick: true
+    dynamics:
+      threshold: 75
+      ratio: 2.5
+      makeup_gain: 8
+  
+  # Phase 25: Sparsify（HH過密抑制）
+  sparsify:
+    enable: true
+    keep_endpoints: false  # Drumsは端点保持不要
+    min_gap_ms: 25  # 25ms未満の間隔を排除（タイトな演奏維持）
+
+loose_indie:
+  description: "ゆるめのインディーロック（自然な演奏、Open多め）"
+  density_multipliers:
+    kick: 0.9
+    snare: 1.0
+    hihat: 1.1
+  drums_params:
+    open_ratio:
+      strong_beat: 0.2
+      weak_beat: 0.35
+      off_beat: 0.6
+    vel_curve: "natural"
+    rimshot_rate: 0.05
+    push_pull:
+      push_amount: 0.05
+      pull_amount: 0.03
+    ghost_notes:
+      snare_rate: 0.2
+    dynamics:
+      threshold: 90
+      ratio: 1.5
+      makeup_gain: 3
+  
+  # Phase 25: Sparsify（HH過密抑制）
+  sparsify:
+    enable: false  # ゆるめスタイルでは不要
+
+edm_straight:
+  description: "EDM/エレクトロ（4つ打ち強調、Ride/Crash多用）"
+  density_multipliers:
+    kick: 1.2
+    snare: 1.0
+    hihat: 1.3
+  drums_params:
+    open_ratio:
+      strong_beat: 0.05
+      weak_beat: 0.1
+      off_beat: 0.3
+    vel_curve: "compress"
+    crash:
+      downbeat_prob: 0.3
+      with_kick: true
+    ride:
+      switch_after_seconds: 8.0
+      decay_curve: "linear"
+    dynamics:
+      threshold: 80
+      ratio: 3.0
+      makeup_gain: 10
+    kick_on_change:
+      emphasis_prob: 0.8
+      velocity_boost: 15
+  
+  # Phase 25: Sparsify（HH過密抑制）
+  sparsify:
+    enable: true
+    keep_endpoints: false
+    min_gap_ms: 18  # 18ms未満の間隔を排除（EDMの高速HH対応）
+
+jazz_swing:
+  description: "ジャズスイング（Ride中心、Ghost多用、Push feel）"
+  density_multipliers:
+    kick: 0.8
+    snare: 0.9
+    hihat: 0.7
+  drums_params:
+    open_ratio:
+      strong_beat: 0.3
+      weak_beat: 0.4
+      off_beat: 0.7
+    vel_curve: "natural"
+    ghost_notes:
+      snare_rate: 0.3
+    ride:
+      switch_after_seconds: 0.0  # 最初からRide
+      decay_curve: "linear"
+    push_pull:
+      push_amount: 0.08
+      pull_amount: 0.0
+    dynamics:
+      threshold: 95
+      ratio: 1.2
+      makeup_gain: 2
+  
+  # Phase 25: Sparsify（HH過密抑制）
+  sparsify:
+    enable: false  # ジャズスタイルでは不要（自然な間隔）
+
+funk_groove:
+  description: "ファンクグルーヴ（Ghost caps、Accent map、Pedal HH）"
+  density_multipliers:
+    kick: 1.1
+    snare: 1.0
+    hihat: 1.2
+  drums_params:
+    open_ratio:
+      strong_beat: 0.1
+      weak_beat: 0.3
+      off_beat: 0.5
+    vel_curve: "natural"
+    ghost_notes:
+      snare_rate: 0.25
+    ghost_caps:
+      max_per_bar: 6
+      velocity_threshold: 55
+    pedal_hh:
+      off_beat_rate: 0.4
+    accent_map:
+      "0": 8   # 1拍目強調
+      "2": 5   # 2拍目裏
+      "4": 6   # 3拍目
+    rim_snare_alternate_rate: 0.3
+    dynamics:
+      threshold: 85
+      ratio: 1.8
+      makeup_gain: 5
+  
+  # Phase 25: Sparsify（HH過密抑制）
+  sparsify:
+    enable: true
+    keep_endpoints: false
+    min_gap_ms: 30  # 30ms未満の間隔を排除（ファンクグルーヴ維持）

@@ -1,0 +1,136 @@
+# OtoKotoba Engine – Test Configuration for Auto Pipeline
+# ----------------------------------------------------
+#  ✓ auto_pipeline_stage1.py で生成されたファイルを使用
+# ----------------------------------------------------
+
+# ---------------- 1. Global Settings ----------------
+global_settings:
+  song_title: "AutoPipeline_Test_Song001"
+  time_signature: "4/4"
+  tempo_bpm: 120
+  key_tonic: "C"
+  key_mode: "major"
+
+  # 演奏フィール
+  swing_ratio: 0.0
+  humanize_profile: "soft_reflective"
+  default_dynamics_profile: "mp"
+
+  # 外部プロファイル（簡易テスト用にオプション化）
+  groove_strength: 0.5
+  accent_threshold: 0.6
+  ghost_density_range: [0.3, 0.8]
+  random_walk_step: 8
+  bass_range_hi: 64
+  fill_emotion_threshold: 0.8
+  fill_fade_beats: 2.0
+  use_consonant_sync: false
+
+# ------------------- 2. Paths -----------------------
+paths:
+  chordmap_path: "data/suno_ai/suno_themesong/song_001/analysis_auto/chordmap_modular.json"
+  rhythm_library_path: "data/rhythm_library.yml"
+  output_dir: "output/auto_pipeline_test"
+
+# 簡易版（ドラム・ボーカル連携なし）
+consonant_sync:
+  lag_ms: 10.0
+  min_distance_beats: 0.25
+
+# ---------------- 3. Part Defaults ------------------
+part_defaults:
+  piano:
+    apply_pedal: true
+    rh_velocity: 65
+    lh_velocity: 60
+    rh_style_keyword: "piano_rh_block_chords_quarters"
+    lh_style_keyword: "piano_lh_roots_half"
+    humanize_profile: ""
+    dynamics_profile: ""
+    articulation: "sustain"
+    anticipatory_chord: false
+
+  guitar:
+    rhythm_key: "guitar_ballad_arpeggio"
+    velocity: 74
+    palm_mute: false
+    strum_direction_cycle: "down,down,up,up"
+    humanize_profile: ""
+    dynamics_profile: ""
+    articulation: "fingerstyle"
+
+  bass:
+    rhythm_key: "bass_pump_8th_octaves"
+    velocity: 80
+    mirror_melody: false
+    weak_beat_style: "none"
+    humanize_profile: ""
+    dynamics_profile: ""
+    articulation: "finger"
+
+  drums:
+    style_key: "ballad_soft_kick_snare_8th_hat"
+    ghost_hat_on_offbeat: true
+    additional_kick_density: 0.2
+    humanize_profile: ""
+    dynamics_profile: ""
+
+# ---------------- 4. Section Overrides --------------
+# ※ セクション別にテンポ/拍子/humanize を上書き可
+section_overrides:
+  intro:
+    tempo_bpm: 115
+    humanize_profile: "gentle_intro"
+  verse:
+    humanize_profile: "reflective"
+  chorus:
+    tempo_bpm: 125
+    humanize_profile: "energetic"
+  bridge:
+    time_signature: "3/4"
+  outro:
+    tempo_bpm: 110
+    humanize_profile: "gentle_outro"
+
+# ---------------- 5. Humanize Profiles ---------------
+humanize_profiles:
+  gentle_intro:
+    timing_offset_range: [-10, 10]
+    velocity_variation: 5
+    note_length_factor: 1.05
+  reflective:
+    timing_offset_range: [-8, 8]
+    velocity_variation: 4
+  energetic:
+    timing_offset_range: [-12, 12]
+    velocity_variation: 8
+    note_length_factor: 0.98
+  gentle_outro:
+    timing_offset_range: [-6, 6]
+    velocity_variation: 3
+    note_length_factor: 1.1
+  soft_reflective:
+    timing_offset_range: [-8, 8]
+    velocity_variation: 4
+    note_length_factor: 1.02
+
+# ---------------- 6. Dynamics Profiles ---------------
+dynamics_profiles:
+  pp:
+    base_velocity: 40
+    range: [30, 50]
+  p:
+    base_velocity: 55
+    range: [45, 65]
+  mp:
+    base_velocity: 70
+    range: [60, 80]
+  mf:
+    base_velocity: 85
+    range: [75, 95]
+  f:
+    base_velocity: 100
+    range: [90, 110]
+  ff:
+    base_velocity: 115
+    range: [105, 120]

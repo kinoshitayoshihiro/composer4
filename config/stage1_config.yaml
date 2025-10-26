@@ -1,0 +1,41 @@
+# stage1_config.yaml
+# MIDI Stage1 クリーニング設定（LAMDA対応・統合レイアウト準拠）
+
+version: 2
+roots:
+  base: "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_midi"
+  midi_in: "CLEANED_MIDI"
+  midi_out: "midi_guide"
+  exclude_dirs: ["drum_loops", "除外"]  # rhythm学習用は除外
+
+priors:
+  # 無ければ空でOK（下記 ranges のデフォルト値を使用）
+  totals_parquet:    "${base}/Local_Lamda_midi/stats/LAMDA_TOTALS.parquet"
+  signatures_json:   "${base}/Local_Lamda_midi/stats/LAMDA_SIGNATURES.json"
+
+policy:
+  tempo_bpm_clip: [30, 300]
+  tempo_min_hold_beats: 1.0     # これ未満のテンポ変化は丸める
+  timesig_rescue: ["1/4->4/4"]  # SIGNATURES優先、無ければヒューリスティック
+  drum_normalize: true
+  bar_split_long_notes: true
+
+ranges:                           # TOTALSが無いときのデフォルト安全レンジ
+  pitch: [21, 108]
+  vel: [1, 127]
+  dur_ticks: [30, 3840]          # PPQ=480基準で 1/16〜8拍
+
+id_rules:
+  # 入力MIDI: バイトMD5[:16]
+  source_mid_id: "md5(input_midi_bytes)[:16]"
+  # 出力MIDI（正本）: バー指紋＋総ティック長のMD5[:16]
+  content_id: "md5(bar_fingerprint + duration_ticks)[:16]"
+  # 実行ID
+  run_id: "local-{iso_datetime}"
+
+ok_meta:
+  inject: true
+  header: {version: "ok-midi-1.0"}
+
+logging:
+  level: "INFO"

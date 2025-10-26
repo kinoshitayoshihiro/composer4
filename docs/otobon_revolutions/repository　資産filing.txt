@@ -1,0 +1,1140 @@
+■repository　資産内容
+
+★    ├── modular_composer.py
+
+    ├── config
+    │   ├── .DS_Store
+    │   ├── auto_pipeline_test.yml
+    │   ├── drum_settings.yaml
+    │   ├── duv
+    │   ├── emotion_mapping.yaml
+    │   ├── Icon
+★    │   ├── main_cfg.yml
+    │   ├── main_cfg_example.yml
+    │   ├── quality_gates.yaml
+    │   ├── sax_demo.yml
+    │   └── song_001_cfg.yml
+
+    ├── configs
+    │   ├── .DS_Store
+    │   ├── __init__.py
+    │   ├── aliases
+    │   ├── attribute_vocab.yaml
+    │   ├── bass_style_presets.yaml
+    │   ├── benchmarks
+    │   ├── contracts
+    │   ├── drums_fill_presets.yaml
+    │   ├── drums_style_presets.yaml
+    │   ├── duration_model.yaml
+    │   ├── duv_weekly_eval.json
+    │   ├── emotion_profile.yaml
+    │   ├── failure_criteria.yaml
+    │   ├── guitar_style_presets.yaml
+    │   ├── Icon
+    │   ├── labels
+    │   ├── lamda
+    │   ├── lyrics_align.yaml
+    │   ├── minimal_ci_test.yaml
+    │   ├── mixing.yaml
+    │   ├── pedal_model.yaml
+    │   ├── phrase_model.yaml
+    │   ├── piano_style_presets.yaml
+    │   ├── piano_transformer.yaml
+    │   ├── quality_gates
+    │   ├── render.yaml
+    │   ├── stage3
+    │   ├── strings_style_presets.yaml
+    │   ├── structure_template.yaml
+    │   ├── targets_hybrid.yaml
+    │   ├── technique_map_example.yaml
+    │   ├── thresholds
+    │   └── velocity_model.yaml
+
+
+
+
+★suno_ai
+    ├── instrument
+    │   └── Whisper of Strings Stems.zip
+    └── suno_themesong
+        └── song_001
+            ├── analysis
+★            │   ├── chordmap.json
+★            │   ├── lyric_anchors.json
+★            │   ├── sections.json
+★            │   ├── tempo_map.json
+            ├── full.wav
+★            ├── lyric.txt
+            ├── stemmidi_001
+            │   ├── stem_midi_001_(Backing Vocals).mid
+            │   ├── stem_midi_001_(Bass).mid
+            │   ├── stem_midi_001_(Drums).mid
+            │   ├── stem_midi_001_(FX).mid
+            │   ├── stem_midi_001_(Guitar).mid
+            │   ├── stem_midi_001_(Keyboard).mid
+            │   ├── stem_midi_001_(Percussion).mid
+            │   ├── stem_midi_001_(Strings).mid
+            │   ├── stem_midi_001_(Synth).mid
+            │   └── stem_midi_001_(Vocals).mid
+            ├── stemswav_001
+            │   ├── .cache
+            │   │   └── chroma_bar_5212526fc2feac00.npz
+            │   ├── stem_wav_001_(Backing Vocals).wav
+            │   ├── stem_wav_001_(Bass).wav
+            │   ├── stem_wav_001_(Drums).wav
+            │   ├── stem_wav_001_(FX).wav
+            │   ├── stem_wav_001_(Guitar).wav
+            │   ├── stem_wav_001_(Keyboard).wav
+            │   ├── stem_wav_001_(Percussion).wav
+            │   ├── stem_wav_001_(Strings).wav
+            │   ├── stem_wav_001_(Synth).wav
+            │   └── stem_wav_001_(Vocals).wav
+
+
+★    │   ├── rhythm_library.yml
+    │   ├── riff_library.yaml
+    │   ├── section_map.yaml
+
+
+    ├── generate_chordmap_with_scale.py
+    ├── generated_events.json
+    ├── generated_events_wav.json
+    ├── generated_grooves
+    │   ├── groove_seed123.mid
+    │   └── Icon
+
+★    ├── generator
+    │   ├── .DS_Store
+    │   ├── __init__.py
+    │   ├── __pycache__
+    │   ├── arranger.py
+    │   ├── articulation.py
+    │   ├── base_part_generator.py
+    │   ├── bass_generator.py
+    │   ├── bass_generator_stage2.py
+    │   ├── bass_params_stage2.py
+    │   ├── bass_utils.py
+    │   ├── chord_voicer.py
+    │   ├── counter_line.py
+    │   ├── drum
+    │   ├── drum_generator.py
+    │   ├── drums_generator_stage2.py
+    │   ├── drums_generator_stage2_old.py.bak
+    │   ├── drums_params_stage2.py
+    │   ├── guitar_generator.py
+    │   ├── guitar_generator_stage2.py
+    │   ├── guitar_generator_stage2_old.py
+    │   ├── guitar_params_stage2.py
+    │   ├── Icon
+    │   ├── instrument_stage2_base.py
+    │   ├── melody_generator.py
+    │   ├── melody_utils.py
+    │   ├── modular_composer_stub.py
+    │   ├── obligato_generator.py
+    │   ├── piano_generator.py
+    │   ├── piano_generator_stage2.py
+    │   ├── piano_generator_stage2.py.backup
+    │   ├── piano_ml_generator.py
+    │   ├── piano_params_stage2.py
+    │   ├── piano_template_generator.py
+    │   ├── piano_transformer.py
+    │   ├── prosody_controller.py
+    │   ├── riff_from_vocal.py
+    │   ├── riff_generator.py
+    │   ├── sax_generator.py
+    │   ├── scale,
+    │   ├── stage2_mode_header_patch_summary.json
+    │   ├── strings_generator.py
+    │   ├── strings_generator_stage2.py
+    │   ├── strings_generator_stage2_new.py
+    │   ├── strings_generator_stage2_old.py
+    │   ├── strings_params_stage2.py
+    │   ├── vocal_generator.py
+    │   ├── vocal_sync_guard.py
+    │   └── voicing_density.py
+
+
+    ├── generators
+    │   ├── .DS_Store
+    │   ├── __init__.py
+    │   ├── __pycache__
+    │   ├── base.py
+    │   ├── chord_generator.py
+    │   └── piano.py
+
+
+
+    ├── json2midi.py
+    ├── lamda_analyzer.py
+    ├── lamda_dataset_inspector.py
+    ├── lamda_integration.py
+    ├── lamda_manifest_builder.py
+    ├── LAMDA_SUBFOLDER_GUIDE.md
+    ├── lamda_tools
+    │   ├── __init__.py
+    │   ├── __pycache__
+    │   ├── drumloops_builder.py
+    │   ├── metadata_io.py
+    │   └── metrics.py
+    ├── lamda_unified_analyzer.py
+
+
+★    ├── scripts
+    │   ├── .DS_Store
+    │   ├── .mypy_cache
+    │   ├── __init__.py
+    │   ├── __pycache__
+    │   ├── ab_report_rich 2.py
+    │   ├── ab_report_rich.py
+    │   ├── ab_report_simple.py
+    │   ├── ab_summarize.py
+    │   ├── ab_summarize_v2.py
+    │   ├── abx_articulation.py
+    │   ├── adapt_drive_folders.py
+    │   ├── align_lyrics.py
+    │   ├── analysis
+    │   ├── analyze_current_state.py
+    │   ├── analyze_drumloops_quality.py
+    │   ├── analyze_key_difference.py
+    │   ├── analyze_pop909_stems.py
+    │   ├── analyze_technique_distribution.py
+    │   ├── append_to_index.py
+    │   ├── append_to_pickle_shard.py
+    │   ├── arrange
+    │   ├── assign_labels.py
+    │   ├── attention_selector.py
+    │   ├── audio2score
+    │   ├── audio_to_velocity_csv.py
+    │   ├── auto_pipeline_stage1.py
+    │   ├── batch_articulation_renderer.py
+    │   ├── batch_chord_test.py
+    │   ├── batch_chord_test_parallel.py
+    │   ├── batch_extract_drums.py
+    │   ├── bench_ws.py
+    │   ├── benchmark_performer.py
+    │   ├── benchmark_performer_adaptive.py
+    │   ├── benchmark_performer_realtime.py
+    │   ├── build_drumloops_lamda.py
+    │   ├── build_drumloops_metadata.py
+    │   ├── build_index_from_json.py
+    │   ├── build_lamda_db_colab.py
+    │   ├── build_lamda_db_incremental.py
+    │   ├── build_lamda_unified_db.py
+    │   ├── build_modular_chordmap.py
+    │   ├── caption_to_attrs.py
+    │   ├── check_acceptance.py
+    │   ├── check_docs_snippets.py
+    │   ├── check_drumloops_progress.sh
+    │   ├── check_lamda_stage1_complete.sh
+    │   ├── check_lamidi_dataset.sh
+    │   ├── ci
+    │   ├── ci_eval_gate.py
+    │   ├── ci_groove.sh
+    │   ├── ci_groove_bass.sh
+    │   ├── ci_groove_rnn.sh
+    │   ├── ci_quality_gate.sh
+    │   ├── clean_drumloops_lamda.py
+    │   ├── clean_midi.py
+    │   ├── clean_pop909_simple.sh
+    │   ├── clean_wheels.py
+    │   ├── cleaners
+    │   ├── collect_conditions.py
+    │   ├── collect_failures.py
+    │   ├── compare_benchmark_metrics.py
+    │   ├── compare_chordmaps.py
+    │   ├── compute_dataset_hashes.py
+    │   ├── convert_duv_to_ts.py
+    │   ├── convert_suno_midi.py
+    │   ├── create_mini_dataset.py
+    │   ├── create_test_sample.py
+    │   ├── daw
+    │   ├── debug_7th_v2.py
+    │   ├── detect_regression.py
+    │   ├── diagnose_colab_setup.py
+    │   ├── diagnose_stage1_stage2.py
+    │   ├── diagnose_stage1_stage2_colab.py
+    │   ├── diversity_analyzer.py
+    │   ├── download_external_datasets.sh
+    │   ├── download_slakh_midi.py
+    │   ├── dump_rhythm_library_map.py
+    │   ├── dump_tree_v3.py
+    │   ├── duv_infer.py
+    │   ├── emotion_arrange.py
+    │   ├── emotion_to_chords.py
+    │   ├── enrich_manifest_with_stats.py
+    │   ├── estimate_gaps_and_emit_manifest.py
+    │   ├── eval_articulation.py
+    │   ├── eval_bass.py
+    │   ├── eval_drum_batch.py
+    │   ├── eval_drum_batch_stratified.py
+    │   ├── eval_duv.py
+    │   ├── eval_duv_piano_plus.py
+    │   ├── eval_external_benchmarks.py
+    │   ├── eval_humanizer_lamda.py
+    │   ├── eval_pedal.py
+    │   ├── eval_piano_external.py
+    │   ├── eval_remi_ablation.py
+    │   ├── eval_strings.py
+    │   ├── evaluate_piano_model.py
+    │   ├── export_duv_torchscript.py
+    │   ├── export_onnx.py
+    │   ├── extract_drum_patterns.py
+    │   ├── extract_duv_weights.py
+    │   ├── extract_lamd_instruments.py
+    │   ├── extract_loops_drums.py
+    │   ├── extract_piano_voicings.py
+    │   ├── extract_pop909_piano.py
+    │   ├── extract_slakh_bass.py
+    │   ├── extract_slakh_by_instrument.py
+    │   ├── extract_stage2_patterns.py
+    │   ├── extract_timbre_dataset.py
+    │   ├── final_v4_test.py
+    │   ├── fix_phase_signatures.py
+    │   ├── fix_suno_midi.py
+    │   ├── full_pipeline.py
+    │   ├── gen_ab_stratified.py
+    │   ├── generate_ab_comparison.py
+    │   ├── generate_benchmark_json.py
+    │   ├── generate_distribution_counts.py
+    │   ├── generate_dummy_report.py
+    │   ├── generate_music_captions.py
+    │   ├── generate_quantized_test.py
+    │   ├── generate_stage1_jsons.py
+    │   ├── generate_vptt_samples.py
+    │   ├── guard_retry_accept.py
+    │   ├── humanize_midi.py
+    │   ├── Icon
+    │   ├── import_guitarset.py
+    │   ├── import_urmp.py
+    │   ├── improve_suno_midi.py
+    │   ├── infer_controls.py
+    │   ├── infer_duration.py
+    │   ├── lamda_dataset_builder.py
+    │   ├── lamda_enhancer.py
+    │   ├── lamda_enhancer_v2.py
+    │   ├── lamda_export_metadata.py
+    │   ├── lamda_make_pairs.py
+    │   ├── lamda_stage2_extractor.py
+    │   ├── manifest_stats.py
+    │   ├── merge_csv_shards.py
+    │   ├── merge_stage2_batches.py
+    │   ├── migrate_tokenizer.py
+    │   ├── modcompose_batch_render.py
+    │   ├── monitor_lamda.sh
+    │   ├── monitor_lamidi.sh
+    │   ├── monitor_pop909.sh
+    │   ├── monitor_pop909_v2.sh
+    │   ├── monitor_training.sh
+    │   ├── normalize_midi_meta.py
+    │   ├── pedal_frames_to_spans.py
+    │   ├── pedal_split_filelist.py
+    │   ├── piano_eval_generate.py
+    │   ├── piano_train.py
+    │   ├── piano_train_prepare.py
+    │   ├── plot_metrics.py
+    │   ├── predict_duv.py
+    │   ├── predict_pedal.py
+    │   ├── predict_phrase.py
+    │   ├── prepare_modular_composer_input.py
+    │   ├── prepare_splits.py
+    │   ├── profile_7th_cached.py
+    │   ├── profile_7th_v2.py
+    │   ├── provenance.py
+    │   ├── quality_gate_checker.py
+    │   ├── quality_gate_drums.py
+    │   ├── quick_eval.py
+    │   ├── quick_eval_stage2.py
+    │   ├── quick_test_new_features.py
+    │   ├── quick_v4_benchmark.py
+    │   ├── randomize_stem_cli.py
+    │   ├── README_ab_summarize.md
+    │   ├── README_guard.md
+    │   ├── render
+    │   ├── render_audio.py
+    │   ├── repair_patterns_pickle.py
+    │   ├── retry_apply.py
+    │   ├── retry_failed_pedal_frames.py
+    │   ├── retry_presets.py
+    │   ├── retry_round_guard.py
+    │   ├── run_all_cleaning.sh
+    │   ├── run_benchmark_suite.py
+    │   ├── run_dataset_full.sh
+    │   ├── run_dataset_full_v2.sh
+    │   ├── run_drumloops_full.sh
+    │   ├── run_drumloops_production.sh
+    │   ├── run_drumloops_stage2.sh
+    │   ├── run_lamda_all_parallel.sh
+    │   ├── run_lamda_by_subfolder.sh
+    │   ├── run_lamda_full.sh
+    │   ├── run_lamda_subfolder.sh
+    │   ├── run_lamidi_full.sh
+    │   ├── run_manifest.py
+    │   ├── run_piano_ab_train_eval.sh
+    │   ├── run_piano_external_bench.sh
+    │   ├── run_pop909_full.sh
+    │   ├── run_pop909_stage1.sh
+    │   ├── run_single_dataset.sh
+    │   ├── run_smoke_test.py
+    │   ├── run_stage1_clean_multi.sh
+    │   ├── run_stage2_by_shard.sh
+    │   ├── run_stage2_multi.sh
+    │   ├── run_stage2_single_shard.py
+    │   ├── run_stage3_drum_eval.sh
+    │   ├── run_weekly_duv_eval.py
+    │   ├── sample_phrase.py
+    │   ├── scan_loops.py
+    │   ├── seed_manager.py
+    │   ├── segment_phrase.py
+    │   ├── setup_colab_stage2.sh
+    │   ├── setup_project.sh
+    │   ├── simple_duv_eval.py
+    │   ├── stage2_instrument_metrics.py
+    │   ├── stage2_production_test.py
+    │   ├── stage2_suno_stem_test.py
+    │   ├── stage2_thresholds.py
+    │   ├── stage3_eval_pipeline.py
+    │   ├── status_drumloops.sh
+    │   ├── status_metadata.sh
+    │   ├── status_pop909.sh
+    │   ├── status_pop909_v2.sh
+    │   ├── suno_importer.py
+    │   ├── suno_midi_import.py
+    │   ├── suno_stem_arranger.py
+    │   ├── suno_wav_to_midi.py
+    │   ├── sweep_phrase.py
+    │   ├── symlink_midis_by_map.py
+    │   ├── synthesize_vocal.py
+    │   ├── test_drumloops_quick.sh
+    │   ├── test_drums_advanced.py
+    │   ├── test_drums_minimal.py
+    │   ├── test_drums_quick.py
+    │   ├── test_full_pipeline_ci.py
+    │   ├── test_guitar_training.sh
+    │   ├── test_instrument_metrics.py
+    │   ├── test_local_build.py
+    │   ├── test_overrides_reflection.py
+    │   ├── test_phase13_direct.py
+    │   ├── test_phase13_quick.py
+    │   ├── test_phase4_integration.sh
+    │   ├── test_phase4_quick.sh
+    │   ├── test_phase_22_24_23.py
+    │   ├── test_phase_25_28.py
+    │   ├── test_stem_harmony.py
+    │   ├── test_v4_improvements.py
+    │   ├── token_utils.py
+    │   ├── train_all_base_colab.sh
+    │   ├── train_all_base_raw.sh
+    │   ├── train_all_base_raw_fixed.sh
+    │   ├── train_all_base_v3.sh
+    │   ├── train_all_colab.sh
+    │   ├── train_articulation.py
+    │   ├── train_controls.py
+    │   ├── train_duration.py
+    │   ├── train_duv.py
+    │   ├── train_duv_improved.py
+    │   ├── train_duv_lora.py
+    │   ├── train_guitar_base_raw_fixed.sh
+    │   ├── train_guitar_base_v3.sh
+    │   ├── train_guitar_base_v3_raw.sh
+    │   ├── train_lyrics_align.py
+    │   ├── train_mixing_assistant.py
+    │   ├── train_pedal.py
+    │   ├── train_phrase.py
+    │   ├── train_velocity.py
+    │   ├── tune_pedal.py
+    │   ├── validate_and_gate.py
+    │   ├── validate_audio_adaptive_config.py
+    │   ├── validate_conditions.py
+    │   ├── validate_stage3_pipeline.py
+    │   ├── verify_phase43_improvements.sh
+    │   ├── verify_phase43_improvements.sh.bak
+    │   ├── verify_phase43_quick.sh
+    │   ├── visualize_piano_trends.py
+    │   └── vocal_analyzer.py
+
+
+
+★    ├── tools
+    │   ├── .DS_Store
+    │   ├── __init__.py
+    │   ├── __pycache__
+    │   ├── assign_labels.py
+    │   ├── auto_tag_loops.py
+    │   ├── build_contract_records.py
+    │   ├── calibrate_thresholds.py
+    │   ├── compare_sections.py
+    │   ├── corpus_to_phrase_csv.py
+    │   ├── dump_drum_map.py
+    │   ├── dump_tree.py
+    │   ├── dump_tree.py.bak
+    │   ├── generate_demo_midis.py
+    │   ├── git_tools.py
+    │   ├── golden.py
+    │   ├── Icon
+    │   ├── label_rules.py
+    │   ├── midi_feature_extractor.py
+    │   ├── peak_synchroniser.py
+    │   ├── prepare_transformer_corpus.py
+    │   ├── prepare_transformer_corpus.py.backup
+    │   ├── prepare_transformer_corpus.py.bak
+    │   ├── rewrite_song_id.py
+    │   ├── shard_phrase_csv.py
+    │   ├── streamlit_gui.py
+    │   ├── suggest_songid_map.py
+    │   ├── tag_midi_dataset.py
+    │   ├── test_timesig.py
+    │   ├── train_transformer.py
+    │   ├── ujam_bridge
+    │   ├── validate_labels.py
+    │   └── validate_thresholds.py
+
+
+
+
+★    ├── utilities
+    │   ├── .DS_Store
+    │   ├── .mypy_cache
+    │   ├── __init__.py
+    │   ├── __pycache__
+    │   ├── accent_mapper.py
+    │   ├── ai_sampler.py
+    │   ├── apply_controls.py
+    │   ├── apply_controls_cli.py
+    │   ├── arrangement_builder.py
+    │   ├── articulation_csv.py
+    │   ├── articulation_mapper.py
+    │   ├── audio_analysis.py
+    │   ├── audio_env.py
+    │   ├── audio_render.py
+    │   ├── audio_to_midi_batch.py
+    │   ├── aux_vocab.py
+    │   ├── bass_timbre_dataset.py
+    │   ├── bass_transformer.py
+    │   ├── bass_utils.py
+    │   ├── breath_edit.py
+    │   ├── breath_mask.py
+    │   ├── cc_map.py
+    │   ├── cc_tools.py
+    │   ├── cc_utils.py
+    │   ├── chordmap_merge.py
+    │   ├── cli_playback.py
+    │   ├── conditioning.py
+    │   ├── config_loader.py
+    │   ├── consonant_extract.py
+    │   ├── control_config.py
+    │   ├── controls_bundle.py
+    │   ├── controls_spline.py
+    │   ├── controls_utils.py
+    │   ├── convolver.py
+    │   ├── core_music_utils.py
+    │   ├── csv_io.py
+    │   ├── custom_types.py
+    │   ├── data_augmentation.py
+    │   ├── dataset_preprocessor.py
+    │   ├── drum_lint.py
+    │   ├── drum_map.py
+    │   ├── drum_map_registry.py
+    │   ├── drumstem_to_midi.py
+    │   ├── duration_bucket.py
+    │   ├── duration_csv.py
+    │   ├── duration_datamodule.py
+    │   ├── duration_datamodule.py.backup
+    │   ├── duration_model_base.py
+    │   ├── duv_apply.py
+    │   ├── duv_infer.py
+    │   ├── effect_preset_loader.py
+    │   ├── emotion_arranger.py
+    │   ├── emotion_profile_loader.py
+    │   ├── expression_map.py
+    │   ├── fastapi_compat.py
+    │   ├── fill_dsl.py
+    │   ├── fx_envelope.py
+    │   ├── generator_factory.py
+    │   ├── ghost_jitter.py
+    │   ├── gm_perc_map.py
+    │   ├── golden.py
+    │   ├── groove_rnn_v2.py
+    │   ├── groove_sampler.py
+    │   ├── groove_sampler_ngram.py
+    │   ├── groove_sampler_rnn.py
+    │   ├── groove_sampler_v2.py
+    │   ├── groove_transformer.py
+    │   ├── guitar_controls.py
+    │   ├── harmonic_utils.py
+    │   ├── harmony_features.py
+    │   ├── hash_utils.py
+    │   ├── humanize_bridge.py
+    │   ├── humanizer.py
+    │   ├── Icon
+    │   ├── infer_chords_from_midi.py
+    │   ├── install_utils.py
+    │   ├── interactive_engine.py
+    │   ├── ir_renderer.py
+    │   ├── kde_velocity.py
+    │   ├── live_buffer.py
+    │   ├── live_player.py
+    │   ├── loader.py
+    │   ├── loop_ingest.py
+    │   ├── loop_scanner.py
+    │   ├── lora_duv_infer.py
+    │   ├── loudness_meter.py
+    │   ├── loudness_normalizer.py
+    │   ├── memmap_utils.py
+    │   ├── merge_artic_features.py
+    │   ├── midi_capture.py
+    │   ├── midi_edit.py
+    │   ├── midi_export.py
+    │   ├── midi_harmony.py
+    │   ├── midi_utils.py
+    │   ├── mix_profile.py
+    │   ├── ml_articulation.py
+    │   ├── ml_duration.py
+    │   ├── ml_pedal.py
+    │   ├── ml_velocity.py
+    │   ├── ngram_store.py
+    │   ├── onset_heatmap.py
+    │   ├── override_loader.py
+    │   ├── pattern_loader.py
+    │   ├── pb_math.py
+    │   ├── pb_tools.py
+    │   ├── pd_stub.py
+    │   ├── peak_extractor.py
+    │   ├── peak_synchroniser.py
+    │   ├── pedal_frames.py
+    │   ├── pedalizer.py
+    │   ├── perc_sampler_v1.py
+    │   ├── phoneme_dict.json
+    │   ├── phrase_data.py
+    │   ├── phrase_filter.py
+    │   ├── pickle_compat.py
+    │   ├── preset_manager.py
+    │   ├── pretty_midi_compat.py
+    │   ├── pretty_midi_safe.py
+    │   ├── prettymidi_sync.py
+    │   ├── progression_templates.py
+    │   ├── progression_templates.yaml
+    │   ├── progression_templates_broken.py
+    │   ├── progression_templates_fixed.py
+    │   ├── realtime_engine.py
+    │   ├── realtime_sampler.py
+    │   ├── rest_utils.py
+    │   ├── rhythm_library_loader.py
+    │   ├── rich_note_csv.py
+    │   ├── ring_buffer.py
+    │   ├── rt_midi_streamer.py
+    │   ├── rtmidi_streamer.py
+    │   ├── rubato_csv.py
+    │   ├── safe_get.py
+    │   ├── scale_registry.py
+    │   ├── section_validator.py
+    │   ├── settings.py
+    │   ├── streaming_sampler.py
+    │   ├── stub_utils.py
+    │   ├── style_db.py
+    │   ├── synth.py
+    │   ├── tempo_curve.py
+    │   ├── tempo_from_mix.py
+    │   ├── tempo_loader.py
+    │   ├── tempo_utils.py
+    │   ├── time_utils.py
+    │   ├── timing_corrector.py
+    │   ├── timing_utils.py
+    │   ├── tone_shaper.py
+    │   ├── transformer_sampler.py
+    │   ├── types_old.py.bak
+    │   ├── ujam_from_chordmap.py
+    │   ├── user_history.py
+    │   ├── velocity_csv.py
+    │   ├── velocity_curve.py
+    │   ├── velocity_model.py
+    │   ├── velocity_smoother.py
+    │   ├── velocity_utils.py
+    │   ├── vibrato_engine.py
+    │   ├── vocal_sync.py
+    │   ├── vocal_sync_backup.py
+    │   ├── vocal_sync_fixed.py
+    │   ├── vocal_sync_new.py
+    │   ├── vocal_synth.py
+    │   └── ws_bridge.py
+    ├── utils
+    │   ├── __pycache__
+    │   └── emotion_loader.py
+
+
+
+■設定
+    ├── requirements-dev.txt
+    ├── requirements-extra.txt
+    ├── requirements-groovae.txt
+    ├── requirements-lamda.txt
+    ├── requirements-optional.txt
+    ├── requirements-test.txt
+    ├── requirements.txt
+
+
+■仕様書
+    ├── DRUMLOOPS_WORKFLOW_UPDATED.md
+    ├── DRUMS_ADVANCED_PHASE_REPORT.md
+    ├── DRUMS_ENHANCEMENT_COMPLETE.md
+    ├── DRUMS_PARAMS_STAGE2_REPORT.md
+    ├── DRUMS_POLISH_COMPLETE.md
+    ├── DRUMS_QUICK_START.md
+    ├── duration_data.csv
+    ├── DUV_IMPLEMENTATION_STATUS.md
+    ├── EMOTION_HUMANIZE_USAGE.md
+    ├── emotion_humanizer.py
+
+
+    ├── docs
+    │   ├── .DS_Store
+    │   ├── A_MINUS_TO_A_PLUS_UPGRADE.md
+    │   ├── ADAPTIVE_ATTENTION_GUIDE.md
+    │   ├── ai.md
+    │   ├── ai_generator.md
+    │   ├── amp_guide.md
+    │   ├── api
+    │   ├── ARCH.md
+    │   ├── architecture.md
+    │   ├── arrangement_features.md
+    │   ├── ATTENTION_DECISION_RECORD.md
+    │   ├── audio_pipeline.md
+    │   ├── auto_tag_aug.md
+    │   ├── aux_features.md
+    │   ├── bass_advanced.md
+    │   ├── BASS_STRINGS_EVAL.md
+    │   ├── BENCHMARK_ADVANCED.md
+    │   ├── caption_to_attrs.md
+    │   ├── changelog.md
+    │   ├── CHATGPT_EVALUATION_FINAL_REPORT.md
+    │   ├── CHATGPT_FEEDBACK_IMPLEMENTATION_REPORT.md
+    │   ├── CHORD_RECOGNITION_SYSTEM.md
+    │   ├── cli_audio_to_midi_batch.md
+    │   ├── COLAB_QUICK_START.md
+    │   ├── COLAB_SETUP_PERFORMER.md
+    │   ├── COLAB_STAGE2_SETUP.md
+    │   ├── COMPLETE_MUSIC_ARCHITECTURE.md
+    │   ├── config_reference.md
+    │   ├── controls.md
+    │   ├── corpus.md
+    │   ├── data
+    │   ├── data_articulation.md
+    │   ├── data_note_schema.md
+    │   ├── DATASET_INTEGRATION_GUIDE.md
+    │   ├── diversity.md
+    │   ├── DRIVE_FOLDER_MAPPING.md
+    │   ├── DUV_CONFIG_EXAMPLE.md
+    │   ├── duv_data_enrichment.md
+    │   ├── DUV_LORA_TRAINING.md
+    │   ├── effect_presets.md
+    │   ├── effects.md
+    │   ├── EMOTION_MAPPING_GUIDE.md
+    │   ├── evaluation_metrics.md
+    │   ├── examples
+    │   ├── EXISTING_GENERATOR_INTEGRATION.md
+    │   ├── FUTURE_SELF_IMPROVING_SYSTEM.md
+    │   ├── fx_guide.md
+    │   ├── GENERATOR_STAGE3_IMPLEMENTATION.md
+    │   ├── GENERATOR_UPGRADE_ROADMAP.md
+    │   ├── generator_usage.md
+    │   ├── GPU_BENCHMARK_ANALYSIS.md
+    │   ├── GPU_BENCHMARK_ANOMALY.md
+    │   ├── GPU_BENCHMARK_VALUE.md
+    │   ├── groove.md
+    │   ├── groove_sampler.md
+    │   ├── groove_sampler_v2.md
+    │   ├── gui.md
+    │   ├── gui_v2_walkthrough.md
+    │   ├── guitar_generator.md
+    │   ├── human_feedback_template.md
+    │   ├── humanizer.md
+    │   ├── humanizer_integration.md
+    │   ├── HYBRID_LEARNING_STRATEGY.md
+    │   ├── HYBRID_STRATEGY_INTEGRATED.md
+    │   ├── Icon
+    │   ├── img
+    │   ├── index.md
+    │   ├── INSTRUMENT_COMPLETION_STATUS.md
+    │   ├── INSTRUMENT_GENERATOR_PLAN.md
+    │   ├── lamda_articulation_metrics.md
+    │   ├── LAMDA_CHECKLIST.md
+    │   ├── LAMDA_EXECUTION_CHECKLIST.md
+    │   ├── LAMDA_EXECUTION_GUIDE.md
+    │   ├── LAMDA_FINAL_BRUSHUP.md
+    │   ├── LAMDA_IMPROVEMENTS.md
+    │   ├── LAMDA_IMPROVEMENTS_SUMMARY.md
+    │   ├── LAMDA_LOCAL_SETUP.md
+    │   ├── LAMDA_QUICKSTART.md
+    │   ├── LAMDA_README.md
+    │   ├── LAMDA_STAGE2_SPEC.md
+    │   ├── LAMDA_UNIFIED_ARCHITECTURE.md
+    │   ├── LAMIDI_CLEANING_GUIDE.md
+    │   ├── LAMIDI_SETUP_SUMMARY.md
+    │   ├── live_tips.md
+    │   ├── lora_training.md
+    │   ├── lyrics_align.md
+    │   ├── MANIFEST_IMPLEMENTATION_REPORT.md
+    │   ├── MERGE_PREPARATION.md
+    │   ├── MIDI_CLEANING_BRUSHUP.md
+    │   ├── MIDI_CLEANING_PIPELINE.md
+    │   ├── MIDI_CLEANING_VALIDATION.md
+    │   ├── ml_articulation.md
+    │   ├── ml_duration.md
+    │   ├── ml_pedal.md
+    │   ├── ml_velocity.md
+    │   ├── offline_ir.md
+    │   ├── ops
+    │   ├── otobon_revolutions
+    │   ├── performance.md
+    │   ├── PERFORMER_BENCHMARK_RESULTS.md
+    │   ├── PERFORMER_CPU_FINDINGS.md
+    │   ├── PERFORMER_FINAL_EVALUATION.md
+    │   ├── PERFORMER_FINAL_VERDICT.md
+    │   ├── PHASE1_IMPLEMENTATION_REPORT.md
+    │   ├── PHASE1_IMPLEMENTATION_SUMMARY.md
+    │   ├── PHASE_1_2_1_3_REPORT.md
+    │   ├── PHASE_22_24_23_IMPLEMENTATION.md
+    │   ├── PHASE_4.3_IMPROVEMENTS.md
+    │   ├── PHASE_4.4_ATTENTION_SELECTION.md
+    │   ├── PHASE_4_6_COMPLETE.md
+    │   ├── PHASE_4_7_COMPLETE.md
+    │   ├── PHASE_4_9_COMPLETE.md
+    │   ├── PHASE_4_COMPLETE.md
+    │   ├── PHASE_4_IMPLEMENTATION_STATUS.md
+    │   ├── PHASE_4_ROADMAP.md
+    │   ├── PHASE_5_0_COMPLETE.md
+    │   ├── PHASE_5_1_COMPLETE.md
+    │   ├── PHASE_5_1_PLAN.md
+    │   ├── PHASE_5_2_COMPLETE.md
+    │   ├── PHASE_5_3_COMPLETE.md
+    │   ├── PHASE_5_4_COMPLETE.md
+    │   ├── PHASE_5_5_COMPLETE.md
+    │   ├── PHASE_5_8_COMPLETE.md
+    │   ├── PHASE_5_COMPLETE.md
+    │   ├── PHASE_5_PLAN.md
+    │   ├── phrase_realtime.md
+    │   ├── piano_beta.md
+    │   ├── PIANO_CONTENT_GENERATION_FIX_REPORT.md
+    │   ├── piano_delta.md
+    │   ├── piano_epsilon.md
+    │   ├── PIANO_EXTERNAL_BENCHMARK.md
+    │   ├── piano_gamma.md
+    │   ├── PIANO_STRINGS_DICT_SUCCESS_REPORT.md
+    │   ├── plugin_gui.md
+    │   ├── plugin_guide.md
+    │   ├── POP909_CLEANING_GUIDE.md
+    │   ├── POP909_COMPLETION_REPORT.md
+    │   ├── PRODUCTION_HARDENING_PHASE1.md
+    │   ├── PRODUCTION_HARDENING_PHASE2.md
+    │   ├── PRODUCTION_PIPELINE_GUIDE.md
+    │   ├── quick_start.md
+    │   ├── realtime_ws.md
+    │   ├── RELEASE_NOTES_v1.0.md
+    │   ├── RELEASE_v1.0.0_COMPLETE.md
+    │   ├── remi_migration_guide.md
+    │   ├── render.md
+    │   ├── ROADMAP_canvas.md
+    │   ├── ROBUSTNESS_PROGRESS.md
+    │   ├── sax_generator.md
+    │   ├── schemas
+    │   ├── sections_mode_scale_schema.json
+    │   ├── slakh2100.md
+    │   ├── STAGE1_QUICK_ANSWER.md
+    │   ├── STAGE1_VS_STAGE2_DECISION.md
+    │   ├── STAGE2_FULL_PRODUCTION_REPORT.md
+    │   ├── STAGE2_GENERATOR_INTEGRATION_PLAN.md
+    │   ├── STAGE2_INSTRUMENT_TEST_RESULTS.md
+    │   ├── stage2実装計画.py
+    │   ├── stage3_architecture.md
+    │   ├── stage3_evaluation_response.md
+    │   ├── STAGE3_LONG_SEQUENCE_BENCHMARK.md
+    │   ├── STAGE3_LONG_SEQUENCE_FINAL_REPORT.md
+    │   ├── stage3_smoke_test_results.md
+    │   ├── STAGE3_V1.1_SPRINT_COMPLETE.md
+    │   ├── stage3_v1.1_sprint_plan.md
+    │   ├── STEM_HARMONY_V2_IMPLEMENTATION.md
+    │   ├── strings_generator.md
+    │   ├── SUNO_GENERATION_GUIDE.md
+    │   ├── SUNO_STEM_ARRANGEMENT.md
+    │   ├── SUNO_STEM_IMPLEMENTATION_REPORT.md
+    │   ├── SUNO_STEM_QUICKSTART.md
+    │   ├── suno_structure_extractor_output.md
+    │   ├── SUNO_SYSTEM_ARCHITECTURE.md
+    │   ├── TODO10_BENCHMARK_SUCCESS.md
+    │   ├── TODO4_COMPLETION_SUMMARY.md
+    │   ├── TODO4_DRUM_BANK_SUCCESS.md
+    │   ├── TODO5_QUALITY_GATE_SUCCESS.md
+    │   ├── TODO6_DIVERSITY_SUCCESS.md
+    │   ├── TODO7_HIHAT_SUCCESS.md
+    │   ├── TODO8_CONFIDENCE_SUCCESS.md
+    │   ├── TODO9_CI_SUCCESS.md
+    │   ├── tone.md
+    │   ├── tone_shaper.md
+    │   ├── utilities_quickstart.md
+    │   ├── v3_upgrade.md
+    │   ├── vertex_ai_lamda_setup.py
+    │   ├── vertex_ai_lamda_unified_guide.py
+    │   └── vocal_generator.md
+
+
+
+
+■Los-Angeles-MIDI
+
+    ├── CHORDS_DATA
+    │   ├── Icon
+    │   ├── LAMDa_CHORDS_DATA_10000.pickle
+    │   ├── LAMDa_CHORDS_DATA_100000.pickle
+    │   ├── LAMDa_CHORDS_DATA_102500.pickle
+    │   ├── LAMDa_CHORDS_DATA_105000.pickle
+    │   ├── LAMDa_CHORDS_DATA_107500.pickle
+    │   ├── LAMDa_CHORDS_DATA_110000.pickle
+    │   ├── LAMDa_CHORDS_DATA_112500.pickle
+    │   ├── LAMDa_CHORDS_DATA_115000.pickle
+    │   ├── LAMDa_CHORDS_DATA_117500.pickle
+    │   ├── LAMDa_CHORDS_DATA_120000.pickle
+    │   ├── LAMDa_CHORDS_DATA_122500.pickle
+    │   ├── LAMDa_CHORDS_DATA_12500.pickle
+    │   ├── LAMDa_CHORDS_DATA_125000.pickle
+    │   ├── LAMDa_CHORDS_DATA_127500.pickle
+    │   ├── LAMDa_CHORDS_DATA_130000.pickle
+    │   ├── LAMDa_CHORDS_DATA_132500.pickle
+    │   ├── LAMDa_CHORDS_DATA_135000.pickle
+    │   ├── LAMDa_CHORDS_DATA_137500.pickle
+    │   ├── LAMDa_CHORDS_DATA_140000.pickle
+    │   ├── LAMDa_CHORDS_DATA_142500.pickle
+    │   ├── LAMDa_CHORDS_DATA_145000.pickle
+    │   ├── LAMDa_CHORDS_DATA_147500.pickle
+    │   ├── LAMDa_CHORDS_DATA_15000.pickle
+    │   ├── LAMDa_CHORDS_DATA_150000.pickle
+    │   ├── LAMDa_CHORDS_DATA_152500.pickle
+    │   ├── LAMDa_CHORDS_DATA_155000.pickle
+    │   ├── LAMDa_CHORDS_DATA_157500.pickle
+    │   ├── LAMDa_CHORDS_DATA_160000.pickle
+    │   ├── LAMDa_CHORDS_DATA_162500.pickle
+    │   ├── LAMDa_CHORDS_DATA_165000.pickle
+    │   ├── LAMDa_CHORDS_DATA_167500.pickle
+    │   ├── LAMDa_CHORDS_DATA_170000.pickle
+    │   ├── LAMDa_CHORDS_DATA_172500.pickle
+    │   ├── LAMDa_CHORDS_DATA_17500.pickle
+    │   ├── LAMDa_CHORDS_DATA_175000.pickle
+    │   ├── LAMDa_CHORDS_DATA_177500.pickle
+    │   ├── LAMDa_CHORDS_DATA_180000.pickle
+    │   ├── LAMDa_CHORDS_DATA_182500.pickle
+    │   ├── LAMDa_CHORDS_DATA_185000.pickle
+    │   ├── LAMDa_CHORDS_DATA_187500.pickle
+    │   ├── LAMDa_CHORDS_DATA_190000.pickle
+    │   ├── LAMDa_CHORDS_DATA_192500.pickle
+    │   ├── LAMDa_CHORDS_DATA_195000.pickle
+    │   ├── LAMDa_CHORDS_DATA_197500.pickle
+    │   ├── LAMDa_CHORDS_DATA_20000.pickle
+    │   ├── LAMDa_CHORDS_DATA_200000.pickle
+    │   ├── LAMDa_CHORDS_DATA_202500.pickle
+    │   ├── LAMDa_CHORDS_DATA_205000.pickle
+    │   ├── LAMDa_CHORDS_DATA_207500.pickle
+    │   ├── LAMDa_CHORDS_DATA_210000.pickle
+    │   ├── LAMDa_CHORDS_DATA_212500.pickle
+    │   ├── LAMDa_CHORDS_DATA_215000.pickle
+    │   ├── LAMDa_CHORDS_DATA_217500.pickle
+    │   ├── LAMDa_CHORDS_DATA_220000.pickle
+    │   ├── LAMDa_CHORDS_DATA_222500.pickle
+    │   ├── LAMDa_CHORDS_DATA_22500.pickle
+    │   ├── LAMDa_CHORDS_DATA_225000.pickle
+    │   ├── LAMDa_CHORDS_DATA_227500.pickle
+    │   ├── LAMDa_CHORDS_DATA_230000.pickle
+    │   ├── LAMDa_CHORDS_DATA_232500.pickle
+    │   ├── LAMDa_CHORDS_DATA_235000.pickle
+    │   ├── LAMDa_CHORDS_DATA_237500.pickle
+    │   ├── LAMDa_CHORDS_DATA_240000.pickle
+    │   ├── LAMDa_CHORDS_DATA_242500.pickle
+    │   ├── LAMDa_CHORDS_DATA_245000.pickle
+    │   ├── LAMDa_CHORDS_DATA_247500.pickle
+    │   ├── LAMDa_CHORDS_DATA_2500.pickle
+    │   ├── LAMDa_CHORDS_DATA_25000.pickle
+    │   ├── LAMDa_CHORDS_DATA_250000.pickle
+    │   ├── LAMDa_CHORDS_DATA_252500.pickle
+    │   ├── LAMDa_CHORDS_DATA_255000.pickle
+    │   ├── LAMDa_CHORDS_DATA_257500.pickle
+    │   ├── LAMDa_CHORDS_DATA_260000.pickle
+    │   ├── LAMDa_CHORDS_DATA_262500.pickle
+    │   ├── LAMDa_CHORDS_DATA_265000.pickle
+    │   ├── LAMDa_CHORDS_DATA_267500.pickle
+    │   ├── LAMDa_CHORDS_DATA_270000.pickle
+    │   ├── LAMDa_CHORDS_DATA_272500.pickle
+    │   ├── LAMDa_CHORDS_DATA_27500.pickle
+    │   ├── LAMDa_CHORDS_DATA_275000.pickle
+    │   ├── LAMDa_CHORDS_DATA_277500.pickle
+    │   ├── LAMDa_CHORDS_DATA_280000.pickle
+    │   ├── LAMDa_CHORDS_DATA_282500.pickle
+    │   ├── LAMDa_CHORDS_DATA_285000.pickle
+    │   ├── LAMDa_CHORDS_DATA_287500.pickle
+    │   ├── LAMDa_CHORDS_DATA_290000.pickle
+    │   ├── LAMDa_CHORDS_DATA_292500.pickle
+    │   ├── LAMDa_CHORDS_DATA_295000.pickle
+    │   ├── LAMDa_CHORDS_DATA_297500.pickle
+    │   ├── LAMDa_CHORDS_DATA_30000.pickle
+    │   ├── LAMDa_CHORDS_DATA_300000.pickle
+    │   ├── LAMDa_CHORDS_DATA_302500.pickle
+    │   ├── LAMDa_CHORDS_DATA_305000.pickle
+    │   ├── LAMDa_CHORDS_DATA_307500.pickle
+    │   ├── LAMDa_CHORDS_DATA_310000.pickle
+    │   ├── LAMDa_CHORDS_DATA_312500.pickle
+    │   ├── LAMDa_CHORDS_DATA_315000.pickle
+    │   ├── LAMDa_CHORDS_DATA_317500.pickle
+    │   ├── LAMDa_CHORDS_DATA_320000.pickle
+    │   ├── LAMDa_CHORDS_DATA_322500.pickle
+    │   ├── LAMDa_CHORDS_DATA_32500.pickle
+    │   ├── LAMDa_CHORDS_DATA_325000.pickle
+    │   ├── LAMDa_CHORDS_DATA_327500.pickle
+    │   ├── LAMDa_CHORDS_DATA_330000.pickle
+    │   ├── LAMDa_CHORDS_DATA_332500.pickle
+    │   ├── LAMDa_CHORDS_DATA_335000.pickle
+    │   ├── LAMDa_CHORDS_DATA_337500.pickle
+    │   ├── LAMDa_CHORDS_DATA_340000.pickle
+    │   ├── LAMDa_CHORDS_DATA_342500.pickle
+    │   ├── LAMDa_CHORDS_DATA_345000.pickle
+    │   ├── LAMDa_CHORDS_DATA_347500.pickle
+    │   ├── LAMDa_CHORDS_DATA_35000.pickle
+    │   ├── LAMDa_CHORDS_DATA_350000.pickle
+    │   ├── LAMDa_CHORDS_DATA_352500.pickle
+    │   ├── LAMDa_CHORDS_DATA_355000.pickle
+    │   ├── LAMDa_CHORDS_DATA_357500.pickle
+    │   ├── LAMDa_CHORDS_DATA_360000.pickle
+    │   ├── LAMDa_CHORDS_DATA_362500.pickle
+    │   ├── LAMDa_CHORDS_DATA_365000.pickle
+    │   ├── LAMDa_CHORDS_DATA_367500.pickle
+    │   ├── LAMDa_CHORDS_DATA_370000.pickle
+    │   ├── LAMDa_CHORDS_DATA_372500.pickle
+    │   ├── LAMDa_CHORDS_DATA_37500.pickle
+    │   ├── LAMDa_CHORDS_DATA_375000.pickle
+    │   ├── LAMDa_CHORDS_DATA_377500.pickle
+    │   ├── LAMDa_CHORDS_DATA_380000.pickle
+    │   ├── LAMDa_CHORDS_DATA_382500.pickle
+    │   ├── LAMDa_CHORDS_DATA_385000.pickle
+    │   ├── LAMDa_CHORDS_DATA_387500.pickle
+    │   ├── LAMDa_CHORDS_DATA_390000.pickle
+    │   ├── LAMDa_CHORDS_DATA_392500.pickle
+    │   ├── LAMDa_CHORDS_DATA_395000.pickle
+    │   ├── LAMDa_CHORDS_DATA_397500.pickle
+    │   ├── LAMDa_CHORDS_DATA_40000.pickle
+    │   ├── LAMDa_CHORDS_DATA_400000.pickle
+    │   ├── LAMDa_CHORDS_DATA_402500.pickle
+    │   ├── LAMDa_CHORDS_DATA_405000.pickle
+    │   ├── LAMDa_CHORDS_DATA_42500.pickle
+    │   ├── LAMDa_CHORDS_DATA_45000.pickle
+    │   ├── LAMDa_CHORDS_DATA_47500.pickle
+    │   ├── LAMDa_CHORDS_DATA_5000.pickle
+    │   ├── LAMDa_CHORDS_DATA_50000.pickle
+    │   ├── LAMDa_CHORDS_DATA_52500.pickle
+    │   ├── LAMDa_CHORDS_DATA_55000.pickle
+    │   ├── LAMDa_CHORDS_DATA_57500.pickle
+    │   ├── LAMDa_CHORDS_DATA_60000.pickle
+    │   ├── LAMDa_CHORDS_DATA_62500.pickle
+    │   ├── LAMDa_CHORDS_DATA_65000.pickle
+    │   ├── LAMDa_CHORDS_DATA_67500.pickle
+    │   ├── LAMDa_CHORDS_DATA_70000.pickle
+    │   ├── LAMDa_CHORDS_DATA_72500.pickle
+    │   ├── LAMDa_CHORDS_DATA_7500.pickle
+    │   ├── LAMDa_CHORDS_DATA_75000.pickle
+    │   ├── LAMDa_CHORDS_DATA_77500.pickle
+    │   ├── LAMDa_CHORDS_DATA_80000.pickle
+    │   ├── LAMDa_CHORDS_DATA_82500.pickle
+    │   ├── LAMDa_CHORDS_DATA_85000.pickle
+    │   ├── LAMDa_CHORDS_DATA_87500.pickle
+    │   ├── LAMDa_CHORDS_DATA_90000.pickle
+    │   ├── LAMDa_CHORDS_DATA_92500.pickle
+    │   ├── LAMDa_CHORDS_DATA_95000.pickle
+    │   └── LAMDa_CHORDS_DATA_97500.pickle
+    ├── CODE
+    │   ├── .DS_Store
+    │   ├── __pycache__
+    │   │   ├── TMIDIX.cpython-310.pyc
+    │   │   ├── TMIDIX.cpython-311.pyc
+    │   │   └── TMIDIX.cpython-313.pyc
+    │   ├── fluidsynth-master
+    │   │   ├── .azure
+    │   │   ├── .cirrus.yml
+    │   │   ├── .clang-format
+    │   │   ├── .clang-tidy
+    │   │   ├── .DS_Store
+    │   │   ├── .github
+    │   │   ├── .gitignore
+    │   │   ├── .obs
+    │   │   ├── AUTHORS
+    │   │   ├── ChangeLog
+    │   │   ├── cmake_admin
+    │   │   ├── CMakeLists.txt
+    │   │   ├── contrib
+    │   │   ├── CONTRIBUTING.md
+    │   │   ├── doc
+    │   │   ├── fluidsynth.conf.in
+    │   │   ├── fluidsynth.pc.in
+    │   │   ├── fluidsynth.service.in
+    │   │   ├── FluidSynthConfig.cmake.in
+    │   │   ├── include
+    │   │   ├── LICENSE
+    │   │   ├── README.cmake.md
+    │   │   ├── README.md
+    │   │   ├── sf2
+    │   │   ├── sonar-project.properties
+    │   │   ├── src
+    │   │   ├── test
+    │   │   ├── test-android
+    │   │   ├── THANKS
+    │   │   └── TODO
+    │   ├── fluidsynth-master.zip
+    │   ├── Icon
+    │   ├── LAMDAの使い方.txt
+    │   ├── LAMDaフレームワーク解説書：思想、構築、そして応用.pdf
+    │   ├── Los_Angeles_MIDI_Dataset_CHORDS_DATA_Decoder.ipynb
+    │   ├── los_angeles_midi_dataset_chords_data_decoder.py
+    │   ├── Los_Angeles_MIDI_Dataset_Maker.ipynb
+    │   ├── los_angeles_midi_dataset_maker.py
+    │   ├── Los_Angeles_MIDI_Dataset_Metadata_Maker.ipynb
+    │   ├── los_angeles_midi_dataset_metadata_maker.py
+    │   ├── Los_Angeles_MIDI_Dataset_Search_and_Explore.ipynb
+    │   ├── los_angeles_midi_dataset_search_and_explore.py
+    │   ├── Master_MIDI_Dataset_GPU_Search_and_Filter.ipynb
+    │   ├── master_midi_dataset_gpu_search_and_filter.py
+    │   ├── Master_MIDI_Dataset_Search_and_Filter.ipynb
+    │   ├── master_midi_dataset_search_and_filter.py
+    │   ├── MIDI.py
+    │   ├── midi_to_colab_audio.py
+    │   └── TMIDIX.py
+    ├── GITHUB-REPO-LINK.txt
+    ├── KILO_CHORDS_DATA
+    │   └── LAMDa_KILO_CHORDS_DATA.pickle
+    ├── lamda_progressions.db
+    ├── LICENSE-CC-BY-NC-SA.txt
+    ├── Los-Angeles-MIDI-Dataset.jpg
+    ├── META_DATA
+    │   ├── .DS_Store
+    │   ├── Icon
+    │   ├── LAMDa_META_DATA_162000.pickle
+    │   ├── LAMDa_META_DATA_243000.pickle
+    │   ├── LAMDa_META_DATA_324000.pickle
+    │   ├── LAMDa_META_DATA_405000.pickle
+    │   └── LAMDa_META_DATA_81000.pickle
+    ├── PROJECT-LOS-ANGELES.txt
+    ├── SIGNATURES_DATA
+    │   ├── Icon
+    │   └── LAMDa_SIGNATURES_DATA.pickle
+    ├── SOUNDFONT_BANKS
+    │   ├── Icon
+    │   ├── KBH-Real-Choir-V2.5.sf2
+    │   ├── Nice-Strings-PlusOrchestra-v1.6.sf2
+    │   └── SGM-v2.01-YamahaGrand-Guit-Bass-v2.7.sf2
+    ├── TEGRIDY-CODE-2024.txt
+    ├── TEST_SAMPLE
+    │   ├── .DS_Store
+    │   ├── CHORDS_DATA
+    │   │   └── sample_100.pickle
+    │   ├── KILO_CHORDS_DATA
+    │   │   └── sample_100.pickle
+    │   ├── SIGNATURES_DATA
+    │   │   └── sample_100.pickle
+    │   └── TOTALS_MATRIX
+    │       └── LAMDa_TOTALS.pickle
+    ├── TOTALS_MATRIX
+    │   ├── Icon
+    │   └── LAMDa_TOTALS.pickle
+    └── リポジトリに存在する主な機能と考察.txt

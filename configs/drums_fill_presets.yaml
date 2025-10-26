@@ -1,0 +1,128 @@
+# ========================================================================
+# Drums Fill Presets - Customizable Fill Patterns
+# ========================================================================
+# emotion_profile.yaml の drums_params.fills.patterns で上書き/拡張可能
+# 
+# 使用方法:
+#   drums_params:
+#     fills:
+#       insert_bars: [3, 7, 15]
+#       intensity: "medium"
+#       # 以下で外部プリセットを参照（オプション）
+#       use_preset: "rock_basic"
+
+rock_basic:
+  description: "基本的なロックフィル（スネア中心）"
+  light:
+    - [{ drum: "snare", offset: 0.0, velocity: 70 },
+       { drum: "snare", offset: 0.5, velocity: 75 }]
+    - [{ drum: "kick", offset: 0.0, velocity: 75 },
+       { drum: "snare", offset: 0.25, velocity: 70 },
+       { drum: "snare", offset: 0.75, velocity: 80 }]
+  
+  medium:
+    - [{ drum: "snare", offset: 0.0, velocity: 80 },
+       { drum: "kick", offset: 0.25, velocity: 85 },
+       { drum: "snare", offset: 0.5, velocity: 90 },
+       { drum: "snare", offset: 0.75, velocity: 85 }]
+    - [{ drum: "snare", offset: 0.0, velocity: 85 },
+       { drum: "snare", offset: 0.25, velocity: 80 },
+       { drum: "kick", offset: 0.5, velocity: 90 },
+       { drum: "snare", offset: 0.75, velocity: 95 }]
+  
+  heavy:
+    - [{ drum: "kick", offset: 0.0, velocity: 90 },
+       { drum: "snare", offset: 0.125, velocity: 85 },
+       { drum: "snare", offset: 0.25, velocity: 95 },
+       { drum: "kick", offset: 0.5, velocity: 90 },
+       { drum: "snare", offset: 0.625, velocity: 85 },
+       { drum: "crash1", offset: 0.75, velocity: 100 }]
+
+tom_run_down:
+  description: "タムの下降フレーズ（high→mid→low tom）"
+  light:
+    - [{ drum: "snare", offset: 0.0, velocity: 75 },
+       { drum: "snare", offset: 0.5, velocity: 80 }]
+  
+  medium:
+    # high tom: 50, mid tom: 47, low tom: 45（GM標準）
+    - [{ drum: "snare", offset: 0.0, velocity: 80 },
+       { drum: "snare", offset: 0.25, velocity: 85 },
+       { drum: "snare", offset: 0.5, velocity: 90 },
+       { drum: "snare", offset: 0.75, velocity: 85 }]
+  
+  heavy:
+    - [{ drum: "kick", offset: 0.0, velocity: 95 },
+       { drum: "snare", offset: 0.125, velocity: 90 },
+       { drum: "snare", offset: 0.25, velocity: 95 },
+       { drum: "kick", offset: 0.5, velocity: 90 },
+       { drum: "snare", offset: 0.625, velocity: 90 },
+       { drum: "crash1", offset: 0.75, velocity: 105 }]
+
+funk_fill:
+  description: "ファンク風フィル（Ghost多用、Kick裏打ち）"
+  light:
+    - [{ drum: "snare", offset: 0.0, velocity: 60 },
+       { drum: "snare", offset: 0.25, velocity: 50 },
+       { drum: "snare", offset: 0.5, velocity: 70 }]
+  
+  medium:
+    - [{ drum: "snare", offset: 0.0, velocity: 70 },
+       { drum: "kick", offset: 0.125, velocity: 80 },
+       { drum: "snare", offset: 0.25, velocity: 60 },
+       { drum: "snare", offset: 0.5, velocity: 85 },
+       { drum: "kick", offset: 0.625, velocity: 75 },
+       { drum: "snare", offset: 0.75, velocity: 90 }]
+  
+  heavy:
+    - [{ drum: "kick", offset: 0.0, velocity: 85 },
+       { drum: "snare", offset: 0.0625, velocity: 55 },
+       { drum: "snare", offset: 0.125, velocity: 80 },
+       { drum: "kick", offset: 0.25, velocity: 90 },
+       { drum: "snare", offset: 0.3125, velocity: 50 },
+       { drum: "snare", offset: 0.375, velocity: 85 },
+       { drum: "kick", offset: 0.5, velocity: 85 },
+       { drum: "snare", offset: 0.625, velocity: 95 },
+       { drum: "crash1", offset: 0.75, velocity: 100 }]
+
+edm_buildup:
+  description: "EDMビルドアップフィル（密度増加、Crash締め）"
+  light:
+    - [{ drum: "kick", offset: 0.0, velocity: 75 },
+       { drum: "snare", offset: 0.5, velocity: 80 }]
+  
+  medium:
+    - [{ drum: "kick", offset: 0.0, velocity: 85 },
+       { drum: "snare", offset: 0.25, velocity: 80 },
+       { drum: "kick", offset: 0.5, velocity: 85 },
+       { drum: "snare", offset: 0.75, velocity: 90 }]
+  
+  heavy:
+    - [{ drum: "kick", offset: 0.0, velocity: 90 },
+       { drum: "snare", offset: 0.125, velocity: 85 },
+       { drum: "kick", offset: 0.25, velocity: 90 },
+       { drum: "snare", offset: 0.375, velocity: 90 },
+       { drum: "kick", offset: 0.5, velocity: 95 },
+       { drum: "snare", offset: 0.625, velocity: 95 },
+       { drum: "kick", offset: 0.75, velocity: 95 },
+       { drum: "crash1", offset: 0.875, velocity: 110 }]
+
+jazz_fill:
+  description: "ジャズフィル（Ride/Cymbal中心、軽い）"
+  light:
+    - [{ drum: "ride1", offset: 0.0, velocity: 65 },
+       { drum: "ride1", offset: 0.5, velocity: 70 }]
+  
+  medium:
+    - [{ drum: "ride1", offset: 0.0, velocity: 70 },
+       { drum: "snare", offset: 0.25, velocity: 60 },
+       { drum: "ride1", offset: 0.5, velocity: 75 },
+       { drum: "snare", offset: 0.75, velocity: 65 }]
+  
+  heavy:
+    - [{ drum: "ride1", offset: 0.0, velocity: 75 },
+       { drum: "snare", offset: 0.125, velocity: 55 },
+       { drum: "snare", offset: 0.25, velocity: 70 },
+       { drum: "kick", offset: 0.5, velocity: 80 },
+       { drum: "ride1", offset: 0.625, velocity: 75 },
+       { drum: "crash1", offset: 0.75, velocity: 90 }]

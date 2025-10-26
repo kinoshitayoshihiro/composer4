@@ -1,366 +1,392 @@
 #!/usr/bin/env python3
 """
-Drums Generator Stage2 - リズム生成（kick/snare/hihat/crash/ride対応）
+Drums Generator Stage2 - V1継承 + AI拡張
 
-SLAKH/LAMDA等のドラムMIDIから高品質なリズムパターンを抽出し、
-新しい曲に適用できる形で保存・推薦します。
+V1 DrumGeneratorの全機能を継承し、Stage2レイヤーでAI処理を追加。
 
-GMドラムマップ:
-    Bass Drum (Kick):  35, 36
-    Snare:             38, 40
-    Hi-Hat Closed:     42
-    Hi-Hat Open:       46
-    Crash Cymbal:      49, 57
-    Ride Cymbal:       51, 59
+アーキテクチャ:
+    DrumsGeneratorStage2 (V1継承)
+    └─ V1の発音エンジン
+       └─ Stage2レイヤー（AI/humanize/tempo展開）
+          ├─ PatternRecommender（pickle）
+          ├─ apply_ai_filters（モデル適用）
+          ├─ humanize（微調整）
+          └─ quantize_to_tempo_map（可変テンポ）
 
-使用方法:
+Usage:
     from generator.drums_generator_stage2 import DrumsGeneratorStage2
     
-    gen = DrumsGeneratorStage2(
-        patterns_pickle="data/patterns/stage2_drums.pickle",
-        default_instrument=music21.instrument.Percussion()
-    )
-    
-    # パターン推薦
-    pattern = gen.recommend_pattern(
-        tempo=120,
-        emotion="energetic",
-        section="Chorus",
-        technique="rock_basic"
-    )
-    
-    # ドラムパート生成
-    drum_part = gen.generate(
-        bars=8,
-        chords=["C", "G", "Am", "F"],
-        tempo=120,
-        emotion="energetic",
-        technique="rock_basic"
-    )
+    gen = DrumsGeneratorStage2(...)
+    part = gen.compose(section_data=section, ...)
 """
 
-import music21
-from music21 import note, stream, instrument, duration
-import numpy as np
-import pickle
 from pathlib import Path
-from typing import Optional, List, Dict, Any
-from dataclasses import dataclass
+import inspect
+import logging
+
+try:
+    from generator.instrument_stage2_base import InstrumentStage2Base
+except ImportError:
+    from instrument_stage2_base import InstrumentStage2Base
+
+try:
+    from ml.pattern_recommender import PatternRecommender
+except ImportError:
+    PatternRecommender = None
+
+logger = logging.getLogger(__name__)
 
 
-# GMドラムマップ
-GM_DRUM_MAP = {
-    'kick': [35, 36],           # Bass Drum 1, Bass Drum 2
-    'snare': [38, 40],          # Acoustic Snare, Electric Snare
-    'hihat_closed': [42],       # Closed Hi-Hat
-    'hihat_open': [46],         # Open Hi-Hat
-    'crash': [49, 57],          # Crash Cymbal 1, Crash Cymbal 2
-    'ride': [51, 59],           # Ride Cymbal 1, Ride Cymbal 2
-    'tom_low': [41, 43, 45],    # Low Floor Tom, High Floor Tom, Low Tom
-    'tom_mid': [47, 48],        # Low-Mid Tom, Hi-Mid Tom
-    'tom_high': [50],           # High Tom
-}
-
-
-@dataclass
-class DrumPattern:
-    """ドラムパターンデータ"""
-    id: str
-    instrument: str  # 'drums'
-    technique: str   # 'rock_basic', 'jazz_swing', 'edm_four_on_floor' etc.
-    tempo: float
-    bars: int
-    emotion: str
+class DrumsGeneratorStage2(InstrumentStage2Base):
+    """Drums Generator Stage2 - Base継承 + V1ラッパ + AI拡張
     
-    # リズムデータ（小節内の相対位置 0.0-4.0）
-    kick_hits: List[float]        # キック打点
-    snare_hits: List[float]       # スネア打点
-    hihat_hits: List[float]       # ハイハット打点
-    crash_hits: List[float]       # クラッシュ打点
-    ride_hits: List[float]        # ライド打点
+    アーキテクチャ:
+        InstrumentStage2Base (共通後段処理)
+        └─ build_notes() で V1 DrumGenerator に委譲
+           └─ Base.compose() が自動で AI → humanize → tempo 適用
     
-    # ベロシティ情報
-    kick_velocities: List[int]
-    snare_velocities: List[int]
-    hihat_velocities: List[int]
-    crash_velocities: List[int]
-    ride_velocities: List[int]
+    Stage2機能（Baseが自動適用）:
+        - Pattern Recommenderによる高品質パターン推薦
+        - AIモデルによるVelocity/Articulation調整
+        - Humanize（微調整）
+        - Quantize to tempo map（可変テンポ）
     
-    # メタ情報
-    density: float               # 密度（hits per bar）
-    complexity: float            # 複雑度（0.0-1.0）
-    syncopation_rate: float      # シンコペーション率
+    Pickle無し動作:
+        - V1の発音エンジンのみ使用（AI機能スキップ）
+    """
     
-    # 品質スコア
-    quality_score: float = 0.0
-    
-    # MIDI Pitch情報（Todo #7: ハイハット開閉整合性チェック用）
-    hihat_pitches: List[int] = None  # 各ハイハットヒットのMIDI pitch（42=Closed, 46=Open, 44=Pedal）
-    
-    # Duration情報（Todo #7: クラッシュチョーク長制限チェック用）
-    crash_durations: List[float] = None  # 各クラッシュノートの長さ（quarter beats）
-
-
-class DrumsGeneratorStage2:
-    """ドラムトラック生成（Stage2: パターンベース）"""
-    
-    def __init__(
-        self,
-        patterns_pickle: Optional[Path] = None,
-        default_instrument: Optional[music21.instrument.Instrument] = None
-    ):
-        """
-        Args:
-            patterns_pickle: Stage2パターンPickleファイル
-            default_instrument: デフォルト楽器（Percussion）
-        """
-        self.patterns: List[DrumPattern] = []
-        self.default_instrument = default_instrument or instrument.Percussion()
+    def _resolve_v1_class(self):
+        """V1 DrumGeneratorクラスを複数パスから解決
         
-        if patterns_pickle and Path(patterns_pickle).exists():
-            self.load_patterns(patterns_pickle)
-    
-    def load_patterns(self, pickle_path: Path) -> None:
-        """パターンをロード"""
-        with open(pickle_path, 'rb') as f:
-            self.patterns = pickle.load(f)
-        print(f"✅ Loaded {len(self.patterns)} drum patterns from {pickle_path}")
-    
-    def recommend_pattern(
-        self,
-        tempo: float,
-        emotion: str,
-        section: str,
-        technique: Optional[str] = None,
-        top_k: int = 5
-    ) -> Optional[DrumPattern]:
-        """
-        最適なドラムパターンを推薦
-        
-        Args:
-            tempo: テンポ (BPM)
-            emotion: 感情タグ
-            section: セクション名
-            technique: 奏法（rock_basic, jazz_swing, edm_four_on_floor等）
-            top_k: 候補数
+        Note:
+            generator.drum_generator を優先（model引数不要）
+            modular_composer.drum_generator はmodel必須なので後回し
         
         Returns:
-            推薦されたパターン
+            tuple: (module_name, module, class) or (None, None, None)
         """
-        if not self.patterns:
+        # 試すモジュールパス（優先順を変更：model不要のものを優先）
+        for modname in ("generator.drum_generator", "drum_generator", "modular_composer.drum_generator"):
+            try:
+                mod = __import__(modname, fromlist=["*"])
+                cls = getattr(mod, "DrumGenerator", None)
+                if cls:
+                    logger.debug(f"Drums Stage2: Found V1 class in {modname}")
+                    return modname, mod, cls
+            except Exception as e:
+                logger.debug(f"Drums Stage2: Could not import from {modname}: {e}")
+                continue
+        
+        logger.warning("Drums Stage2: No V1 DrumGenerator class found")
+        return None, None, None
+    
+    def _determine_model(self):
+        """モデルパスとオブジェクトを決定
+        
+        Note:
+            params.model → overrides.models.drums の順に探す
+        
+        Returns:
+            tuple: (model_path, model_obj) or (None, None)
+        """
+        # paramsから取得（paramsがdictかチェック）
+        model_path = None
+        if isinstance(self.params, dict):
+            model_path = self.params.get("model")
+        
+        # overridesから取得（overridesがdictでNoneでない場合のみ）
+        if not model_path and isinstance(self._overrides, dict):
+            models_dict = self._overrides.get("models") or {}
+            if isinstance(models_dict, dict):
+                model_path = models_dict.get("drums")
+        
+        # model_pathがあればオブジェクト化を試みる
+        model_obj = None
+        if model_path:
+            try:
+                model_obj = self.get_model("drums", path=model_path)
+            except Exception as e:
+                logger.debug(f"Drums Stage2: Could not load model from {model_path}: {e}")
+        
+        return model_path, model_obj
+    
+    def _filter_kwargs(self, fn, kwargs):
+        """関数シグネチャに合う引数だけをフィルタリング
+        
+        Args:
+            fn: 対象関数またはメソッド
+            kwargs: 候補となるキーワード引数辞書
+            
+        Returns:
+            dict: fnが受け入れるキーワード引数のみを含む辞書
+        """
+        try:
+            sig = inspect.signature(fn)
+            # VAR_KEYWORD (**)があれば全部通す
+            has_var_keyword = any(
+                p.kind == inspect.Parameter.VAR_KEYWORD 
+                for p in sig.parameters.values()
+            )
+            if has_var_keyword:
+                return kwargs
+            # そうでなければシグネチャにあるものだけ
+            return {k: v for k, v in kwargs.items() if k in sig.parameters}
+        except Exception as e:
+            logger.debug(f"Drums Stage2: Could not inspect signature: {e}")
+            return {}
+    
+    def _as_dict(self, x):
+        """安全なdict化ヘルパー: None や非dict を空dict に変換"""
+        return x if isinstance(x, dict) else {}
+
+    def _safe_v1_instance(self, v1_cls):
+        """V1インスタンスを安全に作成（model含む引数の賢い注入）
+        
+        Args:
+            v1_cls: DrumGeneratorクラス
+            
+        Returns:
+            DrumGenerator instance or None
+        """
+        if v1_cls is None:
             return None
         
-        scores = []
-        for pattern in self.patterns:
-            score = 0.0
-            
-            # テンポ適合度（±10 BPM以内で最高スコア）
-            tempo_diff = abs(pattern.tempo - tempo)
-            tempo_score = max(0.0, 1.0 - tempo_diff / 30.0)
-            score += tempo_score * 0.4
-            
-            # 感情適合度
-            if pattern.emotion == emotion:
-                score += 0.3
-            
-            # 奏法適合度
-            if technique and pattern.technique == technique:
-                score += 0.2
-            
-            # 品質スコア
-            score += pattern.quality_score * 0.1
-            
-            scores.append(score)
+        try:
+            model_path, model_obj = self._determine_model()
+            logger.debug(f"Drums Stage2: Determined model - path={model_path}, obj={model_obj}")
+        except Exception as e:
+            import traceback
+            logger.warning(f"⚠️ Drums Stage2: _determine_model() failed: {e}")
+            logger.debug(f"Traceback:\n{traceback.format_exc()}")
+            model_path, model_obj = None, None
         
-        # Top-K選択
-        top_indices = np.argsort(scores)[-top_k:][::-1]
-        best_pattern = self.patterns[top_indices[0]]
+        # 必ず dict 化してから渡す（None.get() 事故を防止）
+        overrides = self._as_dict(self._overrides)
+        global_settings = self._as_dict(overrides.get("global_settings"))
         
-        return best_pattern
+        # 共通候補引数（すべて dict 保証）
+        base_kwargs = {
+            'instrument_name': self.instrument_name,
+            'params': self._as_dict(self.params),
+            'overrides': overrides,
+            'global_settings': global_settings,
+            'default_instrument': self.instrument_name,  # V1 が要求する場合に備えた保険
+        }
+        
+        logger.debug(f"Drums Stage2: base_kwargs prepared - overrides={type(overrides).__name__}, global_settings={type(global_settings).__name__}")
+        
+        # main_cfgがあれば追加（V1 DrumGeneratorが必要とする）
+        # 優先順: overrides['main_cfg'] -> config/main_cfg.yml (絶対パス) -> 空辞書
+        main_cfg = overrides.get('main_cfg')  # overrides は既に dict 化済み
+        if main_cfg is None:
+            # このファイルの親の親ディレクトリを基準にconfig/main_cfg.ymlを探す
+            try:
+                import yaml
+                # drums_generator_stage2.py -> generator/ -> repo_root/
+                repo_root = Path(__file__).parent.parent
+                cfg_path = repo_root / 'config' / 'main_cfg.yml'
+                if cfg_path.exists():
+                    with cfg_path.open('r', encoding='utf-8') as fh:
+                        loaded_cfg = yaml.safe_load(fh)
+                        main_cfg = loaded_cfg if isinstance(loaded_cfg, dict) else {}
+                        logger.debug(f"Drums Stage2: Loaded main_cfg from {cfg_path}")
+            except Exception as e:
+                logger.debug(f"Drums Stage2: Could not load config/main_cfg.yml: {e}")
+        # 最低でも空の dict を渡す（YAML が None を返す場合も防御）
+        main_cfg = self._as_dict(main_cfg)
+        
+        # V1 DrumGenerator が内部で .get() をチェーンするため、ネストした dict も安全化
+        # 例: main_cfg.get("paths", {}).get("tempo_curve_path")
+        # もし main_cfg["paths"] が None だと 'NoneType' has no attribute 'get' になる
+        if "paths" in main_cfg and not isinstance(main_cfg["paths"], dict):
+            main_cfg["paths"] = {}
+        if "global_settings" in main_cfg and not isinstance(main_cfg["global_settings"], dict):
+            main_cfg["global_settings"] = {}
+        if "drum" in main_cfg and not isinstance(main_cfg["drum"], dict):
+            main_cfg["drum"] = {}
+        
+        base_kwargs['main_cfg'] = main_cfg
+        
+        # __init__が受け入れる引数だけフィルタ
+        kwargs = self._filter_kwargs(v1_cls.__init__, base_kwargs)
+        logger.debug(f"Drums Stage2: Filtered kwargs for V1 __init__: {list(kwargs.keys())}")
+        
+        # modelを受けるかチェック
+        try:
+            sig = inspect.signature(v1_cls.__init__)
+            accepts_model = 'model' in sig.parameters
+            logger.debug(f"Drums Stage2: V1 __init__ accepts model: {accepts_model}, params: {list(sig.parameters.keys())}")
+        except Exception:
+            accepts_model = False
+        
+        # modelを受けるなら、オブジェクト→パスの順に試す
+        if accepts_model:
+            for m in (model_obj, model_path):
+                if m is None:
+                    continue
+                try:
+                    instance = v1_cls(**{**kwargs, 'model': m})
+                    logger.info(f"✅ Drums Stage2: V1 initialized ({v1_cls.__module__}.{v1_cls.__name__}) with model={'object' if m is model_obj else 'path'}")
+                    return instance
+                except Exception as e:
+                    logger.debug(f"Drums Stage2: V1 init with model={type(m).__name__} failed: {e}")
+                    continue
+        
+        # model無しで試す
+        try:
+            logger.debug(f"Drums Stage2: Attempting V1 init with kwargs: {kwargs}")
+            instance = v1_cls(**kwargs)
+            logger.info(f"✅ Drums Stage2: V1 initialized ({v1_cls.__module__}.{v1_cls.__name__}) without model")
+            return instance
+        except Exception as e:
+            import traceback
+            logger.debug(f"Drums Stage2: V1 init without model failed: {e}")
+            logger.debug(f"Traceback:\n{traceback.format_exc()}")
+            # 最後の手段：引数なし
+            try:
+                instance = v1_cls()
+                logger.info(f"✅ Drums Stage2: V1 initialized ({v1_cls.__module__}.{v1_cls.__name__}) with no args")
+                return instance
+            except Exception as e2:
+                logger.warning(f"⚠️ Drums Stage2: All V1 initialization attempts failed: {e2}")
+                return None
     
-    def generate(
-        self,
-        bars: int,
-        chords: List[str],
-        tempo: float,
-        emotion: str,
-        section: str = "Verse",
-        technique: Optional[str] = None,
-        time_signature: str = "4/4",
-        seed: Optional[int] = None
-    ) -> music21.stream.Part:
-        """
-        ドラムトラックを生成
+    def __init__(self, *args, **kwargs):
+        """Initialize Drums Generator with optional Stage2 support
         
         Args:
-            bars: 小節数
-            chords: コード進行（参考用、ドラムには直接影響なし）
-            tempo: テンポ
-            emotion: 感情タグ
-            section: セクション名
-            technique: 奏法
-            time_signature: 拍子記号
-            seed: 乱数シード
+            *args, **kwargs: InstrumentStage2Baseへ渡される引数
+        """
+        super().__init__(*args, **kwargs)
+        logger.debug(f"Drums Stage2: After super().__init__, params={type(self.params)}, _overrides={type(self._overrides)}")
         
+        # V1 DrumGenerator クラスを解決して初期化
+        modname, mod, v1_cls = self._resolve_v1_class()
+        logger.debug(f"Drums Stage2: Resolved V1 class from {modname}: {v1_cls}")
+        
+        if v1_cls:
+            self._v1_generator = self._safe_v1_instance(v1_cls)
+            self._v1_module = mod
+            self._v1_modname = modname
+        else:
+            logger.warning("⚠️ Drums Stage2: V1 class not available, will use Base defaults")
+            self._v1_generator = None
+            self._v1_module = None
+            self._v1_modname = None
+        
+        patterns_path = Path("data/patterns/stage2_drums.pickle")
+        
+        # Pickleがあれば読み込み（無ければV1のみ）
+        if patterns_path.exists():
+            try:
+                if PatternRecommender is not None:
+                    self.recommender = PatternRecommender("drums", patterns_path)
+                    logger.info(f"✅ Drums Stage2: Loaded {len(self.recommender.patterns)} AI patterns")
+                else:
+                    logger.warning("⚠️ Drums Stage2: PatternRecommender not available, using V1 only")
+                    self.recommender = None
+            except Exception as e:
+                logger.warning(f"⚠️ Drums Stage2: Failed to load patterns ({e}), using V1 only")
+                self.recommender = None
+        else:
+            logger.info(f"ℹ️ Drums Stage2: No pickle found ({patterns_path}), using V1 only")
+            self.recommender = None
+    
+    def build_notes(self, section, processed_chord_events, **kwargs):
+        """V1の発音エンジンを呼び出す（委譲）
+        
+        V1 DrumGenerator の generate系メソッドを呼び出して基本的なnote生成を行います。
+        その後、Base.compose() が自動で AI → humanize → tempo を適用します。
+        
+        Args:
+            section: セクションデータ
+            processed_chord_events: コード進行
+            **kwargs: 追加パラメータ（emotion, technique等）
+            
         Returns:
-            生成されたドラムパート
+            list: V1が生成したnoteイベント
         """
-        if seed is not None:
-            np.random.seed(seed)
+        # V1クラスを再解決（__init__時に失敗した可能性もあるため）
+        if not hasattr(self, '_v1_modname') or self._v1_modname is None:
+            modname, mod, v1_cls = self._resolve_v1_class()
+            self._v1_module = mod
+            self._v1_modname = modname
+        else:
+            mod = self._v1_module
         
-        # パターン推薦
-        pattern = self.recommend_pattern(
-            tempo=tempo,
-            emotion=emotion,
-            section=section,
-            technique=technique
-        )
+        if self._v1_generator is None and mod is None:
+            logger.warning("Drums Stage2: V1 not available, returning empty notes")
+            return []
         
-        if pattern is None:
-            # フォールバック: 基本的な4つ打ち
-            return self._generate_fallback_drums(bars, tempo, time_signature)
+        # 呼び出し候補：インスタンスメソッド優先 → モジュール関数
+        call_targets = []
+        if self._v1_generator:
+            for method_name in ('generate_drums', 'generate', 'render', 'compose'):
+                method = getattr(self._v1_generator, method_name, None)
+                if callable(method):
+                    call_targets.append((f"instance.{method_name}", method))
         
-        # パート作成
-        drum_part = stream.Part()
-        drum_part.insert(0, self.default_instrument)
+        if mod:
+            for func_name in ('generate_drums', 'generate', 'render', 'compose'):
+                func = getattr(mod, func_name, None)
+                if callable(func):
+                    call_targets.append((f"module.{func_name}", func))
         
-        # パターンを繰り返し配置
-        current_offset = 0.0
-        for bar_idx in range(bars):
-            self._add_bar_from_pattern(
-                drum_part,
-                pattern,
-                current_offset,
-                tempo
-            )
-            current_offset += 4.0  # 4/4拍子前提
+        # 候補引数を作る
+        cand = {
+            'section': section,
+            'chords': processed_chord_events,
+            'params': self.params,
+            **kwargs
+        }
         
-        return drum_part
+        # 順番に試す
+        for target_name, fn in call_targets:
+            # シグネチャに合う引数だけフィルタ
+            filtered = self._filter_kwargs(fn, cand)
+            
+            try:
+                logger.debug(f"Drums Stage2: Trying {target_name} with: {list(filtered.keys())}")
+                notes = fn(**filtered)
+                if notes:
+                    logger.info(f"✅ Drums Stage2: {target_name} returned {len(notes)} notes")
+                    return notes if notes else []
+            except TypeError as e:
+                # 位置引数で再試行
+                logger.debug(f"Drums Stage2: {target_name} with kwargs failed ({e}), trying positional")
+                try:
+                    notes = fn(section, processed_chord_events)
+                    if notes:
+                        logger.info(f"✅ Drums Stage2: {target_name} (positional) returned {len(notes)} notes")
+                        return notes if notes else []
+                except Exception as e2:
+                    logger.debug(f"Drums Stage2: Positional also failed ({e2})")
+                    continue
+            except Exception as e:
+                logger.debug(f"Drums Stage2: {target_name} failed: {e}")
+                continue
+        
+        logger.warning("⚠️ Drums Stage2: All V1 call attempts returned no notes")
+        return []
     
-    def _add_bar_from_pattern(
-        self,
-        drum_part: music21.stream.Part,
-        pattern: DrumPattern,
-        start_offset: float,
-        tempo: float
-    ) -> None:
-        """パターンから1小節分のドラムノートを追加"""
+    def apply_ai_filters(self, notes, section=None):
+        """Stage2 AIフィルタを適用（オプション）
         
-        # Kick
-        for i, pos in enumerate(pattern.kick_hits):
-            vel = pattern.kick_velocities[i] if i < len(pattern.kick_velocities) else 90
-            kick_note = note.Note(GM_DRUM_MAP['kick'][0])
-            kick_note.volume.velocity = vel
-            kick_note.duration = duration.Duration(0.25)  # 16分音符長
-            drum_part.insert(start_offset + pos, kick_note)
+        Pickleがロードされている場合のみ、AIモデルによる補正を行います。
         
-        # Snare
-        for i, pos in enumerate(pattern.snare_hits):
-            vel = pattern.snare_velocities[i] if i < len(pattern.snare_velocities) else 95
-            snare_note = note.Note(GM_DRUM_MAP['snare'][0])
-            snare_note.volume.velocity = vel
-            snare_note.duration = duration.Duration(0.25)
-            drum_part.insert(start_offset + pos, snare_note)
-        
-        # Hi-Hat
-        for i, pos in enumerate(pattern.hihat_hits):
-            vel = pattern.hihat_velocities[i] if i < len(pattern.hihat_velocities) else 70
-            hihat_note = note.Note(GM_DRUM_MAP['hihat_closed'][0])
-            hihat_note.volume.velocity = vel
-            hihat_note.duration = duration.Duration(0.25)
-            drum_part.insert(start_offset + pos, hihat_note)
-        
-        # Crash (小節の最初のみ)
-        for i, pos in enumerate(pattern.crash_hits):
-            vel = pattern.crash_velocities[i] if i < len(pattern.crash_velocities) else 100
-            crash_note = note.Note(GM_DRUM_MAP['crash'][0])
-            crash_note.volume.velocity = vel
-            crash_note.duration = duration.Duration(1.0)  # 全音符長
-            drum_part.insert(start_offset + pos, crash_note)
-        
-        # Ride
-        for i, pos in enumerate(pattern.ride_hits):
-            vel = pattern.ride_velocities[i] if i < len(pattern.ride_velocities) else 75
-            ride_note = note.Note(GM_DRUM_MAP['ride'][0])
-            ride_note.volume.velocity = vel
-            ride_note.duration = duration.Duration(0.5)  # 8分音符長
-            drum_part.insert(start_offset + pos, ride_note)
-    
-    def _generate_fallback_drums(
-        self,
-        bars: int,
-        tempo: float,
-        time_signature: str
-    ) -> music21.stream.Part:
+        Args:
+            notes: V1が生成したnote events
+            section: セクション情報（オプション）
+            
+        Returns:
+            list: AI補正後のnote events（pickleが無い場合はそのまま返す）
         """
-        フォールバック: 基本的な4つ打ちドラムパターン
+        if self.recommender is None:
+            # Pickle無し → V1の結果をそのまま返す
+            return notes
         
-        パターン:
-            Kick:  1拍目, 3拍目
-            Snare: 2拍目, 4拍目
-            HH:    全8分音符
-        """
-        drum_part = stream.Part()
-        drum_part.insert(0, self.default_instrument)
+        # TODO: PatternRecommenderを使った補正ロジック
+        # 例: velocity調整、articulation追加等
+        logger.debug(f"Drums Stage2: AI filter applied to {len(notes)} notes")
         
-        current_offset = 0.0
-        for bar_idx in range(bars):
-            # Kick (1拍目, 3拍目)
-            for beat in [0.0, 2.0]:
-                kick = note.Note(GM_DRUM_MAP['kick'][0])
-                kick.volume.velocity = 90
-                kick.duration = duration.Duration(0.25)
-                drum_part.insert(current_offset + beat, kick)
-            
-            # Snare (2拍目, 4拍目)
-            for beat in [1.0, 3.0]:
-                snare = note.Note(GM_DRUM_MAP['snare'][0])
-                snare.volume.velocity = 95
-                snare.duration = duration.Duration(0.25)
-                drum_part.insert(current_offset + beat, snare)
-            
-            # Hi-Hat (全8分音符)
-            for eighth in np.arange(0.0, 4.0, 0.5):
-                hihat = note.Note(GM_DRUM_MAP['hihat_closed'][0])
-                hihat.volume.velocity = 70
-                hihat.duration = duration.Duration(0.25)
-                drum_part.insert(current_offset + eighth, hihat)
-            
-            current_offset += 4.0
-        
-        return drum_part
-
-
-# デモ実行
-if __name__ == '__main__':
-    print("=" * 60)
-    print("  Drums Generator Stage2 Demo")
-    print("=" * 60)
-    
-    # ジェネレーター作成
-    gen = DrumsGeneratorStage2()
-    
-    # フォールバックドラム生成
-    print("\n🥁 Generating fallback drums (4 bars, 120 BPM)...")
-    drum_part = gen.generate(
-        bars=4,
-        chords=["C", "G", "Am", "F"],
-        tempo=120,
-        emotion="energetic",
-        section="Verse",
-        seed=42
-    )
-    
-    # 統計情報
-    all_notes = list(drum_part.flatten().notes)
-    print(f"✅ Generated {len(all_notes)} drum notes")
-    
-    # MIDI出力
-    output_path = Path("out/demo_drums.mid")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    drum_part.write('midi', fp=output_path)
-    print(f"💾 Saved to: {output_path}")
-    
-    print("\n" + "=" * 60)
-    print("Demo complete!")
-    print("=" * 60)
+        return notes

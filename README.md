@@ -13,6 +13,357 @@ This project blends poetic Japanese narration with emotive musical arrangements.
 
 It automatically generates chords, melodies and instrumental parts for each chapter of a text, allowing verse, chorus and bridge sections to be arranged with human‑like expressiveness.
 
+---
+
+## 🎵 SUNO AI Stem Integration System
+
+**New Feature**: This project now supports **Suno AI stem-based arrangement generation**. You can use Suno-generated stems (vocals, drums, bass, guitar, etc.) as the foundation for creating new MIDI arrangements that preserve the original vocal while regenerating all instrumental parts.
+
+### System Architecture
+
+```
+Suno Stems (6-12 WAV files)
+    ↓
+[Phase 13-18: Analysis] → Extract Features
+    ↓
+mix_context (beat_grid, activity, audio_chordmap, accent_grid)
+    ↓
+[Stage2 Generators] → Generate MIDI
+    ↓
+Drums / Bass / Piano / Guitar / Strings MIDI
+    ↓
+Render with original Vocal WAV
+```
+
+### Key Design Principles
+
+1. **Two-Layer Architecture**
+   - **Params Layer** (`*_params_stage2.py`): "What to do" - Reads YAML presets, normalizes parameters, creates generation blueprints
+   - **Generator Layer** (`*_generator_stage2.py`): "How to do it" - Implements actual note generation, voicing, articulation
+
+2. **Feature-Based, Not Transcription**
+   - Does **NOT** transcribe WAV → MIDI note-by-note
+   - **Extracts** high-level features: tempo, energy curves, chord candidates, accent grids
+   - **Generates** new arrangements based on these features + chordmap + emotion profiles
+
+3. **Activity Mask Control**
+   - Each stem provides an activity level (0..1) per bar
+   - Generators only produce notes where the original stem was active
+   - Preserves original arrangement structure while creating new performances
+
+### Supported Stem Roles
+
+| Stem Role | Generator | Usage |
+|-----------|-----------|-------|
+| **Vocals** | Analysis only | Energy curves, phoneme windows, section detection |
+| **Backing Vocals** | Analysis only | Energy/section support |
+| **Drums** | DrumsParamsStage2 | Markov HH, energy-driven ride, preempt/latch |
+| **Bass** | BassParamsStage2 | Root/5th preference, kick sync, octave collapse |
+| **Guitar** | GuitarParamsStage2 | Strum patterns, HH sync, voicing selection |
+| **Keyboard** | PianoParamsStage2 | Voicing, arpeggios, accent grid influence |
+| **Strings** | StringsParamsStage2 | Pad density, tension avoidance, swell control |
+| **Percussion** | → accent_grid | Influences Piano/Guitar rhythm (eakey-style) |
+| **Synth/FX** | → activity/chords | Chord voting, pad thickness hints |
+
+### Analysis Pipeline (Phase 13-18)
+
+Implemented in `analysis/stem_harmony.py`:
+
+- **Phase 13**: Beat grid generation (tempo, time signature, bar/beat positions)
+- **Phase 14**: Activity mask per stem (RMS-based, 0..1 per bar)
+- **Phase 15**: Chord estimation per stem (chroma → candidate chords with scores)
+- **Phase 16**: Aggregate stem votes → `audio_chordmap.yaml` (weighted by activity)
+- **Phase 17**: Accent grid extraction (kick/snare/hihat positions for cross-instrument sync)
+- **Phase 18**: Guide MIDI export (tempo, markers, block chords for QA)
+
+### Workflow Example
+
+```python
+from analysis.stem_harmony import (
+    make_beat_grid, estimate_activity,
+    estimate_chords_per_stem, aggregate_stem_chords,
+    extract_accent_grid
+)
+
+# 1. Analyze stems
+stems = {
+    "drums": "stems/drums.wav",
+    "bass": "stems/bass.wav",
+    "guitar": "stems/guitar.wav",
+    "vocals": "stems/vocals.wav"
+}
+
+beat_grid = make_beat_grid(stems, default_bpm=120.0, time_sig=(4, 4))
+
+# 2. Extract activity masks
+activity = {
+    role: estimate_activity(path, beat_grid)
+    for role, path in stems.items() if role != "vocals"
+}
+
+# 3. Estimate chords per stem
+stem_votes = {
+    role: estimate_chords_per_stem(path, beat_grid, role, key_hint="C:maj")
+    for role, path in stems.items() if role not in ("vocals", "backing_vocals")
+}
+
+# 4. Aggregate to audio_chordmap
+audio_chordmap = aggregate_stem_chords(
+    stem_votes, activity, key_hint="C:maj",
+    sections=[], cfg={"weights": {"bass": 0.35, "guitar": 0.35, "piano": 0.2}}
+)
+
+# 5. Extract accent grid
+accent_grid = extract_accent_grid(stems, beat_grid)
+
+# 6. Pass to Stage2 generators
+overrides = {
+    "mix_context": {
+        "beat_grid": beat_grid,
+        "activity": activity,
+        "accent_grid": accent_grid
+    },
+    "audio_chordmap": audio_chordmap
+}
+
+# Generate MIDI for each part
+bass_gen = BassGeneratorStage2(overrides=overrides)
+bass_midi = bass_gen.generate(chordmap, rhythm_library, params)
+```
+
+### Harmony Source Modes
+
+Configure in YAML presets:
+
+```yaml
+harmony:
+  source: audio          # audio | text | hybrid
+  fallback: text         # Fallback if audio analysis has gaps
+  keep_audio_root: true  # Prefer original bass root notes
+  prefer_root5: true     # Weight root/5th in scale degree selection
+  collapse_octaves: true # Avoid consecutive octave doubling
+  allow_text_tensions: [] # Tension whitelist (empty = strict for vocal preservation)
+```
+
+- **Mode A (audio)**: Follow original chord progression (recommended when keeping original vocal)
+- **Mode B (text)**: Use ChatGPT-generated chordmap (requires careful voice leading)
+- **Mode C (hybrid)**: Keep audio roots, add text tensions (best of both)
+
+### Cross-Instrument Influence (eakey-style)
+
+Enable accent grid influence in params:
+
+```yaml
+piano:
+  influence:
+    drums:
+      use: true
+      kick_to_left_root: 0.7      # Kick accents → L.H. root placement
+      snare_to_right_accent: 0.5  # Snare → R.H. attack
+      hihat_subdivision_bias: 0.6 # HH density → arpeggiation
+    guitar:
+      use: true
+      strum_to_broken_chord: updown  # Strum direction → chord break direction
+      density_follow: 0.5            # Guitar density → piano density
+```
+
+### NO-OP Safety & Backward Compatibility
+
+- **Default behavior**: All stem analysis features are **disabled** unless explicitly enabled
+- **Existing workflows**: Setting `audio_ingest.enable: false` maintains 100% backward compatibility
+- **Gradual adoption**: Enable features one at a time (activity masks → chords → accent grid)
+
+### Phase 22-24: Advanced Expression Control
+
+**New Feature**: Human-like expression through continuous emotion mapping, unified MIDI controls, and prosody alignment.
+
+#### Phase 22: Emotion Mapping (感情連続写像)
+
+Maps emotion curves `E(t) ∈ [0..1]` to musical parameters:
+
+- **Velocity modulation**: High emotion → louder notes (±12)
+- **Density gain**: High emotion → more notes per bar
+- **Register shift**: High emotion → higher pitch range (±4 semitones)
+- **Staccato bias**: High emotion → shorter, more detached notes
+
+**YAML Configuration**:
+```yaml
+emotion_map:
+  density_gain: 0.6      # E(t) influence on note density (0.0-1.0)
+  register_shift: 2      # Semitones shift at E(t)=1.0 (0-4)
+  staccato_bias: 0.15    # Staccato probability increase (0.0-0.3)
+  smooth_ms: 180         # Smoothing window (100-300ms)
+```
+
+#### Phase 24: Controls Unified (CC/RPN/PB統一)
+
+Unified MIDI control implementation:
+
+- **CC11 Expression**: `arch` (crescendo-decrescendo), `linear` (gradual increase), `flat` (constant)
+- **RPN Pitch Bend Sensitivity**: Written once at track start (prevents duplicate events)
+- **14-bit Pitch Bend**: ±8191 precision for smooth glissando
+
+**YAML Configuration**:
+```yaml
+controls:
+  expression_curve: arch    # arch | linear | flat
+  sustain_policy: pad_only  # off | pad_only | always
+  bend_range: 2             # Semitones (1-12)
+```
+
+#### Phase 23: Prosody Alignment (子音窓×強勢)
+
+Aligns instrumental articulation with vocal prosody:
+
+- **Stress**: Velocity boost on stressed syllables (+10)
+- **Sibilant**: Duck high frequencies during "s"/"sh" sounds (-6dB)
+- **Plosive**: Create gaps for "p"/"t"/"k" consonants (40ms)
+
+**YAML Configuration**:
+```yaml
+prosody:
+  enable: true           # Enable prosody alignment
+  stress_boost: 8        # Velocity boost for stress (0-15)
+  sibilant_duck_db: -3   # High freq attenuation (-6 to 0 dB)
+  plosive_gap_ms: 40     # Gap duration for plosives (20-80ms)
+  window_ms: 120         # Prosody window size (80-200ms)
+```
+
+### Phase 25-28: Advanced Post-Processing
+
+**New Feature**: Final stage optimization through note sparsification, hybrid harmony, adaptive style switching, and export formatting.
+
+#### Phase 25: Sparsify & Collision Avoidance
+
+Reduces over-density and prevents register collisions:
+
+- **Even thinning**: Keeps endpoints, removes intermediate notes with min gap
+- **Register collision**: Attenuate/drop notes in crowded pitch bands
+- **Drums HH control**: Prevents 32nd-note hihat machine-gun effect
+
+**YAML Configuration**:
+```yaml
+sparsify:
+  enable: true
+  keep_endpoints: true      # Preserve first/last notes
+  min_gap_ms: 40           # Minimum note spacing (ms)
+  band_low: 60             # Register collision range (MIDI)
+  band_high: 72
+  strategy: vel_first      # vel_first | drop_random
+  reduce_db: 6             # Velocity reduction (dB)
+  drop_prob: 0.25          # Random drop probability
+```
+
+#### Phase 26: Hybrid Harmony
+
+Blends audio-detected chords with creative/score chords:
+
+- **Audio root preservation**: Keeps original bass root
+- **Tension injection**: Adds 9th/11th/13th from creative chordmap
+- **Blend ratio**: Controls audio vs. creative balance (0.0-1.0)
+
+**YAML Configuration**:
+```yaml
+harmony:
+  source: hybrid              # audio | creative | hybrid
+  blend: 0.5                  # 0.0=audio only, 1.0=creative only
+  keep_audio_root: true       # Preserve original root
+  allow_text_tensions: [9, 11, 13]  # Allowed tensions
+  resolve_conflicts: root     # root | creative
+```
+
+#### Phase 27: Style Adaptation
+
+Dynamically interpolates between style presets based on activity level:
+
+- **Window averaging**: Smooths activity over N bars
+- **Preset lerp**: Linear interpolation between simple↔moderate↔complex↔intense
+- **Parameter merge**: Density, register, articulation adapt continuously
+
+**YAML Configuration**:
+```yaml
+style_adapt:
+  enable: true
+  window_bars: 4              # Activity averaging window
+  low_high: [0.3, 0.7]       # Activity thresholds
+  order: ["simple", "moderate", "complex", "intense"]
+  presets_dict: {...}         # Inline or from YAML
+```
+
+#### Phase 28: Export Postprocess
+
+Final formatting for DAW export:
+
+- **Quantization**: Snap to grid (16th/8th notes) while preserving endpoints
+- **Track split**: Piano→RH/LH, Guitar→Clean/FX, Strings→Long/Short
+- **Naming**: Consistent track naming `{idx:02d}_{role}_{section}`
+
+**YAML Configuration**:
+```yaml
+export:
+  quantize_ql: 0.0625         # Quantize unit (0.0625=64th note)
+  track_split: ["RH", "LH"]   # Track split tags
+  name_fmt: "{idx:02d}_Piano_{section}"
+```
+
+#### Using Phase 22-28 Features
+
+```python
+from generator.bass_params_stage2 import BassParamsStage2
+
+params = {
+    "chords": ["C", "F", "G", "C"],
+    "emotion_curve": [0.3, 0.5, 0.7, 0.9],  # Rising emotion
+    "tempo": 120,
+    
+    # Phase 22: Emotion mapping
+    "emotion_map": {
+        "density_gain": 0.6,
+        "register_shift": 2,
+        "staccato_bias": 0.15,
+        "smooth_ms": 180
+    },
+    
+    # Phase 24: Controls
+    "controls": {
+        "expression_curve": "arch",
+        "sustain_policy": "off",
+        "bend_range": 2
+    },
+    
+    # Phase 23: Prosody (optional, for vocal alignment)
+    "prosody": {
+        "enable": True,
+        "stress_boost": 8,
+        "sibilant_duck_db": -3,
+        "plosive_gap_ms": 40,
+        "window_ms": 120
+    }
+}
+
+bass = BassParamsStage2()
+bass.apply(params)
+track = bass.generate()
+```
+
+**Style Presets**: Phase 22-24 settings are included in all instrument presets (`configs/*_style_presets.yaml`):
+- `simple`: Conservative settings, prosody disabled
+- `moderate`: Balanced expression
+- `complex`: Rich modulation
+- `intense`: Maximum expression, high emotion sensitivity
+
+**NO-OP Safety**: All Phase 22-24 features are **opt-in**. Omitting these parameters maintains full backward compatibility.
+
+### Documentation
+
+- **[STEM_HARMONY_IMPLEMENTATION.md](STEM_HARMONY_IMPLEMENTATION.md)**: Complete technical implementation details
+- **[PHASE_22_24_23_IMPLEMENTATION.md](docs/PHASE_22_24_23_IMPLEMENTATION.md)**: Phase 22-24 implementation report
+- **[scripts/test_stem_harmony.py](scripts/test_stem_harmony.py)**: Validation test suite (7/7 tests passing)
+- **[scripts/test_phase_22_24_23.py](scripts/test_phase_22_24_23.py)**: Phase 22-24 integration tests
+- **[analysis/stem_harmony.py](analysis/stem_harmony.py)**: Core analysis module (421 lines, fully documented)
+
+---
+
 ## Table of Contents
 - [Setup](#setup)
 - [Configuration Files](#configuration-files)
@@ -58,6 +409,50 @@ pip install -r requirements/extra-ml.txt
 pip install -r requirements/extra-audio.txt
 pip install -e .[gui]                 # optional GUI
 ```
+
+### Stage1 統合（v4.1）
+
+**スキーマ統一・キャッシュ移植・オーケストレーター**
+
+- `ops/stem_harmony_7th_v2.py`: 7th Enhanced + **キャッシュ** + **最短持続** + **confidence** + **転調マーカー**（任意）
+- `ops/chordmap_unify.py`: 入力揺れを統一フォーマット `{unit:"ql", events:[...]}` へ正規化
+- `scripts/generate_stage1_jsons.py`: chordmap/anchors/mix を **ワンコマンド出力**
+
+**推奨フロー**：
+
+```bash
+python scripts/generate_stage1_jsons.py \
+  --song-dir data/suno_ai/song_001 \
+  --use-enhanced \
+  --exclude Vocals \
+  --force-key C
+```
+
+**詳細オプション**：
+
+```bash
+# v2 コード認識 + スキーマ統一
+python ops/stem_harmony_7th_v2.py \
+  --stems data/stems \
+  --out analysis/chordmap.json \
+  --sections analysis/sections.json \
+  --emit-confidence \
+  --min-dwell-ql 2.0
+
+# スキーマ統一のみ（既存chordmapを変換）
+python ops/chordmap_unify.py \
+  --input old_chordmap.json \
+  --output unified_chordmap.json \
+  --merge-N --glue-same-root
+```
+
+**主な機能**:
+- **スキーマ統一**: 秒/QL・配列/辞書・"Am7"表記等を統一
+- **N区間除去**: `--merge-N --min-N-ql 2.0` で短いN（休符）を除去
+- **X→N→X 吸収**: `--glue-same-root` で同一コード間のNを吸収
+- **最短持続**: `--min-dwell-ql` でぶつ切れコード防止
+- **信頼度**: `--emit-confidence` でコード推定の信頼度付与
+- **転調マーカー**: `--emit-key-changes` でキー変化検出（将来実装）
 
 `basic_pitch` only installs on Python versions below 3.12. If you are on Python 3.12,
 use `miditoolkit` or `pretty_midi` based workflows for audio→MIDI conversion.
@@ -2098,6 +2493,388 @@ totals_matrix = analyzer.load_totals_matrix()    # 統計情報
 - `scripts/build_lamda_unified_db.py` - Vertex AI用構築スクリプト
 - `docs/vertex_ai_lamda_unified_guide.py` - Notebookガイド (Cell 1-7)
 - `docs/LAMDA_UNIFIED_ARCHITECTURE.md` - 詳細設計ドキュメント
+
+---
+
+## 🎼 Local LAMDA Processing Pipeline (MUSDB18 & MoisesDB統合)
+
+### 概要
+
+このプロジェクトでは、**MUSDB18** (150曲) と **MoisesDB** (240曲) の計390曲のステム分離音源を使用して、**WAV版とMIDI版の並行処理パイプライン**を構築しています。
+
+```
+MUSDB18 (150曲) + MoisesDB (240曲) = 390曲
+    ↓
+┌────────────────────────────────────────────────────┐
+│ WAV版 (audio_chordmap.yaml生成)                    │
+├────────────────────────────────────────────────────┤
+│ 1. ステム別ポリシー適用                             │
+│    - MUSDB18: other:0.65 (4ステム専用)             │
+│    - MoisesDB: 11種類楽器対応 (guitar/piano優先)   │
+│ 2. bars.parquet生成 (beat検出)                     │
+│ 3. audio_chordmap.yaml生成 (policy_metadata付き)   │
+└────────────────────────────────────────────────────┘
+    ↓
+┌────────────────────────────────────────────────────┐
+│ MIDI版 (Stage1 LAMDA Plus v2)                      │
+├────────────────────────────────────────────────────┤
+│ 1. CLEANED_MIDI入力 (pop909/slakh_stem)            │
+│ 2. ID付与 (source_mid_id/content_id/run_id)        │
+│ 3. クリーニング (5機能)                             │
+│ 4. OK::メタ注入                                     │
+│ 5. midi_guide/{content_id}/出力                     │
+└────────────────────────────────────────────────────┘
+```
+
+---
+
+### 🎵 WAV版処理フロー
+
+#### 必要な準備
+
+```bash
+# 1. 仮想環境確認
+ls -d venv .venv311
+
+# 2. 設定ファイル確認
+cat config/stem_policy_profiles.yaml
+```
+
+#### MUSDB18処理 (150曲)
+
+```bash
+# 旧データ削除（再処理の場合）
+rm -rf data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/wav_guide/musdb18
+rm -rf data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/CLEANED_WAV/musdb18_decoded
+
+# 処理実行（バックグラウンド）
+nohup python3 scripts/local_lamda_moises_integration.py \
+  --base data/Los-Angeles-MIDI/LOCAL_LAMDA \
+  --dataset musdb18 \
+  --source-name MUSDB18 \
+  --no-registry \
+  --skip-cleanup \
+  > musdb18_processing.log 2>&1 &
+
+# 進捗確認
+tail -f musdb18_processing.log
+```
+
+#### MoisesDB処理 (240曲)
+
+```bash
+# 旧データ削除（再処理の場合）
+rm -rf data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/wav_guide/moisesdb
+
+# 処理実行（バックグラウンド）
+nohup python3 scripts/local_lamda_moises_integration.py \
+  --base data/Los-Angeles-MIDI/LOCAL_LAMDA \
+  --dataset moisesdb \
+  --source-name MoisesDB \
+  --no-registry \
+  --skip-cleanup \
+  > moisesdb_processing.log 2>&1 &
+
+# 進捗確認
+tail -f moisesdb_processing.log
+```
+
+#### 処理結果確認
+
+```bash
+# audio_chordmap.yaml生成数
+find data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/wav_guide -name "audio_chordmap.yaml" | wc -l
+# 期待値: 390 (MUSDB18:150 + MoisesDB:240)
+
+# bars.parquet生成数
+find data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/wav_guide -name "bars.parquet" | wc -l
+# 期待値: 約189 (beat検出成功率48%)
+
+# policy_metadata確認（サンプル）
+cat data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/wav_guide/musdb18/Actions\ -\ One\ Minute\ Smile/audio_chordmap.yaml | grep -A 20 policy_metadata
+```
+
+#### ステム別ポリシー設定
+
+**MUSDB18用** (`config/stem_policy_profiles.yaml`):
+```yaml
+musdb18:
+  description: "MUSDB18 4-stem専用プロファイル"
+  harmony_priority: [other, bass, mix]
+  weights:
+    other: 0.65  # 強化（デフォルト0.3の2倍）
+    bass: 0.25
+    mix: 0.10
+  exclude_for_harmony: [mix, vocals, drums, percussion]
+```
+
+**MoisesDB用**:
+```yaml
+moisesdb:
+  description: "MoisesDB 11種類楽器対応"
+  harmony_priority: 
+    - guitar
+    - piano
+    - other_keys
+    - strings
+    - wind
+    - other_plucked
+    - other
+    - bass
+  weights:
+    guitar: 0.50
+    piano: 0.50
+    # ... 11種類定義
+```
+
+---
+
+### 🎹 MIDI版処理フロー (Stage1 LAMDA Plus v2)
+
+#### 必要な準備
+
+```bash
+# 1. 設定ファイル確認
+cat config/stage1_config.yaml
+
+# 2. バリデーション実行
+python3 scripts/stage1_config_validator.py config/stage1_config.yaml
+# 期待出力: "OK: stage1_config.yaml passed basic validation."
+```
+
+#### Stage1実行
+
+```bash
+# テスト実行（10曲）
+python3 scripts/stage1_lamda_plus_v2.py \
+  --config config/stage1_config.yaml \
+  --max-files 10 \
+  --csv output/stage1_summary_test.csv \
+  --verbose
+
+# 全データ処理（バックグラウンド）
+# 注: 87,184ファイル中、drum_loops除外後の5,350ファイルを処理
+nohup python3 scripts/stage1_lamda_plus_v2.py \
+  --config config/stage1_config.yaml \
+  --csv output/stage1_summary_full.csv \
+  --verbose \
+  > stage1_processing.log 2>&1 &
+
+# 進捗確認
+tail -f stage1_processing.log
+```
+
+#### 処理結果確認
+
+```bash
+# 生成MIDI数
+find data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_midi/midi_guide -name "stage1_clean.mid" | wc -l
+# 実績値: 4,543ファイル
+# 注: CSV記録5,350件との差分807件は以下の原因:
+#   - 同一content_idによる重複除外（正常動作）
+#   - 空MIDIファイルのスキップ
+#   - パースエラーによるスキップ
+
+# JSONメタデータ確認
+find data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_midi/midi_guide -name "stage1_clean.json" | head -1 | xargs cat | jq
+```
+
+#### ID体系
+
+| ID種別 | 生成方法 | 用途 |
+|--------|---------|------|
+| **source_mid_id** | 入力MIDIのMD5[:16] | 変更前の参照点（Resume対応） |
+| **content_id** | バー指紋+ティック長のMD5[:16] | 正本ID（ディレクトリ名） |
+| **run_id** | 日時+バージョン (例: 20251025_224353_v2.0) | 処理単位追跡 |
+
+#### クリーニング機能
+
+1. **拍子救済** (`timesig_rescue`): 1/4→4/4救済、自己相似ヒューリスティック
+2. **テンポ平滑化** (`tempo_bpm_clip`): BPM[30,300]クリップ
+3. **ノート制約** (`ranges`): pitch[21,108], vel[1,127], dur_ticks[30,3840]
+4. **ドラム正規化** (`drum_normalize`): GM Ch10統一、近傍スナップ
+5. **バー境界分割** (`bar_split_long_notes`): 長音を小節単位で分割
+
+#### OK::メタ注入
+
+```json
+{
+  "ok_meta": {
+    "song_id": "86e94f4aa1bead65",
+    "stage": "stage1",
+    "run_id": "20251025_224353_v2.0",
+    "source_mid_id": "16359c765b6df119",
+    "content_id": "86e94f4aa1bead65",
+    "time_sig": [4, 4],
+    "bpm_est": 120
+  }
+}
+```
+
+---
+
+### 🔧 A/B比較（品質評価）
+
+```bash
+# 旧vs新のメトリクス比較
+python scripts/ab_compare_policy_metrics.py \
+  --old-dir data/backup_old \
+  --new-dir data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/wav_guide/musdb18 \
+  --output output/musdb18_ab_metrics.csv
+
+# メトリクス一覧
+# - chord_entropy: コード安定性（低いほど良い）
+# - segment_stability: セグメント安定性（高いほど良い）
+# - conf_mean: 平均信頼度（高いほど良い）
+# - bass_root_agreement: ベース音一致率（高いほど良い）
+```
+
+---
+
+### 📊 処理統計
+
+#### WAV版
+
+| データセット | 曲数 | audio_chordmap.yaml | bars.parquet | policy適用 |
+|-------------|-----|---------------------|--------------|-----------|
+| MUSDB18 | 150 | 150 (100%) | 75 (50%) | other:0.65強化 |
+| MoisesDB | 240 | 240 (100%) | 114 (48%) | 11種類楽器対応 |
+| **合計** | **390** | **390 (100%)** | **189 (48%)** | プロファイル別 |
+
+#### MIDI版
+
+| ソース | 実曲数（推定） | MIDIファイル数 | 処理結果 | 除外 | 備考 |
+|--------|---------------|---------------|---------|------|------|
+| pop909 | 約278曲 | 833ファイル | 処理対象 | 0 | パート別3分割（bass/chords/melody） |
+| slakh_stem | 約500-700曲 | 3,562ファイル | 処理対象 | 0 | パート別4-5分割（strings/drums/guitar/bass） |
+| drum_loops | 827曲 | 827ファイル | 0 | 827 (rhythm学習用) | 除外対象 |
+| **合計（全体）** | - | **87,184ファイル** | **5,350処理** | **81,834除外** | drum_loops + その他 |
+| **生成結果** | **約800-1,000曲** | **4,543ファイル** | ✅ | - | content_id重複除外後 |
+
+**処理内訳**:
+
+- CSV記録: 5,350件（処理試行）
+- 生成MIDI: 4,543件（実際の出力）
+- 差分: 807件（content_id重複除外 + 空MIDI + パースエラー）
+
+---
+
+---
+
+### 🚀 次のステップ
+
+#### 1. Song Package生成（WAV版）
+
+```bash
+# bars.parquet生成済み曲のみ処理
+python scripts/generate_song_package_v2.py \
+  --base data/Los-Angeles-MIDI/LOCAL_LAMDA \
+  --dataset musdb18 --dataset moisesdb \
+  --include-dataset-level \
+  --add-audio-chordmap \
+  --index-out output/song_packages_index.csv
+```
+
+#### 2. LAMDA先験作成（MIDI版品質向上）
+
+```bash
+# TOTALS.parquet作成
+python scripts/create_lamda_priors.py \
+  --input-dir data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_midi/CLEANED_MIDI \
+  --output-totals data/Los-Angeles-MIDI/LOCAL_LAMDA/stats/LAMDA_TOTALS.parquet \
+  --output-signatures data/Los-Angeles-MIDI/LOCAL_LAMDA/stats/LAMDA_SIGNATURES.json
+```
+
+#### 3. Stage2統合（MIDI生成）
+
+```bash
+# Stage1出力をStage2入力として使用
+python scripts/lamda_v2/stage2_extractor.py \
+  --input-dir data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_midi/midi_guide \
+  --output-dir output/stage2_midi \
+  --config configs/lamda/midi_stage2.yaml
+```
+
+---
+
+### 📁 ディレクトリ構造
+
+```
+data/Los-Angeles-MIDI/LOCAL_LAMDA/
+├── Local_Lamda_wav/               # WAV版
+│   ├── CLEANED_WAV/
+│   │   ├── musdb18_decoded/       # MUSDB18ステム
+│   │   └── moisesdb_original/     # MoisesDBステム
+│   └── wav_guide/
+│       ├── musdb18/               # MUSDB18処理済み
+│       │   └── {song_name}/
+│       │       ├── audio_chordmap.yaml
+│       │       └── bars.parquet (optional)
+│       └── moisesdb/              # MoisesDB処理済み
+│           └── {song_id}/
+│               ├── audio_chordmap.yaml
+│               └── bars.parquet (optional)
+│
+└── Local_Lamda_midi/              # MIDI版
+    ├── CLEANED_MIDI/              # 入力MIDI
+    │   ├── pop909/clean_midi/
+    │   ├── slakh_stem/clean_midi/
+    │   └── drum_loops/            # 除外対象
+    └── midi_guide/                # Stage1出力
+        └── {content_id}/
+            ├── stage1_clean.mid
+            └── stage1_clean.json
+```
+
+---
+
+### 🔍 トラブルシューティング
+
+#### bars.parquet生成率が低い（48%）
+
+**原因**: beat検出失敗（静かな曲、複雑なリズム）  
+**対応策**:
+```bash
+# 固定テンポ推定で再生成
+python scripts/regenerate_bars_fixed_tempo.py \
+  --input-dir data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/wav_guide \
+  --default-bpm 120
+```
+
+#### MIDI生成ファイル数が期待より少ない
+
+**原因**: エラーによるスキップ  
+**確認**:
+```bash
+# エラーログ確認
+grep "ERROR" stage1_processing.log
+
+# CSV確認
+wc -l output/stage1_summary_full.csv
+```
+
+#### policy_metadataが埋め込まれていない
+
+**原因**: 古いバージョンのスクリプト  
+**対応策**:
+```bash
+# 最新版確認
+git log --oneline scripts/local_lamda_moises_integration.py | head -5
+
+# 再処理
+rm -rf data/Los-Angeles-MIDI/LOCAL_LAMDA/Local_Lamda_wav/wav_guide/musdb18
+# 再実行（上記手順参照）
+```
+
+---
+
+### 📚 関連ドキュメント
+
+- **[STAGE1_IMPROVEMENTS_APPLIED.md](STAGE1_IMPROVEMENTS_APPLIED.md)** - Stage1改善点適用レポート
+- **[config/stem_policy_profiles.yaml](config/stem_policy_profiles.yaml)** - ステム別ポリシー定義
+- **[config/stage1_config.yaml](config/stage1_config.yaml)** - Stage1設定
+- **[scripts/stage1_config_validator.py](scripts/stage1_config_validator.py)** - 設定バリデータ
+- **[scripts/ab_compare_policy_metrics.py](scripts/ab_compare_policy_metrics.py)** - A/B比較ツール
 
 ---
 

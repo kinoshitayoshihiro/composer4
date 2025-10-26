@@ -169,10 +169,20 @@ def get_part_override(
     section: str,
     part: str,
 ) -> PartOverride:
-    if not overrides_model or not overrides_model.root:
+    if not overrides_model:
+        return PartOverride()
+    
+    # overrides_modelがdictの場合とオブジェクトの場合の両方に対応
+    if isinstance(overrides_model, dict):
+        root = overrides_model
+    elif hasattr(overrides_model, 'root'):
+        if not overrides_model.root:
+            return PartOverride()
+        root = overrides_model.root
+    else:
         return PartOverride()
 
-    section_data_model = overrides_model.root.get(section)
+    section_data_model = root.get(section)
 
     if section_data_model and isinstance(section_data_model, SectionOverride):
         part_data_model = getattr(section_data_model, part, None)

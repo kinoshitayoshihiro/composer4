@@ -1,0 +1,185 @@
+version: 1
+# 各エモーションに対する、人間味付与と密度・ゴースト率などの係数
+# ※ 現時点でアレンジャは humanize.* を直接使用。
+#    density_multipliers / velocity_shift / swing は section_data に埋め込んで
+#    各 Generator（compose/generate 側）が任意に参照できるようにしています。
+emotions:
+  energetic:
+    humanize:
+      timing_ms: 10       # 演奏タイミングのゆらぎ（±ms）
+      vel_sigma: 7        # ベロシティの標準偏差（±）
+    density_multipliers:
+      drums:   { hh: 1.20, ghost: 1.30, fills: 1.20 }
+      bass:    1.10
+      guitar:  1.20
+      piano:   1.10
+      strings: 1.05
+    velocity_shift:
+      drums:   4
+      bass:    2
+      guitar:  3
+      piano:   1
+      strings: 1
+    swing:
+      eighth:  0.04  # 4%スイング（将来拡張用）
+
+  melancholic:
+    humanize: { timing_ms: 8, vel_sigma: 6 }
+    density_multipliers:
+      drums:   { hh: 0.85, ghost: 1.10, fills: 0.80 }
+      bass:    0.95
+      guitar:  0.90
+      piano:   0.95
+      strings: 1.10
+    velocity_shift:
+      drums:  -2
+      bass:   -1
+      guitar: -1
+      piano:   0
+      strings: 1
+    swing: { eighth: 0.02 }
+
+  calm:
+    humanize: { timing_ms: 6, vel_sigma: 4 }
+    density_multipliers:
+      drums:   { hh: 0.75, ghost: 0.80, fills: 0.50 }
+      bass:    0.85
+      guitar:  0.80
+      piano:   0.90
+      strings: 1.00
+    velocity_shift:
+      drums:  -4
+      bass:   -2
+      guitar: -2
+      piano:  -1
+      strings: 0
+    swing: { eighth: 0.00 }
+
+  aggressive:
+    humanize: { timing_ms: 12, vel_sigma: 8 }
+    density_multipliers:
+      drums:   { hh: 1.30, ghost: 1.15, fills: 1.35 }
+      bass:    1.20
+      guitar:  1.30
+      piano:   1.15
+      strings: 1.05
+    velocity_shift:
+      drums:   6
+      bass:    4
+      guitar:  5
+      piano:   3
+      strings: 2
+    swing: { eighth: 0.03 }
+
+  romantic:
+    humanize: { timing_ms: 8, vel_sigma: 6 }
+    density_multipliers:
+      drums:   { hh: 0.95, ghost: 1.15, fills: 0.90 }
+      bass:    1.00
+      guitar:  1.10
+      piano:   1.05
+      strings: 1.15
+    velocity_shift:
+      drums:   1
+      bass:    0
+      guitar:  2
+      piano:   1
+      strings: 2
+    swing: { eighth: 0.02 }
+    
+    # ========================================================================
+    # ★A+ upgrade: Drums Enhancement Parameters (Optional)
+    # ========================================================================
+    # drums_style: "tight_rock"  # スタイルプリセット名（オプション）
+    
+    drums_params:
+      # HH Open化（BPM・位置依存）
+      open_ratio:
+        strong_beat: 0.1   # 強拍（1,3拍目）でのOpen確率
+        weak_beat: 0.2     # 弱拍（2,4拍目）
+        off_beat: 0.4      # 裏拍
+      
+      open_length:
+        base_duration: 0.5  # Open HHの基本長さ（quarter beats）
+        bpm_dependent: true # BPM依存（高速→短く、低速→長く）
+      
+      # Velocity curve
+      vel_curve: "natural"  # "natural" or "compress"
+      
+      # Rimshot混合
+      rimshot_rate: 0.1  # Snare→Rimshot置換率
+      
+      # Rim/Snare交替
+      rim_snare_alternate_rate: 0.3  # 連続Snareの2打目をRim化
+      
+      # Crash downbeat
+      crash:
+        downbeat_prob: 0.15  # セクション冒頭でのCrash確率
+        with_kick: true      # Kick協調
+      
+      # Pedal HH
+      pedal_hh:
+        off_beat_rate: 0.2  # 裏拍でのPedal HH挿入率
+      
+      # Ride切替
+      ride:
+        switch_after_seconds: 16.0  # N秒後からRideに切替
+        decay_curve: "exp"          # "exp" or "linear"
+      
+      # Cymbal choke
+      choke:
+        crash_choke_prob: 0.15  # Crash/Ride duration短縮確率
+      
+      # Push/Pull feel
+      push_pull:
+        push_amount: 0.03  # Snareを微妙に前へ（quarter beats）
+        pull_amount: 0.02  # Kickを微妙に後ろへ
+      
+      # Accent map（拍位置ごとのvelocity boost）
+      accent_map:
+        "0": 5   # 1拍目頭（8分音符単位）
+        "4": 3   # 3拍目頭
+      
+      # Ghost caps
+      ghost_caps:
+        max_per_bar: 4          # 1小節あたりの最大Ghost数
+        velocity_threshold: 50  # これ以下をGhostと判定
+      
+      # Kick on chord change
+      kick_on_change:
+        emphasis_prob: 0.5      # コード変化時のKick強調確率
+        velocity_boost: 10      # Velocity上昇量
+      
+      # Kick⇄Bass unison（Bass利用可能な場合のみ）
+      kick_bass_unison:
+        unison_prob: 0.3  # ベース音位置へのKick追加率
+      
+      # Dynamics compression
+      dynamics:
+        threshold: 80     # これを超えると圧縮
+        ratio: 2.0        # 圧縮比
+        makeup_gain: 5    # 全体ゲイン
+      
+      # Ghost notes
+      ghost_notes:
+        snare_rate: 0.15  # 裏拍へのGhost Snare追加率
+      
+      # Fills（小節番号指定）
+      fills:
+        insert_bars: [3, 7, 15]  # フィルを挿入する小節（0-indexed）
+        intensity: "medium"       # "light" / "medium" / "heavy"
+        
+        # Fill vocabulary（カスタムパターン定義）
+        patterns:
+          light:
+            - [{ drum: "snare", offset: 0.0, velocity: 70 },
+               { drum: "snare", offset: 0.5, velocity: 75 }]
+          medium:
+            - [{ drum: "snare", offset: 0.0, velocity: 80 },
+               { drum: "kick", offset: 0.25, velocity: 85 },
+               { drum: "snare", offset: 0.5, velocity: 90 }]
+          heavy:
+            - [{ drum: "kick", offset: 0.0, velocity: 90 },
+               { drum: "snare", offset: 0.25, velocity: 95 },
+               { drum: "kick", offset: 0.5, velocity: 90 },
+               { drum: "crash1", offset: 0.75, velocity: 100 }]
