@@ -199,13 +199,23 @@ class SimplePatternRecommender:
             section=section, chord_root=chord_root, chord_quality=chord_quality, tempo=tempo
         )
     
-    def recommend(self, features: dict, topk: int = 1) -> Optional[Dict[str, Any]]:
+    def recommend(
+        self, 
+        features: dict, 
+        topk: int = 1, 
+        filter_v3_only: bool = False,
+        min_proba: float = 0.15,
+        min_margin: float = 0.10
+    ) -> Optional[Dict[str, Any]]:
         """ML-based recommendation with Top-K reranking
         
         Args:
             features: Features dict with keys: section, chord_root, chord_quality, tempo, 
                      target_accent, target_density_ql, rerank_w_proba, etc.
             topk: Number of recommendations
+            filter_v3_only: top1_proba=1.0のパターンのみ推薦（Phase 24横展開、デフォルトFalse）
+            min_proba: 最小確率閾値（絶対KPI評価、filter_v3_only=True時有効）
+            min_margin: 最小マージン閾値（絶対KPI評価、filter_v3_only=True時有効）
         
         Returns:
             Pattern dict or None (falls back to get_pattern if ML unavailable or threshold not met)
@@ -229,6 +239,9 @@ class SimplePatternRecommender:
             time_sig=features.get("time_sig", "4/4"),
             topk=topk,
             features=features,
+            filter_v3_only=filter_v3_only,
+            min_proba=min_proba,
+            min_margin=min_margin,
         )
         
         # If ML reranking returned None (threshold fallback), use rule-based
@@ -248,6 +261,9 @@ class SimplePatternRecommender:
         time_sig: str,
         topk: int,
         features: dict = None,
+        filter_v3_only: bool = False,
+        min_proba: float = 0.15,
+        min_margin: float = 0.10,
     ) -> Optional[Dict[str, Any]]:
         """ML-based recommendation (XGB/Sklearn) with Top-K reranking"""
         try:
@@ -283,6 +299,13 @@ class SimplePatternRecommender:
 
             # Rerank with context (accent/density/section fit)
             reranked = self._rerank_with_context(predictions, base_features)
+            
+            # Phase 24.1: V3フィルタ適用（top1_proba=1.0のみ）
+            if filter_v3_only and reranked:
+                reranked = self._filter_v3_patterns_simple(reranked, min_proba, min_margin)
+                if not reranked:
+                    logger.debug("V3 filter: No patterns passed KPI threshold, using fallback")
+                    return None
             
             # Debug: 再ランク結果をログ出力
             if reranked:
@@ -599,6 +622,56 @@ class SimplePatternRecommender:
             return {"pattern_id": fallback_id, "confidence": 0.3, **fallback}
 
         return None
+    
+    def _filter_v3_patterns_simple(
+        self, 
+        patterns: List[Dict[str, Any]], 
+        min_proba: float, 
+        min_margin: float
+    ) -> List[Dict[str, Any]]:
+        """
+        top1_proba=1.0のパターンのみ抽出し、KPI評価（Phase 24.1横展開）
+        
+        Args:
+            patterns: 候補パターンリスト（reranked results）
+            min_proba: 最小確率閾値
+            min_margin: 最小マージン閾値
+        
+        Returns:
+            KPI合格パターンのみのリスト
+        """
+        v3_patterns = []
+        
+        for pattern_dict in patterns:
+            pattern_id = pattern_dict.get('pattern_id')
+            pattern_data = self.patterns.get(pattern_id, {})
+            metadata = pattern_data.get('metadata', {})
+            
+            # Extract top1_proba, top2_proba
+            top1_proba = metadata.get('top1_proba', 0.0)
+            top2_proba = metadata.get('top2_proba', 0.0)
+            
+            # V3フィルタ（top1_proba=1.0）
+            if top1_proba < 0.999:
+                continue
+            
+            # KPI評価
+            proba_margin = top1_proba - top2_proba
+            kpi_passed = (top1_proba >= min_proba) and (proba_margin >= min_margin)
+            
+            if kpi_passed:
+                # Add KPI info to pattern_dict
+                pattern_dict['top1_proba'] = top1_proba
+                pattern_dict['top2_proba'] = top2_proba
+                pattern_dict['proba_margin'] = proba_margin
+                pattern_dict['kpi_passed'] = True
+                v3_patterns.append(pattern_dict)
+                
+                logger.debug(f"V3 KPI passed: {pattern_id} proba={top1_proba:.3f} margin={proba_margin:.3f}")
+            else:
+                logger.debug(f"V3 KPI failed: {pattern_id} proba={top1_proba:.3f} margin={proba_margin:.3f}")
+        
+        return v3_patterns
 
     def get_patterns_by_section(self, section: str) -> List[Dict[str, Any]]:
         """

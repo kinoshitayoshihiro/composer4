@@ -195,11 +195,14 @@ class BassGeneratorStage2(BassGenerator):
             duration_tolerance=8.0,  # ±8 seconds
         )
         
-        # Recommendation
+        # Recommendation (Phase 24.1: V3フィルタ有効化)
         results = self.recommender.recommend(
             query,
             top_k=3,
             min_score=self.stage2_min_score,
+            filter_v3_only=True,  # top1_proba=1.0のみ
+            min_proba=0.15,       # 絶対KPI評価
+            min_margin=0.10,      # 絶対KPI評価
         )
         
         # Check if recommendations available
