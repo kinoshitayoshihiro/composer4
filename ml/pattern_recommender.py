@@ -9,6 +9,7 @@ Features:
 - Stage2品質スコア統合（類似度70% + 品質30%）
 - Top-K推薦
 - キャッシュ機能（高速化）
+- Blacklist/Whitelist機能（Phase 24.3）
 
 Usage:
     from ml.pattern_recommender import PatternRecommender, PatternQuery
@@ -23,7 +24,7 @@ Usage:
         duration=16.0,
     )
     
-    # Recommend
+    # Recommend (with blacklist)
     results = recommender.recommend(query, top_k=5, min_score=0.6)
 """
 
@@ -31,7 +32,7 @@ import pickle
 from utilities.pickle_compat import load as pickle_load_compat
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, Set
 import logging
 import sys
 import time
@@ -62,6 +63,20 @@ except ImportError:
     class ExtractedPattern:
         metadata: Any = None
         notes: List[Any] = None
+
+# Import pattern quality config (Phase 24.3)
+try:
+    from ml.pattern_quality_config import (
+        get_blacklist,
+        get_whitelist,
+        get_recommender_config
+    )
+except ImportError:
+    logger_import = logging.getLogger(__name__)
+    logger_import.warning("Could not import pattern_quality_config. Blacklist disabled.")
+    get_blacklist = lambda: set()
+    get_whitelist = lambda: set()
+    get_recommender_config = lambda: {}
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -111,6 +126,23 @@ class PatternRecommender:
         
         # パターンインデックス構築（遅延最適化）
         self.pattern_index = self._build_pattern_index()
+        
+        # Blacklist/Whitelist読み込み（Phase 24.3）
+        self.blacklist: Set[str] = set()
+        self.whitelist: Set[str] = set()
+        self.recommender_config = {}
+        
+        try:
+            self.blacklist = get_blacklist()
+            self.whitelist = get_whitelist()
+            self.recommender_config = get_recommender_config()
+            
+            if self.blacklist:
+                logger.info(f"  Blacklist: {len(self.blacklist)} patterns")
+            if self.whitelist:
+                logger.info(f"  Whitelist: {len(self.whitelist)} patterns")
+        except Exception as e:
+            logger.debug(f"Failed to load blacklist/whitelist: {e}")
         
         logger.info(f"Initialized PatternRecommender for {instrument}")
         logger.info(f"  Total patterns: {len(self.patterns)}")
@@ -245,6 +277,42 @@ class PatternRecommender:
         
         return dict(index)
     
+    def _filter_blacklist(self, patterns: list) -> list:
+        """
+        Blacklistに含まれるパターンを除外（Phase 24.3）
+        
+        Args:
+            patterns: 候補パターンリスト
+        
+        Returns:
+            Blacklistに含まれないパターンのリスト
+        """
+        filtered = []
+        blacklist_hits = 0
+        
+        for pattern in patterns:
+            # Get pattern ID
+            if isinstance(pattern, dict):
+                pattern_id = pattern.get('key', '')
+            else:
+                pattern_id = getattr(pattern.metadata, 'file', '')
+            
+            # Check blacklist
+            if pattern_id in self.blacklist:
+                blacklist_hits += 1
+                logger.debug(f"Blacklist hit: {pattern_id}")
+                continue
+            
+            filtered.append(pattern)
+        
+        if blacklist_hits > 0:
+            logger.info(
+                f"Blacklist filtered: {blacklist_hits} patterns excluded, "
+                f"{len(filtered)} remain"
+            )
+        
+        return filtered
+    
     def _filter_v3_patterns(self, patterns: list) -> list:
         """
         top1_proba=1.0のパターンのみ抽出（Phase 24横展開）
@@ -375,6 +443,11 @@ class PatternRecommender:
         
         # インデックス活用で候補パターン取得（高速化）
         candidate_patterns = self._get_candidate_patterns(query)
+        
+        # Blacklist filter (Phase 24.3)
+        if self.recommender_config.get('apply_blacklist', True) and self.blacklist:
+            candidate_patterns = self._filter_blacklist(candidate_patterns)
+            logger.debug(f"Blacklist filter: {len(candidate_patterns)} patterns remain")
         
         # V3フィルタ（top1_proba=1.0のみ）
         if filter_v3_only:

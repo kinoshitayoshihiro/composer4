@@ -38,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from generator.bass_generator import BassGenerator
 from ml.pattern_recommender import PatternRecommender, PatternQuery
+from ml.v3_filter_config import get_v3_filter_params
 from music21 import stream, note, pitch
 
 logging.basicConfig(level=logging.INFO)
@@ -195,14 +196,20 @@ class BassGeneratorStage2(BassGenerator):
             duration_tolerance=8.0,  # ±8 seconds
         )
         
-        # Recommendation (Phase 24.1: V3フィルタ有効化)
+        # Get V3 filter params from YAML (Phase 24.3)
+        v3_params = get_v3_filter_params(
+            instrument='bass',
+            section=section.lower() if section else None
+        )
+        
+        # Recommendation (Phase 24.3: YAML-based V3 filter)
         results = self.recommender.recommend(
             query,
             top_k=3,
             min_score=self.stage2_min_score,
-            filter_v3_only=True,  # top1_proba=1.0のみ
-            min_proba=0.15,       # 絶対KPI評価
-            min_margin=0.10,      # 絶対KPI評価
+            filter_v3_only=v3_params['enabled'],
+            min_proba=v3_params['min_proba'],
+            min_margin=v3_params['min_margin'],
         )
         
         # Check if recommendations available

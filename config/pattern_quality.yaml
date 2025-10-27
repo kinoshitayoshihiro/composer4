@@ -1,0 +1,78 @@
+# Pattern Quality Configuration
+# Phase 24.3: Meta Feedback blacklist/whitelist for Pattern Recommender
+
+# ========================================
+# Blacklist: 使用禁止パターン
+# ========================================
+# Pattern Quality Learner（ml/pattern_quality_learner.py）が
+# Safe-Kit fallback率5%以上のパターンを自動検出してここに追加
+
+blacklist:
+  # Guitar patterns (例)
+  # - "STRUM8_CLOSED_A__120"     # Safe-Kit fallback率 8.2%
+  # - "FINGERPICK_SUS__90"       # 音域不適合で頻繁にフォールバック
+  
+  # Bass patterns (例)
+  # - "WALK_CHROMATIC__140"      # テンポ不一致で低品質
+  
+  # Piano patterns (例)
+  # - "ARPEGGIO_FAST__160"       # ダイナミクス不安定
+
+# ========================================
+# Whitelist: 強制採用パターン
+# ========================================
+# 特定のパターンを最優先で推薦させたい場合に使用
+# （通常は空のまま）
+
+whitelist:
+  # Guitar patterns (例)
+  # - "STRUM_OPEN_C__110"        # 確実にヒットする定番パターン
+  
+  # Bass patterns (例)
+  # - "ROOT_8THS_STANDARD"       # 基本パターン（フォールバック代替）
+
+# ========================================
+# Pattern Quality Rules
+# ========================================
+# Pattern Quality Learnerの動作設定
+
+quality_rules:
+  # ブラックリスト追加閾値
+  blacklist_threshold: 0.05  # Safe-Kit fallback率5%以上
+  
+  # 評価期間（日数）
+  evaluation_window_days: 7
+  
+  # 最小サンプル数（統計的信頼性）
+  min_samples: 10
+  
+  # 自動更新（週次バッチで自動blacklist更新）
+  auto_update_enabled: false  # 手動承認推奨（本番は慎重に）
+
+# ========================================
+# Recommender Integration
+# ========================================
+# PatternRecommenderでのblacklist/whitelist適用設定
+
+recommender:
+  # Blacklist適用（推薦候補から除外）
+  apply_blacklist: true
+  
+  # Whitelist適用（最優先推薦）
+  apply_whitelist: false  # 通常は無効（過度な固定化を避ける）
+  
+  # Blacklist除外時のフォールバック
+  fallback_on_blacklist: true  # 全候補がブラックリストの場合Safe-Kit発動
+
+# ========================================
+# Logging & Monitoring
+# ========================================
+logging:
+  # Blacklistヒット時のログ
+  log_blacklist_hits: true
+  
+  # Whitelistヒット時のログ
+  log_whitelist_hits: true
+  
+  # 週次レポート出力
+  weekly_report_path: "data/reports/pattern_quality_weekly.json"

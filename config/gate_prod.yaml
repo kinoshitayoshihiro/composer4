@@ -1,0 +1,278 @@
+# KPI Gate Configuration for Guitar v3/v1 Shadow Testing
+# Phase 21/22: Production-Ready Quality Gates
+
+# ========================================
+# Hard Gates (Must Pass for Deployment)
+# ========================================
+kpi_gate:
+  # Accent Score: 拍アクセント一致度（位相最適化後のコサイン類似度）
+  accent_score_min: 0.65  # デフォルト閾値
+  
+  # Chord Fit: コードトーン/テンション命中率
+  chord_fit_min: 0.60  # デフォルト閾値
+  
+  # Density Absolute Deviation: 目標密度からのズレ（QL単位）
+  density_abs_max: 1.0
+  
+  # ML Used Rate: ML推薦採用率（v3は常に1.0）
+  ml_used_min: 0.70
+  
+  # ========================================
+  # セクション別オーバーライド（攻め/守りの切替）
+  # ========================================
+  per_section:
+    chorus:
+      accent_score_min: 0.70  # Chorusは高水準要求（聴きどころ）
+      chord_fit_min: 0.65
+      density_abs_max: 0.8
+    
+    verse:
+      accent_score_min: 0.65  # Verseは標準
+      chord_fit_min: 0.60
+      density_abs_max: 1.0
+    
+    bridge:
+      accent_score_min: 0.68  # Bridgeは変化重視
+      chord_fit_min: 0.62
+      density_abs_max: 0.9
+    
+    intro:
+      accent_score_min: 0.60  # Introは柔軟に
+      chord_fit_min: 0.55
+      density_abs_max: 1.2
+    
+    outro:
+      accent_score_min: 0.60  # Outroも柔軟
+      chord_fit_min: 0.55
+      density_abs_max: 1.2
+    
+    "pre-chorus":
+      accent_score_min: 0.67  # Pre-Chorusは準重要
+      chord_fit_min: 0.63
+      density_abs_max: 0.9
+
+# ========================================
+# Section-Specific Weights (評価サマリー用)
+# ========================================
+weights:
+  # Overall評価の重み配分
+  accent_overall: 0.4
+  accent_chorus: 0.6  # Chorusは重視
+  
+  chord_fit_overall: 0.3
+  density_overall: 0.3
+
+# ========================================
+# Latency SLO (Service Level Objectives)
+# ========================================
+latency_slo:
+  # Warning閾値: 通常運用時の上限
+  p95_ms_warn: 100
+  
+  # Critical閾値: フォールバックトリガー
+  p95_ms_crit: 150
+  
+  # Target: 最適化後の目標レイテンシ
+  p95_ms_target: 10
+
+# ========================================
+# Fallback Logic (v3 → Safe-Kit切替)
+# ========================================
+fallback:
+  # 評価ウィンドウ（小節数）
+  window_bars: 32
+  
+  # 違反閾値（window内でmin_breach_bars以上の違反でフォールバック発火）
+  min_breach_bars: 6
+  
+  # Cooldown期間（切替後の最短滞留期間、小節数）
+  cooldown_bars: 16
+  
+  # 条件（いずれかを満たせばフォールバック）
+  conditions:
+    - name: "AccentScoreDegradation"
+      metric: "accent_delta"
+      threshold: -0.05  # v3がv1より5pt以上劣化
+      
+    - name: "HighLatency"
+      metric: "latency_p95_ms"
+      threshold: 150.0  # p95が150ms超過
+      
+    - name: "HighErrorRate"
+      metric: "error_rate"
+      threshold: 0.01  # エラー率1%超過
+
+# ========================================
+# V3 Filter Settings (Phase 24.3)
+# ========================================
+v3_filter:
+  # グローバル設定
+  enabled: true           # filter_v3_only（top1_proba=1.0のみ推薦）
+  min_proba: 0.15         # 絶対KPI閾値：top1_proba下限
+  min_margin: 0.10        # 絶対KPI閾値：proba_margin下限
+  
+  # セクション別オーバーライド（Chorusだけ厳格化等）
+  per_section_override:
+    chorus:
+      min_margin: 0.12    # Chorusは余裕を持たせる（top2との差を大きく）
+    intro:
+      min_proba: 0.12     # Introは少し緩く
+      min_margin: 0.08
+    outro:
+      min_proba: 0.12
+      min_margin: 0.08
+  
+  # 楽器別オーバーライド（任意）
+  per_instrument:
+    bass:
+      min_proba: 0.18     # Bassは精度重視（ルート音の安定性）
+    piano:
+      min_proba: 0.15
+      min_margin: 0.12    # Pianoはハーモニー重視
+    strings:
+      min_proba: 0.14     # Stringsは少し緩く（パッド系）
+
+# ========================================
+# Instrument-Specific Settings
+# ========================================
+instruments:
+  guitar:
+    kpi_weights:
+      accent: 0.4
+      chord_fit: 0.35
+      density: 0.25
+    
+    additional_metrics:
+      - name: "voicing_spread"
+        description: "ボイシングの音域幅（オクターブ単位）"
+        min: 0.8
+        max: 2.5
+  
+  bass:
+    kpi_weights:
+      downbeat_hit: 0.5  # ダウンビート命中率（最重要）
+      root_alignment: 0.3  # ルート音整合率
+      density: 0.2
+    
+    additional_metrics:
+      - name: "downbeat_hit_rate"
+        description: "ダウンビート（1拍目・3拍目）でのルート音演奏率"
+        min: 0.70
+  
+  strings:
+    kpi_weights:
+      chord_fit: 0.4
+      voice_leading: 0.35  # ボイスリーディング（音の移動距離）
+      density: 0.25
+    
+    additional_metrics:
+      - name: "voice_leading_smoothness"
+        description: "前小節からの平均音程移動距離（半音単位）"
+        max: 4.0  # 4半音以内の滑らかな移動
+
+# ========================================
+# Monitoring & Alerting
+# ========================================
+monitoring:
+  # Prometheus exporter設定
+  prometheus:
+    port: 9109
+    path: "/metrics"
+    refresh_interval_sec: 30
+  
+  # Slack通知
+  slack:
+    webhook_url: ""  # 環境変数SLACK_WEBHOOK_URLで設定
+    notification_triggers:
+      - "fallback_triggered"
+      - "kpi_gate_failed"
+      - "high_error_rate"
+  
+  # Grafana Dashboard
+  grafana:
+    dashboard_id: "shadow-testing-guitar-v3"
+    panel_refresh_sec: 30
+    alert_evaluation_interval_sec: 60
+
+# ========================================
+# Data Retention & Logging
+# ========================================
+logging:
+  # CSV詳細ログ
+  csv_log_path: "data/shadow_logs/shadow_eval.csv"
+  max_rows: 10000  # ローテーション閾値
+  
+  # JSON集計レポート
+  json_report_path: "data/shadow_logs/shadow_report_{timestamp}.json"
+  report_interval_bars: 100  # 100小節ごとにレポート生成
+  
+  # Inference Metadata（生成MIDIへの追記）
+  embed_metadata: true
+  metadata_fields:
+    - model_version
+    - model_sha256
+    - selector_type
+    - top1_proba
+    - accent_score
+    - chord_fit
+    - safety_fallback
+
+# ========================================
+# Canary Deployment Settings
+# ========================================
+canary:
+  # 段階的展開
+  stages:
+    - name: "canary_10"
+      v3_ratio: 0.10
+      duration_songs: 10
+      auto_promote: false
+    
+    - name: "canary_25"
+      v3_ratio: 0.25
+      duration_songs: 25
+      auto_promote: true
+      auto_promote_conditions:
+        - "accent_score_mean >= 0.70"
+        - "chord_fit_mean >= 0.65"
+        - "error_rate < 0.005"
+    
+    - name: "canary_50"
+      v3_ratio: 0.50
+      duration_songs: 50
+      auto_promote: true
+      auto_promote_conditions:
+        - "accent_score_mean >= 0.72"
+        - "win_rate >= 0.75"
+    
+    - name: "full_rollout"
+      v3_ratio: 1.00
+      duration_songs: 100
+
+# ========================================
+# Model Registry & Versioning
+# ========================================
+model_registry:
+  v3:
+    model_path: "data/patterns/stage2_guitar_v3_fixed.pickle"
+    sha256: "auto"  # 起動時に自動計算
+    version: "v3.2.1"
+    training_date: "2025-10-15"
+    selector_config:
+      threshold: 0.0
+      w_proba: 1.00
+      rerank_enabled: false
+  
+  v1:
+    model_path: "data/patterns/stage2_guitar.pickle"
+    sha256: "auto"
+    version: "v1.0.0"
+    type: "rule_based"
+  
+  safe_kit:
+    # フォールバック時の緊急代替パターン
+    enabled: true
+    patterns:
+      - "open_chord_basic"
+      - "downbeat_root_only"
+      - "suspended_pad"
