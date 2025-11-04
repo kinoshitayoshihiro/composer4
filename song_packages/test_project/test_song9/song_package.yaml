@@ -1,0 +1,25 @@
+artifacts:
+  bars: bars.parquet
+  chordmap: ../../data/test_chordmap.json
+  sections: ../../test_sections.json
+generation:
+  drums:
+    kpi_gate: configs/gate_prod.yaml
+    safe_kit_fallback: true
+    swing_hint: detect
+    target_density: 8.0
+    target_family: auto
+meta:
+  bpm: 120.0
+  emotion_profile: energetic_upbeat
+  key_hint: C
+  project: test_project
+  time_signature: 4/4
+  title: Test_Short_Song
+  total_bars: 32
+models:
+  drums: data/patterns/stage2_drums_rhythm_ai.pickle
+render:
+  out_dir: renders/test_project/test_song
+  stem_format: wav/48k/24bit
+title: Test Song 9

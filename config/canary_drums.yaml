@@ -1,0 +1,236 @@
+# Drums Canary Deployment Configuration
+# Phase 25.3: Gradual Rollout Strategy
+
+deployment:
+  name: "drums_v3_ml"
+  version: "v1.0.0"
+  description: "Rhythm AI (Drums) with ML inference and v3 quality gates"
+
+# ===== Traffic Split Configuration =====
+
+traffic_split:
+  # Stage 1: Shadow (Logging only, no serving)
+  shadow:
+    enabled: true
+    percentage: 5
+    duration_hours: 24
+    description: |
+      Shadow deployment logs predictions without serving.
+      Compare KPIs with production for validation.
+    
+  # Stage 2: Canary (Limited serving)
+  canary:
+    enabled: false  # Enable after shadow validation
+    percentage: 20
+    duration_hours: 48
+    description: |
+      Serve 20% of traffic with new drums ML model.
+      Monitor KPIs closely for degradation.
+    
+    # Canary rollout phases
+    phases:
+      - percentage: 5
+        duration_hours: 12
+        description: "Initial canary (5%)"
+      
+      - percentage: 10
+        duration_hours: 12
+        description: "Expanded canary (10%)"
+      
+      - percentage: 20
+        duration_hours: 24
+        description: "Full canary (20%)"
+  
+  # Stage 3: Production (Full serving)
+  production:
+    enabled: true
+    percentage: 75  # Remainder after shadow+canary
+    description: |
+      Current production drums generation.
+      Gradually reduced as canary expands.
+
+# ===== Rollout Criteria =====
+
+rollout_criteria:
+  # KPI thresholds for promotion
+  kpi_thresholds:
+    kick_downbeat_rate_min: 0.80
+    snare_backbeat_acc_min: 0.85
+    hat_density_abs_max: 2.0
+    fill_placement_valid_min: 0.95
+    ml_used_min: 0.90
+  
+  # Statistical significance
+  statistical:
+    min_samples: 1000  # Minimum patterns generated
+    confidence_level: 0.95
+    max_p_value: 0.05
+  
+  # Performance criteria
+  performance:
+    max_p95_latency_ms: 100
+    max_error_rate: 0.01
+    min_cache_hit_rate: 0.80
+  
+  # Canary vs Prod comparison
+  comparison:
+    max_kpi_degradation: 0.05  # 5% worse than prod = rollback
+    max_latency_degradation_ms: 20
+    max_error_rate_increase: 0.005
+
+# ===== Rollback Configuration =====
+
+rollback:
+  # Automatic rollback triggers
+  auto_rollback:
+    enabled: true
+    triggers:
+      - condition: "canary_kick_downbeat_rate < 0.75"
+        description: "Critical KPI failure"
+      
+      - condition: "canary_error_rate > 0.05"
+        description: "High error rate"
+      
+      - condition: "(canary_kick_downbeat_rate - prod_kick_downbeat_rate) < -0.10"
+        description: "Significant KPI degradation vs prod"
+      
+      - condition: "canary_p95_latency_ms > 200"
+        description: "Unacceptable latency"
+  
+  # Manual rollback
+  manual_rollback:
+    enabled: true
+    command: "kubectl rollout undo deployment/drums-generator"
+    description: |
+      Manual rollback via kubectl or UI.
+      Use when observing quality degradation not caught by auto-rollback.
+
+# ===== Monitoring Configuration =====
+
+monitoring:
+  # Metrics to track
+  metrics:
+    - name: "drums_kick_downbeat_rate"
+      type: "gauge"
+      labels: ["deployment", "section", "song_id"]
+    
+    - name: "drums_snare_backbeat_acc"
+      type: "gauge"
+      labels: ["deployment", "section", "song_id"]
+    
+    - name: "drums_hat_density_abs_error"
+      type: "gauge"
+      labels: ["deployment", "section", "song_id"]
+    
+    - name: "drums_ml_used"
+      type: "counter"
+      labels: ["deployment", "model_type"]
+    
+    - name: "drums_safe_kit_fallback"
+      type: "counter"
+      labels: ["deployment", "reason"]
+    
+    - name: "drums_recommend_duration_seconds"
+      type: "histogram"
+      labels: ["deployment"]
+      buckets: [0.001, 0.005, 0.010, 0.050, 0.100, 0.500, 1.0]
+    
+    - name: "drums_auto_recovery_triggered"
+      type: "counter"
+      labels: ["deployment", "violation_type"]
+  
+  # Dashboards
+  dashboards:
+    - name: "Drums Canary vs Prod"
+      url: "grafana/dashboards/drums-canary"
+      panels:
+        - "KPI Comparison (Canary vs Prod)"
+        - "Latency Comparison"
+        - "Error Rate Comparison"
+        - "ML Usage Rate"
+        - "Safe-Kit Fallback Rate"
+    
+    - name: "Drums Traffic Split"
+      url: "grafana/dashboards/drums-traffic"
+      panels:
+        - "Traffic Distribution (Shadow/Canary/Prod)"
+        - "Request Volume by Deployment"
+        - "KPI by Deployment"
+
+# ===== Feature Flags =====
+
+feature_flags:
+  # ML inference toggle
+  use_ml_inference:
+    shadow: true
+    canary: true
+    production: false  # Enable after canary validation
+  
+  # Auto-recovery toggle
+  auto_recovery:
+    shadow: true
+    canary: true
+    production: false  # Enable after canary validation
+  
+  # KPI gates toggle
+  kpi_gates_strict:
+    shadow: false
+    canary: true
+    production: true
+
+# ===== Deployment Schedule =====
+
+schedule:
+  # Week 1: Shadow deployment
+  week_1:
+    phase: "shadow"
+    traffic: {shadow: 5, canary: 0, production: 95}
+    goals:
+      - "Collect KPI baseline"
+      - "Validate ML model inference"
+      - "Compare with production"
+  
+  # Week 2: Initial canary
+  week_2:
+    phase: "canary_5pct"
+    traffic: {shadow: 5, canary: 5, production: 90}
+    goals:
+      - "Serve 5% real traffic"
+      - "Monitor KPI degradation"
+      - "Validate auto-recovery"
+  
+  # Week 3: Expanded canary
+  week_3:
+    phase: "canary_20pct"
+    traffic: {shadow: 0, canary: 20, production: 80}
+    goals:
+      - "Increase to 20% traffic"
+      - "Statistical significance achieved"
+      - "Performance validation"
+  
+  # Week 4: Full production
+  week_4:
+    phase: "production_100pct"
+    traffic: {shadow: 0, canary: 0, production: 100}
+    goals:
+      - "Full production rollout"
+      - "Deprecate old drums generation"
+      - "Enable all v3 features"
+
+# ===== Success Criteria =====
+
+success_criteria:
+  # Must achieve all of the following
+  required:
+    - "Canary KPI >= Production KPI (all metrics)"
+    - "Canary p95 latency < 100ms"
+    - "Canary error rate < 1%"
+    - "ML usage rate > 90%"
+    - "No auto-rollback triggers for 48 hours"
+  
+  # Nice to have
+  optional:
+    - "Canary KPI > Production KPI (improvement)"
+    - "Canary p95 latency < 50ms"
+    - "Zero manual rollbacks"
+    - "Positive user feedback"

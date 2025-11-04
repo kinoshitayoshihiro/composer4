@@ -1,0 +1,87 @@
+# Real Groove Ghost HH補完ルール
+# Phase A/C最終構成（2025年11月1日）
+
+# KPI density_target最低限満たしのための自動補完設定
+ghost_hh:
+  # 有効/無効フラグ
+  enabled: true
+  
+  # 相対密度下限（gate_prod.yaml準拠）
+  min_rel: 0.40
+  
+  # 小節あたり上限（過剰注入防止）
+  max_ghost_per_bar: 4
+  
+  # ベロシティ範囲（機械感回避のランダム化）
+  velocity_range:
+    min: 22
+    max: 28
+  
+  # デュレーション（拍単位、短め=機械感回避）
+  duration_beats: 0.20
+  
+  # Ghost HH Pitch（GM Drum Map: 42=Closed HH）
+  pitch: 42
+  
+  # 配置パターン（8分音符均等配置）
+  placement:
+    strategy: "uniform_eighth"  # uniform_eighth | random | backbeat
+    beats_per_bar: 4.0
+    subdivision: 0.5  # 8分音符
+  
+  # 既存HH系Pitchセット（カウント対象）
+  hh_pitches:
+    - 42  # Closed HH
+    - 44  # Pedal HH
+    - 46  # Open HH
+    - 51  # Ride Cymbal
+    - 53  # Ride Bell
+    - 59  # Ride Cymbal 2
+
+# Break優遇ルール（stems_features.drums_active連動）
+break_boost:
+  # 有効/無効フラグ
+  enabled: true
+  
+  # Break判定しきい値（drums_active < threshold → Break扱い）
+  activity_threshold: 0.30
+  
+  # Break小節での補完優先度（通常の何倍補完するか）
+  boost_factor: 1.5
+  
+  # Break検出時のログ出力
+  verbose: true
+
+# Phase別設定（後方互換性）
+phase_config:
+  # Phase A: 基本補完のみ
+  phase_a:
+    ghost_hh.max_ghost_per_bar: 6  # 旧仕様（上限緩め）
+    ghost_hh.velocity_range.min: 20
+    ghost_hh.velocity_range.max: 30
+  
+  # Phase B: velocity調整
+  phase_b:
+    ghost_hh.velocity_range.min: 22
+    ghost_hh.velocity_range.max: 28
+  
+  # Phase C: 上限強化（現行）
+  phase_c:
+    ghost_hh.max_ghost_per_bar: 4
+    ghost_hh.velocity_range.min: 22
+    ghost_hh.velocity_range.max: 28
+    ghost_hh.duration_beats: 0.20
+
+# 適用優先度（phase_cが最優先）
+active_phase: "phase_c"
+
+# 監視指標
+monitoring:
+  # Ghost HH注入率（全HHに対する割合）
+  max_ghost_ratio: 0.30  # 30%超過で警告
+  
+  # 連続Ghost HH小節数上限
+  max_consecutive_bars: 10  # 10小節連続で警告
+  
+  # レポート出力先
+  report_path: "{song_dir}/ghost_hh_report.json"

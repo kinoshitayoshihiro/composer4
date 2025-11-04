@@ -1,5 +1,105 @@
-# KPI Gate Configuration for Guitar v3/v1 Shadow Testing
+# KPI Gate Configuration for Guitar/Bass/Piano/Drums
 # Phase 21/22: Production-Ready Quality Gates
+# Phase 26: ML Expansion - Guitar/Bass/Piano ML Integration
+
+# ========================================
+# Guitar ML Configuration (Phase 26)
+# ========================================
+guitar_ml:
+  enabled: true  # Guitar ML推論有効化
+  
+  # ML Model Settings
+  model_path: "ml/stage2_guitar_v3_ml.pickle"
+  safe_kit_path: "config/safe_kit_guitar.yaml"
+  
+  # Safety Thresholds
+  safety:
+    min_proba: 0.15   # Top-1確率最小値（これ以下でSafe-Kit発火）
+    min_margin: 0.10  # Top-1/Top-2マージン最小値
+  
+  # Auto-Recovery (Phase 26で有効化)
+  auto_recovery:
+    enabled: true
+    window_size: 64          # 監視ウィンドウサイズ（bars）
+    max_violations: 10       # 許容違反回数
+    cooldown_bars: 16        # クールダウン期間（bars）
+    recovery_action: "safe_kit_fallback"
+    notify_on_recovery: true
+    collect_metrics: true
+    metrics_prefix: "guitar_auto_recovery"
+  
+  # KPI Gates（既存設定を維持）
+  kpi_gates:
+    accent_score_min: 0.65
+    chord_fit_min: 0.60
+    density_abs_max: 1.0
+    ml_used_min: 0.70
+
+# ========================================
+# Bass ML Configuration (Phase 26)
+# ========================================
+bass_ml:
+  enabled: true  # Bass ML推論有効化
+  
+  # ML Model Settings
+  model_path: "ml/stage2_bass_v3_ml.pickle"
+  safe_kit_path: "config/safe_kit_bass.yaml"
+  
+  # Safety Thresholds
+  safety:
+    min_proba: 0.15   # Top-1確率最小値（これ以下でSafe-Kit発火）
+    min_margin: 0.10  # Top-1/Top-2マージン最小値
+  
+  # Auto-Recovery (Phase 26で有効化)
+  auto_recovery:
+    enabled: true
+    window_size: 64          # 監視ウィンドウサイズ（bars）
+    max_violations: 10       # 許容違反回数
+    cooldown_bars: 16        # クールダウン期間（bars）
+    recovery_action: "safe_kit_fallback"
+    notify_on_recovery: true
+    collect_metrics: true
+    metrics_prefix: "bass_auto_recovery"
+  
+  # KPI Gates（既存設定を維持）
+  kpi_gates:
+    root_hit_rate_min: 0.85  # ルート音命中率
+    chord_fit_min: 0.70      # コード適合度
+    density_abs_max: 2.0     # 目標密度との絶対差
+    ml_used_min: 0.70
+
+# ========================================
+# Piano ML Configuration (Phase 26)
+# ========================================
+piano_ml:
+  enabled: true  # Piano ML推論有効化
+  
+  # ML Model Settings
+  model_path: "ml/stage2_piano_v3_ml.pickle"
+  safe_kit_path: "config/safe_kit_piano.yaml"
+  
+  # Safety Thresholds
+  safety:
+    min_proba: 0.15   # Top-1確率最小値（これ以下でSafe-Kit発火）
+    min_margin: 0.10  # Top-1/Top-2マージン最小値
+  
+  # Auto-Recovery (Phase 26で有効化)
+  auto_recovery:
+    enabled: true
+    window_size: 64          # 監視ウィンドウサイズ（bars）
+    max_violations: 10       # 許容違反回数
+    cooldown_bars: 16        # クールダウン期間（bars）
+    recovery_action: "safe_kit_fallback"
+    notify_on_recovery: true
+    collect_metrics: true
+    metrics_prefix: "piano_auto_recovery"
+  
+  # KPI Gates（既存設定を維持）
+  kpi_gates:
+    chord_fit_min: 0.75              # コード適合度
+    voicing_quality_min: 0.70        # ボイシング品質
+    voice_leading_smooth_min: 0.65   # ボイスリーディング滑らかさ
+    ml_used_min: 0.70
 
 # ========================================
 # Hard Gates (Must Pass for Deployment)
@@ -61,6 +161,48 @@ weights:
   
   chord_fit_overall: 0.3
   density_overall: 0.3
+
+# ========================================
+# Chord Fit Weights (v3.1計算用係数)
+# ========================================
+chord_fit:
+  # セクション別の重み係数（強拍/弱拍/ベースルート/衝突ペナルティ）
+  weights_by_section:
+    Chorus:
+      beat_strong: 0.40      # 強拍のコードトーン一致度
+      beat_weak: 0.20        # 弱拍のコードトーン一致度
+      bass_root_bonus: 0.10  # ベース音がルート音に一致
+      clash_penalty: -0.30   # 半音衝突ペナルティ
+    
+    Verse:
+      beat_strong: 0.30      # Verseは強拍重視度を少し下げる
+      beat_weak: 0.25        # 弱拍を少し上げてバランス型
+      bass_root_bonus: 0.05  # ベースルートボーナスは控えめ
+      clash_penalty: -0.25   # 衝突ペナルティも少し緩和
+    
+    Bridge:
+      beat_strong: 0.35      # Bridge標準
+      beat_weak: 0.20
+      bass_root_bonus: 0.10
+      clash_penalty: -0.30
+    
+    Intro:
+      beat_strong: 0.30      # Intro柔軟
+      beat_weak: 0.25
+      bass_root_bonus: 0.05
+      clash_penalty: -0.20   # 衝突を許容
+    
+    Outro:
+      beat_strong: 0.30      # Outro柔軟
+      beat_weak: 0.25
+      bass_root_bonus: 0.05
+      clash_penalty: -0.20
+    
+    "Pre-Chorus":
+      beat_strong: 0.38      # Pre-Chorus準重要
+      beat_weak: 0.22
+      bass_root_bonus: 0.08
+      clash_penalty: -0.28
 
 # ========================================
 # Latency SLO (Service Level Objectives)
@@ -276,3 +418,83 @@ model_registry:
       - "open_chord_basic"
       - "downbeat_root_only"
       - "suspended_pad"
+
+# ========================================
+# Drums KPI Gates (Phase 25: Rhythm AI)
+# ========================================
+drums:
+  kpi_gates:
+    # ダウンビート命中率（キック）: 1拍目/3拍目へのキック配置率
+    kick_downbeat_rate_min: 0.80
+    
+    # バックビート整合率（スネア）: 4/4で2&4拍目、6/8相応位置
+    snare_backbeat_acc_min: 0.85
+    
+    # ハイハット密度許容誤差: 目標密度との絶対差の中央値（QL単位）
+    hat_density_abs_max: 2.0
+    
+    # フィル配置妥当性: 小節跨ぎ・休符崩壊なし
+    fill_placement_valid_min: 0.95
+    
+    # ML使用率（v3直採用率）
+    ml_used_min: 0.90
+    
+    # レイテンシ（p95）
+    latency_p95_ms_max: 100
+  
+  safety:
+    # Top-1確率最小値（低い場合はSafe-Kit発火）
+    min_proba: 0.15
+    
+    # Top-1/Top-2マージン最小値（低い場合はSafe-Kit発火）
+    min_margin: 0.10
+  
+  traffic:
+    # Shadow/Canary/Prod分配比率
+    shadow_ratio: 0.05
+    canary_ratio: 0.10
+    prod_ratio: 0.85
+  
+  auto_recovery:
+    # Auto-Recovery機能（Phase 25.3で有効化）
+    enabled: true  # KPI違反時の自動復旧を有効化
+    
+    # 移動窓パラメータ
+    window_size: 64          # 監視ウィンドウサイズ（bars）
+    max_violations: 10       # 許容違反回数
+    cooldown_bars: 16        # クールダウン期間（bars）
+    
+    # Recovery動作
+    recovery_action: "safe_kit_fallback"  # Safe-Kitへフォールバック
+    notify_on_recovery: true               # Recovery時にアラート送信
+    
+    # メトリクス収集
+    collect_metrics: true
+    metrics_prefix: "drums_auto_recovery"
+  
+  # セクション別オーバーライド（攻め/守りの切替）
+  per_section:
+    chorus:
+      kick_downbeat_rate_min: 0.85  # Chorusは安定重視
+      snare_backbeat_acc_min: 0.90
+      hat_density_abs_max: 1.5
+    
+    verse:
+      kick_downbeat_rate_min: 0.80  # Verse標準
+      snare_backbeat_acc_min: 0.85
+      hat_density_abs_max: 2.0
+    
+    bridge:
+      kick_downbeat_rate_min: 0.75  # Bridge変化許容
+      snare_backbeat_acc_min: 0.80
+      hat_density_abs_max: 2.5
+    
+    intro:
+      kick_downbeat_rate_min: 0.70  # Intro柔軟
+      snare_backbeat_acc_min: 0.75
+      hat_density_abs_max: 3.0
+    
+    outro:
+      kick_downbeat_rate_min: 0.70  # Outro柔軟
+      snare_backbeat_acc_min: 0.75
+      hat_density_abs_max: 3.0

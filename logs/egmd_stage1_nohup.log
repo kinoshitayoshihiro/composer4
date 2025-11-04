@@ -1,0 +1,105 @@
+[2025-10-28 19:06:31] ==========================================
+[2025-10-28 19:06:31] 🥁 Rhythm AI Stage1 Cleaning - E-GMD
+[2025-10-28 19:06:31] ==========================================
+[2025-10-28 19:06:31] Base Dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-28 19:06:31] E-GMD Dir: data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/e-gmd-v1.0.0
+[2025-10-28 19:06:31] Output Dir: output/rhythm_ai
+[2025-10-28 19:06:31] Log File: logs/rhythm_stage1_egmd_20251028_190631.log
+[2025-10-28 19:06:31] 
+[2025-10-28 19:06:31] 📂 1. Verifying E-GMD MIDI files...
+[2025-10-28 19:06:36] ✅ Found 45537 MIDI files
+[2025-10-28 19:06:36] 🧹 2. Running Stage1 Cleaning for E-GMD...
+[2025-10-28 19:06:36]    - Input: data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/e-gmd-v1.0.0 (45,537 files)
+[2025-10-28 19:06:36]    - Output: output/rhythm_ai/egmd_cleaned
+[2025-10-28 19:06:36]    - Metadata: output/rhythm_ai/egmd_metadata
+WARNING: TMIDIX not found, using basic MIDI loading
+======================================================================
+E-GMD Simple Cleaner
+======================================================================
+Input: data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/e-gmd-v1.0.0
+Output (cleaned): output/rhythm_ai/egmd_cleaned
+Output (metadata): output/rhythm_ai/egmd_metadata
+Extension: .midi
+======================================================================
+Scanning data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/e-gmd-v1.0.0 for .midi files...
+Found 45537 files
+
+Processing 45537 files...
+Max workers: 8
+Shard size: 500
+Processing 45537 files...
+  Progress: 0/45537 (0.0%)
+  Progress: 1000/45537 (2.2%)
+  Progress: 2000/45537 (4.4%)
+  Progress: 3000/45537 (6.6%)
+  Progress: 4000/45537 (8.8%)
+  Progress: 5000/45537 (11.0%)
+  Progress: 6000/45537 (13.2%)
+  Progress: 7000/45537 (15.4%)
+  Progress: 8000/45537 (17.6%)
+  Progress: 9000/45537 (19.8%)
+  Progress: 10000/45537 (22.0%)
+  Progress: 11000/45537 (24.2%)
+  Progress: 12000/45537 (26.4%)
+  Progress: 13000/45537 (28.5%)
+  Progress: 14000/45537 (30.7%)
+  Progress: 15000/45537 (32.9%)
+  Progress: 16000/45537 (35.1%)
+  Progress: 17000/45537 (37.3%)
+  Progress: 18000/45537 (39.5%)
+  Progress: 19000/45537 (41.7%)
+  Progress: 20000/45537 (43.9%)
+  Progress: 21000/45537 (46.1%)
+  Progress: 22000/45537 (48.3%)
+  Progress: 23000/45537 (50.5%)
+  Progress: 24000/45537 (52.7%)
+  Progress: 25000/45537 (54.9%)
+  Progress: 26000/45537 (57.1%)
+  Progress: 27000/45537 (59.3%)
+  Progress: 28000/45537 (61.5%)
+  Progress: 29000/45537 (63.7%)
+  Progress: 30000/45537 (65.9%)
+  Progress: 31000/45537 (68.1%)
+  Progress: 32000/45537 (70.3%)
+  Progress: 33000/45537 (72.5%)
+  Progress: 34000/45537 (74.7%)
+  Progress: 35000/45537 (76.9%)
+  Progress: 36000/45537 (79.1%)
+  Progress: 37000/45537 (81.3%)
+  Progress: 38000/45537 (83.4%)
+  Progress: 39000/45537 (85.6%)
+  Progress: 40000/45537 (87.8%)
+  Progress: 41000/45537 (90.0%)
+  Progress: 42000/45537 (92.2%)
+  Progress: 43000/45537 (94.4%)
+  Progress: 44000/45537 (96.6%)
+  Progress: 45000/45537 (98.8%)
+
+Cleaning complete!
+  Total files: 45537
+  Cleaned: 4552
+  Duplicates: 40985
+  Errors: 0
+
+Saving metadata in shards (size: 500)...
+✅ Metadata saved: 10 shards + index
+   Index: output/rhythm_ai/egmd_metadata/drums_index.pkl
+
+✅ Done!
+[2025-10-28 19:08:35] 
+[2025-10-28 19:08:35] ✅ Stage1 Cleaning - E-GMD COMPLETE
+[2025-10-28 19:08:35] 
+[2025-10-28 19:08:35] 📊 3. Verifying output...
+[2025-10-28 19:08:35] ✅ Metadata index created: egmd_metadata/drums_index.pkl
+[2025-10-28 19:08:35] ✅ Cleaned MIDI files: 4552
+[2025-10-28 19:08:35] ✅ Metadata shards: 11
+[2025-10-28 19:08:35] 
+[2025-10-28 19:08:35] ==========================================
+[2025-10-28 19:08:35] 🎉 E-GMD Stage1 Complete!
+[2025-10-28 19:08:35] ==========================================
+[2025-10-28 19:08:35] Next steps:
+[2025-10-28 19:08:35]   1. Run Stage2 feature extraction:
+[2025-10-28 19:08:35]      bash scripts/run_rhythm_stage2_egmd.sh
+[2025-10-28 19:08:35]   2. Merge with drumclean + groove datasets
+[2025-10-28 19:08:35]   3. Train ML model on merged dataset (~97,600 records)
+[2025-10-28 19:08:35] 

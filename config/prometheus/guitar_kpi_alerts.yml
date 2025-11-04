@@ -1,0 +1,47 @@
+groups:
+  - name: guitar_kpi_alerts
+    interval: 30s
+    rules:
+      # Primary KPI: accent_score
+      - alert: guitar_accent_score_low
+        expr: guitar_accent_score < 0.65
+        for: 5m
+        labels:
+          severity: warning
+          instrument: guitar
+        annotations:
+          summary: "Guitar: accent score below threshold"
+          description: "Guitar accent_score ({{ $value }}) is below minimum 0.65 for 5 minutes"
+      
+      # Secondary KPI: chord_fit
+      - alert: guitar_chord_fit_low
+        expr: guitar_chord_fit < 0.60
+        for: 5m
+        labels:
+          severity: warning
+          instrument: guitar
+        annotations:
+          summary: "Guitar: chord fit below threshold"
+          description: "Guitar chord_fit ({{ $value }}) is below minimum 0.60 for 5 minutes"
+      
+      # Density deviation alert
+      - alert: guitar_density_deviation_high
+        expr: guitar_density_abs_error > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          instrument: guitar
+        annotations:
+          summary: "Guitar: density deviation too high"
+          description: "Guitar density_abs_error ({{ $value }}) exceeds maximum 1.0 for 5 minutes"
+      
+      # ML Usage Rate alert
+      - alert: guitar_ml_usage_rate_low
+        expr: guitar_ml_usage_rate < 0.70
+        for: 10m
+        labels:
+          severity: info
+          instrument: guitar
+        annotations:
+          summary: "Guitar: ML usage rate below target"
+          description: "Guitar ML usage rate ({{ $value }}) is below 0.70 for 10 minutes"

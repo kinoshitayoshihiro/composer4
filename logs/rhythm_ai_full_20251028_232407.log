@@ -1,0 +1,22 @@
+[2025-10-28 23:24:07] =========================================
+[2025-10-28 23:24:07] Rhythm AI Full Pipeline
+[2025-10-28 23:24:07] Stage1 → Pickle → Stage2
+[2025-10-28 23:24:07] =========================================
+[2025-10-28 23:24:07] 
+[2025-10-28 23:24:07] 📂 [1/5] Processing drumclean_midi...
+[2025-10-28 23:24:08]    Found 51248 MIDI files
+🔍 Enumerating MIDI files in data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/drumclean_midi (this may take a few minutes)...
+✅ Found 51248 MIDI files
+🎵 Processing 51248 MIDI files (drums)
+   Input:        data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/drumclean_midi
+   Output:       output/rhythm_ai/drumclean_midi
+   Quarantine:   output/rhythm_ai/drumclean_q
+   Jobs:         8
+   Fileset Hash: 359d1ffcb803
+
+📂 Resume mode: Found 103 existing shards, starting from shard 00103
+📦 ShardWriter initialized: output/rhythm_ai/drumclean_metadata
+   Shard size: 5000
+   Resume mode: True
+
+Cleaning:   0%|          | 0/51248 [00:00<?, ?it/s]Cleaning:   0%|          | 10/51248 [00:00<16:54, 50.51it/s]Cleaning:   0%|          | 18/51248 [00:00<14:44, 57.93it/s]Cleaning:   0%|          | 27/51248 [00:00<13:02, 65.42it/s]Cleaning:   0%|          | 35/51248 [00:00<12:22, 69.02it/s]Cleaning:   0%|          | 46/51248 [00:00<10:42, 79.74it/s]Cleaning:   0%|          | 55/51248 [00:00<10:43, 79.57it/s]Cleaning:   0%|          | 64/51248 [00:00<10:53, 78.31it/s]Cleaning:   0%|          | 72/51248 [00:00<11:20, 75.18it/s]Cleaning:   0%|          | 80/51248 [00:01<11:38, 73.27it/s]Cleaning:   0%|          | 111/51248 [00:01<06:08, 138.66it/s]Cleaning:   0%|          | 240/51248 [00:01<01:50, 459.67it/s]Cleaning:   1%|          | 293/51248 [00:01<01:46, 479.19it/s]Cleaning:   1%|          | 381/51248 [00:01<01:25, 591.68it/s]Cleaning:   1%|          | 442/51248 [00:01<01:40, 504.71it/s]Cleaning:   1%|          | 502/51248 [00:01<01:38, 515.48it/s]Cleaning:   1%|          | 556/51248 [00:02<02:13, 380.21it/s]Cleaning:   1%|          | 601/51248 [00:02<02:11, 385.15it/s]Cleaning:   1%|▏         | 645/51248 [00:02<03:15, 258.77it/s]Cleaning:   1%|▏         | 680/51248 [00:02<04:00, 210.13it/s]Cleaning:   1%|▏         | 708/51248 [00:02<03:51, 218.58it/s]Cleaning:   2%|▏         | 814/51248 [00:02<02:15, 372.69it/s]Cleaning:   2%|▏         | 864/51248 [00:03<02:09, 389.99it/s]Cleaning:   2%|▏         | 913/51248 [00:03<02:07, 394.48it/s]Cleaning:   2%|▏         | 960/51248 [00:03<03:15, 257.61it/s]Cleaning:   2%|▏         | 997/51248 [00:03<03:31, 238.09it/s]Cleaning:   2%|▏         | 1258/51248 [00:03<01:17, 645.38it/s]Cleaning:   3%|▎         | 1386/51248 [00:03<01:04, 770.95it/s]Cleaning:   3%|▎         | 1541/51248 [00:04<00:53, 926.12it/s]

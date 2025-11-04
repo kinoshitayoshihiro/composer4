@@ -1,0 +1,157 @@
+version: 2
+ppq: 480
+
+# ======================================================================
+# 全役割ON + ライト強度設定（ChatGPT推奨値）
+# KPI維持しつつ耳上の質感を向上させる安全な設定
+# ======================================================================
+
+velocity:
+  clamp_min: 24
+  clamp_max: 116
+  default: 92
+  drums:
+    kick:   100
+    snare:   96
+    hat:     82
+  bass:
+    default: 90
+  guitar:
+    default: 88
+  piano:
+    default: 90
+  strings:
+    default: 84
+
+swing:
+  default: 0.0   # ここはPlanの per-bar swing_target を優先。未指定時のみ使用
+  clamp_min: 0.0
+  clamp_max: 0.6  # 極端なスウィング暴走を抑える
+
+quantize:
+  grid: 1/16     # 文字列で指定（1/8, 1/16, 1/24 など）。0なら無効
+  grid_beats: 0.25  # 同義（将来の可変テンポ対応用）
+  strength: 0.8     # 1.0=完全、0.0=量子化しない
+
+# ======================================================================
+# Humanize メインスイッチ（全役割ON）
+# ======================================================================
+humanize:
+  enabled: true             # 全体スイッチON
+  seed: 42                  # 再現性確保（null=ランダム）
+  
+  # グローバル設定
+  global:
+    swing:
+      enabled: true
+      ratio: 0.54           # 0.5=ストレート、0.54=軽いスウィング
+      max_shift_ms: 8       # 8msまで（ゴーストHH併用時は10ms超えない）
+    
+    accent:
+      enabled: true
+      strength: 0.08        # 軽めのアクセント（0.0-1.0）
+      decay_bars: 4         # アクセント減衰期間（小節）
+  
+  # 役割別設定
+  roles:
+    drums:
+      enabled: true
+      hh_microshift_ms: 3         # ハイハット前後揺れ ±3ms
+      snare_layback_ms: 2         # スネア後ノリ +2ms
+      kick_anticipation_ms: 1     # キック前ノリ +1ms
+      ghost_hh:
+        enabled: true
+        max_per_bar: 4            # 最大4個/小節
+        vel_min: 22
+        vel_max: 28
+        dur_beats: 0.20           # 長さ0.2拍
+    
+    bass:
+      enabled: true
+      timing_jitter_ms: 6         # タイミング揺れ ±6ms
+      velocity_jitter: 6          # ベロシティ揺れ ±6
+      legato_bias: 0.05           # レガート傾向5%
+    
+    guitar:
+      enabled: true
+      strum:
+        enabled: true
+        direction: auto           # verse=up/chorus=down を内部推定
+        width_ms: 22              # ストラム幅22ms（最終調整：18→22ms）
+        # セクション別オーバーライド（Chorusだけ少し広め）
+        section_overrides:
+          chorus:
+            width_ms: 24
+      timing_jitter_ms: 6
+      velocity_jitter: 7
+    
+    piano:
+      enabled: true
+      timing_jitter_ms: 5
+      velocity_jitter: 6
+      pedal:
+        enabled: true
+        randomness: 0.10          # ペダルタイミング10%揺れ（最終調整：0.07→0.10）
+        late_ms: 16               # ペダル遅延16ms（最終調整：12→16ms）
+        # セクション別オーバーライド
+        section_overrides:
+          chorus:
+            late_ms: 12
+    
+    strings:
+      enabled: true
+      timing_jitter_ms: 4
+      velocity_jitter: 5
+      expr_curve:
+        enabled: true
+        arc: "gentle"             # gentle | steep | plateau
+        depth: 0.16               # CC11変化幅16%（最終調整：0.12→0.16）
+  
+  # フェイルセーフ境界
+  limits:
+    max_time_jitter_ms: 30        # 時間揺れ上限30ms
+    max_velocity_jitter: 20       # ベロシティ揺れ上限20
+
+# ======================================================================
+# レビュー改善提案: セクション別バイアス（耳上の効果大）
+# ======================================================================
+section_bias:
+  # [提案1] ドラムのセクション別マイクロオフセット
+  drums:
+    enabled: true
+    chorus:
+      hh_microshift_ms: -2        # HH（ハイハット）を2ms前ノリ
+      snare_layback_ms: 3         # スネアを3ms後ノリ
+      kick_anticipation_ms: -1    # キックを1ms前ノリ
+    verse:
+      hh_microshift_ms: 0
+      snare_layback_ms: 1
+      kick_anticipation_ms: 0
+    bridge:
+      hh_microshift_ms: -1
+      snare_layback_ms: 4
+      kick_anticipation_ms: -2
+  
+  # [提案2] ギターのセクション別ストラム方向バイアス
+  guitar:
+    enabled: true
+    direction_bias:
+      chorus: "down"              # コーラスは常にダウン優先
+      verse: "up"                 # ヴァースはアップ優先
+      bridge: null                # ブリッジは自動判定
+
+# ======================================================================
+# 再現性タグ（運用改善：差分追跡容易）
+# ======================================================================
+reproducibility:
+  enabled: true
+  hash_sections: ["humanize", "section_bias"]
+  embed_in_midi_meta: true        # MIDI Track Name に "humanize_v2_abc123" 追記
+
+# ======================================================================
+# その他設定（後方互換）
+# ======================================================================
+merge_control_midi:
+  ks_advance_ms: 80               # KS先行は制御MIDI生成側が担うのが基本
+  cc_slew_beats: 0.125
+  dedupe_same_value_window_ms: 20

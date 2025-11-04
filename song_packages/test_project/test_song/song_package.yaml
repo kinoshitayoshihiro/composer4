@@ -1,0 +1,31 @@
+# SongPackage定義 - Test Song
+# テスト用の短い楽曲（32小節）
+
+meta:
+  title: "Test_Short_Song"
+  project: "test_project"
+  bpm: 120.0
+  time_signature: "4/4"
+  key_hint: "C"
+  emotion_profile: "energetic_upbeat"
+  total_bars: 32
+
+artifacts:
+  sections: "../../test_sections.json"
+  chordmap: "../../data/test_chordmap.json"
+  bars: "bars.parquet"
+
+models:
+  drums: "data/patterns/stage2_drums_rhythm_ai.pickle"
+
+generation:
+  drums:
+    target_family: "auto"
+    target_density: 8.0  # より高密度（エネルギッシュ）
+    swing_hint: "detect"
+    kpi_gate: "configs/gate_prod.yaml"
+    safe_kit_fallback: true
+
+render:
+  out_dir: "renders/test_project/test_song"
+  stem_format: "wav/48k/24bit"

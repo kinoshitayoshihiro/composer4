@@ -1,0 +1,44 @@
+# WAV Stage1 Configuration
+# 共用設定（RhythmAI / 和声AI / EmotionAI）
+
+# ========== Audio Processing ==========
+sample_rate: 44100
+bitdepth: 16
+channel_mode: keep  # keep/mono/stereo（推奨: keep → 下流で必要に応じて変換）
+
+# ========== Normalization ==========
+peak_target: 0.98  # -0.17 dBFS
+write_lufs_pre: true
+write_lufs_post: true
+write_gain_applied_db: true
+
+# ========== Silence Trimming ==========
+trim_silence: false  # RhythmAI互換性のためfalse推奨（時刻原点保持）
+silence_trim_db: -50.0
+silence_margin_ms: 50  # トリム時の安全マージン
+write_trim_offsets: true  # trim_head_ms/trim_tail_ms記録
+
+# ========== Duration Gating ==========
+min_duration_s: 1.5
+max_duration_s: 120.0
+
+# ========== Quality Flags ==========
+quality_flags:
+  clipping_ratio_max: 0.01
+  rms_min: 0.01
+
+# ========== ID Policy ==========
+id_policy:
+  src_id: md5_pcm_pre   # Pre-clean PCMのMD5
+  clean_id: md5_pcm_post # Post-clean PCMのMD5
+  write_hashes_prepost: true
+
+# ========== Metadata ==========
+metadata:
+  version: "1.0.0"
+  pipeline: "wav_stage1"
+  write_tool_versions: true  # librosa/soundfile等のバージョン
+  write_processing_params: true  # 全パラメータ記録
+  
+# ========== Output ==========
+write_audio: false  # Sidecar JSONのみ生成（オーディオは元データ参照）

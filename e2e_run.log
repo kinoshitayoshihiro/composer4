@@ -1,0 +1,151 @@
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_001
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+
+   Tempo: 74.5 BPM
+
+📋 Step 1.2: Importing Stage1 Analysis Data
+   Source: data/suno_ai/suno_themesong/song_001/analysis
+
+⏭️  Step 1.5: Stem Features Generation (SKIPPED)
+   Using existing stem_features.parquet / bars.parquet
+
+🔍 Step 1: Pattern Matching (Top-K=5)
+📊 Song Analysis:
+  Tempo: 74.5 BPM
+  Family Hint: STRAIGHT_8
+  Density Hint: 0.3
+
+✅ Rhythm Pickle: 30964 patterns loaded
+
+🎯 Top-5 Rhythm Matches:
+  1. 88_hiphop_75_fill_4-4_21 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  2. 88_hiphop_75_fill_4-4_35 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  3. 88_hiphop_75_fill_4-4_37 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  4. 88_hiphop_75_fill_4-4_4 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  5. 88_hiphop_75_fill_4-4_41 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+
+✅ Output:
+  - data/suno_ai/suno_themesong/song_001/matches_rhythm.json
+
+🎯 Stems features detected: data/suno_ai/suno_themesong/song_001/stem_features.parquet
+🔁 Step 2: Reusing existing data/suno_ai/suno_themesong/song_001/drums_recommendations.json
+
+🎸 Step 3: Bass/Guitar Plans (real groove v4 → plan)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+✅ bass_plan written → data/suno_ai/suno_themesong/song_001/bass_plan.json (events=419)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+✅ guitar_plan written → data/suno_ai/suno_themesong/song_001/guitar_plan.json (events=456)
+
+🎹 Step 4: Piano/Strings Plans (real groove v4 → plan)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+✅ piano_plan written → data/suno_ai/suno_themesong/song_001/piano_plan.json (events=166)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+✅ strings_plan written → data/suno_ai/suno_themesong/song_001/strings_plan.json (events=68)
+
+🥁 Step 5: Drums Plan (from recommendations)
+✅ Generated drums_plan.json: 2980 events (149 bars)
+
+🎼 Step 6: Full Arrangement (5 tracks)
+✅ Merged bass: Bass (ch=1, prog=33, 419 events)
+✅ Merged guitar: Guitar (ch=2, prog=25, 456 events)
+✅ Merged piano: Piano (ch=3, prog=0, 166 events)
+✅ Merged strings: Strings (ch=4, prog=48, 68 events)
+✅ Merged drums: Drums (ch=9, prog=0, 2980 events)
+✅ Saved: data/suno_ai/suno_themesong/song_001/full_arrangement.json (5 tracks)
+
+🧭 Step 6.1: Plan normalization (bar/beat backfill)
+✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/drums_plan.json
+✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/bass_plan.json
+✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/guitar_plan.json
+✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/piano_plan.json
+✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/strings_plan.json
+
+🧰 Step 6.5: Normalize plan event schema
+✅ wrote: data/suno_ai/suno_themesong/song_001/full_arrangement.json
+  tracks fixed(header channel added): 0
+  events added channel: 4089
+  events added velocity(from vel): 4089
+
+🧭 Step 6.6: Full arrangement bar/beat backfill
+✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/full_arrangement.json
+
+🔧 Step 6.7: Fix missing fields (start_beats/end_beats/vel/velocity)
+✅ normalized: 4089 events | fixes: {'bar': 0, 'beat': 0, 'start_beats': 2980, 'end_beats': 2980, 'dur_beats': 0, 'vel': 0, 'velocity': 0, 'channel': 0} | bpb=4
+
+✅ Step 7: Plan Validation
+✅ Valid: data/suno_ai/suno_themesong/song_001/full_arrangement.json
+
+🎵 Step 8: MIDI Generation
+[midi_writer] CLIP_TO_SONG_END=True
+[midi_writer] total_bars=149, song_end_beats=596.0
+[midi_writer] BEFORE CLIP: track=Bass events=419 max_end_beats=595.900
+[midi_writer] BEFORE CLIP: track=Guitar events=456 max_end_beats=592.150
+[midi_writer] BEFORE CLIP: track=Piano events=166 max_end_beats=595.400
+[midi_writer] BEFORE CLIP: track=Strings events=68 max_end_beats=596.000
+[midi_writer] BEFORE CLIP: track=Drums events=2980 max_end_beats=596.875
+[midi_writer] Clipping all tracks to 596.0 beats
+[clip] Bass: 419->419 ev, hard_cut=0
+[clip] Guitar: 456->456 ev, hard_cut=0
+[clip] Piano: 166->166 ev, hard_cut=0
+[clip] Strings: 68->68 ev, hard_cut=1
+[clip] Drums: 2980->2975 ev, hard_cut=0
+✅ Saved MIDI: data/suno_ai/suno_themesong/song_001/full_arrangement.mid (6 tracks, PPQ=480)
+✅ タグ埋め込み完了: humanize_v2_44136fa3 → data/suno_ai/suno_themesong/song_001/full_arrangement.mid
+✅ Humanize tag embedded: humanize_v2_44136fa3
+
+📊 Step 9: MIDI Statistics
+   Tracks: 6
+   PPQ: 480
+   Total notes: 2730
+   Duration: 480.0s (8.0min)
+
+📏 Step 10: KPI Gate Validation (bars.parquet基準)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+📖 Loading MIDI: data/suno_ai/suno_themesong/song_001/full_arrangement.mid
+   Hat pitches: [42, 43, 44, 46, 51, 52, 53, 59, 82]
+   bars.parquet loaded: 149 bars
+   Epsilon: 20.0ms
+   Use downbeats: False
+[DEBUG] Loaded 149 bars with time_signature from bars.parquet
+   Total bars: 149
+   Gate config: configs/gate_prod.yaml
+
+📊 Validation Statistics:
+   Total bars: 149
+   Pass: 149 (100.0%)
+   Fail: 0 (0.0%)
+   Warning: 0
+
+🔍 Fail原因Top10:
+
+✅ Saved validation report: data/suno_ai/suno_themesong/song_001/kpi_gate_postgen.json
+
+🛡️  Step 11: CI Regression Guard (Final Verification)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+✅ CI レポートを書き出しました: data/suno_ai/suno_themesong/song_001/ci_verify_report.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CI Summary:
+  pass : 9
+  warn : 0
+  fail : 1
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ❌ CI Verification FAILED
+      See details: data/suno_ai/suno_themesong/song_001/ci_verify_report.json
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_001/.debug_20251102_013502

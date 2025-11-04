@@ -1,0 +1,250 @@
+# Prometheus Alert Rules for Drums KPIs
+# Phase 25.3: Rhythm AI Production Integration
+
+groups:
+  - name: drums_kpi_alerts
+    interval: 30s
+    rules:
+      # ===== KPI Violation Alerts =====
+      
+      - alert: DrumsKickDownbeatRateLow
+        expr: |
+          drums_kick_downbeat_rate < 0.80
+        for: 2m
+        labels:
+          severity: warning
+          component: drums
+          kpi: kick_downbeat_rate
+        annotations:
+          summary: "Drums kick downbeat rate below threshold"
+          description: |
+            Kick downbeat rate is {{ $value | humanizePercentage }} 
+            (threshold: 80%)
+            This indicates weak downbeat emphasis.
+            Section: {{ $labels.section }}
+            Song: {{ $labels.song_id }}
+      
+      - alert: DrumsSnareBackbeatAccLow
+        expr: |
+          drums_snare_backbeat_acc < 0.85
+        for: 2m
+        labels:
+          severity: warning
+          component: drums
+          kpi: snare_backbeat_acc
+        annotations:
+          summary: "Drums snare backbeat accuracy below threshold"
+          description: |
+            Snare backbeat accuracy is {{ $value | humanizePercentage }}
+            (threshold: 85%)
+            This indicates poor backbeat placement.
+            Section: {{ $labels.section }}
+            Song: {{ $labels.song_id }}
+      
+      - alert: DrumsHatDensityDeviationHigh
+        expr: |
+          abs(drums_hat_density_actual - drums_hat_density_target) > 2.0
+        for: 2m
+        labels:
+          severity: warning
+          component: drums
+          kpi: hat_density_deviation
+        annotations:
+          summary: "Drums hi-hat density deviation too high"
+          description: |
+            Hi-hat density deviation is {{ $value | printf "%.2f" }}
+            (threshold: 2.0)
+            Actual: {{ $labels.hat_density_actual }}, Target: {{ $labels.hat_density_target }}
+            Section: {{ $labels.section }}
+            Song: {{ $labels.song_id }}
+      
+      - alert: DrumsFillPlacementInvalid
+        expr: |
+          drums_fill_placement_valid < 0.95
+        for: 1m
+        labels:
+          severity: warning
+          component: drums
+          kpi: fill_placement
+        annotations:
+          summary: "Drums fill placement validity low"
+          description: |
+            Fill placement validity is {{ $value | humanizePercentage }}
+            (threshold: 95%)
+            This indicates improper fill timing.
+            Song: {{ $labels.song_id }}
+      
+      # ===== ML Usage Alerts =====
+      
+      - alert: DrumsMLUsageRateLow
+        expr: |
+          rate(drums_ml_used_total[5m]) / rate(drums_patterns_total[5m]) < 0.90
+        for: 5m
+        labels:
+          severity: info
+          component: drums
+          kpi: ml_usage
+        annotations:
+          summary: "Drums ML usage rate below target"
+          description: |
+            ML usage rate is {{ $value | humanizePercentage }}
+            (target: 90%)
+            This may indicate frequent Safe-Kit fallbacks.
+      
+      - alert: DrumsSafeKitFallbackHigh
+        expr: |
+          rate(drums_safe_kit_fallback_total[5m]) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          component: drums
+          kpi: safe_kit_fallback
+        annotations:
+          summary: "Drums Safe-Kit fallback rate high"
+          description: |
+            Safe-Kit fallback rate is {{ $value | humanizePercentage }}
+            This indicates low ML confidence or pattern unavailability.
+            Reason breakdown:
+            - low_p1: {{ $labels.reason_low_p1 }}
+            - low_margin: {{ $labels.reason_low_margin }}
+            - no_patterns: {{ $labels.reason_no_patterns }}
+      
+      # ===== Performance Alerts =====
+      
+      - alert: DrumsRecommendLatencyHigh
+        expr: |
+          histogram_quantile(0.95, 
+            rate(drums_recommend_duration_seconds_bucket[5m])
+          ) > 0.100
+        for: 3m
+        labels:
+          severity: warning
+          component: drums
+          kpi: latency
+        annotations:
+          summary: "Drums recommendation latency high (p95)"
+          description: |
+            p95 recommendation latency is {{ $value | printf "%.3f" }}s
+            (threshold: 100ms)
+            This may impact real-time generation performance.
+      
+      - alert: DrumsPatternCacheHitRateLow
+        expr: |
+          rate(drums_pattern_cache_hits_total[5m]) / 
+          rate(drums_pattern_cache_requests_total[5m]) < 0.80
+        for: 5m
+        labels:
+          severity: info
+          component: drums
+          kpi: cache_hit_rate
+        annotations:
+          summary: "Drums pattern cache hit rate low"
+          description: |
+            Cache hit rate is {{ $value | humanizePercentage }}
+            (target: 80%)
+            Consider increasing cache size or adjusting TTL.
+      
+      # ===== Auto-Recovery Alerts =====
+      
+      - alert: DrumsAutoRecoveryTriggered
+        expr: |
+          increase(drums_auto_recovery_triggered_total[10m]) > 0
+        labels:
+          severity: info
+          component: drums
+          kpi: auto_recovery
+        annotations:
+          summary: "Drums auto-recovery triggered"
+          description: |
+            Auto-recovery was triggered {{ $value }} times in the last 10 minutes.
+            Violation type: {{ $labels.violation_type }}
+            Recovery action: Switched to Safe-Kit pattern.
+      
+      - alert: DrumsAutoRecoveryFrequent
+        expr: |
+          rate(drums_auto_recovery_triggered_total[30m]) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          component: drums
+          kpi: auto_recovery
+        annotations:
+          summary: "Drums auto-recovery triggering frequently"
+          description: |
+            Auto-recovery is triggering at {{ $value | printf "%.2f" }} per second
+            This indicates systemic quality issues.
+            Investigate pattern quality or ML model degradation.
+      
+      # ===== Critical System Alerts =====
+      
+      - alert: DrumsMLModelUnavailable
+        expr: |
+          drums_ml_model_loaded == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: drums
+          kpi: ml_model
+        annotations:
+          summary: "Drums ML model not loaded"
+          description: |
+            ML model (stage2_drums_v1.pickle) is not loaded.
+            System is using rule-based fallback only.
+            Action: Check model file integrity and restart service.
+      
+      - alert: DrumsPatternsEmpty
+        expr: |
+          drums_patterns_total == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: drums
+          kpi: patterns
+        annotations:
+          summary: "Drums pattern dictionary is empty"
+          description: |
+            No patterns available for recommendation.
+            System will fail to generate drums.
+            Action: Check pattern loading and data pipeline.
+      
+      # ===== Quality Degradation Alerts =====
+      
+      - alert: DrumsOverallQualityDegraded
+        expr: |
+          (
+            (drums_kick_downbeat_rate < 0.80) +
+            (drums_snare_backbeat_acc < 0.85) +
+            (abs(drums_hat_density_actual - drums_hat_density_target) > 2.0)
+          ) >= 2
+        for: 5m
+        labels:
+          severity: warning
+          component: drums
+          kpi: overall_quality
+        annotations:
+          summary: "Drums overall quality degraded"
+          description: |
+            Multiple KPI violations detected ({{ $value }} KPIs failing).
+            This indicates systemic quality issues.
+            Investigate:
+            - ML model performance
+            - Pattern dictionary quality
+            - Input query validity
+      
+      # ===== Canary Alerts =====
+      
+      - alert: DrumsCanaryKPIWorseThanProd
+        expr: |
+          (drums_kick_downbeat_rate{deployment="canary"} - 
+           drums_kick_downbeat_rate{deployment="prod"}) < -0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: drums
+          deployment: canary
+        annotations:
+          summary: "Drums Canary KPI worse than Production"
+          description: |
+            Canary deployment shows {{ $value | humanizePercentage }} 
+            worse kick_downbeat_rate than Production.
+            Consider rollback or investigation before full deployment.

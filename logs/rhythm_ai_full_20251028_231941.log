@@ -1,0 +1,16 @@
+[2025-10-28 23:19:41] =========================================
+[2025-10-28 23:19:41] Rhythm AI Full Pipeline
+[2025-10-28 23:19:41] Stage1 → Pickle → Stage2
+[2025-10-28 23:19:41] =========================================
+[2025-10-28 23:19:41] 
+[2025-10-28 23:19:42] 📂 [1/5] Processing drumclean_midi...
+[2025-10-28 23:19:48]    Found 51248 MIDI files
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_midi.py", line 27, in <module>
+    from tqdm import tqdm
+ModuleNotFoundError: No module named 'tqdm'
+[2025-10-28 23:19:49] ✅ drumclean_midi Stage1 completed
+[2025-10-28 23:19:49] 
+[2025-10-28 23:19:49] 📂 [2/5] Processing groove (MIDI extraction)...

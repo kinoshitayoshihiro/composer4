@@ -1,0 +1,207 @@
+# Guitar Safe-Kit - 緊急フォールバック用基本パターン
+#
+# Phase 26: Guitar ML基盤 - Safe-Kit定義
+#
+# 用途:
+# - ML推論失敗時の安全なフォールバック
+# - 低確率/低マージン時の代替パターン
+# - KPI Gates維持（accent_score ≥ 0.65, chord_fit ≥ 0.60）
+
+patterns:
+  # 1. Open Chord Basic (開放コード基本パターン)
+  - pattern_id: "safe_kit_open_chord_basic"
+    family: "safe_kit"
+    chord_type_hint: "maj"
+    tempo_hint: 120
+    section_hint: "Verse"
+    energy_hint: 0.5
+    
+    description: "基本的な開放コードストローク（4分音符ダウンビート）"
+    
+    # KPI予測値（保守的）
+    accent_score: 0.70  # Safe-Kitは保守的だが基準クリア
+    chord_fit: 0.80     # コード適合度は高め
+    density: 4.0        # 4分音符ダウンビート（低密度）
+    
+    # イベントテンプレート（pos_ql単位）
+    events:
+      # 1拍目（ルート + 3rd + 5th）
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 85, duration_ql: 3.5}   # Root
+      - {pos_ql: 0.0, pitch_offset: 4, velocity: 80, duration_ql: 3.5}   # 3rd
+      - {pos_ql: 0.0, pitch_offset: 7, velocity: 80, duration_ql: 3.5}   # 5th
+      
+      # 2拍目
+      - {pos_ql: 4.0, pitch_offset: 0, velocity: 80, duration_ql: 3.5}
+      - {pos_ql: 4.0, pitch_offset: 4, velocity: 75, duration_ql: 3.5}
+      - {pos_ql: 4.0, pitch_offset: 7, velocity: 75, duration_ql: 3.5}
+      
+      # 3拍目
+      - {pos_ql: 8.0, pitch_offset: 0, velocity: 85, duration_ql: 3.5}
+      - {pos_ql: 8.0, pitch_offset: 4, velocity: 80, duration_ql: 3.5}
+      - {pos_ql: 8.0, pitch_offset: 7, velocity: 80, duration_ql: 3.5}
+      
+      # 4拍目
+      - {pos_ql: 12.0, pitch_offset: 0, velocity: 80, duration_ql: 3.5}
+      - {pos_ql: 12.0, pitch_offset: 4, velocity: 75, duration_ql: 3.5}
+      - {pos_ql: 12.0, pitch_offset: 7, velocity: 75, duration_ql: 3.5}
+
+  # 2. Power Chord (パワーコード - ロック/ポップス)
+  - pattern_id: "safe_kit_power_chord"
+    family: "safe_kit"
+    chord_type_hint: "maj"
+    tempo_hint: 140
+    section_hint: "Chorus"
+    energy_hint: 0.8
+    
+    description: "パワーコード（Root + 5th、8分音符刻み）"
+    
+    accent_score: 0.75
+    chord_fit: 0.75
+    density: 8.0  # 8分音符刻み
+    
+    events:
+      # 1拍目
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 90, duration_ql: 1.8}   # Root
+      - {pos_ql: 0.0, pitch_offset: 7, velocity: 85, duration_ql: 1.8}   # 5th
+      
+      # 1拍目裏
+      - {pos_ql: 2.0, pitch_offset: 0, velocity: 75, duration_ql: 1.8}
+      - {pos_ql: 2.0, pitch_offset: 7, velocity: 70, duration_ql: 1.8}
+      
+      # 2拍目
+      - {pos_ql: 4.0, pitch_offset: 0, velocity: 85, duration_ql: 1.8}
+      - {pos_ql: 4.0, pitch_offset: 7, velocity: 80, duration_ql: 1.8}
+      
+      # 2拍目裏
+      - {pos_ql: 6.0, pitch_offset: 0, velocity: 75, duration_ql: 1.8}
+      - {pos_ql: 6.0, pitch_offset: 7, velocity: 70, duration_ql: 1.8}
+      
+      # 3拍目
+      - {pos_ql: 8.0, pitch_offset: 0, velocity: 90, duration_ql: 1.8}
+      - {pos_ql: 8.0, pitch_offset: 7, velocity: 85, duration_ql: 1.8}
+      
+      # 3拍目裏
+      - {pos_ql: 10.0, pitch_offset: 0, velocity: 75, duration_ql: 1.8}
+      - {pos_ql: 10.0, pitch_offset: 7, velocity: 70, duration_ql: 1.8}
+      
+      # 4拍目
+      - {pos_ql: 12.0, pitch_offset: 0, velocity: 85, duration_ql: 1.8}
+      - {pos_ql: 12.0, pitch_offset: 7, velocity: 80, duration_ql: 1.8}
+      
+      # 4拍目裏
+      - {pos_ql: 14.0, pitch_offset: 0, velocity: 75, duration_ql: 1.8}
+      - {pos_ql: 14.0, pitch_offset: 7, velocity: 70, duration_ql: 1.8}
+
+  # 3. Arpeggio (アルペジオ - バラード)
+  - pattern_id: "safe_kit_arpeggio"
+    family: "safe_kit"
+    chord_type_hint: "maj7"
+    tempo_hint: 70
+    section_hint: "Verse"
+    energy_hint: 0.3
+    
+    description: "アルペジオパターン（Root-3rd-5th-7th順次）"
+    
+    accent_score: 0.68
+    chord_fit: 0.85
+    density: 8.0
+    
+    events:
+      # 1拍目: Root
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 70, duration_ql: 3.5}
+      
+      # 2拍目: 3rd
+      - {pos_ql: 4.0, pitch_offset: 4, velocity: 65, duration_ql: 3.5}
+      
+      # 3拍目: 5th
+      - {pos_ql: 8.0, pitch_offset: 7, velocity: 70, duration_ql: 3.5}
+      
+      # 4拍目: 7th (maj7=11, min7=10)
+      - {pos_ql: 12.0, pitch_offset: 11, velocity: 65, duration_ql: 3.5}
+
+  # 4. Suspended Pad (サスペンドパッド - アンビエント)
+  - pattern_id: "safe_kit_suspended_pad"
+    family: "safe_kit"
+    chord_type_hint: "sus4"
+    tempo_hint: 90
+    section_hint: "Bridge"
+    energy_hint: 0.4
+    
+    description: "サスペンドコードパッド（Root + 4th + 5th、長音）"
+    
+    accent_score: 0.65
+    chord_fit: 0.70
+    density: 3.0
+    
+    events:
+      # 1小節全体でサスペンドコードを維持
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 60, duration_ql: 15.5}   # Root
+      - {pos_ql: 0.0, pitch_offset: 5, velocity: 55, duration_ql: 15.5}   # 4th
+      - {pos_ql: 0.0, pitch_offset: 7, velocity: 55, duration_ql: 15.5}   # 5th
+
+  # 5. Downbeat Root Only (ダウンビート・ルートのみ - ミニマル)
+  - pattern_id: "safe_kit_downbeat_root_only"
+    family: "safe_kit"
+    chord_type_hint: "min"
+    tempo_hint: 100
+    section_hint: "Intro"
+    energy_hint: 0.2
+    
+    description: "ダウンビートでルート音のみ（最小限パターン）"
+    
+    accent_score: 0.65
+    chord_fit: 0.60  # ルートのみなので低め
+    density: 1.0     # 1小節に1音
+    
+    events:
+      # 1拍目のみ
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 75, duration_ql: 15.5}
+
+# Safe-Kit使用統計（Phase 26での目標）
+usage_stats:
+  target_safe_kit_rate: 0.10  # Safe-Kit発火率10%以下
+  min_proba_threshold: 0.15   # Top-1確率閾値
+  min_margin_threshold: 0.10  # Top-1/Top-2マージン閾値
+
+# KPI Gates（Safe-Kitでも維持）
+kpi_gates:
+  accent_score_min: 0.65
+  chord_fit_min: 0.60
+  density_abs_max: 1.0  # 目標密度との絶対差
+
+# Pitch Offset説明
+pitch_offset_mapping:
+  0: "Root（ルート音）"
+  2: "2nd（長2度）"
+  4: "3rd（長3度 for maj, 短3度 for min）"
+  5: "4th（完全4度）"
+  7: "5th（完全5度）"
+  9: "6th（長6度）"
+  10: "min7（短7度）"
+  11: "maj7（長7度）"
+  12: "Octave（オクターブ）"
+
+# 使用方法
+usage:
+  example: |
+    from ml.guitar_pattern_recommender import GuitarPatternRecommender
+    
+    rec = GuitarPatternRecommender(
+        patterns=patterns_dict,
+        safe_kit_path="config/safe_kit_guitar.yaml"
+    )
+    
+    result = rec.recommend(
+        query=GuitarQuery(
+            tempo_bpm=120,
+            chord_root="C",
+            chord_type="maj",
+            section="Chorus",
+            target_energy=0.7
+        ),
+        min_proba=0.15,
+        min_margin=0.10
+    )
+    
+    if result.safety_triggered:
+        print(f"Safe-Kit triggered: {result.safety_reason}")

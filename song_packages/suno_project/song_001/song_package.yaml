@@ -1,0 +1,17 @@
+artifacts:
+  audio: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_001/full.wav
+  bars: bars.parquet
+  chordmap: chordmap.json
+  sections: sections.json
+dataset: suno_ai
+generation:
+  auto_safe_kit: true
+  kpi_gate_enabled: true
+  target_bpm: 74.67733137590379
+meta:
+  duration_sec: 479.95997916666664
+  tempo_bpm: 74.67733137590379
+  time_signature: 4/4
+  total_bars: 150
+song_id: song_001
+source: wav

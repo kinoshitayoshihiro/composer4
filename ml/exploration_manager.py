@@ -4,20 +4,24 @@ Exploration Manager for Pattern Discovery
 Implements epsilon-greedy exploration strategy to discover new high-quality patterns.
 After v3_ratio reaches 1.00, allocates 10% of traffic for exploration.
 
+Phase 24.4: セクション別探索上限（cap_by_section）対応
+
 Usage:
     manager = ExplorationManager(epsilon=0.10)
     
-    if manager.should_explore():
-        pattern = manager.select_exploration_pattern(exploration_pool)
+    # セクション別探索判定（Chorusは抑制）
+    if manager.should_explore_section(section='Chorus'):
+        pattern = manager.select_exploration_pattern(exploration_pool, section='Chorus')
     else:
         pattern = v3_candidates[0]  # Exploit best pattern
     
-    manager.record_exploration_result(pattern_id, quality_score)
+    manager.record_exploration_result(pattern_id, quality_score, section='Chorus')
 """
 
 import json
 import random
 import logging
+import yaml
 from typing import Dict, List, Optional, Set
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -27,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExplorationManager:
-    """Manages epsilon-greedy exploration for pattern discovery"""
+    """Manages epsilon-greedy exploration for pattern discovery with section-specific caps"""
     
     def __init__(
         self,
@@ -35,7 +39,8 @@ class ExplorationManager:
         exploration_log_path: str = "data/exploration_log.json",
         discovered_patterns_path: str = "data/discovered_patterns.json",
         min_exploration_samples: int = 10,
-        quality_threshold: float = 0.70
+        quality_threshold: float = 0.70,
+        config_path: Optional[str] = None
     ):
         """
         Initialize exploration manager
@@ -46,12 +51,17 @@ class ExplorationManager:
             discovered_patterns_path: Path to discovered patterns database
             min_exploration_samples: Minimum samples before pattern evaluation
             quality_threshold: Quality score threshold for pattern promotion (0-1)
+            config_path: Path to exploration_config.yaml (optional)
         """
         self.epsilon = epsilon
         self.exploration_log_path = Path(exploration_log_path)
         self.discovered_patterns_path = Path(discovered_patterns_path)
         self.min_exploration_samples = min_exploration_samples
         self.quality_threshold = quality_threshold
+        
+        # Load exploration config (cap_by_section等)
+        self.config = self._load_exploration_config(config_path)
+        self.cap_by_section = self.config.get('exploration', {}).get('cap_by_section', {})
         
         # Ensure data directories exist
         self.exploration_log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -62,7 +72,28 @@ class ExplorationManager:
         self.discovered_patterns = self._load_discovered_patterns()
         
         logger.info(f"ExplorationManager initialized: epsilon={epsilon}, "
-                   f"quality_threshold={quality_threshold}")
+                   f"quality_threshold={quality_threshold}, "
+                   f"cap_by_section={self.cap_by_section}")
+    
+    def _load_exploration_config(self, config_path: Optional[str] = None) -> Dict:
+        """Load exploration_config.yaml"""
+        if config_path is None:
+            config_path = Path(__file__).parent.parent / "config" / "exploration_config.yaml"
+        else:
+            config_path = Path(config_path)
+        
+        if not config_path.exists():
+            logger.warning(f"exploration_config.yaml not found: {config_path}")
+            return {}
+        
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f)
+            logger.info(f"Exploration config loaded from {config_path}")
+            return config
+        except Exception as e:
+            logger.error(f"Failed to load exploration config: {e}")
+            return {}
     
     def should_explore(self) -> bool:
         """
@@ -73,6 +104,30 @@ class ExplorationManager:
         """
         explore = random.random() < self.epsilon
         logger.debug(f"Exploration decision: {'EXPLORE' if explore else 'EXPLOIT'}")
+        return explore
+    
+    def should_explore_section(self, section: Optional[str] = None) -> bool:
+        """
+        Decide whether to explore with section-specific cap
+        
+        Phase 24.4: セクション別上限対応
+        Chorusは3%上限、Verseは12%許容など
+        
+        Args:
+            section: Song section (Chorus, Verse, etc.)
+        
+        Returns:
+            True if should explore, False if should exploit
+        """
+        if section and section in self.cap_by_section:
+            section_epsilon = self.cap_by_section[section]
+            explore = random.random() < section_epsilon
+            logger.debug(f"Exploration decision ({section}): {'EXPLORE' if explore else 'EXPLOIT'} "
+                        f"(cap={section_epsilon:.2%})")
+        else:
+            # セクション未指定 or 未定義 → グローバルepsilon
+            explore = self.should_explore()
+        
         return explore
     
     def select_exploration_pattern(

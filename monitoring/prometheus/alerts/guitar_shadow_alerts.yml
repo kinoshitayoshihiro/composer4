@@ -1,0 +1,183 @@
+groups:
+  - name: shadow_testing
+    interval: 30s
+    rules:
+      # ==================================================================
+      # CRITICAL Alerts
+      # ==================================================================
+      
+      - alert: GuitarV3Degradation
+        expr: guitar_shadow_accent_delta < -0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 degraded vs v1 (Accent Score)"
+          description: |
+            v3 Accent Score is {{ $value | humanizePercentage }} lower than v1
+            This indicates v3 is performing worse than the baseline v1.
+            Delta threshold: -5pt
+            Current delta: {{ $value | humanizePercentage }}
+          runbook: "https://wiki/shadow-testing#degradation"
+          dashboard: "http://localhost:3000/d/shadow-testing"
+      
+      - alert: GuitarV3HighLatency
+        expr: guitar_v3_latency_p95_ms > 150
+        for: 5m
+        labels:
+          severity: critical
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 p95 latency exceeds 150ms"
+          description: |
+            v3 p95 latency: {{ $value }}ms (threshold: 150ms)
+            This may trigger auto-fallback to v1.
+          runbook: "https://wiki/shadow-testing#latency"
+      
+      - alert: GuitarV3HighErrorRate
+        expr: guitar_v3_error_rate > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 error rate exceeds 1%"
+          description: |
+            v3 error rate: {{ $value | humanizePercentage }}
+            Threshold: 1%
+            This may indicate v3 instability.
+      
+      # ==================================================================
+      # WARNING Alerts
+      # ==================================================================
+      
+      - alert: GuitarV3LowWinRate
+        expr: guitar_shadow_v3_win_rate < 0.60
+        for: 10m
+        labels:
+          severity: warning
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 win rate below 60%"
+          description: |
+            v3 wins against v1 only {{ $value | humanizePercentage }} of the time.
+            Expected: >70%
+            Current: {{ $value | humanizePercentage }}
+      
+      - alert: GuitarV3MinorDegradation
+        expr: guitar_shadow_accent_delta < -0.02 and guitar_shadow_accent_delta >= -0.05
+        for: 10m
+        labels:
+          severity: warning
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 slightly degraded vs v1"
+          description: |
+            v3 Accent Score delta: {{ $value | humanizePercentage }}
+            Warning threshold: -2pt
+            Critical threshold: -5pt
+      
+      - alert: GuitarV3LatencyWarning
+        expr: guitar_v3_latency_p95_ms > 100 and guitar_v3_latency_p95_ms <= 150
+        for: 10m
+        labels:
+          severity: warning
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 p95 latency elevated"
+          description: |
+            v3 p95 latency: {{ $value }}ms
+            Warning threshold: 100ms
+            Critical threshold: 150ms
+      
+      - alert: GuitarShadowTestLowVolume
+        expr: rate(guitar_shadow_total_requests[5m]) < 0.1
+        for: 15m
+        labels:
+          severity: warning
+          component: shadow_testing
+          category: monitoring
+        annotations:
+          summary: "Shadow testing request volume low"
+          description: |
+            Shadow testing requests: {{ $value }} req/s
+            Expected: >0.5 req/s
+            This may indicate shadow testing is not running properly.
+      
+      - alert: GuitarV3VsV1LatencyRegression
+        expr: |
+          (guitar_v3_latency_p95_ms - guitar_v1_latency_p95_ms) 
+          / guitar_v1_latency_p95_ms > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 latency 50% slower than v1"
+          description: |
+            v3 p95: {{ with query "guitar_v3_latency_p95_ms" }}{{ . | first | value }}{{ end }}ms
+            v1 p95: {{ with query "guitar_v1_latency_p95_ms" }}{{ . | first | value }}{{ end }}ms
+            Regression: {{ $value | humanizePercentage }}
+      
+      # ==================================================================
+      # INFO Alerts
+      # ==================================================================
+      
+      - alert: GuitarV3Improvement
+        expr: guitar_shadow_accent_delta > 0.10
+        for: 10m
+        labels:
+          severity: info
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 shows significant improvement over v1"
+          description: |
+            v3 Accent Score is {{ $value | humanizePercentage }} higher than v1!
+            This is great news - v3 is performing well.
+      
+      - alert: GuitarV3HighWinRate
+        expr: guitar_shadow_v3_win_rate > 0.80
+        for: 10m
+        labels:
+          severity: info
+          component: guitar_v3
+          category: shadow_testing
+        annotations:
+          summary: "v3 win rate exceeds 80%"
+          description: |
+            v3 wins {{ $value | humanizePercentage }} of comparisons.
+            Excellent performance!
+      
+      # ==================================================================
+      # Fallback Trigger Monitoring
+      # ==================================================================
+      
+      - alert: GuitarShadowFallbackConditionMet
+        expr: |
+          (guitar_shadow_accent_delta < -0.05) or
+          (guitar_v3_latency_p95_ms > 150) or
+          (guitar_v3_error_rate > 0.01)
+        for: 5m
+        labels:
+          severity: critical
+          component: shadow_testing
+          category: fallback
+        annotations:
+          summary: "Auto-fallback condition met"
+          description: |
+            One or more fallback conditions are met:
+            - Accent delta < -5pt: {{ with query "guitar_shadow_accent_delta" }}{{ . | first | value | humanizePercentage }}{{ end }}
+            - v3 p95 > 150ms: {{ with query "guitar_v3_latency_p95_ms" }}{{ . | first | value }}{{ end }}ms
+            - v3 error > 1%: {{ with query "guitar_v3_error_rate" }}{{ . | first | value | humanizePercentage }}{{ end }}
+            
+            Auto-fallback to v1 should trigger.
+          runbook: "https://wiki/shadow-testing#auto-fallback"

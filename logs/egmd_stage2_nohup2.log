@@ -1,0 +1,27 @@
+[2025-10-28 19:32:02] ==========================================
+[2025-10-28 19:32:02] 🎵 Rhythm AI Stage2 - E-GMD
+[2025-10-28 19:32:02] ==========================================
+[2025-10-28 19:32:02] Base Dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-28 19:32:02] Output Dir: output/rhythm_ai
+[2025-10-28 19:32:02] Extractor: scripts/rhythm_stage2_extractor.py
+[2025-10-28 19:32:02] Config: configs/rhythm_stage2.yaml
+[2025-10-28 19:32:02] Log File: logs/rhythm_stage2_egmd_20251028_193202.log
+[2025-10-28 19:32:02] 
+[2025-10-28 19:32:02] 📂 1. Verifying E-GMD Stage1 outputs...
+[2025-10-28 19:32:03] ✅ E-GMD cleaned files: 4552
+[2025-10-28 19:32:03] 🚀 2. Running E-GMD Stage2 feature extraction...
+[2025-10-28 19:32:03]    - Input: output/rhythm_ai/egmd_cleaned (4552 files)
+[2025-10-28 19:32:03]    - Metadata: output/rhythm_ai/egmd_metadata/drums_index.pkl
+[2025-10-28 19:32:03]    - Output: output/rhythm_ai/egmd_stage2
+📂 Loading index: output/rhythm_ai/egmd_metadata/drums_index.pkl
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 670, in <module>
+    main()
+    ~~~~^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 662, in main
+    summary = processor.process()
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 500, in process
+    records = load_lamda_index(self.lamda_index)
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 473, in load_lamda_index
+    raise ValueError(f"Unknown index format: {type(data)}, keys: {data.keys() if isinstance(data, dict) else 'N/A'}")
+ValueError: Unknown index format: <class 'dict'>, keys: dict_keys(['total_files', 'num_shards', 'shard_size', 'dataset_name', 'md5_hashes'])

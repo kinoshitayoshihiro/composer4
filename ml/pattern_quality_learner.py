@@ -289,12 +289,15 @@ class PatternQualityLearner:
         
         return pattern_id in blacklist_ids
     
-    def analyze_by_section(self, days: int = 7) -> Dict[str, Dict[str, float]]:
+    def analyze_by_section(
+        self,
+        days: int = 7
+    ) -> Dict[str, Dict[str, float]]:
         """
-        セクション別にブラックリスト分析
+        セクション別にブラックリスト生成
         
         Returns:
-            {section: {pattern_id: fallback_rate}}
+            {section_name: {pattern_id: fallback_rate}}
         """
         results = {}
         
@@ -303,6 +306,127 @@ class PatternQualityLearner:
             results[section] = blacklist
         
         return results
+    
+    def cleanup_blacklist(
+        self,
+        auto_remove_threshold: float = 0.01,
+        auto_remove_days: int = 7,
+        permanent_demotion_threshold: float = 0.05,
+        permanent_demotion_weeks: int = 3
+    ) -> Dict[str, List[str]]:
+        """
+        Phase 24.5: ブラックリスト自動クリーンアップ
+        
+        Rules:
+        1. 直近7日で使用率<1% → 自動解除（ハネすぎ防止）
+        2. 連続3週≥5% → 恒久降格（恒常的な地雷除去）
+        
+        Args:
+            auto_remove_threshold: 自動解除閾値（デフォルト1%）
+            auto_remove_days: 自動解除判定期間（デフォルト7日）
+            permanent_demotion_threshold: 恒久降格閾値（デフォルト5%）
+            permanent_demotion_weeks: 恒久降格判定期間（デフォルト3週）
+        
+        Returns:
+            {
+                'removed': [pattern_ids],  # 自動解除されたパターン
+                'permanent': [pattern_ids]  # 恒久降格されたパターン
+            }
+        """
+        # 既存ブラックリスト読み込み
+        if not self.blacklist_output_path.exists():
+            self.logger.warning("No existing blacklist found")
+            return {'removed': [], 'permanent': []}
+        
+        with open(self.blacklist_output_path, 'r') as f:
+            current_blacklist = json.load(f)
+        
+        if not current_blacklist:
+            return {'removed': [], 'permanent': []}
+        
+        removed_patterns = []
+        permanent_patterns = []
+        
+        # Rule 1: 直近7日で使用率<1% → 自動解除
+        recent_df = self._load_shadow_log(days=auto_remove_days)
+        if not recent_df.empty:
+            pattern_stats = self._calculate_fallback_rates(recent_df)
+            
+            for pattern_id in list(current_blacklist.keys()):
+                if pattern_id in pattern_stats:
+                    fallback_rate = pattern_stats[pattern_id]
+                    if fallback_rate < auto_remove_threshold:
+                        removed_patterns.append(pattern_id)
+                        del current_blacklist[pattern_id]
+                        self.logger.info(
+                            f"Auto-removed from blacklist: {pattern_id} "
+                            f"(recent fallback rate: {fallback_rate:.2%})"
+                        )
+        
+        # Rule 2: 連続3週≥5% → 恒久降格
+        for week in range(permanent_demotion_weeks):
+            week_start = week * 7
+            week_end = (week + 1) * 7
+            week_df = self._load_shadow_log(days=week_end)
+            
+            if len(week_df) < week_start:
+                continue
+            
+            week_df_filtered = week_df[week_df.index >= len(week_df) - week_end]
+            week_df_filtered = week_df_filtered[week_df_filtered.index < len(week_df) - week_start]
+            
+            if week_df_filtered.empty:
+                continue
+            
+            week_stats = self._calculate_fallback_rates(week_df_filtered)
+            
+            # 連続3週チェック
+            for pattern_id in list(current_blacklist.keys()):
+                if pattern_id in week_stats:
+                    if week_stats[pattern_id] >= permanent_demotion_threshold:
+                        if pattern_id not in permanent_patterns:
+                            # 全週チェック
+                            all_weeks_high = True
+                            for check_week in range(permanent_demotion_weeks):
+                                check_start = check_week * 7
+                                check_end = (check_week + 1) * 7
+                                check_df = self._load_shadow_log(days=check_end)
+                                
+                                if check_df.empty:
+                                    all_weeks_high = False
+                                    break
+                                
+                                check_stats = self._calculate_fallback_rates(check_df)
+                                if pattern_id not in check_stats or \
+                                   check_stats[pattern_id] < permanent_demotion_threshold:
+                                    all_weeks_high = False
+                                    break
+                            
+                            if all_weeks_high:
+                                permanent_patterns.append(pattern_id)
+                                current_blacklist[pattern_id] = {
+                                    'fallback_rate': week_stats[pattern_id],
+                                    'status': 'permanent',
+                                    'demoted_at': datetime.now().isoformat()
+                                }
+                                self.logger.warning(
+                                    f"Permanent demotion: {pattern_id} "
+                                    f"(consistent {permanent_demotion_weeks} weeks ≥{permanent_demotion_threshold:.0%})"
+                                )
+        
+        # 更新されたブラックリスト保存
+        with open(self.blacklist_output_path, 'w') as f:
+            json.dump(current_blacklist, f, indent=2)
+        
+        self.logger.info(
+            f"Blacklist cleanup: {len(removed_patterns)} removed, "
+            f"{len(permanent_patterns)} permanently demoted"
+        )
+        
+        return {
+            'removed': removed_patterns,
+            'permanent': permanent_patterns
+        }
 
 
 # Example usage

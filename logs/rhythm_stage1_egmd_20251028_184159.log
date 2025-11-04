@@ -1,0 +1,15 @@
+[2025-10-28 18:41:59] ==========================================
+[2025-10-28 18:41:59] 🥁 Rhythm AI Stage1 Cleaning - E-GMD
+[2025-10-28 18:41:59] ==========================================
+[2025-10-28 18:41:59] Base Dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-28 18:41:59] E-GMD Dir: data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/e-gmd-v1.0.0
+[2025-10-28 18:41:59] Output Dir: output/rhythm_ai
+[2025-10-28 18:41:59] Log File: logs/rhythm_stage1_egmd_20251028_184159.log
+[2025-10-28 18:41:59] 
+[2025-10-28 18:41:59] 📂 1. Verifying E-GMD MIDI files...
+[2025-10-28 18:42:16] ✅ Found 45537 MIDI files
+[2025-10-28 18:42:16] 🧹 2. Running Stage1 Cleaning for E-GMD...
+[2025-10-28 18:42:16]    - Input: data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/e-gmd-v1.0.0 (45,537 files)
+[2025-10-28 18:42:16]    - Output: output/rhythm_ai/egmd_cleaned
+[2025-10-28 18:42:16]    - Metadata: output/rhythm_ai/egmd_metadata
+scripts/run_rhythm_stage1_egmd.sh: line 51: python: command not found

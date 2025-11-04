@@ -43,14 +43,35 @@ schema:
       modes: [major, minor, dorian, mixolydian, lydian, phrygian, locrian]
       confidence_min: 0.5
   technique:
+    # VioPTT/MOSA-VPT準拠の奏法分類
     common:
       - none
       - staccato
       - legato
       - tremolo
       - accent
+      - portamento
+      - glissando
+      
     strings:
-      generic: [detache, spiccato, pizzicato, flageolet, marcato]
+      # VioPTT 4技法（論文ベース）
+      vioptt_core:
+        - detache        # デタシェ（分離弓）
+        - spiccato       # スピッカート（跳弓）
+        - pizzicato      # ピチカート（撥弦）
+        - flageolet      # フラジオレット（倍音）
+      
+      # 拡張奏法
+      generic: 
+        - detache
+        - spiccato
+        - pizzicato
+        - flageolet
+        - marcato
+        - sul_ponticello # 駒寄り
+        - sul_tasto      # 指板寄り
+        - col_legno      # 弓の木部で叩く
+        
       violin:
         - detache
         - spiccato
@@ -58,12 +79,85 @@ schema:
         - flageolet
         - legato
         - staccato
+        - tremolo
+        - sul_ponticello
+        - sul_tasto
+        
+      cello:
+        - detache
+        - spiccato
+        - pizzicato
+        - legato
+        - staccato
+        
+    guitar:
+      - normal
+      - palm_mute      # パームミュート
+      - harmonics      # ハーモニクス
+      - slide          # スライド
+      - hammer_on      # ハンマリング
+      - pull_off       # プリング
+      - bend           # ベンド
+      - vibrato        # ビブラート
+      - rake           # レイク
+      - tapping        # タッピング
+      
+    bass:
+      - fingerstyle    # 指弾き
+      - slap           # スラップ
+      - pop            # ポップ
+      - thumb          # 親指
+      - pick           # ピック
+      - mute           # ミュート
+      - harmonics      # ハーモニクス
+      - slide          # スライド
+      
     drums:
-      - flam
-      - drag
-      - roll
-      - hat_open
-      - rimshot
+      # リズムAI統合用
+      - normal
+      - flam           # フラム（装飾音）
+      - drag           # ドラッグ
+      - roll           # ロール
+      - buzz_roll      # バズロール
+      - rimshot        # リムショット
+      - cross_stick    # クロススティック
+      - ghost_note     # ゴーストノート
+      - hat_open       # オープンハイハット
+      - hat_closed     # クローズドハイハット
+      - hat_pedal      # ペダルハイハット
+      
+    piano:
+      - normal
+      - staccato
+      - legato
+      - portamento
+      - pedal_sustain  # サステインペダル
+      - pedal_soft     # ソフトペダル
+      - pedal_sostenuto # ソステヌートペダル
+      
+    # 奏法検出信頼度閾値
+    confidence_thresholds:
+      high: 0.8
+      medium: 0.5
+      low: 0.3
+      
+    # 奏法前駆特徴（Stage2抽出用）
+    articulation_features:
+      staccato_ratio:
+        description: "短音符割合"
+        threshold: 0.125
+      legato_ratio:
+        description: "ノート間ギャップ小割合"
+        threshold: 0.05
+      attack_variance:
+        description: "アタックベロシティ分散"
+        threshold: 15
+      pizzicato_score:
+        duration_max: 0.2
+        velocity_min: 80
+      flageolet_score:
+        note_min: 100  # MIDI Note 100以上
+        duration_max: 0.3
   license:
     origin: [user_owned, public_domain, cc, restricted, research_only]
 defaults:

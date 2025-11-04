@@ -1,0 +1,276 @@
+# Piano Safe-Kit - 緊急フォールバック用基本ボイシング
+#
+# Phase 26: Piano ML基盤 - Safe-Kit定義
+#
+# 用途:
+# - ML推論失敗時の安全なフォールバック
+# - 低確率/低マージン時の代替ボイシング
+# - KPI Gates維持（chord_fit ≥ 0.75, voicing_quality ≥ 0.70）
+
+patterns:
+  # 1. Close Voicing Block Chord (密集配置ブロックコード - スタンダード)
+  - pattern_id: "safe_kit_close_block"
+    family: "safe_kit"
+    chord_type_hint: "maj"
+    voicing_hint: "close"
+    texture_hint: "block"
+    tempo_hint: 120
+    section_hint: "Verse"
+    energy_hint: 0.5
+    
+    description: "密集配置ブロックコード（Root-3rd-5th、全音符）"
+    
+    # KPI予測値
+    chord_fit: 0.85          # コード適合度高め
+    voicing_quality: 0.80    # ボイシング品質高め
+    voice_leading_smooth: 0.75  # ボイスリーディング（静止）
+    
+    # イベントテンプレート（pos_ql単位、C4=60基準）
+    events:
+      # 全音符でブロックコード
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 70, duration_ql: 15.5}   # Root (C4)
+      - {pos_ql: 0.0, pitch_offset: 4, velocity: 65, duration_ql: 15.5}   # 3rd (E4)
+      - {pos_ql: 0.0, pitch_offset: 7, velocity: 65, duration_ql: 15.5}   # 5th (G4)
+
+  # 2. Open Voicing (開離配置 - ジャズ/バラード)
+  - pattern_id: "safe_kit_open_voicing"
+    family: "safe_kit"
+    chord_type_hint: "maj7"
+    voicing_hint: "open"
+    texture_hint: "block"
+    tempo_hint: 80
+    section_hint: "Verse"
+    energy_hint: 0.4
+    
+    description: "開離配置（Root-5th-7th-3rd、オープンボイシング）"
+    
+    chord_fit: 0.90
+    voicing_quality: 0.85
+    voice_leading_smooth: 0.80
+    
+    events:
+      # Root（低音域）
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 75, duration_ql: 15.5}    # Root (C3)
+      
+      # 5th（中音域）
+      - {pos_ql: 0.0, pitch_offset: 7, velocity: 65, duration_ql: 15.5}    # 5th (G3)
+      
+      # 7th（高音域）
+      - {pos_ql: 0.0, pitch_offset: 11, velocity: 65, duration_ql: 15.5}   # maj7 (B3)
+      
+      # 3rd（最高音）
+      - {pos_ql: 0.0, pitch_offset: 16, velocity: 70, duration_ql: 15.5}   # 3rd (E4)
+
+  # 3. Arpeggio Pattern (アルペジオパターン - バラード)
+  - pattern_id: "safe_kit_arpeggio"
+    family: "safe_kit"
+    chord_type_hint: "maj"
+    voicing_hint: "close"
+    texture_hint: "arpeggio"
+    tempo_hint: 70
+    section_hint: "Verse"
+    energy_hint: 0.3
+    
+    description: "アルペジオパターン（Root-3rd-5th-Octave順次）"
+    
+    chord_fit: 0.85
+    voicing_quality: 0.75
+    voice_leading_smooth: 0.70
+    
+    events:
+      # 1拍目: Root
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 70, duration_ql: 3.5}
+      
+      # 2拍目: 3rd
+      - {pos_ql: 4.0, pitch_offset: 4, velocity: 65, duration_ql: 3.5}
+      
+      # 3拍目: 5th
+      - {pos_ql: 8.0, pitch_offset: 7, velocity: 70, duration_ql: 3.5}
+      
+      # 4拍目: Octave
+      - {pos_ql: 12.0, pitch_offset: 12, velocity: 65, duration_ql: 3.5}
+
+  # 4. Broken Chord (ブロークンコード - ポップス)
+  - pattern_id: "safe_kit_broken_chord"
+    family: "safe_kit"
+    chord_type_hint: "maj"
+    voicing_hint: "close"
+    texture_hint: "broken"
+    tempo_hint: 120
+    section_hint: "Chorus"
+    energy_hint: 0.7
+    
+    description: "ブロークンコード（Root/3rd/5th交互、8分音符）"
+    
+    chord_fit: 0.80
+    voicing_quality: 0.75
+    voice_leading_smooth: 0.70
+    
+    events:
+      # 1拍目: Root + 5th
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 75, duration_ql: 1.8}
+      - {pos_ql: 0.0, pitch_offset: 7, velocity: 70, duration_ql: 1.8}
+      
+      # 1拍目裏: 3rd
+      - {pos_ql: 2.0, pitch_offset: 4, velocity: 65, duration_ql: 1.8}
+      
+      # 2拍目: Root + 5th
+      - {pos_ql: 4.0, pitch_offset: 0, velocity: 75, duration_ql: 1.8}
+      - {pos_ql: 4.0, pitch_offset: 7, velocity: 70, duration_ql: 1.8}
+      
+      # 2拍目裏: 3rd
+      - {pos_ql: 6.0, pitch_offset: 4, velocity: 65, duration_ql: 1.8}
+      
+      # 3拍目: Root + 5th
+      - {pos_ql: 8.0, pitch_offset: 0, velocity: 75, duration_ql: 1.8}
+      - {pos_ql: 8.0, pitch_offset: 7, velocity: 70, duration_ql: 1.8}
+      
+      # 3拍目裏: 3rd
+      - {pos_ql: 10.0, pitch_offset: 4, velocity: 65, duration_ql: 1.8}
+      
+      # 4拍目: Root + 5th
+      - {pos_ql: 12.0, pitch_offset: 0, velocity: 75, duration_ql: 1.8}
+      - {pos_ql: 12.0, pitch_offset: 7, velocity: 70, duration_ql: 1.8}
+      
+      # 4拍目裏: 3rd
+      - {pos_ql: 14.0, pitch_offset: 4, velocity: 65, duration_ql: 1.8}
+
+  # 5. Rootless Voicing (ルートレスボイシング - ジャズ)
+  - pattern_id: "safe_kit_rootless_voicing"
+    family: "safe_kit"
+    chord_type_hint: "7"
+    voicing_hint: "rootless"
+    texture_hint: "block"
+    tempo_hint: 120
+    section_hint: "Verse"
+    energy_hint: 0.6
+    
+    description: "ルートレスボイシング（3rd-5th-7th-9th）"
+    
+    chord_fit: 0.85
+    voicing_quality: 0.90  # ジャズは高品質
+    voice_leading_smooth: 0.85
+    
+    events:
+      # 3rd（最低音）
+      - {pos_ql: 0.0, pitch_offset: 4, velocity: 70, duration_ql: 15.5}
+      
+      # 5th
+      - {pos_ql: 0.0, pitch_offset: 7, velocity: 65, duration_ql: 15.5}
+      
+      # 7th
+      - {pos_ql: 0.0, pitch_offset: 10, velocity: 65, duration_ql: 15.5}  # min7
+      
+      # 9th
+      - {pos_ql: 0.0, pitch_offset: 14, velocity: 70, duration_ql: 15.5}  # 9th
+
+  # 6. Stride Piano (ストライドピアノ - クラシックジャズ)
+  - pattern_id: "safe_kit_stride_piano"
+    family: "safe_kit"
+    chord_type_hint: "maj"
+    voicing_hint: "open"
+    texture_hint: "stride"
+    tempo_hint: 140
+    section_hint: "Chorus"
+    energy_hint: 0.8
+    
+    description: "ストライドピアノ（低音Root + 中音Chord交互）"
+    
+    chord_fit: 0.80
+    voicing_quality: 0.80
+    voice_leading_smooth: 0.75
+    
+    events:
+      # 1拍目: 低音Root
+      - {pos_ql: 0.0, pitch_offset: -12, velocity: 80, duration_ql: 1.8}  # Root (C2)
+      
+      # 2拍目: 中音Chord (3rd + 7th)
+      - {pos_ql: 4.0, pitch_offset: 4, velocity: 70, duration_ql: 1.8}    # 3rd
+      - {pos_ql: 4.0, pitch_offset: 11, velocity: 70, duration_ql: 1.8}   # maj7
+      
+      # 3拍目: 低音5th
+      - {pos_ql: 8.0, pitch_offset: -5, velocity: 80, duration_ql: 1.8}   # 5th (G2)
+      
+      # 4拍目: 中音Chord (3rd + 7th)
+      - {pos_ql: 12.0, pitch_offset: 4, velocity: 70, duration_ql: 1.8}
+      - {pos_ql: 12.0, pitch_offset: 11, velocity: 70, duration_ql: 1.8}
+
+# Safe-Kit使用統計（Phase 26での目標）
+usage_stats:
+  target_safe_kit_rate: 0.10  # Safe-Kit発火率10%以下
+  min_proba_threshold: 0.15   # Top-1確率閾値
+  min_margin_threshold: 0.10  # Top-1/Top-2マージン閾値
+
+# KPI Gates（Safe-Kitでも維持）
+kpi_gates:
+  chord_fit_min: 0.75            # コード適合度
+  voicing_quality_min: 0.70      # ボイシング品質
+  voice_leading_smooth_min: 0.65 # ボイスリーディング滑らかさ
+
+# Pitch Offset説明（ピアノ中域: C4=60基準）
+pitch_offset_mapping:
+  -12: "Octave下（低音域）"
+  -5: "5th下"
+  0: "Root（基準音 C4=60）"
+  4: "3rd（長3度 for maj, 短3度 for min）"
+  5: "4th（完全4度）"
+  7: "5th（完全5度）"
+  9: "6th（長6度）"
+  10: "min7（短7度）"
+  11: "maj7（長7度）"
+  12: "Octave上"
+  14: "9th（長9度）"
+  16: "10th（3rd + Octave）"
+  17: "11th（完全11度）"
+  21: "13th（長13度）"
+
+# Piano音域（MIDI Pitch）
+piano_pitch_range:
+  low: 36    # C2（低音域）
+  mid: 60    # C4（中音域、基準）
+  high: 84   # C6（高音域）
+  standard_voicing: "C3-C5（MIDI 48-72）が一般的なボイシング範囲"
+
+# Voicing Styles説明
+voicing_styles:
+  close: "密集配置（1オクターブ以内）"
+  open: "開離配置（1オクターブ超）"
+  spread: "広域配置（2オクターブ超）"
+  rootless: "ルートレス（ベースがルートを担当）"
+
+# Texture説明
+textures:
+  block: "ブロックコード（和音を同時発音）"
+  arpeggio: "アルペジオ（和音を順次発音）"
+  broken: "ブロークンコード（和音を交互発音）"
+  stride: "ストライドピアノ（低音/和音交互）"
+
+# 使用方法
+usage:
+  example: |
+    from ml.piano_pattern_recommender import PianoPatternRecommender, PianoQuery
+    
+    rec = PianoPatternRecommender(
+        patterns=patterns_dict,
+        safe_kit_path="config/safe_kit_piano.yaml"
+    )
+    
+    result = rec.recommend(
+        query=PianoQuery(
+            tempo_bpm=120,
+            chord_root="C",
+            chord_type="maj7",
+            section="Chorus",
+            target_energy=0.7,
+            voicing_style="close",
+            texture="block"
+        ),
+        min_proba=0.15,
+        min_margin=0.10
+    )
+    
+    if result.safety_triggered:
+        print(f"Piano Safe-Kit triggered: {result.safety_reason}")
+    else:
+        print(f"Chord fit: {result.chord_fit:.2f}")
+        print(f"Voicing quality: {result.voicing_quality:.2f}")

@@ -1,0 +1,91 @@
+[2025-10-28 19:43:39] ==========================================
+[2025-10-28 19:43:39] 🎵 Rhythm AI Stage2 - E-GMD
+[2025-10-28 19:43:39] ==========================================
+[2025-10-28 19:43:39] Base Dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-28 19:43:39] Output Dir: output/rhythm_ai
+[2025-10-28 19:43:39] Extractor: scripts/rhythm_stage2_extractor.py
+[2025-10-28 19:43:39] Config: configs/rhythm_stage2.yaml
+[2025-10-28 19:43:39] Log File: logs/rhythm_stage2_egmd_20251028_194339.log
+[2025-10-28 19:43:39] 
+[2025-10-28 19:43:39] 📂 1. Verifying E-GMD Stage1 outputs...
+[2025-10-28 19:43:40] ✅ E-GMD cleaned files: 4552
+[2025-10-28 19:43:40] 🚀 2. Running E-GMD Stage2 feature extraction...
+[2025-10-28 19:43:40]    - Input: output/rhythm_ai/egmd_cleaned (4552 files)
+[2025-10-28 19:43:41]    - Metadata: output/rhythm_ai/egmd_metadata/drums_index.pkl
+[2025-10-28 19:43:41]    - Output: output/rhythm_ai/egmd_stage2
+📂 Loading index: output/rhythm_ai/egmd_metadata/drums_index.pkl
+✅ Loaded 4552 records
+
+🔍 Extracting rhythm features...
+  Progress: 0/4552 (0.0%)
+  Progress: 100/4552 (2.2%)
+  Progress: 200/4552 (4.4%)
+  Progress: 300/4552 (6.6%)
+  Progress: 400/4552 (8.8%)
+  Progress: 500/4552 (11.0%)
+  Progress: 600/4552 (13.2%)
+  Progress: 700/4552 (15.4%)
+  Progress: 800/4552 (17.6%)
+  Progress: 900/4552 (19.8%)
+  Progress: 1000/4552 (22.0%)
+  Progress: 1100/4552 (24.2%)
+  Progress: 1200/4552 (26.4%)
+  Progress: 1300/4552 (28.6%)
+  Progress: 1400/4552 (30.8%)
+  Progress: 1500/4552 (33.0%)
+  Progress: 1600/4552 (35.1%)
+  Progress: 1700/4552 (37.3%)
+  Progress: 1800/4552 (39.5%)
+  Progress: 1900/4552 (41.7%)
+  Progress: 2000/4552 (43.9%)
+  Progress: 2100/4552 (46.1%)
+  Progress: 2200/4552 (48.3%)
+  Progress: 2300/4552 (50.5%)
+  Progress: 2400/4552 (52.7%)
+  Progress: 2500/4552 (54.9%)
+  Progress: 2600/4552 (57.1%)
+  Progress: 2700/4552 (59.3%)
+  Progress: 2800/4552 (61.5%)
+  Progress: 2900/4552 (63.7%)
+  Progress: 3000/4552 (65.9%)
+  Progress: 3100/4552 (68.1%)
+  Progress: 3200/4552 (70.3%)
+  Progress: 3300/4552 (72.5%)
+  Progress: 3400/4552 (74.7%)
+  Progress: 3500/4552 (76.9%)
+  Progress: 3600/4552 (79.1%)
+  Progress: 3700/4552 (81.3%)
+  Progress: 3800/4552 (83.5%)
+  Progress: 3900/4552 (85.7%)
+  Progress: 4000/4552 (87.9%)
+  Progress: 4100/4552 (90.1%)
+  Progress: 4200/4552 (92.3%)
+  Progress: 4300/4552 (94.5%)
+  Progress: 4400/4552 (96.7%)
+  Progress: 4500/4552 (98.9%)
+✅ Extracted features from 4547 files
+
+📊 Quality Filter:
+   Total:  4547
+   Passed: 91 (2.0%)
+💾 Saved: output/rhythm_ai/egmd_stage2/rhythm_features.parquet
+💾 Saved: output/rhythm_ai/egmd_stage2/rhythm_stage2_summary.json
+
+======================================================================
+✅ Rhythm Stage2 processing completed!
+======================================================================
+[2025-10-28 19:44:57] 
+[2025-10-28 19:44:57] ✅ E-GMD Stage2 Feature Extraction COMPLETE
+[2025-10-28 19:44:57] 
+[2025-10-28 19:44:57] 📊 3. Verifying output...
+[2025-10-28 19:44:58] ✅ Parquet records: 4547
+[2025-10-28 19:44:59] ✅ Columns: ['tempo_bpm', 'swing_pct', 'backbeat_strength', 'kick_downbeat_rate', 'snare_backbeat_rate', 'hat_density', 'family_label', 'loop_id', 'time_sig_num', 'time_sig_denom', 'slots', 'num_notes', 'kick_pattern', 'snare_pattern', 'hat_pattern', 'kick_onset_count', 'snare_onset_count', 'hat_onset_count', 'onset_deviation_mean', 'onset_deviation_std', 'density_mean', 'density_std', 'density_min', 'density_max']
+[2025-10-28 19:44:59] 
+[2025-10-28 19:44:59] ==========================================
+[2025-10-28 19:44:59] 🎉 E-GMD Stage2 Complete!
+[2025-10-28 19:44:59] ==========================================
+[2025-10-28 19:44:59] Next steps:
+[2025-10-28 19:44:59]   1. Merge with drumclean + groove datasets:
+[2025-10-28 19:44:59]      bash scripts/merge_rhythm_datasets.sh
+[2025-10-28 19:44:59]   2. Train ML model on merged dataset (~97,600 records)
+[2025-10-28 19:44:59] 

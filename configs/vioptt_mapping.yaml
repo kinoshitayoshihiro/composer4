@@ -1,0 +1,513 @@
+# vioptt_mapping.yaml - VioPTT（Violin Performance Technique Transfer）マッピング定義
+# articulation_hints → VST keyswitch/CC/param への対応表
+
+# 使い方:
+# vioptt_render_stub.py で読み込んで、articulation_hints.json から制御MIDI生成
+# 各VSTの実機パラメータ名/KSノートは環境差があるため、適宜調整してください
+
+# ==============================================================================
+# IK Multimedia - Miroslav Philharmonik 2 (14 Violins Multi)
+# ==============================================================================
+violin_miroslav_14violins:
+  name: "Miroslav Philharmonik 2 - 14 Violins Multi"
+  vendor: "IK Multimedia"
+  type: "vst3"
+  
+  # Articulation Keyswitches（画面から確認した奏法）
+  # Miroslav Philharmonikは通常C1-B1（MIDI 24-35）をKSに使用
+  keyswitches:
+    - articulation: "sustain"
+      note: 24  # C1（Violins Sustain）
+      threshold: 0.5  # legato_ratio >= 0.5
+      
+    - articulation: "detache"
+      note: 25  # C#1（Violins Detache）
+      threshold: 0.5  # staccato_ratio >= 0.5
+      
+    - articulation: "espressivo"
+      note: 26  # D1（Violins Espressivo）
+      threshold: 0.6  # energy_curve >= 0.6（表現力豊か）
+      
+    - articulation: "staccato"
+      note: 27  # D#1（Violins Staccato）
+      threshold: 0.5  # staccato_ratio >= 0.5
+      
+    - articulation: "pizzicato"
+      note: 28  # E1（Violins Pizzicato）
+      threshold: 0.3  # pizzicato_score >= 0.3
+      
+    - articulation: "tremolo"
+      note: 29  # F1（Violins Tremolo）
+      threshold: 0.5  # tremolo_ratio >= 0.5
+      
+    - articulation: "sul_pont"
+      note: 30  # F#1（Violins Sul Pont）
+      threshold: 0.7  # accent_score >= 0.7（明るい音色）
+      
+    - articulation: "legato"
+      note: 31  # G1（Violins Legato）
+      threshold: 0.6  # legato_ratio >= 0.6（滑らか）
+  
+  # CC (Control Change) Mappings
+  cc_mappings:
+    - param: "expression"
+      cc: 11  # Expression（標準）
+      source: "energy_curve"
+      min: 0
+      max: 127
+      
+    - param: "dynamics"
+      cc: 1   # Modulation Wheel（動的変化用）
+      source: "accent_score"
+      min: 0
+      max: 127
+      
+    - param: "vibrato_depth"
+      cc: 21  # 標準CC
+      source: "vibrato_depth"
+      min: 0
+      max: 127
+      
+    - param: "reverb"
+      cc: 91  # Reverb Level
+      source: "energy_curve"
+      min: 20
+      max: 80
+
+# ==============================================================================
+# Vienna Synchron String - Violin Solo
+# ==============================================================================
+violin_solo_synchron:
+  name: "Vienna Synchron Strings - Violin Solo"
+  vendor: "Vienna Symphonic Library"
+  type: "vst3"
+  
+  # Articulation Keyswitches (MIDI Note Number)
+  # Synchronは通常C0-B0（MIDI 0-11）をKSに使用
+  keyswitches:
+    - articulation: "legato"
+      note: 0  # C0
+      threshold: 0.5  # legato_ratio >= 0.5
+      
+    - articulation: "staccato"
+      note: 1  # C#0
+      threshold: 0.5  # staccato_ratio >= 0.5
+      
+    - articulation: "pizzicato"
+      note: 2  # D0
+      threshold: 0.3  # pizzicato_score >= 0.3
+      
+    - articulation: "tremolo"
+      note: 3  # D#0
+      threshold: 0.5  # tremolo_ratio >= 0.5
+      
+    - articulation: "spiccato"
+      note: 4  # E0
+      threshold: 0.4  # accent_score >= 0.4（短いアタック）
+  
+  # CC (Control Change) Mappings
+  cc_mappings:
+    - param: "expression"
+      cc: 11  # Expression
+      source: "energy_curve"  # articulation_hints内のキー
+      min: 0
+      max: 127
+      
+    - param: "dynamics"
+      cc: 1  # Modulation Wheel（Synchronでは動的変化用）
+      source: "accent_score"
+      min: 0
+      max: 127
+      
+    - param: "vibrato_depth"
+      cc: 21  # VSL標準CC
+      source: "vibrato_depth"
+      min: 0
+      max: 127
+
+# ==============================================================================
+# Ample Sound - Steel Guitar (AGS)
+# ==============================================================================
+guitar_steel_ample:
+  name: "Ample Sound - Steel Guitar (AGS)"
+  vendor: "Ample Sound"
+  type: "vst3"
+  
+  keyswitches:
+    - articulation: "sustain"
+      note: 24  # C1（Ample標準KS範囲）
+      threshold: 0.5
+      
+    - articulation: "mute"
+      note: 25  # C#1
+      threshold: 0.4  # staccato_ratio >= 0.4
+      
+    - articulation: "harmonic"
+      note: 26  # D1
+      threshold: 0.3
+      
+    - articulation: "slide"
+      note: 27  # D#1
+      threshold: 0.5  # legato_ratio >= 0.5（スライド表現）
+      
+    - articulation: "palm_mute"
+      note: 28  # E1
+      threshold: 0.6  # staccato_ratio >= 0.6（強めのミュート）
+  
+  cc_mappings:
+    - param: "expression"
+      cc: 11
+      source: "energy_curve"
+      min: 0
+      max: 127
+      
+    - param: "attack"
+      cc: 73  # Attack Time
+      source: "accent_score"
+      min: 0
+      max: 127
+      
+    - param: "release"
+      cc: 72  # Release Time
+      source: "staccato_ratio"
+      min: 0
+      max: 127
+      inverse: true  # staccato高い→release短い
+
+# ==============================================================================
+# Native Instruments Kontakt - String Ensemble
+# ==============================================================================
+kontakt_strings:
+  name: "Native Instruments Kontakt - String Ensemble"
+  vendor: "Native Instruments"
+  type: "vst3"
+  
+  keyswitches:
+    - articulation: "long"
+      note: 36  # C2（Kontakt標準KS範囲）
+      threshold: 0.5
+      
+    - articulation: "short"
+      note: 37  # C#2
+      threshold: 0.5  # staccato_ratio >= 0.5
+      
+    - articulation: "pizz"
+      note: 38  # D2
+      threshold: 0.3  # pizzicato_score >= 0.3
+      
+    - articulation: "tremolo"
+      note: 39  # D#2
+      threshold: 0.5  # tremolo_ratio >= 0.5
+      
+    - articulation: "spiccato"
+      note: 40  # E2
+      threshold: 0.4
+  
+  cc_mappings:
+    - param: "expression"
+      cc: 11
+      source: "energy_curve"
+      min: 0
+      max: 127
+      
+    - param: "dynamics"
+      cc: 1
+      source: "accent_score"
+      min: 0
+      max: 127
+      
+    - param: "vibrato"
+      cc: 2  # Kontakt標準CC
+      source: "vibrato_depth"
+      min: 0
+      max: 127
+
+# ==============================================================================
+# Spectrasonics Trilian - Electric Bass
+# ==============================================================================
+bass_electric_trilian:
+  name: "Spectrasonics Trilian - Electric Bass"
+  vendor: "Spectrasonics"
+  type: "vst3"
+  
+  keyswitches:
+    - articulation: "sustain"
+      note: 12  # C1
+      threshold: 0.5  # legato_ratio >= 0.5
+      
+    - articulation: "staccato"
+      note: 13  # C#1
+      threshold: 0.5  # staccato_ratio >= 0.5
+      
+    - articulation: "mute"
+      note: 14  # D1
+      threshold: 0.6  # staccato_ratio >= 0.6（強めのミュート）
+      
+    - articulation: "slap"
+      note: 15  # D#1
+      threshold: 0.7  # accent_score >= 0.7（スラップ奏法）
+      
+    - articulation: "slide"
+      note: 16  # E1
+      threshold: 0.5  # legato_ratio >= 0.5（スライド）
+  
+  cc_mappings:
+    - param: "expression"
+      cc: 11
+      source: "energy_curve"
+      min: 0
+      max: 127
+      
+    - param: "attack"
+      cc: 73  # Attack Time
+      source: "accent_score"
+      min: 0
+      max: 127
+      
+    - param: "tone"
+      cc: 74  # Brightness
+      source: "energy_curve"
+      min: 30
+      max: 100
+
+# ==============================================================================
+# Salamander Grand Piano V3 (SFZ Library via sfizz/sforzando)
+# ==============================================================================
+piano_sfz_salamander:
+  name: "Salamander Grand Piano V3 (SFZ)"
+  vendor: "Freepats / sfizz"
+  type: "vst3"
+  
+  # ピアノはKeyswitch不要、CC中心で制御
+  keyswitches:
+    # ダミーKS（select_keyswitch()でエラー回避用）
+    - articulation: "default"
+      note: 60  # C4（使用しない）
+      threshold: 0.0
+  
+  # CC (Control Change) Mappings
+  cc_mappings:
+    - param: "expression"
+      cc: 11  # Expression（音量感）
+      source: "energy_curve"
+      min: 40  # 静かすぎを防ぐ（最小40）
+      max: 127
+      
+    - param: "sustain_pedal"
+      cc: 64  # Sustain Pedal
+      source: "legato_ratio"
+      min: 0
+      max: 127
+      threshold: 0.55  # legato_ratio >= 0.55 でペダルON（127）
+      hysteresis: 0.05  # 0.55でON、0.50でOFF（パカパカ防止）
+      
+    - param: "dynamics"
+      cc: 1   # Modulation Wheel（ダイナミクス補助）
+      source: "accent_score"
+      min: 0
+      max: 127
+      
+    - param: "reverb_send"
+      cc: 91  # Reverb Send
+      source: "energy_curve"
+      min: 10
+      max: 50  # 控えめなリバーブ
+
+# ==============================================================================
+# SampleTank 4 - Piano (ST4内蔵ピアノ音色用)
+# ==============================================================================
+piano_sampletank4:
+  name: "SampleTank 4 - Piano"
+  vendor: "IK Multimedia"
+  type: "vst3"
+  
+  # ピアノはKeyswitch不要
+  keyswitches:
+    - articulation: "default"
+      note: 60  # C4（使用しない）
+      threshold: 0.0
+  
+  cc_mappings:
+    - param: "expression"
+      cc: 11
+      source: "energy_curve"
+      min: 40
+      max: 127
+      
+    - param: "sustain_pedal"
+      cc: 64
+      source: "legato_ratio"
+      min: 0
+      max: 127
+      threshold: 0.55
+      hysteresis: 0.05  # 0.55でON、0.50でOFF
+      
+    - param: "dynamics"
+      cc: 1
+      source: "accent_score"
+      min: 0
+      max: 127
+      
+    - param: "brightness"
+      cc: 74  # Brightness/Filter
+      source: "accent_score"
+      min: 50
+      max: 110
+      clip: "soft"  # やわらかいカーブで明るさの耳当たり均一化
+
+# ==============================================================================
+# Arturia - Analog Lab V (Piano Preset)
+# ==============================================================================
+piano_analoglab_v:
+  name: "Arturia Analog Lab V - Piano"
+  vendor: "Arturia"
+  type: "vst3"
+  
+  # ピアノプリセットはKeyswitch不要（プリセット選択で音色決定）
+  keyswitches:
+    - articulation: "default"
+      note: 60  # C4（ダミー、使用しない）
+      threshold: 0.0
+  
+  cc_mappings:
+    - param: "expression"
+      cc: 11  # Expression
+      source: "energy_curve"
+      min: 40
+      max: 127
+      
+    - param: "sustain_pedal"
+      cc: 64  # Sustain Pedal
+      source: "legato_ratio"
+      min: 0
+      max: 127
+      threshold: 0.55
+      hysteresis: 0.05  # 0.55でON、0.50でOFF（ペダルフリッカー防止）
+      
+    - param: "modulation"
+      cc: 1  # Modulation Wheel
+      source: "accent_score"
+      min: 0
+      max: 100
+      
+    - param: "reverb_send"
+      cc: 91  # Reverb Send
+      source: "energy_curve"
+      min: 20
+      max: 60
+
+# ==============================================================================
+# Native Instruments Kontakt - The Giant Piano
+# ==============================================================================
+piano_giant_kontakt:
+  name: "Native Instruments Kontakt - The Giant Piano"
+  vendor: "Native Instruments"
+  type: "vst3"
+  
+  keyswitches:
+    - articulation: "soft"
+      note: 48  # C3
+      threshold: 0.0  # energy_curve < 0.3
+      velocity_range: [0, 50]
+      
+    - articulation: "medium"
+      note: 49  # C#3
+      threshold: 0.3  # energy_curve 0.3-0.7
+      velocity_range: [51, 90]
+      
+    - articulation: "forte"
+      note: 50  # D3
+      threshold: 0.7  # energy_curve >= 0.7
+      velocity_range: [91, 127]
+      
+    - articulation: "staccato"
+      note: 51  # D#3
+      threshold: 0.5  # staccato_ratio >= 0.5
+      
+    - articulation: "pedal_down"
+      note: 52  # E3
+      threshold: 0.5  # legato_ratio >= 0.5（ペダル表現）
+  
+  cc_mappings:
+    - param: "expression"
+      cc: 11
+      source: "energy_curve"
+      min: 0
+      max: 127
+      
+    - param: "sustain_pedal"
+      cc: 64  # Sustain Pedal
+      source: "legato_ratio"
+      min: 0
+      max: 127
+      threshold: 0.5  # legato_ratio >= 0.5 でペダルON
+      
+    - param: "reverb"
+      cc: 91  # Reverb Level
+      source: "energy_curve"
+      min: 20
+      max: 80
+      
+    - param: "brightness"
+      cc: 74  # Brightness
+      source: "accent_score"
+      min: 40
+      max: 110
+
+# ==============================================================================
+# Generic Template（カスタム用テンプレート）
+# ==============================================================================
+generic_template:
+  name: "Generic VST Template"
+  vendor: "Custom"
+  type: "vst3"
+  
+  keyswitches:
+    - articulation: "default"
+      note: 60  # C4
+      threshold: 0.0
+      
+  cc_mappings:
+    - param: "expression"
+      cc: 11
+      source: "energy_curve"
+      min: 0
+      max: 127
+
+# ==============================================================================
+# Global Settings（全VST共通設定）
+# ==============================================================================
+global:
+  # デフォルトKS送信タイミング（小節頭の何tick前に送るか）
+  keyswitch_advance_ticks: 48  # 480 ticks/beat の場合、1/10拍前
+  
+  # CCスムージング設定（急激な変化を防ぐ）
+  cc_smoothing:
+    enabled: true
+    max_jump: 20  # 最大変化量（0-127の範囲）
+    interpolate: true  # 中間値補間
+  
+  # デフォルトticks_per_beat
+  ticks_per_beat: 480
+  
+  # articulation_hints内のキー名（VST側で参照するパラメータ名）
+  hint_keys:
+    - "staccato_ratio"
+    - "legato_ratio"
+    - "pizzicato_score"
+    - "tremolo_ratio"
+    - "accent_score"
+    - "energy_curve"
+    - "vibrato_depth"
+    - "time"  # 時刻（秒）
+
+# ==============================================================================
+# Alternative structure: instruments配下に定義（将来拡張用）
+# ==============================================================================
+# instruments:
+#   violin_solo_synchron:
+#     name: "Vienna Synchron Strings - Violin Solo"
+#     vendor: "Vienna Symphonic Library"
+#     ...（上記と同じ構造）
+#
+# load_mapping()は top-level と instruments配下の両方に対応済み

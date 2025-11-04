@@ -1,0 +1,113 @@
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: song_packages/suno_project/song_001
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : false
+   KPI Gate     : true
+   Dry Run      : false
+
+   Tempo: 74.67733137590379 BPM
+
+⚠️  Step 1.5: No stems directory found, skipping stem features
+
+🔁 Step 1: Reusing existing song_packages/suno_project/song_001/matches_rhythm.json
+
+⚠️  No stem_features.parquet found, using bars.parquet only
+🥁 Step 2: Drums (real MIDI → plan)
+🔧 Added 294 ghost HH notes (max 4/bar, vel 22-28)
+✅ Applied HH variation from configs/arranger_weights.yaml
+✅ Extracted 3677 drum notes → song_packages/suno_project/song_001/drums_plan.json
+
+🎸 Step 3: Bass/Guitar Plans
+📂 SongPackage: song_001
+📊 Bars: 150
+🎯 Top Match: 88_hiphop_75_fill_4-4_37
+
+✅ bass_plan.json: 692 events
+✅ guitar_plan.json: 600 events
+
+🎉 Generated: bass_plan.json, guitar_plan.json
+
+🎹 Step 4: Piano/Strings Plans
+📂 SongPackage: song_001
+📊 Bars: 150, Chords: 149, Tempo: 74.67733137590379 BPM
+
+✅ piano_plan.json: 149 events
+✅ strings_plan.json: 447 events
+
+🎉 Generated: piano_plan.json, strings_plan.json
+
+🎼 Step 6: Full Arrangement (5 tracks)
+✅ Merged bass: Bass (692 events)
+✅ Merged guitar: Guitar (600 events)
+✅ Merged piano: Piano (149 events)
+✅ Merged strings: Strings (447 events)
+✅ Merged drums: Drums (3677 events)
+✅ Saved: song_packages/suno_project/song_001/full_arrangement.json (5 tracks)
+
+✅ Step 7: Plan Validation
+✅ Valid: song_packages/suno_project/song_001/full_arrangement.json
+
+🎵 Step 8: MIDI Generation
+[midi_writer] CLIP_TO_SONG_END=True
+[midi_writer] total_bars=150, song_end_beats=600.0
+[midi_writer] BEFORE CLIP: track=Bass events=692 max_end_beats=600.250
+[midi_writer] BEFORE CLIP: track=Guitar events=600 max_end_beats=600.250
+[midi_writer] BEFORE CLIP: track=Piano events=149 max_end_beats=594.000
+[midi_writer] BEFORE CLIP: track=Strings events=447 max_end_beats=595.000
+[midi_writer] BEFORE CLIP: track=Drums events=3677 max_end_beats=604.727
+[midi_writer] Clipping all tracks to 600.0 beats
+[clip] Bass: 692->691 ev, hard_cut=0
+[clip] Guitar: 600->599 ev, hard_cut=0
+[clip] Piano: 149->149 ev, hard_cut=0
+[clip] Strings: 447->447 ev, hard_cut=0
+[clip] Drums: 3677->3656 ev, hard_cut=0
+✅ Saved MIDI: song_packages/suno_project/song_001/full_arrangement.mid (6 tracks, PPQ=480)
+✅ タグ埋め込み完了: humanize_v2_44136fa3 → song_packages/suno_project/song_001/full_arrangement.mid
+✅ Humanize tag embedded: humanize_v2_44136fa3
+
+📊 Step 9: MIDI Statistics
+   Tracks: 6
+   PPQ: 480
+   Total notes: 4198
+   Duration: 481.5s (8.0min)
+
+📏 Step 10: KPI Gate Validation (bars.parquet基準)
+📖 Loading MIDI: song_packages/suno_project/song_001/full_arrangement.mid
+   Hat pitches: [42, 43, 44, 46, 51, 52, 53, 59, 82]
+   bars.parquet loaded: 150 bars
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/kpi_gate_enhanced.py", line 534, in <module>
+    main()
+    ~~~~^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/kpi_gate_enhanced.py", line 521, in main
+    kpi_gate_validate_enhanced(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        args.midi,
+        ^^^^^^^^^^
+    ...<6 lines>...
+        verbose=not args.quiet,
+        ^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/kpi_gate_enhanced.py", line 407, in kpi_gate_validate_enhanced
+    if bars_parquet_path and bars_parquet_path.exists() and PANDAS_AVAILABLE:
+       ^^^^^^^^^^^^^^^^^
+NameError: name 'bars_parquet_path' is not defined. Did you mean: 'bars_parquet'?
+
+🛡️  Step 11: CI Regression Guard (Final Verification)
+✅ CI レポートを書き出しました: song_packages/suno_project/song_001/ci_verify_report.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CI Summary:
+  pass : 6
+  warn : 1
+  fail : 3
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ❌ CI Verification FAILED
+      See details: song_packages/suno_project/song_001/ci_verify_report.json
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: song_packages/suno_project/song_001/.debug_20251101_144141

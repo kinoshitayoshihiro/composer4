@@ -1,0 +1,316 @@
+# Safe-Kit for Drums - Phase 25: Rhythm AI
+# 緊急安全網パターン集（破綻しない安全なドラムパターン）
+
+version: "1.0.0"
+description: "Drum Safe-Kit - 緊急安全網パターン集"
+
+# ========================================
+# セクション別デフォルト（4/4拍子）
+# ========================================
+section_defaults_4_4:
+  Chorus: STRAIGHT_8_SAFE
+  Verse: STRAIGHT_8_SIMPLE
+  Bridge: HALF_TIME_SAFE
+  Intro: STRAIGHT_8_SAFE
+  Outro: STRAIGHT_8_SIMPLE
+  "Pre-Chorus": STRAIGHT_8_SAFE
+
+# ========================================
+# セクション別デフォルト（6/8, 12/8拍子）
+# ========================================
+section_defaults_6_8:
+  Chorus: TRIPLET_DRIVE_SAFE
+  Verse: TRIPLET_SIMPLE
+  Bridge: TRIPLET_HALF_TIME
+  Intro: TRIPLET_DRIVE_SAFE
+  Outro: TRIPLET_SIMPLE
+  "Pre-Chorus": TRIPLET_DRIVE_SAFE
+
+# ========================================
+# パターン定義
+# ========================================
+patterns:
+  # ==================== 4/4拍子パターン ====================
+  
+  STRAIGHT_8_SAFE:
+    description: "安全な8ビートストレート（全ハイハット）"
+    family: "STRAIGHT_8"
+    time_sig_slots: 16
+    tempo_range: [80, 140]
+    tempo_bin: 120
+    swing_ratio: 0.0
+    
+    accent_profile:
+      # キック: 1拍目と3拍目（ダウンビート）
+      kick:  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0]
+      
+      # スネア: 2拍目と4拍目（バックビート）
+      snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]
+      
+      # ハイハット: 16分音符全打ち
+      hat:   [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
+      
+      # ライド: 使用しない
+      ride:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+      
+      # クラッシュ: 使用しない
+      crash: [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+    
+    density_ql_per_bar:
+      kick: 4
+      snare: 2
+      hat: 16
+      ride: 0
+      crash: 0
+    
+    humanize:
+      timing_ms: 8      # タイミング揺らぎ（±8ms）
+      vel_jitter: 6     # ベロシティ揺らぎ（±6）
+    
+    kpi_guarantee:
+      kick_downbeat_rate: 1.00
+      snare_backbeat_acc: 1.00
+      hat_density_abs: 0.0
+  
+  STRAIGHT_8_SIMPLE:
+    description: "シンプル8ビート（8分音符ハイハット）"
+    family: "STRAIGHT_8"
+    time_sig_slots: 16
+    tempo_range: [80, 140]
+    tempo_bin: 120
+    swing_ratio: 0.0
+    
+    accent_profile:
+      kick:  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0]
+      snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]
+      hat:   [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0]
+      ride:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+      crash: [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+    
+    density_ql_per_bar:
+      kick: 4
+      snare: 2
+      hat: 8
+      ride: 0
+      crash: 0
+    
+    humanize:
+      timing_ms: 6
+      vel_jitter: 5
+    
+    kpi_guarantee:
+      kick_downbeat_rate: 1.00
+      snare_backbeat_acc: 1.00
+      hat_density_abs: 0.0
+  
+  HALF_TIME_SAFE:
+    description: "ハーフタイム安全版（スネア3拍目）"
+    family: "HALF_TIME"
+    time_sig_slots: 16
+    tempo_range: [60, 100]
+    tempo_bin: 80
+    swing_ratio: 0.0
+    
+    accent_profile:
+      kick:  [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0]
+      
+      # スネア: 3拍目のみ（ハーフタイムフィール）
+      snare: [0,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0]
+      
+      hat:   [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
+      ride:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+      crash: [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+    
+    density_ql_per_bar:
+      kick: 3
+      snare: 1
+      hat: 16
+      ride: 0
+      crash: 0
+    
+    humanize:
+      timing_ms: 8
+      vel_jitter: 6
+    
+    kpi_guarantee:
+      kick_downbeat_rate: 1.00
+      snare_backbeat_acc: 0.50  # ハーフタイムは特殊
+      hat_density_abs: 0.0
+  
+  STRAIGHT_16_SAFE:
+    description: "16ビート安全版（ハイハット16分刻み）"
+    family: "STRAIGHT_16"
+    time_sig_slots: 16
+    tempo_range: [90, 130]
+    tempo_bin: 110
+    swing_ratio: 0.0
+    
+    accent_profile:
+      kick:  [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,0,0,0]
+      snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0]
+      hat:   [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1]
+      ride:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+      crash: [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+    
+    density_ql_per_bar:
+      kick: 5
+      snare: 2
+      hat: 16
+      ride: 0
+      crash: 0
+    
+    humanize:
+      timing_ms: 7
+      vel_jitter: 5
+    
+    kpi_guarantee:
+      kick_downbeat_rate: 0.80
+      snare_backbeat_acc: 1.00
+      hat_density_abs: 0.0
+  
+  # ==================== 6/8, 12/8拍子パターン ====================
+  
+  TRIPLET_DRIVE_SAFE:
+    description: "三連符ドライブ（安全版）"
+    family: "TRIPLET"
+    time_sig_slots: 24
+    tempo_range: [80, 120]
+    tempo_bin: 100
+    swing_ratio: 0.33
+    
+    accent_profile:
+      # 6/8拍子: 24スロット（16分音符基準）
+      # キック: 1拍目と4拍目
+      kick:  [1,0,0,0,0,0, 0,0,0,0,0,0, 1,0,0,0,0,0, 0,0,0,0,0,0]
+      
+      # スネア: 2拍目と5拍目（6/8のバックビート相当）
+      snare: [0,0,0,0,0,0, 1,0,0,0,0,0, 0,0,0,0,0,0, 1,0,0,0,0,0]
+      
+      # ハイハット: 8分音符刻み（三連符の頭）
+      hat:   [1,0,1,0,1,0, 1,0,1,0,1,0, 1,0,1,0,1,0, 1,0,1,0,1,0]
+      
+      ride:  [0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0]
+      crash: [0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0]
+    
+    density_ql_per_bar:
+      kick: 4
+      snare: 2
+      hat: 12
+      ride: 0
+      crash: 0
+    
+    humanize:
+      timing_ms: 7
+      vel_jitter: 5
+    
+    kpi_guarantee:
+      kick_downbeat_rate: 1.00
+      snare_backbeat_acc: 1.00
+      hat_density_abs: 0.0
+  
+  TRIPLET_SIMPLE:
+    description: "シンプル三連符（4分音符ハイハット）"
+    family: "TRIPLET"
+    time_sig_slots: 24
+    tempo_range: [80, 120]
+    tempo_bin: 100
+    swing_ratio: 0.33
+    
+    accent_profile:
+      kick:  [1,0,0,0,0,0, 0,0,0,0,0,0, 1,0,0,0,0,0, 0,0,0,0,0,0]
+      snare: [0,0,0,0,0,0, 1,0,0,0,0,0, 0,0,0,0,0,0, 1,0,0,0,0,0]
+      
+      # ハイハット: 4分音符（三連符の各グループの頭のみ）
+      hat:   [1,0,0,1,0,0, 1,0,0,1,0,0, 1,0,0,1,0,0, 1,0,0,1,0,0]
+      
+      ride:  [0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0]
+      crash: [0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0]
+    
+    density_ql_per_bar:
+      kick: 4
+      snare: 2
+      hat: 8
+      ride: 0
+      crash: 0
+    
+    humanize:
+      timing_ms: 6
+      vel_jitter: 5
+    
+    kpi_guarantee:
+      kick_downbeat_rate: 1.00
+      snare_backbeat_acc: 1.00
+      hat_density_abs: 0.0
+  
+  TRIPLET_HALF_TIME:
+    description: "三連符ハーフタイム"
+    family: "TRIPLET_HALF"
+    time_sig_slots: 24
+    tempo_range: [60, 90]
+    tempo_bin: 75
+    swing_ratio: 0.33
+    
+    accent_profile:
+      kick:  [1,0,0,0,0,0, 0,0,0,0,0,0, 1,0,0,0,0,0, 0,0,0,0,0,0]
+      
+      # スネア: 3拍目のみ（ハーフタイム）
+      snare: [0,0,0,0,0,0, 0,0,0,0,0,0, 1,0,0,0,0,0, 0,0,0,0,0,0]
+      
+      hat:   [1,0,1,0,1,0, 1,0,1,0,1,0, 1,0,1,0,1,0, 1,0,1,0,1,0]
+      ride:  [0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0]
+      crash: [0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0]
+    
+    density_ql_per_bar:
+      kick: 3
+      snare: 1
+      hat: 12
+      ride: 0
+      crash: 0
+    
+    humanize:
+      timing_ms: 8
+      vel_jitter: 6
+    
+    kpi_guarantee:
+      kick_downbeat_rate: 1.00
+      snare_backbeat_acc: 0.50  # ハーフタイム
+      hat_density_abs: 0.0
+
+# ========================================
+# フィル定義（オプション）
+# ========================================
+fills:
+  FILL_1BAR_TOM:
+    description: "1小節タムフィル"
+    length_bars: 1
+    time_sig_slots: 16
+    
+    # 4拍目のみタム使用
+    slot_mask: [0,0,0,0, 0,0,0,0, 0,0,0,0, 1,1,1,1]
+    
+    accent_profile:
+      tom_high: [0,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,1,0]
+      tom_mid:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,1,0,1]
+      tom_low:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+      crash:    [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1]
+  
+  FILL_2BEAT_SNARE:
+    description: "2拍フィル（スネア連打）"
+    length_bars: 0.5
+    time_sig_slots: 8
+    
+    slot_mask: [1,1,1,1, 1,1,1,1]
+    
+    accent_profile:
+      snare: [1,0,1,0, 1,1,1,1]
+      crash: [0,0,0,0, 0,0,0,1]
+
+# ========================================
+# メタデータ
+# ========================================
+metadata:
+  author: "Phase 25 Rhythm AI"
+  created: "2025-10-28"
+  version: "1.0.0"
+  compatible_generator: "drums_generator_stage2.py"
+  compatible_recommender: "drum_pattern_recommender.py"

@@ -1,4 +1,70 @@
 version: 2025.10
+
+# ========================================
+# DAWDreamer統合設定（VioPTT/MOSA-VPT準拠）
+# ========================================
+dawdreamer:
+  enabled: true
+  sample_rate: 44100
+  buffer_size: 512
+  bit_depth: 24
+  
+  # VST音源パス（環境依存、要設定）
+  vst_paths:
+    synchron_solo_violin: "/Library/Audio/Plug-Ins/VST3/Synchron Solo Violin I.vst3"
+    ample_guitar: "/Library/Audio/Plug-Ins/VST3/Ample Guitar M.vst3"
+    kontakt: "/Library/Audio/Plug-Ins/VST3/Kontakt 7.vst3"
+  
+  # 奏法別レンダリングプリセット
+  technique_presets:
+    detache:
+      attack_time: 0.01
+      release_time: 0.1
+      reverb_mix: 0.15
+    spiccato:
+      attack_time: 0.005
+      release_time: 0.05
+      reverb_mix: 0.10
+    pizzicato:
+      attack_time: 0.002
+      release_time: 0.3
+      reverb_mix: 0.20
+    legato:
+      attack_time: 0.02
+      release_time: 0.2
+      overlap_ms: 50
+      reverb_mix: 0.18
+
+# ========================================
+# Stage2特徴量抽出用（奏法前駆特徴）
+# ========================================
+stage2_features:
+  articulation_hints:
+    staccato_ratio:
+      description: "音符長 < 32分音符の割合"
+      duration_threshold: 0.125  # 拍の1/8以下
+    legato_ratio:
+      description: "音符間ギャップ < 50msの割合"
+      gap_threshold: 0.05
+    attack_velocity_variance:
+      description: "同一音高でのベロシティ分散"
+      threshold: 15
+    pizzicato_score:
+      short_duration: 0.2
+      high_velocity: 80
+
+# ========================================
+# ライセンス管理
+# ========================================
+license:
+  research_only:
+    - "MOSA"
+    - "MOSA-VPT"
+  attribution:
+    mosa_vpt:
+      citation: "VioPTT: Violin Technique-Aware Transcription"
+      url: "https://arxiv.org/abs/2410.xxxxx"
+
 instruments:
   violin:
     engine: generic_keyswitch_cc

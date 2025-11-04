@@ -1,0 +1,56 @@
+# configs/rhythm_stage2.yaml
+# Rhythm AI Stage2 Configuration - リズム専用特徴量抽出設定
+version: "1.0"
+description: "Rhythm AI Stage2 Configuration for Groove/Beat/Density extraction"
+
+# ========== Slot Configuration (量子化粒度) ==========
+# 拍子別のスロット数（グリッド分割）
+slots_4_4: 16    # 4/4拍子: 16分音符グリッド
+slots_6_8: 24    # 6/8拍子: 24グリッド（3連符対応）
+slots_3_4: 12    # 3/4拍子: 12グリッド
+
+# ========== Feature Ranges ==========
+# テンポ範囲（BPM）
+tempo_range: [60.0, 180.0]
+
+# 密度範囲（notes per bar）
+density_range: [0.0, 24.0]
+
+# ========== Groove Thresholds ==========
+# スウィング検出閾値（%）
+swing_threshold: 10.0
+
+# バックビート強度閾値（0-1）
+backbeat_threshold: 0.7
+
+# ========== KPI Thresholds (学習フィルタ用) ==========
+# 人間演奏対応: 窓拡張により通過率向上
+# キックのダウンビート率（最小値）- 窓拡張後は0.6程度に緩和
+kick_downbeat_min: 0.60
+
+# スネアのバックビート率（最小値）- velocity >= 30 & 窓拡張で0.6程度に緩和
+snare_backbeat_min: 0.60
+
+# ハット密度（最大値、notes/bar）- hat系のみなので20で妥当
+hat_density_max: 20.0
+
+# ========== Pattern Extraction ==========
+# パターン長（小節数）
+min_bars: 2
+max_bars: 8
+
+# ========== Output Settings ==========
+# Parquet圧縮形式
+parquet_compression: "snappy"
+
+# サンプルJSON出力数（デバッグ用）
+sample_size: 1000
+
+# ========== Advanced Features (groove_sampler_v2統合時) ==========
+# オンセット偏差ヒストグラム設定
+onset_deviation_bins: 20
+onset_deviation_range: [-0.1, 0.1]  # seconds
+
+# ベロシティ分布設定
+velocity_bins: 16
+velocity_range: [0, 127]

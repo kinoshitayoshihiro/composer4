@@ -1,0 +1,177 @@
+# audio_gate_prod.yaml - 音声KPI SLOゲート設定（Production環境）
+#
+# VST到着後、validate_audio_quality.py / aggregate_audio_kpi.py で使用
+# 初回は閾値を広めに設定し、実測データで微調整する
+
+# ==============================================================================
+# Audio Quality SLO（Service Level Objective）
+# ==============================================================================
+audio:
+  # レンダリング実時間比（RTF: Real-Time Factor）
+  # render_duration / audio_duration ≤ 0.50（2×速以上を要求）
+  render_rtf:
+    max: 0.50      # FAIL if > 0.50
+    warn_max: 0.65 # WARNING if > 0.65 (but < max)
+    description: "レンダリング実時間比（2×速以上）"
+    unit: "ratio"
+
+  # クリップ率（0dBFS近傍サンプル率）
+  # |amplitude| > 0.95 のサンプル数 / 総サンプル数 ≤ 0.1%
+  clip_ratio:
+    max: 0.001     # FAIL if > 0.1%
+    warn_max: 0.002 # WARNING if > 0.2%
+    description: "クリップ率（0dBFS近傍サンプル）"
+    unit: "ratio"
+
+  # 統合ラウドネス（LUFS: Loudness Units relative to Full Scale）
+  # 素材用音源として -23〜-13 LUFS を推奨
+  integrated_lufs:
+    min: -23       # FAIL if < -23 LUFS（静かすぎ）
+    max: -13       # FAIL if > -13 LUFS（大きすぎ）
+    warn_min: -24  # WARNING if < -24
+    warn_max: -12  # WARNING if > -12
+    description: "統合ラウドネス（素材用音源）"
+    unit: "LUFS"
+
+  # クレストファクター（ピーク/平均の比率）
+  # 8-20 dB が一般的（ジャンル依存のため広め設定）
+  crest_factor_db:
+    min: 8         # FAIL if < 8 dB（圧縮されすぎ）
+    max: 20        # FAIL if > 20 dB（ダイナミックすぎ）
+    warn_min: 7    # WARNING if < 7
+    warn_max: 22   # WARNING if > 22
+    description: "クレストファクター（ピーク/平均比）"
+    unit: "dB"
+
+  # DCオフセット（直流成分）
+  # ≤ -60 dBFS を要求（ほぼゼロ）
+  dc_offset_dbfs:
+    max: -60       # FAIL if > -60 dBFS
+    warn_max: -55  # WARNING if > -55 dBFS
+    description: "DCオフセット（直流成分）"
+    unit: "dBFS"
+
+  # ノイズフロア（無音区間の最小振幅）
+  # ≤ -55 dBFS を要求（静かな無音）
+  noise_floor_dbfs:
+    max: -55       # FAIL if > -55 dBFS
+    warn_max: -50  # WARNING if > -50 dBFS
+    description: "ノイズフロア（無音区間）"
+    unit: "dBFS"
+
+  # レイテンシー（最初のMIDIノート→有音まで）
+  # ≤ 120ms を要求（VST起動遅延を含む）
+  latency_ms_onset:
+    max: 120       # FAIL if > 120ms
+    warn_max: 180  # WARNING if > 180ms
+    description: "レイテンシー（最初のノート→有音）"
+    unit: "ms"
+
+  # 欠落オンセット率（MIDIノート vs オーディオ検出）
+  # ≤ 3% を要求（97%以上のノートが正しく発音）
+  missing_onset_rate:
+    max: 0.03      # FAIL if > 3%
+    warn_max: 0.05 # WARNING if > 5%
+    description: "欠落オンセット率（MIDIノート vs オーディオ）"
+    unit: "ratio"
+
+# ==============================================================================
+# File Format Requirements
+# ==============================================================================
+format:
+  # サンプリングレート
+  sample_rate:
+    allowed: [44100, 48000, 96000]
+    preferred: 48000
+    description: "サンプリングレート（44.1/48/96 kHz）"
+
+  # ビット深度
+  bit_depth:
+    allowed: [16, 24, 32]
+    preferred: 24
+    description: "ビット深度（16/24/32 bit）"
+
+  # チャンネル数
+  channels:
+    allowed: [1, 2]
+    preferred: 2
+    description: "チャンネル数（mono/stereo）"
+
+# ==============================================================================
+# Validation Settings
+# ==============================================================================
+validation:
+  # 最小ファイルサイズ（バイト）
+  min_file_size: 1024  # 1 KB（空ファイル検出）
+
+  # 最大ファイルサイズ（バイト）
+  max_file_size: 536870912  # 512 MB（異常肥大化検出）
+
+  # 最小オーディオ長（秒）
+  min_duration_sec: 1.0
+
+  # 最大オーディオ長（秒）
+  max_duration_sec: 600.0  # 10分
+
+# ==============================================================================
+# Reporting Settings
+# ==============================================================================
+reporting:
+  # SLO集計時の優先度
+  priority_order:
+    - "render_rtf"
+    - "clip_ratio"
+    - "integrated_lufs"
+    - "missing_onset_rate"
+    - "latency_ms_onset"
+    - "crest_factor_db"
+    - "dc_offset_dbfs"
+    - "noise_floor_dbfs"
+
+  # Fail時の終了コード
+  exit_code_fail: 1
+  exit_code_warn: 0  # WARNINGは成功扱い
+
+  # レポート出力形式
+  formats:
+    - "csv"
+    - "markdown"
+    - "json"
+
+# ==============================================================================
+# Notes
+# ==============================================================================
+# - 初回は閾値を広めに設定し、実測データで微調整
+# - ジャンル依存の項目（crest_factor等）は楽曲タイプで調整
+# - VST到着後、aggregate_audio_kpi.py で全曲集計
+# - drums KPI（kpi_gate.py）と統合してダッシュボード表示
+
+# ==============================================================================
+# Piano-specific Audio KPI SLO（ピアノ専用プロファイル）
+# ==============================================================================
+piano_kpi:
+  # レンダリングパフォーマンス
+  render_rtf:
+    max: 0.50  # 2×速以上（ピアノは軽量）
+  
+  # クリッピング（ピアノは広いダイナミクスレンジ、少し厳しめ）
+  clip_ratio:
+    max: 0.001  # 0.1%以下
+  
+  # ラウドネス（ピアノ推奨: -22 〜 -16 LUFS）
+  integrated_lufs:
+    min: -22.0
+    max: -16.0
+  
+  # クレストファクター（ピアノは広いダイナミクス: 10-20dB）
+  crest_factor_db:
+    min: 10.0
+    max: 20.0
+  
+  # レイテンシ（オンセット遅延）
+  latency_ms_onset:
+    max: 120  # 120ms以下
+  
+  # 欠損オンセット率
+  missing_onset_rate:
+    max: 0.03  # 3%以下

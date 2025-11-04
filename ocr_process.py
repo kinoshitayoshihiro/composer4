@@ -2,9 +2,7 @@ import os
 import json
 
 # 認証ファイルパスを明示的に指定
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-    "/Volumes/SSD-SCTU3A/ラジオ用/charged-camera.json"
-)
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Volumes/SSD-SCTU3A/ラジオ用/charged-camera.json"
 
 from google.cloud import storage
 from google.cloud import vision
@@ -50,9 +48,7 @@ def ocr_process_image_files(bucket_name, prefix, batch_size=16):
 
     # すべてのリクエストをバッチに分割して処理する
     all_results = []
-    for batch_index, batch_requests in enumerate(
-        chunk_list(requests_list, batch_size), start=1
-    ):
+    for batch_index, batch_requests in enumerate(chunk_list(requests_list, batch_size), start=1):
         print(f"Processing batch {batch_index} ( {len(batch_requests)} images )...")
         response = vision_client.batch_annotate_images(requests=batch_requests)
         all_results.extend(response.responses)
@@ -74,5 +70,5 @@ def ocr_process_image_files(bucket_name, prefix, batch_size=16):
 
 if __name__ == "__main__":
     bucket_name = "bungo-syousetu"
-    prefix = "伊勢音頭恋寝刃/"  # 例: "images/pngs/"
+    prefix = "ふたり蔵人/"  # 例: "images/pngs/"
     ocr_process_image_files(bucket_name, prefix)

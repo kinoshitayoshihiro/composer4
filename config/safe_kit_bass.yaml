@@ -1,0 +1,264 @@
+# Bass Safe-Kit - 緊急フォールバック用基本パターン
+#
+# Phase 26: Bass ML基盤 - Safe-Kit定義
+#
+# 用途:
+# - ML推論失敗時の安全なフォールバック
+# - 低確率/低マージン時の代替パターン
+# - KPI Gates維持（root_hit_rate ≥ 0.85, chord_fit ≥ 0.70）
+
+patterns:
+  # 1. Whole Note Root (全音符ルート - バラード)
+  - pattern_id: "safe_kit_whole_note_root"
+    family: "safe_kit"
+    tempo_hint: 60
+    groove_hint: "straight"
+    section_hint: "Verse"
+    energy_hint: 0.3
+    
+    description: "全音符でルート音を保持（バラード・アンビエント）"
+    
+    # KPI予測値
+    root_hit_rate: 1.00  # ルート音100%
+    chord_fit: 0.80      # コード適合度高め
+    density: 1.0         # 全音符（最低密度）
+    
+    # イベントテンプレート（pos_ql単位）
+    events:
+      # 1小節全体でルート音保持
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 85, duration_ql: 15.5}  # Root
+
+  # 2. Quarter Note Root (4分音符ルート - スタンダード)
+  - pattern_id: "safe_kit_quarter_note_root"
+    family: "safe_kit"
+    tempo_hint: 120
+    groove_hint: "straight"
+    section_hint: "Verse"
+    energy_hint: 0.5
+    
+    description: "4分音符でルート音を刻む（標準パターン）"
+    
+    root_hit_rate: 1.00
+    chord_fit: 0.85
+    density: 4.0
+    
+    events:
+      # 4拍分のルート音
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 90, duration_ql: 3.5}   # 1拍目
+      - {pos_ql: 4.0, pitch_offset: 0, velocity: 85, duration_ql: 3.5}   # 2拍目
+      - {pos_ql: 8.0, pitch_offset: 0, velocity: 90, duration_ql: 3.5}   # 3拍目
+      - {pos_ql: 12.0, pitch_offset: 0, velocity: 85, duration_ql: 3.5}  # 4拍目
+
+  # 3. Root-Fifth Pattern (ルート-5度パターン - ドライビング)
+  - pattern_id: "safe_kit_root_fifth"
+    family: "safe_kit"
+    tempo_hint: 140
+    groove_hint: "straight"
+    section_hint: "Chorus"
+    energy_hint: 0.7
+    
+    description: "ルート-5度交互パターン（ドライビングベース）"
+    
+    root_hit_rate: 0.90  # ルート90%、5度10%
+    chord_fit: 0.85
+    density: 8.0
+    
+    events:
+      # 1拍目: Root
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 95, duration_ql: 1.8}
+      
+      # 1拍目裏: 5th
+      - {pos_ql: 2.0, pitch_offset: 7, velocity: 80, duration_ql: 1.8}
+      
+      # 2拍目: Root
+      - {pos_ql: 4.0, pitch_offset: 0, velocity: 90, duration_ql: 1.8}
+      
+      # 2拍目裏: 5th
+      - {pos_ql: 6.0, pitch_offset: 7, velocity: 80, duration_ql: 1.8}
+      
+      # 3拍目: Root
+      - {pos_ql: 8.0, pitch_offset: 0, velocity: 95, duration_ql: 1.8}
+      
+      # 3拍目裏: 5th
+      - {pos_ql: 10.0, pitch_offset: 7, velocity: 80, duration_ql: 1.8}
+      
+      # 4拍目: Root
+      - {pos_ql: 12.0, pitch_offset: 0, velocity: 90, duration_ql: 1.8}
+      
+      # 4拍目裏: 5th
+      - {pos_ql: 14.0, pitch_offset: 7, velocity: 80, duration_ql: 1.8}
+
+  # 4. Walking Bass (ウォーキングベース - ジャズ)
+  - pattern_id: "safe_kit_walking_bass"
+    family: "safe_kit"
+    tempo_hint: 130
+    groove_hint: "swing"
+    section_hint: "Verse"
+    energy_hint: 0.6
+    
+    description: "ウォーキングベース（Root-3rd-5th-7th）"
+    
+    root_hit_rate: 0.85  # ルート85%
+    chord_fit: 0.90      # ジャズはコード適合度高め
+    density: 8.0
+    
+    events:
+      # 1拍目: Root
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 85, duration_ql: 1.8}
+      
+      # 1拍目裏: 3rd
+      - {pos_ql: 2.0, pitch_offset: 4, velocity: 80, duration_ql: 1.8}
+      
+      # 2拍目: 5th
+      - {pos_ql: 4.0, pitch_offset: 7, velocity: 85, duration_ql: 1.8}
+      
+      # 2拍目裏: 7th
+      - {pos_ql: 6.0, pitch_offset: 10, velocity: 80, duration_ql: 1.8}  # min7
+      
+      # 3拍目: Root (1オクターブ上)
+      - {pos_ql: 8.0, pitch_offset: 12, velocity: 85, duration_ql: 1.8}
+      
+      # 3拍目裏: 5th
+      - {pos_ql: 10.0, pitch_offset: 7, velocity: 80, duration_ql: 1.8}
+      
+      # 4拍目: 3rd
+      - {pos_ql: 12.0, pitch_offset: 4, velocity: 85, duration_ql: 1.8}
+      
+      # 4拍目裏: Root
+      - {pos_ql: 14.0, pitch_offset: 0, velocity: 80, duration_ql: 1.8}
+
+  # 5. Shuffle Triplet (シャッフルトリプレット)
+  - pattern_id: "safe_kit_shuffle_triplet"
+    family: "safe_kit"
+    tempo_hint: 110
+    groove_hint: "shuffle"
+    section_hint: "Chorus"
+    energy_hint: 0.7
+    
+    description: "シャッフルトリプレット（3連符グルーブ）"
+    
+    root_hit_rate: 0.88
+    chord_fit: 0.80
+    density: 12.0  # 3連符
+    
+    events:
+      # 1拍目: Root (triplet head)
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 90, duration_ql: 1.2}
+      
+      # 1拍目 triplet 3rd: 5th
+      - {pos_ql: 2.67, pitch_offset: 7, velocity: 75, duration_ql: 1.2}
+      
+      # 2拍目: Root
+      - {pos_ql: 4.0, pitch_offset: 0, velocity: 85, duration_ql: 1.2}
+      
+      # 2拍目 triplet 3rd: 5th
+      - {pos_ql: 6.67, pitch_offset: 7, velocity: 75, duration_ql: 1.2}
+      
+      # 3拍目: Root
+      - {pos_ql: 8.0, pitch_offset: 0, velocity: 90, duration_ql: 1.2}
+      
+      # 3拍目 triplet 3rd: 5th
+      - {pos_ql: 10.67, pitch_offset: 7, velocity: 75, duration_ql: 1.2}
+      
+      # 4拍目: Root
+      - {pos_ql: 12.0, pitch_offset: 0, velocity: 85, duration_ql: 1.2}
+      
+      # 4拍目 triplet 3rd: 5th
+      - {pos_ql: 14.67, pitch_offset: 7, velocity: 75, duration_ql: 1.2}
+
+  # 6. Syncopated Eighth (シンコペーション8分音符 - ファンク)
+  - pattern_id: "safe_kit_syncopated_eighth"
+    family: "safe_kit"
+    tempo_hint: 100
+    groove_hint: "straight"
+    section_hint: "Chorus"
+    energy_hint: 0.8
+    
+    description: "シンコペーション8分音符（ファンクベース）"
+    
+    root_hit_rate: 0.87
+    chord_fit: 0.75
+    density: 8.0
+    
+    events:
+      # 1拍目: Root
+      - {pos_ql: 0.0, pitch_offset: 0, velocity: 95, duration_ql: 1.5}
+      
+      # 1拍目裏: Rest（シンコペーション）
+      
+      # 2拍目前: 5th
+      - {pos_ql: 3.0, pitch_offset: 7, velocity: 80, duration_ql: 1.5}
+      
+      # 2拍目裏: Root
+      - {pos_ql: 6.0, pitch_offset: 0, velocity: 85, duration_ql: 1.5}
+      
+      # 3拍目: Root
+      - {pos_ql: 8.0, pitch_offset: 0, velocity: 95, duration_ql: 1.5}
+      
+      # 3拍目裏: Rest
+      
+      # 4拍目前: 5th
+      - {pos_ql: 11.0, pitch_offset: 7, velocity: 80, duration_ql: 1.5}
+      
+      # 4拍目裏: Root
+      - {pos_ql: 14.0, pitch_offset: 0, velocity: 85, duration_ql: 1.5}
+
+# Safe-Kit使用統計（Phase 26での目標）
+usage_stats:
+  target_safe_kit_rate: 0.10  # Safe-Kit発火率10%以下
+  min_proba_threshold: 0.15   # Top-1確率閾値
+  min_margin_threshold: 0.10  # Top-1/Top-2マージン閾値
+
+# KPI Gates（Safe-Kitでも維持）
+kpi_gates:
+  root_hit_rate_min: 0.85     # ルート音命中率
+  chord_fit_min: 0.70         # コード適合度
+  density_abs_max: 2.0        # 目標密度との絶対差
+
+# Pitch Offset説明（ベース音域: C2=36）
+pitch_offset_mapping:
+  0: "Root（ルート音）"
+  2: "2nd（長2度）"
+  4: "3rd（長3度 for maj, 短3度 for min）"
+  5: "4th（完全4度）"
+  7: "5th（完全5度）"
+  9: "6th（長6度）"
+  10: "min7（短7度）"
+  11: "maj7（長7度）"
+  12: "Octave（オクターブ）"
+  -12: "Octave下"
+
+# Bass音域（MIDI Pitch）
+bass_pitch_range:
+  low: 28   # E1
+  standard: 36  # C2（基準）
+  high: 48  # C3
+  description: "ベースは通常E1-C3の範囲（MIDI 28-48）"
+
+# 使用方法
+usage:
+  example: |
+    from ml.bass_pattern_recommender import BassPatternRecommender, BassQuery
+    
+    rec = BassPatternRecommender(
+        patterns=patterns_dict,
+        safe_kit_path="config/safe_kit_bass.yaml"
+    )
+    
+    result = rec.recommend(
+        query=BassQuery(
+            tempo_bpm=120,
+            chord_root="C",
+            chord_type="maj",
+            section="Chorus",
+            target_energy=0.7,
+            groove_style="straight"
+        ),
+        min_proba=0.15,
+        min_margin=0.10
+    )
+    
+    if result.safety_triggered:
+        print(f"Bass Safe-Kit triggered: {result.safety_reason}")
+    else:
+        print(f"Root hit rate: {result.root_hit_rate:.2f}")

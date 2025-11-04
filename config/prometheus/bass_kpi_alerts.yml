@@ -1,0 +1,47 @@
+groups:
+  - name: bass_kpi_alerts
+    interval: 30s
+    rules:
+      # Primary KPI: root_hit_rate
+      - alert: bass_root_hit_rate_low
+        expr: bass_root_hit_rate < 0.85
+        for: 5m
+        labels:
+          severity: warning
+          instrument: bass
+        annotations:
+          summary: "Bass: root hit rate below threshold"
+          description: "Bass root_hit_rate ({{ $value }}) is below minimum 0.85 for 5 minutes"
+      
+      # Secondary KPI: chord_fit
+      - alert: bass_chord_fit_low
+        expr: bass_chord_fit < 0.70
+        for: 5m
+        labels:
+          severity: warning
+          instrument: bass
+        annotations:
+          summary: "Bass: chord fit below threshold"
+          description: "Bass chord_fit ({{ $value }}) is below minimum 0.70 for 5 minutes"
+      
+      # Density deviation alert
+      - alert: bass_density_deviation_high
+        expr: bass_density_abs_error > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          instrument: bass
+        annotations:
+          summary: "Bass: density deviation too high"
+          description: "Bass density_abs_error ({{ $value }}) exceeds maximum 2.0 for 5 minutes"
+      
+      # ML Usage Rate alert
+      - alert: bass_ml_usage_rate_low
+        expr: bass_ml_usage_rate < 0.70
+        for: 10m
+        labels:
+          severity: info
+          instrument: bass
+        annotations:
+          summary: "Bass: ML usage rate below target"
+          description: "Bass ML usage rate ({{ $value }}) is below 0.70 for 10 minutes"

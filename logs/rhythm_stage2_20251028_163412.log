@@ -1,0 +1,92 @@
+[2025-10-28 16:34:12] =========================================
+[2025-10-28 16:34:12] Rhythm AI Stage2 Processing
+[2025-10-28 16:34:12] =========================================
+[2025-10-28 16:34:12] Log: logs/rhythm_stage2_20251028_163412.log
+[2025-10-28 16:34:12] 
+[2025-10-28 16:34:12] 📂 1. Processing drumclean_midi...
+📂 Loading index: output/rhythm_ai/drumclean_metadata/drums_index.pkl
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 568, in <module>
+    main()
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 560, in main
+    summary = processor.process()
+              ^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 420, in process
+    records = load_lamda_index(self.lamda_index)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 393, in load_lamda_index
+    raise ValueError(f"Unknown index format: {type(data)}")
+ValueError: Unknown index format: <class 'dict'>
+[2025-10-28 16:34:27] ✅ drumclean_midi Stage2 completed
+[2025-10-28 16:34:27] 
+[2025-10-28 16:34:27] 📂 2. Processing groove...
+📂 Loading index: output/rhythm_ai/groove_metadata/drums_index.pkl
+Traceback (most recent call last):
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 568, in <module>
+    main()
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 560, in main
+    summary = processor.process()
+              ^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 420, in process
+    records = load_lamda_index(self.lamda_index)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/rhythm_stage2_extractor.py", line 393, in load_lamda_index
+    raise ValueError(f"Unknown index format: {type(data)}")
+ValueError: Unknown index format: <class 'dict'>
+[2025-10-28 16:34:36] ✅ groove Stage2 completed
+[2025-10-28 16:34:36] 
+[2025-10-28 16:34:36] =========================================
+[2025-10-28 16:34:36] Merging Stage2 results...
+[2025-10-28 16:34:36] =========================================
+Traceback (most recent call last):
+  File "<string>", line 7, in <module>
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/io/parquet.py", line 669, in read_parquet
+    return impl.read(
+           ^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/io/parquet.py", line 258, in read
+    path_or_handle, handles, filesystem = _get_path_or_handle(
+                                          ^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/io/parquet.py", line 141, in _get_path_or_handle
+    handles = get_handle(
+              ^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/io/common.py", line 882, in get_handle
+    handle = open(handle, ioargs.mode)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'output/rhythm_ai/drumclean_stage2/rhythm_features.parquet'
+[2025-10-28 16:34:39] ✅ Merge completed
+[2025-10-28 16:34:39] 
+[2025-10-28 16:34:39] =========================================
+[2025-10-28 16:34:39] Summary
+[2025-10-28 16:34:39] =========================================
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/io/parquet.py", line 669, in read_parquet
+    return impl.read(
+           ^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/io/parquet.py", line 258, in read
+    path_or_handle, handles, filesystem = _get_path_or_handle(
+                                          ^^^^^^^^^^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/io/parquet.py", line 141, in _get_path_or_handle
+    handles = get_handle(
+              ^^^^^^^^^^^
+  File "/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pandas/io/common.py", line 882, in get_handle
+    handle = open(handle, ioargs.mode)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'output/rhythm_ai/rhythm_features_merged.parquet'
+[2025-10-28 16:34:40] 
+[2025-10-28 16:34:40] =========================================
+[2025-10-28 16:34:40] ✅ All processing completed!
+[2025-10-28 16:34:40] =========================================
+[2025-10-28 16:34:40] 
+[2025-10-28 16:34:40] Next steps:
+[2025-10-28 16:34:40]   1. Train ML model:
+[2025-10-28 16:34:40]      python scripts/train_rhythm_baseline.py \
+[2025-10-28 16:34:40]        --train-parquet output/rhythm_ai/rhythm_features_merged.parquet \
+[2025-10-28 16:34:40]        --out data/patterns/stage2_drums_rhythm_ai.pickle
+[2025-10-28 16:34:40] 
+[2025-10-28 16:34:40]   2. Run benchmark:
+[2025-10-28 16:34:40]      python scripts/benchmark_ml_latency.py \
+[2025-10-28 16:34:40]        --instrument drums \
+[2025-10-28 16:34:40]        --pickle data/patterns/stage2_drums_rhythm_ai.pickle \
+[2025-10-28 16:34:40]        --batch-mode
+[2025-10-28 16:34:40] 

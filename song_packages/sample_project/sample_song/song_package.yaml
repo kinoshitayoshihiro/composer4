@@ -1,0 +1,66 @@
+# SongPackage定義
+# 1曲単位の設計図（セクション構成/コード/歌詞アンカー/bars.parquet）
+# Recommender/Generatorと学習済みモデルを連携
+
+meta:
+  title: "OreNoNyoubou_Shudaika"
+  project: "sample_project"
+  bpm: 76.01  # sections.jsonのtempo_map[0][1]
+  time_signature: "4/4"
+  key_hint: "Fm"  # sections.jsonのkey_hint[0][1]
+  emotion_profile: "quiet_pain_and_nascent_strength"  # chordmap.jsonのVerse 1から
+  total_bars: 72  # sections.jsonのenergy配列最終インデックス+1
+
+artifacts:
+  # Stage1楽曲構成ファイル（既存）
+  sections: "sections.json"
+  chordmap: "chordmap.json"
+  lyric_anchors: "results/test_anchors_beat.json"  # 任意
+  
+  # bars.parquet（後から生成）
+  bars: "bars.parquet"
+  # 必須カラム:
+  # - bar_index: int (0..71)
+  # - section_label: str (intro/verse/chorus/pre_chorus/outro)
+  # - energy_curve: float (0..1、sections.jsonのenergy参照)
+  # 推奨カラム:
+  # - accent_score_target: float (0..1)
+  # - density_target: float (Hi-hat密度目標)
+  # - swing_target: float (0..1、0=STRAIGHT, 1=SWING)
+
+models:
+  # Stage2学習済みモデル
+  drums: "data/patterns/stage2_drums_rhythm_ai.pickle"
+  # 将来対応
+  # guitar: "data/patterns/stage2_guitar.pickle"
+  # bass: "data/patterns/stage2_bass.pickle"
+  # piano: "data/patterns/stage2_piano.pickle"
+
+generation:
+  drums:
+    # Recommenderに任せる（自動推奨）
+    target_family: "auto"  # "STRAIGHT_8", "SWING_8", "SWING_16", "STRAIGHT_16", or "auto"
+    target_density: 6.0    # Hi-hat密度目標（onset/bar）
+    swing_hint: "detect"   # "detect" or 0..1（sections/chordmapから自動）
+    kpi_gate: "configs/gate_prod.yaml"  # KPI検証しきい値
+    # KPI失敗時のSafe-Kit fallback
+    safe_kit_fallback: true
+  
+  # 将来対応
+  # guitar:
+  #   accent_strategy: "from_bars"  # bars.parquetのaccent_score_target参照
+  #   voicing_style: "power_chord"
+  
+  # bass:
+  #   groove_style: "auto"  # drumsと連動
+  
+  # piano:
+  #   voicing_style: "auto"  # chordmap.jsonのpart_settingsから
+
+render:
+  # 出力設定
+  out_dir: "renders/sample_project/sample_song"
+  stem_format: "wav/48k/24bit"
+  # 将来対応
+  # mix_profile: "balanced"
+  # master_chain: "soft_limit"

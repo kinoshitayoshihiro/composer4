@@ -1,0 +1,99 @@
+# Exploration Manager Configuration
+# Phase 24.4: セクション別探索上限設定
+
+# ========================================
+# Exploration Strategy
+# ========================================
+exploration:
+  # グローバル探索率（全体の平均）
+  epsilon_global: 0.10  # 10%探索
+  
+  # セクション別上限（Chorusは抑制、Verse/Bridgeは許容）
+  cap_by_section:
+    Chorus: 0.03      # Chorus: 3%上限（聴きどころなので安全重視）
+    Verse: 0.12       # Verse: 12%許容（探索余地あり）
+    Bridge: 0.10      # Bridge: 10%標準
+    Intro: 0.08       # Intro: 8%（第一印象重視）
+    Outro: 0.15       # Outro: 15%（最も自由に探索可能）
+    "Pre-Chorus": 0.09  # Pre-Chorus: 9%（準重要）
+    Unknown: 0.10     # 未分類: デフォルト10%
+  
+  # UCB（Upper Confidence Bound）パラメータ
+  ucb_exploration_constant: 1.5  # 探索-活用バランス（大きいほど探索重視）
+  
+  # 最小サンプル数（パターン評価前に必要な試行回数）
+  min_samples_for_evaluation: 10
+  
+  # 品質閾値（この値以上で昇格候補）
+  quality_threshold: 0.70
+
+# ========================================
+# Exploration Pool Management
+# ========================================
+pool:
+  # 探索プールの最大サイズ（セクション別）
+  max_pool_size_by_section:
+    Chorus: 20   # Chorusは厳選
+    Verse: 50    # Verseは多様性重視
+    Bridge: 30
+    Intro: 25
+    Outro: 40
+    "Pre-Chorus": 30
+  
+  # 探索プールの更新頻度（日次）
+  refresh_interval_days: 7
+  
+  # 探索プール候補の最低品質（事前フィルタ）
+  min_candidate_quality: 0.50
+
+# ========================================
+# Discovery Pattern Promotion
+# ========================================
+promotion:
+  # 昇格条件（新パターンをv3候補に追加）
+  min_samples: 20              # 最低20回試行
+  min_quality_mean: 0.75       # 平均品質0.75以上
+  min_quality_p10: 0.65        # p10品質0.65以上（安定性）
+  max_quality_variance: 0.05   # 分散0.05以下（一貫性）
+  
+  # 昇格後の処理
+  auto_add_to_v3_pool: true    # 自動でv3候補に追加
+  notify_on_discovery: true    # 発見時に通知
+
+# ========================================
+# Safety Constraints
+# ========================================
+safety:
+  # Safe-Kit使用率が高い場合の探索抑制
+  safekit_rate_threshold: 0.08  # 8%以上で探索抑制開始
+  exploration_reduction_factor: 0.5  # 探索率を50%に低減
+  
+  # 連続失敗時の探索停止
+  max_consecutive_failures: 5  # 連続5回KPI失敗で一時停止
+  failure_cooldown_minutes: 30  # 30分間探索停止
+
+# ========================================
+# Logging and Monitoring
+# ========================================
+logging:
+  exploration_log_path: "data/exploration_log.json"
+  discovered_patterns_path: "data/discovered_patterns.json"
+  
+  # Prometheusメトリクス
+  metrics_enabled: true
+  metrics:
+    - exploration_rate_by_section
+    - discovered_pattern_count
+    - promotion_count
+    - exploration_quality_distribution
+
+# ========================================
+# Section Priority（重要度順）
+# ========================================
+section_priority:
+  - Chorus       # 最重要（探索最小）
+  - Pre-Chorus   # 準重要
+  - Intro        # 第一印象
+  - Bridge       # 変化
+  - Verse        # 標準
+  - Outro        # 最も自由（探索最大）

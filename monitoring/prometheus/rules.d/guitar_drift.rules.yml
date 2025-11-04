@@ -1,0 +1,164 @@
+# guitar_drift.rules.yml
+# データドリフト監視用のRecording Rules
+#
+# Purpose: 品質が少しずつ崩れる"裾"を早期検知（下位10%を監視）
+#
+# 監視対象:
+# - guitar_v3_accent_score (正規化後)
+# - guitar_v3_chord_fit
+# - latency_ms
+
+groups:
+- name: guitar_drift_weekly
+  interval: 1h  # 1時間ごとに集計
+  rules:
+  # 7日間のp10（週次基準）
+  - record: guitar_v3_accent_p10_7d
+    expr: quantile_over_time(0.1, guitar_v3_accent_score[7d])
+    labels:
+      instrument: guitar
+      version: v3
+      metric_type: drift_baseline
+  
+  - record: guitar_v3_chordfit_p10_7d
+    expr: quantile_over_time(0.1, guitar_v3_chord_fit[7d])
+    labels:
+      instrument: guitar
+      version: v3
+      metric_type: drift_baseline
+  
+  - record: guitar_v3_latency_p95_7d
+    expr: quantile_over_time(0.95, guitar_v3_latency_ms[7d])
+    labels:
+      instrument: guitar
+      version: v3
+      metric_type: drift_baseline
+  
+  # 24時間のp10（短期変動）
+  - record: guitar_v3_accent_p10_24h
+    expr: quantile_over_time(0.1, guitar_v3_accent_score[24h])
+    labels:
+      instrument: guitar
+      version: v3
+      metric_type: drift_current
+  
+  - record: guitar_v3_chordfit_p10_24h
+    expr: quantile_over_time(0.1, guitar_v3_chord_fit[24h])
+    labels:
+      instrument: guitar
+      version: v3
+      metric_type: drift_current
+  
+  - record: guitar_v3_latency_p95_24h
+    expr: quantile_over_time(0.95, guitar_v3_latency_ms[24h])
+    labels:
+      instrument: guitar
+      version: v3
+      metric_type: drift_current
+  
+  # ドリフト率（24h vs 7d）
+  - record: guitar_v3_accent_drift_ratio
+    expr: guitar_v3_accent_p10_24h / guitar_v3_accent_p10_7d
+    labels:
+      instrument: guitar
+      version: v3
+      metric_type: drift_ratio
+  
+  - record: guitar_v3_chordfit_drift_ratio
+    expr: guitar_v3_chordfit_p10_24h / guitar_v3_chordfit_p10_7d
+    labels:
+      instrument: guitar
+      version: v3
+      metric_type: drift_ratio
+
+# セクション別ドリフト監視（オプション）
+- name: guitar_drift_per_section
+  interval: 1h
+  rules:
+  # Chorus
+  - record: guitar_v3_accent_p10_7d_chorus
+    expr: quantile_over_time(0.1, guitar_v3_accent_score{section="Chorus"}[7d])
+    labels:
+      section: Chorus
+  
+  - record: guitar_v3_accent_p10_24h_chorus
+    expr: quantile_over_time(0.1, guitar_v3_accent_score{section="Chorus"}[24h])
+    labels:
+      section: Chorus
+  
+  # Verse
+  - record: guitar_v3_accent_p10_7d_verse
+    expr: quantile_over_time(0.1, guitar_v3_accent_score{section="Verse"}[7d])
+    labels:
+      section: Verse
+  
+  - record: guitar_v3_accent_p10_24h_verse
+    expr: quantile_over_time(0.1, guitar_v3_accent_score{section="Verse"}[24h])
+    labels:
+      section: Verse
+  
+  # Bridge
+  - record: guitar_v3_accent_p10_7d_bridge
+    expr: quantile_over_time(0.1, guitar_v3_accent_score{section="Bridge"}[7d])
+    labels:
+      section: Bridge
+  
+  - record: guitar_v3_accent_p10_24h_bridge
+    expr: quantile_over_time(0.1, guitar_v3_accent_score{section="Bridge"}[24h])
+    labels:
+      section: Bridge
+
+# Safety閾値監視（Phase 23.5 - Histogram tracking）
+- name: guitar_safety_threshold_distribution
+  interval: 5m  # 5分ごと（リアルタイム監視）
+  rules:
+  # top1_proba分布追跡（p10/p50/p90）
+  - record: guitar_v3_top1_proba_p10
+    expr: histogram_quantile(0.10, guitar_v3_top1_proba_bucket)
+    labels:
+      metric_type: safety_threshold
+      quantile: p10
+  
+  - record: guitar_v3_top1_proba_p50
+    expr: histogram_quantile(0.50, guitar_v3_top1_proba_bucket)
+    labels:
+      metric_type: safety_threshold
+      quantile: p50
+  
+  - record: guitar_v3_top1_proba_p90
+    expr: histogram_quantile(0.90, guitar_v3_top1_proba_bucket)
+    labels:
+      metric_type: safety_threshold
+      quantile: p90
+  
+  # margin（top1-top2）分布追跡
+  - record: guitar_v3_margin_p10
+    expr: histogram_quantile(0.10, guitar_v3_top12_margin_bucket)
+    labels:
+      metric_type: safety_threshold
+      quantile: p10
+  
+  - record: guitar_v3_margin_p50
+    expr: histogram_quantile(0.50, guitar_v3_top12_margin_bucket)
+    labels:
+      metric_type: safety_threshold
+      quantile: p50
+  
+  - record: guitar_v3_margin_p90
+    expr: histogram_quantile(0.90, guitar_v3_top12_margin_bucket)
+    labels:
+      metric_type: safety_threshold
+      quantile: p90
+  
+  # Safety trigger rate（5分間のtrigger割合）
+  - record: guitar_v3_safety_trigger_rate_5m
+    expr: rate(guitar_v3_safety_triggered_total[5m])
+    labels:
+      metric_type: safety_threshold
+  
+  # Safe-Kit fallback rate（5分間）
+  - record: guitar_v3_safe_kit_fallback_rate_5m
+    expr: rate(guitar_v3_safe_kit_invocations_total[5m])
+    labels:
+      metric_type: safety_threshold
+

@@ -1,0 +1,15 @@
+[2025-10-28 18:44:43] ==========================================
+[2025-10-28 18:44:43] 🥁 Rhythm AI Stage1 Cleaning - E-GMD
+[2025-10-28 18:44:43] ==========================================
+[2025-10-28 18:44:43] Base Dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-28 18:44:43] E-GMD Dir: data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/e-gmd-v1.0.0
+[2025-10-28 18:44:43] Output Dir: output/rhythm_ai
+[2025-10-28 18:44:43] Log File: logs/rhythm_stage1_egmd_20251028_184443.log
+[2025-10-28 18:44:43] 
+[2025-10-28 18:44:43] 📂 1. Verifying E-GMD MIDI files...
+[2025-10-28 18:44:55] ✅ Found 45537 MIDI files
+[2025-10-28 18:44:55] 🧹 2. Running Stage1 Cleaning for E-GMD...
+[2025-10-28 18:44:55]    - Input: data/Los-Angeles-MIDI/LOCAL_LAMDA/rhythmAI/e-gmd-v1.0.0 (45,537 files)
+[2025-10-28 18:44:55]    - Output: output/rhythm_ai/egmd_cleaned
+[2025-10-28 18:44:55]    - Metadata: output/rhythm_ai/egmd_metadata
+/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python: can't open file '/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/scripts/clean_rhythm_stage1.py': [Errno 2] No such file or directory

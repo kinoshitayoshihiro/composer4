@@ -1,0 +1,41 @@
+# Model Configuration for Guitar Generation
+# This file controls which guitar pattern model version is used
+
+# Guitar Model Version Selection
+# Options: v1, v3
+# - v1: Legacy model (stage2_guitar.pickle)
+# - v3: New model with improved indexing (v3_fixed.pickle)
+guitar_model_version: v3
+
+# Model Paths
+guitar_model_v1_path: "data/stage2_guitar.pickle"
+guitar_model_v3_path: "data/v3_fixed.pickle"
+
+# Pattern Recommendation Settings
+pattern_search:
+  top_k: 5
+  min_score: 0.5
+  tempo_tolerance: 20.0
+
+# LRU Cache Settings
+cache:
+  enabled: true
+  max_size: 1024
+
+# Shadow Testing Settings (for auto_fallback.py monitoring)
+shadow_testing:
+  enabled: true
+  traffic_split_ratio: 0.9  # 90% v3, 10% v1
+  
+  # Auto Fallback Thresholds
+  fallback_conditions:
+    accent_delta_threshold: -0.05  # -5%
+    latency_p95_threshold_ms: 150.0
+    error_rate_threshold: 0.01  # 1%
+  
+  # Monitoring
+  prometheus_url: "http://localhost:9090"
+  poll_interval_sec: 30
+  
+  # Notifications
+  slack_webhook_url: ""  # Set via environment variable SLACK_WEBHOOK_URL

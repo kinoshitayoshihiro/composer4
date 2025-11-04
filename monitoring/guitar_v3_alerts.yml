@@ -1,0 +1,144 @@
+# Prometheus Alert Rules for Guitar Stage2 v3
+
+groups:
+  - name: guitar_v3_kpi_alerts
+    interval: 1m
+    rules:
+      # Critical: Accent Score below minimum threshold
+      - alert: GuitarV3AccentScoreCritical
+        expr: guitar_v3_accent_score_mean < 0.65
+        for: 5m
+        labels:
+          severity: critical
+          component: guitar_v3
+          kpi: accent_score
+        annotations:
+          summary: "Guitar v3 Accent Score below critical threshold"
+          description: "Accent Score is {{ $value | humanizePercentage }}, below 65% threshold (critical). Immediate investigation required."
+          runbook: "https://github.com/kinoshitayoshihiro/composer4/wiki/Runbook-Accent-Score-Drop"
+      
+      # Warning: Accent Score below warning threshold
+      - alert: GuitarV3AccentScoreWarning
+        expr: guitar_v3_accent_score_mean < 0.70
+        for: 5m
+        labels:
+          severity: warning
+          component: guitar_v3
+          kpi: accent_score
+        annotations:
+          summary: "Guitar v3 Accent Score below warning threshold"
+          description: "Accent Score is {{ $value | humanizePercentage }}, below 70% threshold (warning). Monitor closely."
+      
+      # Critical: Chord Fit below minimum threshold
+      - alert: GuitarV3ChordFitCritical
+        expr: guitar_v3_chord_fit_mean < 0.60
+        for: 5m
+        labels:
+          severity: critical
+          component: guitar_v3
+          kpi: chord_fit
+        annotations:
+          summary: "Guitar v3 Chord Fit below critical threshold"
+          description: "Chord Fit is {{ $value | humanizePercentage }}, below 60% threshold (critical). Immediate investigation required."
+          runbook: "https://github.com/kinoshitayoshihiro/composer4/wiki/Runbook-Chord-Fit-Drop"
+      
+      # Warning: Chord Fit below warning threshold
+      - alert: GuitarV3ChordFitWarning
+        expr: guitar_v3_chord_fit_mean < 0.65
+        for: 5m
+        labels:
+          severity: warning
+          component: guitar_v3
+          kpi: chord_fit
+        annotations:
+          summary: "Guitar v3 Chord Fit below warning threshold"
+          description: "Chord Fit is {{ $value | humanizePercentage }}, below 65% threshold (warning). Monitor closely."
+      
+      # Critical: ML Usage below minimum threshold
+      - alert: GuitarV3MLUsageCritical
+        expr: guitar_v3_ml_usage_rate < 0.70
+        for: 5m
+        labels:
+          severity: critical
+          component: guitar_v3
+          kpi: ml_usage
+        annotations:
+          summary: "Guitar v3 ML Usage below critical threshold"
+          description: "ML Usage is {{ $value | humanizePercentage }}, below 70% threshold (critical). Check safety fallback rate."
+          runbook: "https://github.com/kinoshitayoshihiro/composer4/wiki/Runbook-ML-Usage-Drop"
+      
+      # Warning: ML Usage below warning threshold
+      - alert: GuitarV3MLUsageWarning
+        expr: guitar_v3_ml_usage_rate < 0.80
+        for: 5m
+        labels:
+          severity: warning
+          component: guitar_v3
+          kpi: ml_usage
+        annotations:
+          summary: "Guitar v3 ML Usage below warning threshold"
+          description: "ML Usage is {{ $value | humanizePercentage }}, below 80% threshold (warning). Monitor safety fallback."
+      
+      # Warning: High Safety Fallback Rate
+      - alert: GuitarV3HighSafetyFallback
+        expr: guitar_v3_safety_fallback_rate > 0.10
+        for: 10m
+        labels:
+          severity: warning
+          component: guitar_v3
+          kpi: safety_fallback
+        annotations:
+          summary: "Guitar v3 High Safety Fallback Rate"
+          description: "Safety Fallback rate is {{ $value | humanizePercentage }}, above 10% threshold. Investigate SAFETY_THRESHOLD tuning."
+      
+      # Info: Very High Safety Fallback Rate
+      - alert: GuitarV3VeryHighSafetyFallback
+        expr: guitar_v3_safety_fallback_rate > 0.15
+        for: 10m
+        labels:
+          severity: info
+          component: guitar_v3
+          kpi: safety_fallback
+        annotations:
+          summary: "Guitar v3 Very High Safety Fallback Rate"
+          description: "Safety Fallback rate is {{ $value | humanizePercentage }}, above 15%. Consider SAFETY_THRESHOLD adjustment."
+      
+      # Warning: Section-specific Accent Score drop
+      - alert: GuitarV3SectionAccentScoreDrop
+        expr: guitar_v3_section_accent_score < 0.70
+        for: 5m
+        labels:
+          severity: warning
+          component: guitar_v3
+          kpi: section_accent_score
+        annotations:
+          summary: "Guitar v3 Section Accent Score Drop"
+          description: "Section {{ $labels.section }} Accent Score is {{ $value | humanizePercentage }}, below 70%."
+      
+      # Critical: No metrics received
+      - alert: GuitarV3MetricsAbsent
+        expr: absent(guitar_v3_kpi_total_cases)
+        for: 5m
+        labels:
+          severity: critical
+          component: guitar_v3
+          kpi: health
+        annotations:
+          summary: "Guitar v3 Metrics Absent"
+          description: "No KPI metrics received for 5 minutes. Check kpi_collector service."
+          runbook: "https://github.com/kinoshitayoshihiro/composer4/wiki/Runbook-Metrics-Absent"
+
+  - name: guitar_v3_system_alerts
+    interval: 1m
+    rules:
+      # Warning: Low total cases (data collection issue)
+      - alert: GuitarV3LowDataVolume
+        expr: rate(guitar_v3_kpi_total_cases[5m]) < 1
+        for: 10m
+        labels:
+          severity: warning
+          component: guitar_v3
+          kpi: health
+        annotations:
+          summary: "Guitar v3 Low Data Volume"
+          description: "KPI data collection rate is {{ $value }} cases/sec, below expected. Check log ingestion."

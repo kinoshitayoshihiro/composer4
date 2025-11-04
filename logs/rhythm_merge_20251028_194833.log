@@ -1,0 +1,54 @@
+[2025-10-28 19:48:33] ==========================================
+[2025-10-28 19:48:33] 🔗 Merging Rhythm AI Datasets
+[2025-10-28 19:48:33] ==========================================
+[2025-10-28 19:48:33] Base Dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3
+[2025-10-28 19:48:33] Output Dir: output/rhythm_ai
+[2025-10-28 19:48:33] Log File: logs/rhythm_merge_20251028_194833.log
+[2025-10-28 19:48:33] 
+[2025-10-28 19:48:33] 📂 1. Verifying input Parquet files...
+[2025-10-28 19:48:33] ✅ drumclean parquet found
+[2025-10-28 19:48:33] ✅ groove parquet found
+[2025-10-28 19:48:33] ✅ E-GMD parquet found
+[2025-10-28 19:48:33] 
+[2025-10-28 19:48:33] 🔗 2. Merging Parquet files...
+📂 Loading drumclean: output/rhythm_ai/drumclean_stage2/rhythm_features.parquet
+   Records: 51248
+📂 Loading groove: output/rhythm_ai/groove_stage2/rhythm_features.parquet
+   Records: 827
+📂 Loading E-GMD: output/rhythm_ai/egmd_stage2/rhythm_features.parquet
+   Records: 4547
+
+🔗 Merging datasets...
+   Total records (before dedup): 56622
+   Total records (after dedup): 35511
+✅ All required columns present
+✅ Merged parquet saved: output/rhythm_ai/rhythm_features_merged.parquet
+
+📊 Dataset Statistics:
+   drumclean: 51248
+   groove:    827
+   E-GMD:     4547
+   TOTAL:     35511
+
+   Columns: 24
+   Family labels: {'STRAIGHT_8': 18298, 'SWING_8': 16749, 'SWING_16': 322, 'STRAIGHT_16': 142}
+[2025-10-28 19:48:35] 
+[2025-10-28 19:48:35] ✅ Dataset Merge COMPLETE
+[2025-10-28 19:48:35] 
+[2025-10-28 19:48:35] 🚀 3. Training ML model on merged dataset...
+📂 Loaded 35511 records
+   Features: 19
+   Target: family_label
+
+🚀 Training model...
+   XGBoost failed: No module named 'xgboost'
+   Falling back to LogisticRegression
+Traceback (most recent call last):
+  File "<stdin>", line 24, in <module>
+ModuleNotFoundError: No module named 'xgboost'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<stdin>", line 43, in <module>
+ModuleNotFoundError: No module named 'sklearn'

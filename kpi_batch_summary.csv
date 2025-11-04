@@ -1,0 +1,2 @@
+song_package,total_bars,pass_count,fail_count,warning_count,pass_rate,fail_rate,warn_rate,section_override_count,safe_kit_count
+suno_project/song_001,150,149,1,0,0.9933333333333333,0.006666666666666667,0.0,0,1

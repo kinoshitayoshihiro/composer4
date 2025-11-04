@@ -29,3 +29,7 @@ TorchCRF
 
 # Chord Recognition (Deep Learning)
 madmom>=0.16.1  # CNN-based Chord Recognition, 85-90% accuracy
+
+# Audio Features Enhancement (Phase A/B)
+pyloudnorm>=0.1.1  # EBU R128 LUFS loudness measurement
+scipy>=1.11.4  # For butterworth filters (librosa_enhanced hat_density)

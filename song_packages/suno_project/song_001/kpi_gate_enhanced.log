@@ -1,0 +1,23 @@
+📖 Loading MIDI: song_packages/suno_project/song_001/drums.mid
+   Hat pitches: [42, 43, 44, 46, 51, 52, 53, 59, 82]
+   bars.parquet loaded: 150 bars
+   Epsilon: 20.0ms
+   Use downbeats: True
+   Total bars: 150
+   Gate config: configs/gate_prod.yaml
+
+📊 Validation Statistics:
+   Total bars: 150
+   Pass: 149 (99.3%)
+   Fail: 1 (0.7%)
+   Warning: 0
+
+🔍 Fail原因Top10:
+     1 (  0.7%): density too low (relative):
+     1 (  0.7%): backbeat_strength too high:
+     1 (  0.7%): notes_per_bar too low:
+
+✅ Saved validation report: song_packages/suno_project/song_001/kpi_gate_report_enhanced.json
+
+⚠️  1 bars failed KPI Gate
+   Recommend Safe-Kit fallback for failed bars

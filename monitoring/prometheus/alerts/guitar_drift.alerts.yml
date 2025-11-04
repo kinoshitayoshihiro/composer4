@@ -1,0 +1,150 @@
+# guitar_drift.alerts.yml
+# データドリフト検知用のAlert Rules
+#
+# Purpose: 週次基準に対する急落を検知
+#
+# 合格基準:
+# - p10_24h が p10_7d の 90%未満 → 黄色（warning）
+# - p10_24h が p10_7d の 80%未満 → 赤（critical）
+
+groups:
+- name: guitar_drift_alerts
+  rules:
+  # Accent Score ドリフト（警告）
+  - alert: GuitarAccentP10DriftWarning
+    expr: guitar_v3_accent_drift_ratio < 0.90
+    for: 6h  # 6時間継続で発火
+    labels:
+      severity: warning
+      instrument: guitar
+      metric: accent_score
+    annotations:
+      summary: "Guitar v3 Accent p10 drift detected (>10% drop vs 7d baseline)"
+      description: |
+        24h p10: {{ $value | humanize }}x of 7d baseline
+        Current: {{ printf "guitar_v3_accent_p10_24h" | query | first | value | humanize }}
+        Baseline (7d): {{ printf "guitar_v3_accent_p10_7d" | query | first | value | humanize }}
+      runbook_url: "https://internal.docs/runbooks/guitar-drift-response"
+  
+  # Accent Score ドリフト（重大）
+  - alert: GuitarAccentP10DriftCritical
+    expr: guitar_v3_accent_drift_ratio < 0.80
+    for: 3h  # 3時間継続で発火
+    labels:
+      severity: critical
+      instrument: guitar
+      metric: accent_score
+    annotations:
+      summary: "Guitar v3 Accent p10 SEVERE drift (>20% drop vs 7d baseline)"
+      description: |
+        24h p10 dropped to {{ $value | humanize }}x of 7d baseline
+        IMMEDIATE ACTION REQUIRED
+        1. Check recent CSV logs (last 24h)
+        2. Verify gate_prod.yaml changes
+        3. Consider v3_ratio reduction
+  
+  # Chord Fit ドリフト（警告）
+  - alert: GuitarChordFitP10DriftWarning
+    expr: guitar_v3_chordfit_drift_ratio < 0.90
+    for: 6h
+    labels:
+      severity: warning
+      instrument: guitar
+      metric: chord_fit
+    annotations:
+      summary: "Guitar v3 Chord Fit p10 drift detected (>10% drop vs 7d baseline)"
+      description: |
+        24h p10: {{ $value | humanize }}x of 7d baseline
+        Current: {{ printf "guitar_v3_chordfit_p10_24h" | query | first | value | humanize }}
+        Baseline (7d): {{ printf "guitar_v3_chordfit_p10_7d" | query | first | value | humanize }}
+  
+  # Chord Fit ドリフト（重大）
+  - alert: GuitarChordFitP10DriftCritical
+    expr: guitar_v3_chordfit_drift_ratio < 0.80
+    for: 3h
+    labels:
+      severity: critical
+      instrument: guitar
+      metric: chord_fit
+    annotations:
+      summary: "Guitar v3 Chord Fit p10 SEVERE drift (>20% drop vs 7d baseline)"
+      description: |
+        24h p10 dropped to {{ $value | humanize }}x of 7d baseline
+        Check for recent pattern updates or gate config changes
+  
+  # Latency 急増（警告）
+  - alert: GuitarLatencyP95Spike
+    expr: guitar_v3_latency_p95_24h > guitar_v3_latency_p95_7d * 1.5
+    for: 2h
+    labels:
+      severity: warning
+      instrument: guitar
+      metric: latency
+    annotations:
+      summary: "Guitar v3 Latency p95 spike (>50% increase vs 7d baseline)"
+      description: |
+        24h p95 latency: {{ printf "guitar_v3_latency_p95_24h" | query | first | value | humanize }}ms
+        Baseline (7d): {{ printf "guitar_v3_latency_p95_7d" | query | first | value | humanize }}ms
+        Check for resource contention or pattern cache issues
+  
+  # 絶対値ゲート（念のため）
+  - alert: GuitarAccentP10BelowMinimum
+    expr: guitar_v3_accent_p10_24h < 0.50
+    for: 4h
+    labels:
+      severity: critical
+      instrument: guitar
+      metric: accent_score
+    annotations:
+      summary: "Guitar v3 Accent p10 below absolute minimum (0.50)"
+      description: |
+        Current 24h p10: {{ $value | humanize }}
+        Minimum acceptable: 0.50
+        System quality degradation detected
+  
+  - alert: GuitarChordFitP10BelowMinimum
+    expr: guitar_v3_chordfit_p10_24h < 0.30
+    for: 4h
+    labels:
+      severity: critical
+      instrument: guitar
+      metric: chord_fit
+    annotations:
+      summary: "Guitar v3 Chord Fit p10 below absolute minimum (0.30)"
+      description: |
+        Current 24h p10: {{ $value | humanize }}
+        Minimum acceptable: 0.30
+        Review recent pattern changes
+
+# Auto-Recovery 関連アラート
+- name: guitar_auto_recovery_alerts
+  rules:
+  # Fallback Storm（1時間に3回以上切替）
+  - alert: GuitarAutoRecoveryFallbackStorm
+    expr: rate(auto_recovery_switches_v3_to_v1_total[1h]) > 3
+    for: 10m
+    labels:
+      severity: warning
+      instrument: guitar
+      component: auto_recovery
+    annotations:
+      summary: "Guitar Auto-Recovery fallback storm detected (>3 switches/hour)"
+      description: |
+        Fallback rate: {{ $value | humanize }} switches/hour
+        Check for configuration oscillation or data quality issues
+        Consider increasing cooldown period
+  
+  # クールダウン中の切替（異常）
+  - alert: GuitarAutoRecoverySwitchDuringCooldown
+    expr: auto_recovery_cooldown_active == 1 AND increase(auto_recovery_switches_v3_to_v1_total[1m]) > 0
+    for: 1m
+    labels:
+      severity: critical
+      instrument: guitar
+      component: auto_recovery
+    annotations:
+      summary: "Guitar Auto-Recovery switch occurred during cooldown (BUG)"
+      description: |
+        This should never happen - indicates a logic error
+        Cooldown remaining: {{ printf "auto_recovery_cooldown_remaining" | query | first | value }}
+        INVESTIGATE IMMEDIATELY

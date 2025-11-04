@@ -1,0 +1,66 @@
+# HELP guitar_v3_kpi_total_cases Total number of evaluated cases
+# TYPE guitar_v3_kpi_total_cases gauge
+guitar_v3_kpi_total_cases 5120
+
+# HELP guitar_v3_accent_score_mean Mean accent score (0-1)
+# TYPE guitar_v3_accent_score_mean gauge
+guitar_v3_accent_score_mean 0.9191
+
+# HELP guitar_v3_accent_score_below_threshold Count of cases below threshold
+# TYPE guitar_v3_accent_score_below_threshold gauge
+guitar_v3_accent_score_below_threshold{threshold="0.65"} 0
+guitar_v3_accent_score_below_threshold{threshold="0.70"} 0
+
+# HELP guitar_v3_chord_fit_mean Mean chord fit score (0-1)
+# TYPE guitar_v3_chord_fit_mean gauge
+guitar_v3_chord_fit_mean 0.8359
+
+# HELP guitar_v3_chord_fit_below_threshold Count of cases below threshold
+# TYPE guitar_v3_chord_fit_below_threshold gauge
+guitar_v3_chord_fit_below_threshold{threshold="0.60"} 1680
+guitar_v3_chord_fit_below_threshold{threshold="0.65"} 1680
+
+# HELP guitar_v3_ml_usage_rate ML usage rate (0-1)
+# TYPE guitar_v3_ml_usage_rate gauge
+guitar_v3_ml_usage_rate 1.0000
+
+# HELP guitar_v3_safety_fallback_rate Safety fallback rate (0-1)
+# TYPE guitar_v3_safety_fallback_rate gauge
+guitar_v3_safety_fallback_rate 0.0000
+
+# HELP guitar_v3_top1_proba_mean Mean top-1 probability
+# TYPE guitar_v3_top1_proba_mean gauge
+guitar_v3_top1_proba_mean 0.3230
+
+# HELP guitar_v3_section_accent_score Mean accent score by section
+# TYPE guitar_v3_section_accent_score gauge
+guitar_v3_section_accent_score{section="intro"} 0.8832
+
+# HELP guitar_v3_section_ml_usage_rate ML usage rate by section
+# TYPE guitar_v3_section_ml_usage_rate gauge
+guitar_v3_section_ml_usage_rate{section="intro"} 1.0000
+
+# HELP guitar_v3_section_accent_score Mean accent score by section
+# TYPE guitar_v3_section_accent_score gauge
+guitar_v3_section_accent_score{section="verse"} 0.9350
+
+# HELP guitar_v3_section_ml_usage_rate ML usage rate by section
+# TYPE guitar_v3_section_ml_usage_rate gauge
+guitar_v3_section_ml_usage_rate{section="verse"} 1.0000
+
+# HELP guitar_v3_section_accent_score Mean accent score by section
+# TYPE guitar_v3_section_accent_score gauge
+guitar_v3_section_accent_score{section="chorus"} 0.9565
+
+# HELP guitar_v3_section_ml_usage_rate ML usage rate by section
+# TYPE guitar_v3_section_ml_usage_rate gauge
+guitar_v3_section_ml_usage_rate{section="chorus"} 1.0000
+
+# HELP guitar_v3_section_accent_score Mean accent score by section
+# TYPE guitar_v3_section_accent_score gauge
+guitar_v3_section_accent_score{section="bridge"} 0.9016
+
+# HELP guitar_v3_section_ml_usage_rate ML usage rate by section
+# TYPE guitar_v3_section_ml_usage_rate gauge
+guitar_v3_section_ml_usage_rate{section="bridge"} 1.0000
+

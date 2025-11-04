@@ -1,0 +1,35 @@
+======================================================================
+🔍 Rhythm AI Stage2 Smoke Checks
+======================================================================
+
+📂 Loaded: output/rhythm_ai/stage2/rhythm_features_passed.parquet
+   Total records: 5125
+⚠️  3/4 × STRAIGHT_8: 6 samples (< 50) → 除外
+⚠️  4/4 × SWING_16: 44 samples (< 50) → 除外
+⚠️  5/4 × STRAIGHT_8: 4 samples (< 50) → 除外
+
+✅ Check 1: Time Sig × Family Distribution
+   Total combinations: 9
+   Valid (≥50):  6
+   Dropped (<50): 3
+   Records before: 5125
+   Records after:  5071
+
+✅ Check 2: Bar/Tempo Consistency
+   Records before: 5071
+   Records after:  5071
+   Dropped (invalid): 0
+
+✅ Check 3: Pattern Similarity De-duplication
+   Records before: 5071
+   Records after:  49
+   Duplicates removed: 5022
+   Similarity threshold: 0.98
+
+💾 Saved: output/rhythm_ai/stage2/rhythm_features_cleaned.parquet
+   Final records: 49
+💾 Summary: output/rhythm_ai/stage2/rhythm_smoke_checks_summary.json
+
+======================================================================
+✅ Smoke checks completed!
+======================================================================

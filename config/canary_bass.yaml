@@ -1,0 +1,283 @@
+# Canary Deployment Configuration: Bass ML Inference
+# Phase: 26.2 (Bass ML基盤展開)
+# Created: 2025-10-28
+
+# Canary展開スケジュール（4週間段階的ロールアウト）
+deployment:
+  instrument: "bass"
+  phase: "26.2"
+  schedule:
+    week_1:
+      name: "Shadow Deployment (5% logging)"
+      traffic_split:
+        shadow: 0.05
+        production: 0.95
+      feature_flags:
+        ml_inference_enabled: true
+        ml_serving_enabled: false  # Logging only
+        auto_recovery_enabled: false
+      success_criteria:
+        - "Shadow KPI ≥ Production KPI"
+        - "ML usage ≥ 70%"
+        - "No critical errors"
+    
+    week_2:
+      name: "Canary 5% (serving)"
+      traffic_split:
+        shadow: 0.05
+        canary: 0.05
+        production: 0.90
+      feature_flags:
+        ml_inference_enabled: true
+        ml_serving_enabled: true
+        auto_recovery_enabled: true
+      success_criteria:
+        - "Canary KPI ≥ Production KPI"
+        - "Latency p95 < 100ms"
+        - "Error rate < 1%"
+        - "ML usage ≥ 70%"
+    
+    week_3:
+      name: "Canary 20% (serving)"
+      traffic_split:
+        canary: 0.20
+        production: 0.80
+      feature_flags:
+        ml_inference_enabled: true
+        ml_serving_enabled: true
+        auto_recovery_enabled: true
+      success_criteria:
+        - "Canary KPI ≥ Production KPI"
+        - "Statistical significance (1000+ samples, 95% confidence)"
+        - "Latency p95 < 100ms"
+        - "Error rate < 1%"
+    
+    week_4:
+      name: "Production 100% (full rollout)"
+      traffic_split:
+        production: 1.00
+      feature_flags:
+        ml_inference_enabled: true
+        ml_serving_enabled: true
+        auto_recovery_enabled: true
+      success_criteria:
+        - "All KPIs maintained"
+        - "No rollback events for 7 days"
+
+# KPI監視対象（Bass固有）
+kpi_gates:
+  root_hit_rate:
+    min_threshold: 0.85
+    description: "ルート音命中率（重要拍でのルート音使用率）"
+    alert_on_violation: true
+  
+  chord_fit:
+    min_threshold: 0.70
+    description: "コード適合度"
+    alert_on_violation: true
+  
+  density_abs:
+    max_threshold: 2.0
+    description: "目標密度との絶対差"
+    alert_on_violation: true
+  
+  ml_used:
+    min_threshold: 0.70
+    description: "ML使用率（Safe-Kit以外）"
+    alert_on_violation: true
+
+# Safety閾値（ML推論）
+safety:
+  min_proba: 0.15   # Top-1確率最小値（これ以下でSafe-Kit発火）
+  min_margin: 0.10  # Top-1/Top-2マージン最小値（これ以下でSafe-Kit発火）
+
+# Auto-Recovery設定
+auto_recovery:
+  enabled: true
+  window_size: 64          # 監視ウィンドウサイズ（bars）
+  max_violations: 10       # 許容違反回数
+  cooldown_bars: 16        # クールダウン期間（bars）
+  recovery_action: "safe_kit_fallback"
+  notify_on_recovery: true
+  collect_metrics: true
+  metrics_prefix: "bass_auto_recovery"
+
+# Prometheus Alerting Rules
+alerting:
+  rules:
+    - name: "BassKPIViolation"
+      expr: "bass_root_hit_rate < 0.85 OR bass_chord_fit < 0.70 OR bass_density_abs > 2.0"
+      for: "5m"
+      severity: "warning"
+      annotations:
+        summary: "Bass KPI violation detected"
+        description: "Bass KPI out of range. Check root_hit_rate/chord_fit/density."
+    
+    - name: "BassMLUsageLow"
+      expr: "rate(bass_ml_used_total[15m]) < 0.70"
+      for: "10m"
+      severity: "warning"
+      annotations:
+        summary: "Bass ML usage below 70%"
+        description: "Too many Safe-Kit fallbacks. Check ML model performance."
+    
+    - name: "BassLatencyHigh"
+      expr: "histogram_quantile(0.95, bass_recommend_duration_seconds_bucket) > 0.100"
+      for: "5m"
+      severity: "critical"
+      annotations:
+        summary: "Bass recommendation latency p95 > 100ms"
+        description: "Performance degradation detected. Investigate bottlenecks."
+    
+    - name: "BassAutoRecoveryFrequent"
+      expr: "rate(bass_auto_recovery_triggered_total[30m]) > 0.05"
+      for: "15m"
+      severity: "warning"
+      annotations:
+        summary: "Bass Auto-Recovery triggered frequently"
+        description: "Check KPI violation patterns. Model retraining may be required."
+    
+    - name: "BassSafeKitFallbackHigh"
+      expr: "rate(bass_safe_kit_fallback_total[5m]) > 0.10"
+      for: "10m"
+      severity: "warning"
+      annotations:
+        summary: "Bass Safe-Kit fallback rate > 10%"
+        description: "ML model confidence too low. Review min_proba/min_margin thresholds."
+    
+    - name: "BassGrooveMismatch"
+      expr: "rate(bass_groove_mismatch_total[10m]) > 0.05"
+      for: "10m"
+      severity: "info"
+      annotations:
+        summary: "Bass groove style mismatch detected"
+        description: "Check groove_style parameter (straight/swing/shuffle)."
+
+# Grafana Dashboard Panels（Bass固有）
+grafana:
+  dashboard_url: "http://grafana.company.com/d/bass-ml-canary"
+  panels:
+    - name: "Bass Root Hit Rate (Canary vs Production)"
+      query: "bass_root_hit_rate{deployment=\"canary\"} vs bass_root_hit_rate{deployment=\"production\"}"
+      threshold: 0.85
+    
+    - name: "Bass Chord Fit (Canary vs Production)"
+      query: "bass_chord_fit{deployment=\"canary\"} vs bass_chord_fit{deployment=\"production\"}"
+      threshold: 0.70
+    
+    - name: "Bass Density (Canary vs Production)"
+      query: "bass_density_actual{deployment=\"canary\"} vs bass_density_actual{deployment=\"production\"}"
+      threshold: "target ± 2.0"
+    
+    - name: "Bass ML Usage Rate"
+      query: "rate(bass_ml_used_total[5m])"
+      threshold: 0.70
+    
+    - name: "Bass Groove Style Distribution"
+      query: "rate(bass_groove_style_total{style=\"straight\"}[5m]), rate(bass_groove_style_total{style=\"swing\"}[5m]), rate(bass_groove_style_total{style=\"shuffle\"}[5m])"
+      threshold: "N/A (monitoring only)"
+    
+    - name: "Bass Recommendation Latency (p50, p95, p99)"
+      query: |
+        histogram_quantile(0.50, bass_recommend_duration_seconds_bucket),
+        histogram_quantile(0.95, bass_recommend_duration_seconds_bucket),
+        histogram_quantile(0.99, bass_recommend_duration_seconds_bucket)
+      threshold: "p95 < 100ms"
+    
+    - name: "Bass Auto-Recovery Events"
+      query: "rate(bass_auto_recovery_triggered_total[30m])"
+      threshold: "< 0.05 events/sec"
+    
+    - name: "Bass Safe-Kit Fallback Rate"
+      query: "rate(bass_safe_kit_fallback_total[5m])"
+      threshold: "< 0.10 (10%)"
+
+# Rollback計画
+rollback:
+  trigger_conditions:
+    - "Canary KPI < Production KPI (95% confidence, 1000+ samples)"
+    - "Error rate > 5%"
+    - "Latency p95 > 150ms"
+    - "Manual trigger by SRE"
+  
+  procedure:
+    - step: 1
+      action: "Disable ml_serving_enabled flag"
+      rollback_to: "Production (Rule-based)"
+    
+    - step: 2
+      action: "Notify engineering team via PagerDuty"
+      priority: "P2"
+    
+    - step: 3
+      action: "Collect debug logs and ML model diagnostics"
+      retention: "30 days"
+    
+    - step: 4
+      action: "Post-mortem within 48 hours"
+      template: "docs/postmortem_template.md"
+
+# テストデータセット（Canary検証用）
+test_dataset:
+  name: "bass_canary_test_v1"
+  size: 5000
+  sections:
+    - Chorus: 2000
+    - Verse: 1500
+    - Bridge: 800
+    - Intro: 400
+    - Outro: 300
+  chord_distribution:
+    - maj: 0.40
+    - min: 0.30
+    - 7: 0.15
+    - maj7: 0.10
+    - sus4: 0.03
+    - dim: 0.01
+    - aug: 0.01
+  groove_distribution:
+    - straight: 0.65
+    - swing: 0.20
+    - shuffle: 0.15
+  tempo_range: [60, 180]
+  energy_range: [0.0, 1.0]
+
+# Success Metrics（最終評価）
+success_metrics:
+  kpi_improvement:
+    target: "Canary KPI ≥ Production KPI (95% confidence)"
+    measurement_period: "Week 3-4"
+  
+  ml_usage:
+    target: "≥ 70%"
+    measurement_period: "All weeks"
+  
+  latency:
+    target: "p95 < 100ms"
+    measurement_period: "Week 2-4"
+  
+  error_rate:
+    target: "< 1%"
+    measurement_period: "All weeks"
+  
+  safe_kit_fallback_rate:
+    target: "< 10%"
+    measurement_period: "Week 2-4"
+  
+  auto_recovery_rate:
+    target: "< 5% (of total generations)"
+    measurement_period: "Week 2-4"
+  
+  groove_coverage:
+    target: "All 3 groove styles (straight/swing/shuffle) supported"
+    measurement_period: "Week 2-4"
+
+# Notes
+notes: |
+  - Drumsの成功（Phase 25）を踏まえ、同様の4週間Canaryスケジュールを採用
+  - Bass固有のKPI（root_hit_rate ≥ 0.85, chord_fit ≥ 0.70）に注目
+  - Groove Style対応（straight/swing/shuffle）により多様なベースラインスタイルを実現
+  - Safe-Kitは6種類（Whole Note Root, Quarter Note Root, Root-Fifth, Walking Bass, Shuffle Triplet, Syncopated Eighth）
+  - ML Model: ml/stage2_bass_v3_ml.pickle（XGBoost/LogReg）
+  - Safe-Kit Config: config/safe_kit_bass.yaml
+  - Groove Mismatchアラートを追加（groove_styleパラメータ検証）

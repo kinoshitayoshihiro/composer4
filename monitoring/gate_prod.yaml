@@ -1,0 +1,162 @@
+# gate_prod.yaml - Production KPI Gate Configuration
+#
+# Purpose: Single source of truth for all KPI thresholds
+# - Shadow Traffic routing decisions
+# - Grafana dashboard thresholds (red/yellow/green)
+# - Auto-Recovery breach detection
+#
+# Last Updated: 2025-10-27
+
+# Default thresholds (used when no section-specific override exists)
+default:
+  accent_min: 0.60      # Minimum accent score (0.0-1.0)
+  chord_min: 0.40       # Minimum chord fit score (0.0-1.0)
+  density_min: 0.0      # Minimum density (quarter-length based)
+
+# Future: Distribution-based gates (percentile-based, more robust)
+# Uncomment to switch from mean-based to distribution-based thresholds
+# default_p10:
+#   accent_p10_min: 0.50   # p10 accent score must be >= 0.50
+#   chord_p10_min: 0.30    # p10 chord fit must be >= 0.30
+# 
+# per_section_p10:
+#   Chorus:
+#     accent_p10_min: 0.60
+#     chord_p10_min: 0.35
+
+# Section-specific overrides
+# Higher standards for prominent sections (Chorus)
+per_section:
+  Chorus:
+    accent_min: 0.70    # Chorus needs stronger accent alignment
+    chord_min: 0.45     # Slightly higher chord fit requirement
+    density_min: 0.0
+  
+  Verse:
+    accent_min: 0.65    # Moderate accent requirement
+    chord_min: 0.40     # Standard chord fit
+    density_min: 0.0
+  
+  Bridge:
+    accent_min: 0.65
+    chord_min: 0.40
+    density_min: 0.0
+  
+  Intro:
+    accent_min: 0.60    # More lenient for intro
+    chord_min: 0.35
+    density_min: 0.0
+  
+  Outro:
+    accent_min: 0.60    # More lenient for outro
+    chord_min: 0.35
+    density_min: 0.0
+  
+  Pre-Chorus:
+    accent_min: 0.65
+    chord_min: 0.40
+    density_min: 0.0
+
+# Auto-Recovery parameters
+# Conservative settings to avoid false positives with short song fragments
+auto_recovery:
+  window_size: 64       # Observe 64 bars before making decisions (was 32)
+  threshold: 8          # Allow 8 breaches in window (~12.5%, was 10 ~15.6%)
+  cooldown: 16          # Wait 16 bars after version switch before next switch
+  
+  # Ratio-based fallback/recovery (more stable than count-based)
+  fallback_ratio: 0.20  # Fallback to v1 if breach rate > 20% (in addition to count threshold)
+  recovery_ratio: 0.05  # Recover to v3 if breach rate < 5% (in addition to zero-breach check)
+  
+  # Section-specific ratio overrides (optional, for fine-tuning)
+  per_section_ratio:
+    Chorus:
+      fallback_ratio: 0.15  # Stricter for Chorus (15%)
+    Verse:
+      fallback_ratio: 0.20  # Standard
+    Bridge:
+      fallback_ratio: 0.20
+  
+  # 2-stage fallback hierarchy (Phase 23.5)
+  # Priority: safe-kit → v1（突然のキャラ変化を緩和）
+  fallback_priority:
+    - safe-kit  # Stage 1: Safe-Kit patterns first
+    - v1        # Stage 2: Legacy v1 if safe-kit also fails
+
+# Grafana alert thresholds (aligned with gate values)
+# Use these exact values in Grafana alert rules
+grafana_alerts:
+  accent_p10_critical: 0.50   # RED: p10 Accent Score < 0.50
+  accent_p10_warning: 0.60    # YELLOW: p10 < default accent_min
+  
+  chord_p10_critical: 0.30    # RED: p10 Chord Fit < 0.30
+  chord_p10_warning: 0.40     # YELLOW: p10 < default chord_min
+  
+  latency_p95_critical: 100   # RED: p95 latency > 100ms
+  latency_p95_warning: 50     # YELLOW: p95 > 50ms
+  
+  error_rate_critical: 0.05   # RED: Error rate > 5%
+  error_rate_warning: 0.01    # YELLOW: Error rate > 1%
+
+# Safety threshold (low probability guard)
+# Phase 23.5強化版: section別カスタマイズ + Histogram監視
+safety:
+  min_proba: 0.15       # If top-1 proba < 0.15, fallback to safe-kit (not v1)
+  min_margin: 0.08      # If (p1 - p2) < 0.08, fallback to safe-kit (ambiguous prediction)
+  fallback_target: "safe-kit"  # Use safe-kit, not legacy v1
+  
+  # Section別Safety閾値（Chorusはより厳格に）
+  by_section:
+    Chorus:
+      min_proba: 0.18   # Chorus: 18% (stricter)
+      min_margin: 0.10  # Margin: 10% (stricter)
+    Verse:
+      min_proba: 0.15   # Verse: default
+      min_margin: 0.08
+    Bridge:
+      min_proba: 0.15
+      min_margin: 0.08
+    Intro:
+      min_proba: 0.12   # Intro: more lenient (experimental)
+      min_margin: 0.06
+
+# Chord Quality別テンション許容設定（Phase 23.5）
+# Dominant 7thコード専用拡張（9th, 13thを許容）
+chord_quality_config:
+  "7":  # Dominant 7th
+    allowed_tensions: [9, 13]  # 9th, 13th OK
+    avoid_tensions: [11]        # Natural 11th avoid (3rd+11th clash)
+    voicing_preference: ["R", "3", "m7", "9"]  # 推奨ボイシング
+  
+  "maj7":  # Major 7th
+    allowed_tensions: [9, 13]
+    avoid_tensions: []
+    voicing_preference: ["R", "M3", "M7"]
+  
+  "min7":  # Minor 7th
+    allowed_tensions: [9, 11]
+    avoid_tensions: []
+    voicing_preference: ["R", "m3", "m7"]
+  
+  "sus4":  # Suspended 4th
+    allowed_tensions: []
+    avoid_tensions: [3]  # 3rd prohibited in sus4
+    voicing_preference: ["R", "4", "5"]
+
+# Metadata tracking (reproducibility)
+metadata:
+  required_fields:
+    - run_id           # UUID for execution session
+    - git_sha          # Git commit SHA (short)
+    - model_sha256     # Model pickle SHA256 (first 16 chars)
+    - song_id          # Unique song identifier
+  
+  log_destinations:
+    - csv              # CSV log file
+    - prometheus       # Prometheus labels
+
+# Notes:
+# - All thresholds are inclusive (>=)
+# - Auto-Recovery uses default thresholds unless section-specific overrides apply
+# - Grafana dashboard should reference this file's values (no hardcoded numbers)
+# - Update this file via version control (git) only, not manual edits in production

@@ -1,0 +1,47 @@
+groups:
+  - name: piano_kpi_alerts
+    interval: 30s
+    rules:
+      # Primary KPI: chord_fit
+      - alert: piano_chord_fit_low
+        expr: piano_chord_fit < 0.75
+        for: 5m
+        labels:
+          severity: warning
+          instrument: piano
+        annotations:
+          summary: "Piano: chord fit below threshold"
+          description: "Piano chord_fit ({{ $value }}) is below minimum 0.75 for 5 minutes"
+      
+      # Secondary KPI: voicing_quality
+      - alert: piano_voicing_quality_low
+        expr: piano_voicing_quality < 0.70
+        for: 5m
+        labels:
+          severity: warning
+          instrument: piano
+        annotations:
+          summary: "Piano: voicing quality below threshold"
+          description: "Piano voicing_quality ({{ $value }}) is below minimum 0.70 for 5 minutes"
+      
+      # Voice leading smoothness alert
+      - alert: piano_voice_leading_rough
+        expr: piano_voice_leading_smooth < 0.65
+        for: 5m
+        labels:
+          severity: warning
+          instrument: piano
+        annotations:
+          summary: "Piano: voice leading not smooth"
+          description: "Piano voice_leading_smooth ({{ $value }}) is below minimum 0.65 for 5 minutes"
+      
+      # ML Usage Rate alert
+      - alert: piano_ml_usage_rate_low
+        expr: piano_ml_usage_rate < 0.70
+        for: 10m
+        labels:
+          severity: info
+          instrument: piano
+        annotations:
+          summary: "Piano: ML usage rate below target"
+          description: "Piano ML usage rate ({{ $value }}) is below 0.70 for 10 minutes"

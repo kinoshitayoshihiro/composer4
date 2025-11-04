@@ -1,0 +1,38 @@
+groups:
+  - name: drums_kpi_alerts
+    rules:
+      - alert: drums_kick_downbeat_rate_low
+        expr: drums_kick_downbeat_rate < 0.80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kick downbeat rate low"
+          description: "Kick downbeat KPI below 0.80 for 5m"
+
+      - alert: drums_snare_backbeat_acc_low
+        expr: drums_snare_backbeat_acc < 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Snare backbeat accuracy low"
+          description: "Snare backbeat KPI below 0.85 for 5m"
+
+      - alert: drums_hat_density_deviation_high
+        expr: drums_hat_density_abs_dev > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hi-hat density deviation high"
+          description: "Hi-hat density abs deviation above 2.0 for 5m"
+
+      - alert: drums_ml_usage_rate_low
+        expr: drums_ml_usage_rate < 0.90
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "ML usage rate low"
+          description: "ML usage rate below 0.90"
