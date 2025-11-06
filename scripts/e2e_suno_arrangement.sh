@@ -5,6 +5,17 @@
 # Usage: ./scripts/e2e_suno_arrangement.sh <song-dir> [OPTIONS]
 
 set -Eeuo pipefail
+IFS=$'\n\t'
+
+# パッチ4: 再現性Seed環境変数集約
+export PYTHONHASHSEED=0
+export COMPOSER2_GLOBAL_SEED="${COMPOSER2_GLOBAL_SEED:-42}"
+export TF_CPP_MIN_LOG_LEVEL=2
+# NumPy古エイリアス対策（pretty_midi等の依存対策）
+export COMPOSER2_ENABLE_NUMPY_SHIM=1
+
+# 早期失敗・後始末（トラップ）
+trap 'echo "❌ E2E failed at line $LINENO"; exit 1' ERR
 
 # PYTHONPATHを明示的に設定（opsモジュール認識用）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,6 +29,20 @@ if [[ -f "${WORKSPACE_ROOT}/.venv311/bin/activate" ]]; then
 fi
 
 PYTHON_BIN="${PYTHON_BIN:-python3}"
+# Magenta専用Python（別venv、依存衝突回避）
+MAGENTA_PY="${MAGENTA_PY:-${WORKSPACE_ROOT}/.venv311/bin/python}"
+
+# パッチ7: Magenta venv使用ミス検知
+if [[ ! -x "$MAGENTA_PY" ]]; then
+    echo "⚠️  MAGENTA_PY not found or not executable: $MAGENTA_PY"
+    echo "   Using fallback python3, but Bus error risk remains"
+fi
+echo "[ENV] which python: $(which python)"
+echo "[ENV] MAGENTA_PY: $MAGENTA_PY"
+if command -v pip &>/dev/null; then
+    echo "[ENV] pip show note-seq: $(pip show note-seq 2>&1 | grep '^Version:' || echo 'NOT INSTALLED')"
+fi
+
 # fail if Stage1 bars missing（ダミーbars禁止）
 STRICT_STAGE1=${STRICT_STAGE1:-true}
 # Skip heavy stem features generation (use existing files)
@@ -64,9 +89,14 @@ OPTIONS:
   --topk N        : Top-K for rhythm search (default: 5)
   --force-match   : Regenerate matches_rhythm.json
   --use-ml        : (deprecated) Use ML for drums
-  --drums-mode M  : drums source: rule|ml|real (default: rule)
+  --drums-mode M  : drums source: rule|ml|real|magenta (default: rule)
   --kpi           : Run KPI Gate validation after generation
   --dry-run       : Generate plans only, skip MIDI writing
+  --enable-crepe  : Enable CREPE vocal F0 extraction (Phase C)
+  --enable-oaf    : Enable Onsets-and-Frames piano transcription (Phase C)
+  --enable-f0-extract : Enable F0 extraction for bass/lead (Phase D)
+  --enable-timbre-curves : Enable timbre curves for synth/pad (Phase D)
+  --force-regenerate-drums : Force regenerate Magenta drums (delete cached plan)
   --stems-dir P   : 外部 stem ディレクトリを明示指定（例: data/.../stemswav_001）
   --stem-drums-pattern  GLOB : Drums 検出パターン（例: 'stem_wav_*_(Drums).wav'）
   --stem-vocals-pattern GLOB : Vocals検出パターン（例: 'stem_wav_*_(Vocals).wav'）
@@ -76,6 +106,7 @@ EXAMPLES:
   $0 song_packages/suno_project/song_001
   $0 song_packages/suno_project/song_001 --topk 10 --drums-mode ml --kpi
   $0 song_packages/suno_project/song_001 --drums-mode real --kpi
+  $0 song_packages/suno_project/song_001 --drums-mode magenta --kpi
 USAGE
 }
 
@@ -86,6 +117,12 @@ USE_ML=false
 DRUMS_MODE="rule"
 RUN_KPI=false
 DRY_RUN=false
+# NO-OP安全設計：ファイル不在でもスキップされるため既定ONで運用
+ENABLE_CREPE=true
+ENABLE_OAF=true
+ENABLE_F0_EXTRACT=false
+ENABLE_TIMBRE_CURVES=false
+FORCE_REGENERATE_DRUMS=false
 
 # 外部Stemオプション（配列初期化必須）
 declare -a STEMS_ARGS=()
@@ -102,6 +139,12 @@ POLISH_HH_OPEN_RATE="${POLISH_HH_OPEN_RATE:-0.15}"
 POLISH_TOM_FILL="${POLISH_TOM_FILL:-true}"
 POLISH_SNARE_FLAM="${POLISH_SNARE_FLAM:-true}"
 
+# --help処理を最優先（引数なし時より前）
+if [[ $# -ge 1 ]] && [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
 [[ $# -lt 1 ]] && usage && exit 1
 SONG_DIR="$1"; shift || true
 
@@ -113,6 +156,11 @@ while [[ $# -gt 0 ]]; do
     --drums-mode) DRUMS_MODE="${2:-rule}"; shift 2;;
     --kpi) RUN_KPI=true; shift;;
     --dry-run) DRY_RUN=true; shift;;
+    --enable-crepe) ENABLE_CREPE=true; shift;;
+    --enable-oaf) ENABLE_OAF=true; shift;;
+    --enable-f0-extract) ENABLE_F0_EXTRACT=true; shift;;
+    --enable-timbre-curves) ENABLE_TIMBRE_CURVES=true; shift;;
+    --force-regenerate-drums) FORCE_REGENERATE_DRUMS=true; shift;;
     --stems-dir) STEMS_DIR_CLI="${2:-}"; shift 2;;
     --stem-drums-pattern) STEM_DRUMS_PATTERN="${2:-}"; shift 2;;
     --stem-vocals-pattern) STEM_VOCALS_PATTERN="${2:-}"; shift 2;;
@@ -130,6 +178,14 @@ echo "   Use ML       : $USE_ML"
 echo "   Force Match  : $FORCE_MATCH"
 echo "   KPI Gate     : $RUN_KPI"
 echo "   Dry Run      : $DRY_RUN"
+echo "   CREPE        : $ENABLE_CREPE"
+echo "   Onsets-Frames: $ENABLE_OAF"
+echo "   F0 Extract   : $ENABLE_F0_EXTRACT"
+echo "   Timbre Curves: $ENABLE_TIMBRE_CURVES"
+echo "   Force Regen Drums: $FORCE_REGENERATE_DRUMS"
+echo
+echo "   Onsets-Frames: $ENABLE_OAF"
+echo "   Force Regen Drums: $FORCE_REGENERATE_DRUMS"
 echo
 
 # 1. SongPackage読み込み
@@ -338,15 +394,87 @@ else
     echo
 fi
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Phase C: CREPE/Onsets-and-Frames (Optional, NO-OP安全)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if [[ "$ENABLE_CREPE" == "true" ]]; then
+    echo "🎤 Step 1.5: CREPE Vocal F0 Extraction (Phase C)"
+    VOCAL_WAV="$SONG_DIR/vocal.wav"
+    if [[ -f "$VOCAL_WAV" ]]; then
+        "$PYTHON_BIN" ops/crepe_pitch_extract.py \
+            --vocal-wav "$VOCAL_WAV" \
+            --song-package "$SONG_PKG" \
+            --bars "$SONG_DIR/bars.parquet" \
+            --out "$SONG_DIR/vocal_f0_crepe.parquet" \
+            --anchors "$SONG_DIR/lyric_anchors_crepe.json" || echo "⚠️  CREPE failed (NO-OP)"
+        echo "✅ CREPE completed (or NO-OP)"
+    else
+        echo "⚠️  vocal.wav not found, CREPE skipped (NO-OP)"
+    fi
+    echo
+fi
+
+if [[ "$ENABLE_OAF" == "true" ]]; then
+    echo "🎹 Step 1.6: Onsets-and-Frames Piano Transcription (Phase C)"
+    PIANO_WAV="$SONG_DIR/piano.wav"
+    if [[ -f "$PIANO_WAV" ]]; then
+        "$PYTHON_BIN" ops/transcribe_piano_oaf.py \
+            --piano-wav "$PIANO_WAV" \
+            --song-package "$SONG_PKG" \
+            --bars "$SONG_DIR/bars.parquet" \
+            --out-midi "$SONG_DIR/piano_onsets_frames.mid" \
+            --out-stats "$SONG_DIR/piano_onsets_frames.parquet" || echo "⚠️  OaF failed (NO-OP)"
+        echo "✅ Onsets-and-Frames completed (or NO-OP)"
+    else
+        echo "⚠️  piano.wav not found, OaF skipped (NO-OP)"
+    fi
+    echo
+fi
+
+# Phase D: F0 extraction & Timbre curves (完全NO-OP設計)
+if [[ "$ENABLE_F0_EXTRACT" == "true" ]]; then
+    echo "🎸 Step 1.7: F0 Extraction for Bass/Lead (Phase D)"
+    for stem_role in "Bass" "Lead" "Guitar"; do
+        STEM_WAV=$(find "${STEMS_DIR:-$SONG_DIR}" -name "*${stem_role}*.wav" 2>/dev/null | head -1)
+        if [[ -f "$STEM_WAV" ]]; then
+            OUT_F0="$SONG_DIR/${stem_role,,}_f0.parquet"
+            "$PYTHON_BIN" ops/crepe_extract.py \
+                --audio "$STEM_WAV" \
+                --bars "$SONG_DIR/bars.parquet" \
+                --out "$OUT_F0" \
+                --hop-ms 10 --smooth-ms 120 || echo "⚠️  F0 extraction failed for $stem_role (NO-OP)"
+            [[ -f "$OUT_F0" ]] && echo "✅ F0 extracted: $OUT_F0"
+        fi
+    done
+    echo
+fi
+
+if [[ "$ENABLE_TIMBRE_CURVES" == "true" ]]; then
+    echo "🎨 Step 1.8: Timbre Curves for Synth/Pad (Phase D)"
+    for stem_role in "Synth" "Pad" "SynthPad" "Keys"; do
+        STEM_WAV=$(find "${STEMS_DIR:-$SONG_DIR}" -name "*${stem_role}*.wav" 2>/dev/null | head -1)
+        if [[ -f "$STEM_WAV" ]]; then
+            OUT_TIMBRE="$SONG_DIR/${stem_role,,}_timbre.parquet"
+            "$PYTHON_BIN" ops/ddsp_timbre_curves.py \
+                --audio "$STEM_WAV" \
+                --bars "$SONG_DIR/bars.parquet" \
+                --out "$OUT_TIMBRE" \
+                --hop-ms 20 --smooth-ms 200 || echo "⚠️  Timbre curves failed for $stem_role (NO-OP)"
+            [[ -f "$OUT_TIMBRE" ]] && echo "✅ Timbre curves: $OUT_TIMBRE"
+        fi
+    done
+    echo
+fi
+
 # 3. Drums 生成（rule / ml / real）
 CURRENT_STEP="Drums Recommendations"
 DRUMS_REC="$SONG_DIR/drums_recommendations.json"
 
 # Stems特徴ファイルパス（存在チェック）
 STEMS_FEATURES="$SONG_DIR/stem_features.parquet"
-STEMS_ARG=""
+STEMS_ARGS=()
 if [[ -f "$STEMS_FEATURES" ]]; then
-    STEMS_ARG="--stems-features $STEMS_FEATURES"
+    STEMS_ARGS=("--stems-features" "$STEMS_FEATURES")
     echo "🎯 Stems features detected: $STEMS_FEATURES"
 else
     echo "⚠️  No stem_features.parquet found, using bars.parquet only"
@@ -354,13 +482,107 @@ fi
 
 if [[ "$DRUMS_MODE" != "real" ]]; then
   if [[ ! -f "$DRUMS_REC" ]]; then
-    if $USE_ML || [[ "$DRUMS_MODE" == "ml" ]]; then
+    if [[ "$DRUMS_MODE" == "magenta" ]]; then
+        echo "🥁 Step 2: Drums (Magenta GrooVAE humanize)"
+        
+        # 🧹 Purge old drum artifacts (if --force-regenerate-drums)
+        if [[ "$FORCE_REGENERATE_DRUMS" == "true" ]]; then
+            echo "🧹 Force regenerate: purging cached drums artifacts"
+            rm -f "$SONG_DIR/drums_plan.json" \
+                  "$SONG_DIR/drums_plan.log" \
+                  "$SONG_DIR/drums_seed.mid" \
+                  "$SONG_DIR/drums_grooved.mid" \
+                  "$SONG_DIR/drums_plan_seed.json"
+            # 過去のMagenta出力も削除（latest linkを破棄）
+            rm -rf "${WORKSPACE_ROOT}/data/Magenta_Studio/outputs/$(basename "$SONG_DIR")/latest"
+        fi
+        
+        # Magenta出力ディレクトリ（証跡保存用）
+        MAG_OUT_DIR="${WORKSPACE_ROOT}/data/Magenta_Studio/outputs/$(basename "$SONG_DIR")/$(date +%Y%m%d_%H%M%S)"
+        mkdir -p "$MAG_OUT_DIR"
+        echo "📂 Magenta outputs: $MAG_OUT_DIR"
+        
+        # パッチ6: Phase E2E Magenta中間物再利用防止ログ強化
+        echo "   [Magenta] seed/grooved path: $MAG_OUT_DIR"
+        if [[ -d "$MAG_OUT_DIR" ]]; then
+            echo "   [Magenta] will write fresh intermediates here (stale reuse prevented)"
+        fi
+        
+        # rule推薦→MIDI化→GrooVAE→plan再化（安全ルート）
+        DRUMS_REC_SEED="${SONG_DIR}/drums_recommendations_seed.json"
+        
+        # Step 2.1: Rule-based seed生成
+        if ! "$PYTHON_BIN" scripts/recommend_drums.py \
+            --song-package "$SONG_PKG" \
+            --output "$DRUMS_REC_SEED" \
+            --no-ml \
+            --topk "$TOPK" \
+            "${STEMS_ARGS[@]}"; then
+            echo "⚠️  Magenta seed generation failed, falling back to rule"
+            DRUMS_MODE="rule"
+            "$PYTHON_BIN" scripts/recommend_drums.py \
+                --song-package "$SONG_PKG" \
+                --output "$DRUMS_REC" \
+                --no-ml \
+                --topk "$TOPK" \
+                "${STEMS_ARGS[@]}" || exit 1
+        else
+            # Step 2.2: Seed→plan→MIDI
+            "$PYTHON_BIN" scripts/adapt_drums_to_plan.py \
+                --recommendations "$DRUMS_REC_SEED" \
+                --out "$SONG_DIR/drums_plan_seed.json" \
+                --tempo-bpm "$TEMPO_BPM" \
+                2>&1 | tee "$MAG_OUT_DIR/magenta_seed_plan.log" || exit 1
+            
+            "$PYTHON_BIN" scripts/midi_writer.py \
+                --plan "$SONG_DIR/drums_plan_seed.json" \
+                --out "$SONG_DIR/drums_seed.mid" \
+                --bars "$SONG_DIR/bars.parquet" \
+                2>&1 | tee "$MAG_OUT_DIR/magenta_seed_gen.log" || exit 1
+            
+            # Step 2.3: GrooVAE humanize
+            echo "🥁 Magenta Groove: seed→grooved"
+            if "$MAGENTA_PY" "${WORKSPACE_ROOT}/ops/magenta_groove.py" groove \
+                -i "$SONG_DIR/drums_seed.mid" \
+                -o "$SONG_DIR/drums_grooved.mid" \
+                --temp 0.7 \
+                2>&1 | tee "$MAG_OUT_DIR/magenta_groove.log"; then
+                
+                # 証跡退避
+                cp -f "$SONG_DIR/drums_seed.mid" "$MAG_OUT_DIR/"
+                cp -f "$SONG_DIR/drums_grooved.mid" "$MAG_OUT_DIR/"
+                echo "✅ Magenta証跡保存: $MAG_OUT_DIR"
+                
+                # パッチ1: Magenta中間物必須化ガード（stale reuse防止）
+                if [[ ! -s "$MAG_OUT_DIR/drums_seed.mid" || ! -s "$MAG_OUT_DIR/drums_grooved.mid" ]]; then
+                    echo "❌ Magenta intermediates missing (seed/grooved). Abort to avoid stale reuse."
+                    exit 1
+                fi
+                
+                # Step 2.4: Grooved MIDI→plan（adapt_drums_to_planで--grooved-mid使用）
+                "$PYTHON_BIN" scripts/adapt_drums_to_plan.py \
+                    --recommendations "$DRUMS_REC_SEED" \
+                    --grooved-mid "$SONG_DIR/drums_grooved.mid" \
+                    --out "$SONG_DIR/drums_plan.json" \
+                    --tempo-bpm "$TEMPO_BPM" \
+                    --bars "$SONG_DIR/bars.parquet" \
+                    "${STEMS_ARGS[@]}" || exit 1
+                
+                # drums_recommendations.jsonへコピー（後続処理用）
+                cp "$SONG_DIR/drums_plan.json" "$DRUMS_REC"
+                echo "✅ Magenta groove applied successfully"
+            else
+                echo "⚠️  Magenta groove failed, using seed plan"
+                cp "$SONG_DIR/drums_plan_seed.json" "$DRUMS_REC"
+            fi
+        fi
+    elif $USE_ML || [[ "$DRUMS_MODE" == "ml" ]]; then
         echo "🥁 Step 2: Drums Recommendations (ML mode)"
         if ! "$PYTHON_BIN" scripts/recommend_drums.py \
             --song-package "$SONG_PKG" \
             --output "$DRUMS_REC" \
             --topk "$TOPK" \
-            $STEMS_ARG; then
+            "${STEMS_ARGS[@]}"; then
             echo "❌ Drums recommendations failed"
             exit 1
         fi
@@ -371,7 +593,7 @@ if [[ "$DRUMS_MODE" != "real" ]]; then
             --output "$DRUMS_REC" \
             --no-ml \
             --topk "$TOPK" \
-            $STEMS_ARG; then
+            "${STEMS_ARGS[@]}"; then
             echo "❌ Drums recommendations failed"
             exit 1
         fi
@@ -464,6 +686,12 @@ echo "🎸 Step 3 & 🎹 Step 4: Instruments via instrument_midi_to_plan_real.py
 
 # 3-1) Bass
 echo "   ▸ Bass (Stage2 real groove) [STRICT + DEBUG]"
+# Phase E: Bass F0オプション追加
+BASS_F0_OPT=""
+if [[ -f "$SONG_DIR/bass_f0.parquet" ]]; then
+    BASS_F0_OPT="--bass-f0 $SONG_DIR/bass_f0.parquet"
+    echo "      [Phase E] Bass F0 detected: $SONG_DIR/bass_f0.parquet"
+fi
 if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     --role bass \
     "${INSTR_ARGS[@]}" \
@@ -473,6 +701,7 @@ if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     --multi-chords \
     --anchors-strict \
     --follow-drum-density \
+    $BASS_F0_OPT \
     --out "$SONG_DIR/bass_plan.json" \
     2>&1 | tee "$SONG_DIR/bass_plan.log"
 then
@@ -530,12 +759,19 @@ if p<10 or v<8 or d<6:
 
 # 4-1) Piano
 echo "   ▸ Piano (Stage2 real groove) [STRICT + DEBUG]"
+# Phase E: Piano OaFオプション追加
+PIANO_OAF_OPT=""
+if [[ -f "$SONG_DIR/piano_oaf.json" ]]; then
+    PIANO_OAF_OPT="--oaf-piano $SONG_DIR/piano_oaf.json"
+    echo "      [Phase E] Piano OaF detected: $SONG_DIR/piano_oaf.json"
+fi
 if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     --role piano \
     "${INSTR_ARGS[@]}" \
     --voice-leading \
     --multi-chords \
     $PIANO_ACTIVITY \
+    $PIANO_OAF_OPT \
     --anchors-strict \
     --anchors-strict \
     --follow-drum-density \
@@ -560,12 +796,23 @@ if p<10 or v<8 or d<6:
 
 # 4-2) Strings
 echo "   ▸ Strings (Stage2 real groove) [STRICT + DEBUG]"
+# Phase E: Timbre Curvesオプション追加（Synth/Pad代表としてstringsに適用）
+TIMBRE_CURVES_OPT=""
+# Synth/Pad用のtimbre curves検索（複数パターン対応）
+for STEM_ROLE in "synthpad" "synth" "pad" "keys"; do
+    if [[ -f "$SONG_DIR/${STEM_ROLE}_timbre.parquet" ]]; then
+        TIMBRE_CURVES_OPT="--timbral-curves $SONG_DIR/${STEM_ROLE}_timbre.parquet"
+        echo "      [Phase E] Timbre curves detected: $SONG_DIR/${STEM_ROLE}_timbre.parquet"
+        break
+    fi
+done
 if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     --role strings \
     "${INSTR_ARGS[@]}" \
     --voice-leading \
     --multi-chords \
     $STRINGS_ACTIVITY \
+    $TIMBRE_CURVES_OPT \
     --anchors-strict \
     --follow-drum-density \
     --out "$SONG_DIR/strings_plan.json" \
@@ -593,39 +840,42 @@ echo
 if [[ "$DRUMS_MODE" != "real" ]]; then
   echo "🥁 Step 5: Drums Plan (hybrid v2: WAV×MIDI fusion)"
   
-  # Base arguments
-  DRUMS_ARGS="--out $SONG_DIR/drums_plan.json --tempo-bpm $TEMPO_BPM"
-  DRUMS_ARGS="$DRUMS_ARGS --recommendations $DRUMS_REC"
+  # Base arguments (配列形式)
+  DRUMS_ARGS=(
+    "--out" "$SONG_DIR/drums_plan.json"
+    "--tempo-bpm" "$TEMPO_BPM"
+    "--recommendations" "$DRUMS_REC"
+  )
   
   # Hybrid sources (optional, backward compatible)
   if [[ -f "$SONG_DIR/bars.parquet" ]]; then
-    DRUMS_ARGS="$DRUMS_ARGS --bars $SONG_DIR/bars.parquet"
+    DRUMS_ARGS+=("--bars" "$SONG_DIR/bars.parquet")
   fi
   if [[ -f "$SONG_DIR/drums.mid" ]]; then
-    DRUMS_ARGS="$DRUMS_ARGS --stem-midi $SONG_DIR/drums.mid"
+    DRUMS_ARGS+=("--stem-midi" "$SONG_DIR/drums.mid")
     echo "   ✅ Using stem MIDI: drums.mid (weak labels)"
   fi
   if [[ -f "$SONG_DIR/stem_features.parquet" ]]; then
-    DRUMS_ARGS="$DRUMS_ARGS --stems-features $SONG_DIR/stem_features.parquet"
+    DRUMS_ARGS+=("--stems-features" "$SONG_DIR/stem_features.parquet")
     echo "   ✅ Using stem features: density/hat_density"
   fi
   if [[ -f "$SONG_DIR/lyric_anchors.json" ]]; then
-    DRUMS_ARGS="$DRUMS_ARGS --lyric-anchors $SONG_DIR/lyric_anchors.json"
+    DRUMS_ARGS+=("--lyric-anchors" "$SONG_DIR/lyric_anchors.json")
     echo "   ✅ Using lyric anchors: vocal ducking"
   fi
   
   # Open-hat policy
-  DRUMS_ARGS="$DRUMS_ARGS --oh-open-prob 0.25 --oh-close-delay 0.20 --oh-avoid-vocal"
+  DRUMS_ARGS+=("--oh-open-prob" "0.25" "--oh-close-delay" "0.20" "--oh-avoid-vocal")
   
   # Tom fills (enable for dynamic sections)
-  DRUMS_ARGS="$DRUMS_ARGS --enable-fills --fill-when section,cadence --fill-palette mid"
-  DRUMS_ARGS="$DRUMS_ARGS --fill-max-notes 8 --fill-strength 0.9 --fill-crash-next"
+  DRUMS_ARGS+=("--enable-fills" "--fill-when" "section,cadence" "--fill-palette" "mid")
+  DRUMS_ARGS+=("--fill-max-notes" "8" "--fill-strength" "0.9" "--fill-crash-next")
   
   # KPI強化オプション（Backbeat保障 + ライド→タム2段フィル + 軽フラム）
-  DRUMS_ARGS="$DRUMS_ARGS --enforce-backbeat --min-backbeat-vel 86"
-  DRUMS_ARGS="$DRUMS_ARGS --light-flam --fill-l2"
+  DRUMS_ARGS+=("--enforce-backbeat" "--min-backbeat-vel" "86")
+  DRUMS_ARGS+=("--light-flam" "--fill-l2")
   
-  "$PYTHON_BIN" scripts/adapt_drums_to_plan.py $DRUMS_ARGS
+  "$PYTHON_BIN" scripts/adapt_drums_to_plan.py "${DRUMS_ARGS[@]}"
   echo
 fi
 
@@ -1065,16 +1315,19 @@ if [[ -f "$SONG_DIR/full_arrangement.mid" ]] && [[ ! $DRY_RUN = true ]]; then
     echo "🛡️  Step 11: CI Regression Guard (Final Verification)"
     CURRENT_STEP="CI Verification"
     
-    CI_ARGS="--midi $SONG_DIR/full_arrangement.mid --bars $SONG_DIR/bars.parquet"
-    CI_ARGS="$CI_ARGS --tempo-bpm $TEMPO_BPM"
-    CI_ARGS="$CI_ARGS --report $SONG_DIR/ci_verify_report.json"
+    CI_ARGS=(
+        "--midi" "$SONG_DIR/full_arrangement.mid"
+        "--bars" "$SONG_DIR/bars.parquet"
+        "--tempo-bpm" "$TEMPO_BPM"
+        "--report" "$SONG_DIR/ci_verify_report.json"
+    )
     
     # KPIが有効な場合はCI検証にも含める
     if $RUN_KPI; then
-        CI_ARGS="$CI_ARGS --gate-config configs/gate_prod.yaml --kpi-threshold 0.90"
+        CI_ARGS+=("--gate-config" "configs/gate_prod.yaml" "--kpi-threshold" "0.90")
     fi
     
-    if "$PYTHON_BIN" ops/ci_verify_music_package.py $CI_ARGS; then
+    if "$PYTHON_BIN" ops/ci_verify_music_package.py "${CI_ARGS[@]}"; then
         echo "   ✅ CI Verification PASSED"
         echo "      - Tempo meta: Track 0 only"
         echo "      - Downbeats: Match bars.parquet (±1 bar)"

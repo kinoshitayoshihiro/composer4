@@ -240,8 +240,9 @@ def recommend_drums(
     # パス解決（相対パス → 絶対パス）
     base_dir = song_package_path.parent
 
-    # bars.parquet
-    bars_path = base_dir / song_package["artifacts"]["bars"]
+    # bars.parquet (schema v1.1対応: artifacts → paths)
+    bars_key = "paths" if "paths" in song_package else "artifacts"
+    bars_path = base_dir / song_package[bars_key]["bars"]
     bars_df = load_bars(bars_path)
 
     if verbose:
@@ -340,9 +341,24 @@ def recommend_drums(
     if verbose:
         print(f"   Rhythm features: {len(rhythm_features)} patterns")
 
-    # meta情報
-    bpm = song_package["meta"].get("bpm") or song_package["meta"].get("tempo_bpm", 120.0)
-    time_sig = song_package["meta"].get("time_signature", "4/4")
+    # meta情報（schema v1.1対応）
+    if "meta" in song_package:
+        # schema v1.0
+        bpm = song_package["meta"].get("bpm") or song_package["meta"].get("tempo_bpm", 120.0)
+        time_sig = song_package["meta"].get("time_signature", "4/4")
+    else:
+        # schema v1.1
+        time_info = song_package.get("time", {})
+        tempo_info = time_info.get("tempo", {})
+        if isinstance(tempo_info, dict):
+            bpm = tempo_info.get("summary_bpm") or tempo_info.get("bpm_median", 120.0)
+        else:
+            bpm = 120.0
+        time_sig_info = time_info.get("signature", {})
+        if isinstance(time_sig_info, dict):
+            time_sig = f"{time_sig_info.get('num', 4)}/{time_sig_info.get('den', 4)}"
+        else:
+            time_sig = "4/4"
 
     # 推奨処理
     recommendations = {}
