@@ -541,6 +541,34 @@ fi
 echo "✅ Files copied to analysis/"
 
 # ==========================================
+# STEP 7: CREPE/OaF用シンボリックリンク作成
+# ==========================================
+echo ""
+echo "🔗 Step 7: Creating symbolic links for CREPE/OaF"
+
+# vocal.wavシンボリックリンク作成
+VOCAL_STEM=$(find "$STEMS_DIR" -name "*Vocals*.wav" -o -name "*vocals*.wav" -o -name "*vocal*.wav" 2>/dev/null | head -1)
+if [[ -n "$VOCAL_STEM" ]]; then
+    # 相対パスに変換
+    VOCAL_RELATIVE=$(python3 -c "import os; print(os.path.relpath('$VOCAL_STEM', '$SONG_DIR'))")
+    ln -sf "$VOCAL_RELATIVE" "$SONG_DIR/vocal.wav"
+    echo "✅ Created symbolic link: vocal.wav -> $VOCAL_RELATIVE"
+else
+    echo "⚠️  No vocal stem found in $STEMS_DIR"
+fi
+
+# piano.wavシンボリックリンク作成
+PIANO_STEM=$(find "$STEMS_DIR" -name "*Keyboard*.wav" -o -name "*Piano*.wav" -o -name "*piano*.wav" 2>/dev/null | head -1)
+if [[ -n "$PIANO_STEM" ]]; then
+    # 相対パスに変換
+    PIANO_RELATIVE=$(python3 -c "import os; print(os.path.relpath('$PIANO_STEM', '$SONG_DIR'))")
+    ln -sf "$PIANO_RELATIVE" "$SONG_DIR/piano.wav"
+    echo "✅ Created symbolic link: piano.wav -> $PIANO_RELATIVE"
+else
+    echo "⚠️  No piano/keyboard stem found in $STEMS_DIR"
+fi
+
+# ==========================================
 # 完了
 # ==========================================
 echo ""

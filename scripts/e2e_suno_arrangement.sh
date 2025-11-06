@@ -114,7 +114,7 @@ USAGE
 TOPK=5
 FORCE_MATCH=true  # 古いmatches再利用を防止（デフォルトで再探索）
 USE_ML=false
-DRUMS_MODE="rule"
+DRUMS_MODE="magenta"  # ← Magenta Groove デフォルトON
 RUN_KPI=false
 DRY_RUN=false
 # NO-OP安全設計：ファイル不在でもスキップされるため既定ONで運用
