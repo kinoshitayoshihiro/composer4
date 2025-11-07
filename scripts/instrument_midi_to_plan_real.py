@@ -198,6 +198,7 @@ def _apply_activity_density(
     hat_s=None,
     drums_active_s=None,
     follow_drum_density: bool = False,
+    seed: int | None = None,  # パッチ4: seed追加
 ) -> List[Dict]:
     """
     楽器別activityに応じてノート密度を調整（確率的間引き、オプショナルでドラム密度統合）
@@ -209,6 +210,7 @@ def _apply_activity_density(
         hat_s: hat_density Series（オプション）
         drums_active_s: drums_active Series（オプション）
         follow_drum_density: True時、hat/active統合を有効化
+        seed: 再現性確保用seed（Noneの場合はrandom使用）
 
     Returns:
         間引き後のイベントリスト
@@ -219,6 +221,14 @@ def _apply_activity_density(
     bar_activity = dict(activity_s.items())
     hat_dict = dict(hat_s.items()) if hat_s is not None else {}
     active_dict = dict(drums_active_s.items()) if drums_active_s is not None else {}
+
+    # パッチ4: seedがあればRandom、なければrandomモジュール
+    if seed is not None:
+        import random as random_module
+
+        rng = random_module.Random(seed)
+    else:
+        import random as rng
 
     filtered = []
 
@@ -241,8 +251,8 @@ def _apply_activity_density(
             # 0.0<=skip_prob<=0.85に制限（音が消えすぎる事故防止）
             skip_prob = max(0.0, min(0.85, skip_prob))
 
-        # 確率的スキップ
-        if random.random() < skip_prob:
+        # 確率的スキップ（パッチ4: rng使用）
+        if rng.random() < skip_prob:
             continue
 
         filtered.append(e)
@@ -400,11 +410,61 @@ DEG = {
 }
 
 
+# Phase 113: Symbol-first parsing utilities (safety net for root/quality inconsistencies)
+def _normalize_quality_for_symbol(quality: str) -> str:
+    """Normalize quality string for symbol construction."""
+    if quality is None:
+        return ""
+    q = quality.strip()
+    # 69 → 6/9 (notation variation absorption)
+    if q == "69":
+        return "6/9"
+    # madd9 is already compatible with music21
+    if q == "madd9":
+        return "madd9"
+    return q
+
+
+def _symbol_from_event(ev: dict) -> str:
+    """
+    Extract symbol from event, preferring 'symbol' field over root+quality.
+
+    Args:
+        ev: Chord event dict with 'symbol', 'root', 'quality' fields
+
+    Returns:
+        Symbol string suitable for parsing
+    """
+    # Prefer explicit symbol (most reliable)
+    sym = (ev.get("symbol") or "").strip()
+    if sym:
+        return sym
+
+    # Fallback: construct from root + quality
+    root = (ev.get("root") or "").strip()
+    q = _normalize_quality_for_symbol(ev.get("quality") or "")
+
+    # Expand common abbreviations
+    if q == "7alt":
+        return f"{root}7(#9#5)"
+    if q == "7b9":
+        return f"{root}7(b9)"
+
+    return f"{root}{q}" if q else root
+
+
 def parse_chord(sym: str, default_mode="ionian") -> ChordInfo:
     m = CH_RE.match(sym or "C")
     root = NOTE_PC.get(m.group(1).capitalize(), 0) if m else 0
     suf = (m.group(2) or "").strip() if m else ""
     sL = suf.lower()
+
+    # Phase 113: Special handling for 6/9 and madd9
+    # Normalize "69" → "6/9" for consistent interpretation
+    if sL in ["69", "6/9"]:
+        sL = "6/9"
+        suf = "6/9"
+
     # quality
     q = "maj"
     if "sus4" in sL:
@@ -421,10 +481,13 @@ def parse_chord(sym: str, default_mode="ionian") -> ChordInfo:
         q = "aug"
     elif "7" in sL:
         q = "dom"
+    elif "madd9" in sL:  # Phase 113: Explicit madd9 quality
+        q = "min"
     elif "m" in sL and "maj" not in sL:
         q = "min"
     elif "5" in sL and "add" not in sL:
         q = "power"
+
     # 明示テンション（#11, b13, 9 等）
     ten = []
     for k, semi in DEG.items():
@@ -432,6 +495,14 @@ def parse_chord(sym: str, default_mode="ionian") -> ChordInfo:
             continue
         if k in sL.replace("add", ""):
             ten.append(semi)
+
+    # Phase 113: Ensure 6/9 includes both 6th and 9th
+    if "6/9" in sL or "69" in sL:
+        if 9 not in ten:  # 6th (9 semitones)
+            ten.append(9)
+        if 2 not in ten:  # 9th (2 semitones in next octave)
+            ten.append(2)
+
     return ChordInfo(root, q, suf, ten)
 
 
@@ -757,8 +828,9 @@ def chord_segments_by_bar(chordmap: dict, bars: pd.DataFrame, beats_per_bar=4.0)
     mode = normalize_mode(chordmap.get("mode", "ionian"))
     out = []
     bybar = bars.sort_values("bar_index")
+    # Phase 113: Use symbol-first parsing for all chord events
     times = sorted(
-        [(float(e.get("time", 0)), parse_chord(e.get("symbol", "C"), mode)) for e in evs],
+        [(float(e.get("time", 0)), parse_chord(_symbol_from_event(e), mode)) for e in evs],
         key=lambda x: x[0],
     ) or [(0.0, parse_chord("C", mode))]
     for _, r in bybar.iterrows():
@@ -1180,6 +1252,65 @@ def main():
         action="store_true",
         help="hat_density/drums_activeに合わせて密度/velocityを微調整",
     )
+    # NEW: Phase C-3 ガイド入力（NO-OP安全）
+    ap.add_argument(
+        "--f0-guide",
+        type=str,
+        default=None,
+        help="vocal_f0_crepe.parquet (CREPE F0ガイド、Vocal追従用)",
+    )
+    ap.add_argument(
+        "--seed-midi",
+        type=str,
+        default=None,
+        help="piano_onsets_frames.mid (Onsets-and-Frames seed MIDI、Piano構造ガイド用)",
+    )
+    # NEW: Phase E ガイド入力（原曲追従強化）
+    ap.add_argument(
+        "--bass-f0",
+        type=str,
+        default=None,
+        help="bass_f0.parquet (Bass F0ガイド、原曲ベースライン追従用)",
+    )
+    # NEW: EmotionAI/和声AI統合
+    ap.add_argument(
+        "--enable-emotion-ai",
+        action="store_true",
+        help="EmotionAI有効化（section別emotion profile適用）",
+    )
+    ap.add_argument(
+        "--enable-harmony-ai",
+        action="store_true",
+        help="Harmony AI有効化（adaptive chord progression learning）",
+    )
+    ap.add_argument(
+        "--emotion-profile",
+        type=str,
+        default="auto",
+        help="Emotion profile (auto/energetic/calm/happy/sad等)",
+    )
+    ap.add_argument(
+        "--emotion-config",
+        type=str,
+        default=None,
+        help="emotion_mapping.yamlパス（未指定時はconfig/emotion_mapping.yaml）",
+    )
+        type=str,
+        default=None,
+        help="bass_f0.parquet (Phase D: Bass F0抽出、レジスター/スライド/ビブラート反映用)",
+    )
+    ap.add_argument(
+        "--oaf-piano",
+        type=str,
+        default=None,
+        help="piano_oaf.json (Phase D: Piano OaF転写、ボイシング/ペダル反映用)",
+    )
+    ap.add_argument(
+        "--timbral-curves",
+        type=str,
+        default=None,
+        help="synthpad_timbre.parquet (Phase D: 音色カーブ、CC11/CC74/CC1反映用)",
+    )
     # STRICT/DEBUG/RICHNESS オプション
     ap.add_argument("--strict", action="store_true", help="必須コンテキスト欠如時は即エラー終了")
     ap.add_argument("--debug", action="store_true", help="詳細ログをstdoutとJSONに出力")
@@ -1249,21 +1380,232 @@ def main():
             )
     anchors = load_anchors(lyr_p if lyr_p.exists() else None, bpm, bars)
 
+    # Phase C-3: ガイド入力読み込み（NO-OP安全）
+    f0_guide_df = None
+    seed_midi_data = None
+
+    if args.f0_guide:
+        f0_guide_path = Path(args.f0_guide)
+        if f0_guide_path.exists():
+            try:
+                f0_guide_df = pd.read_parquet(f0_guide_path)
+                if args.debug:
+                    print(f"[DEBUG] Loaded F0 guide: {f0_guide_path}")
+                    print(
+                        f"        Frames: {len(f0_guide_df)}, Voiced: {f0_guide_df['voiced'].sum()}"
+                    )
+            except Exception as e:
+                print(f"[WARNING] Failed to load F0 guide: {e}")
+        else:
+            print(f"[WARNING] F0 guide not found: {f0_guide_path}, using NO-OP")
+
+    if args.seed_midi:
+        seed_midi_path = Path(args.seed_midi)
+        if seed_midi_path.exists():
+            try:
+                import pretty_midi
+
+                seed_midi_data = pretty_midi.PrettyMIDI(str(seed_midi_path))
+                if args.debug:
+                    note_count = sum(len(inst.notes) for inst in seed_midi_data.instruments)
+                    print(f"[DEBUG] Loaded seed MIDI: {seed_midi_path}")
+                    print(f"        Notes: {note_count}")
+            except Exception as e:
+                print(f"[WARNING] Failed to load seed MIDI: {e}")
+        else:
+            print(f"[WARNING] Seed MIDI not found: {seed_midi_path}, using NO-OP")
+
+    # Phase E: 原曲追従強化ガイド入力読み込み（NO-OP安全）
+    bass_f0_df = None
+    oaf_piano_data = None
+    timbre_curves_df = None
+
+    if args.bass_f0:
+        bass_f0_path = Path(args.bass_f0)
+        if bass_f0_path.exists():
+            try:
+                bass_f0_df = pd.read_parquet(bass_f0_path)
+                if args.debug:
+                    print(f"[DEBUG] Loaded Bass F0: {bass_f0_path}")
+                    print(
+                        f"        Bars: {len(bass_f0_df)}, Median MIDI: {bass_f0_df['f0_median_midi'].mean():.1f}"
+                    )
+            except Exception as e:
+                print(f"[WARNING] Failed to load Bass F0: {e}")
+        else:
+            if args.debug:
+                print(f"[DEBUG] Bass F0 not found: {bass_f0_path}, using NO-OP")
+
+    if args.oaf_piano:
+        oaf_piano_path = Path(args.oaf_piano)
+        if oaf_piano_path.exists():
+            try:
+                with open(oaf_piano_path, "r", encoding="utf-8") as f:
+                    oaf_piano_data = json.load(f)
+                if args.debug:
+                    note_count = len(oaf_piano_data.get("notes", []))
+                    pedal_count = len(oaf_piano_data.get("pedal", []))
+                    print(f"[DEBUG] Loaded Piano OaF: {oaf_piano_path}")
+                    print(f"        Notes: {note_count}, Pedal segments: {pedal_count}")
+            except Exception as e:
+                print(f"[WARNING] Failed to load Piano OaF: {e}")
+        else:
+            if args.debug:
+                print(f"[DEBUG] Piano OaF not found: {oaf_piano_path}, using NO-OP")
+
+    if args.timbral_curves:
+        timbre_curves_path = Path(args.timbral_curves)
+        if timbre_curves_path.exists():
+            try:
+                timbre_curves_df = pd.read_parquet(timbre_curves_path)
+                if args.debug:
+                    print(f"[DEBUG] Loaded Timbral curves: {timbre_curves_path}")
+                    print(
+                        f"        Bars: {len(timbre_curves_df)}, Brightness mean: {timbre_curves_df['brightness'].mean():.3f}"
+                    )
+            except Exception as e:
+                print(f"[WARNING] Failed to load Timbral curves: {e}")
+        else:
+            if args.debug:
+                print(f"[DEBUG] Timbral curves not found: {timbre_curves_path}, using NO-OP")
+
+    # パッチ3: Phase E NO-OP可視化ログ強化（1行サマリー）
+    print(
+        f"[GUIDE] bass_f0={'ON' if bass_f0_df is not None else 'OFF'} "
+        f"oaf_piano={'ON' if oaf_piano_data is not None else 'OFF'} "
+        f"timbre_cc={'ON' if timbre_curves_df is not None else 'OFF'}"
+    )
+
+    # Phase E: bars拡張（原曲追従強化属性追加）
+    # Bass F0反映: register_hint, allow_position_shift, add_vibrato
+    if bass_f0_df is not None and args.role == "bass":
+        from collections import deque
+
+        bass_f0_indexed = bass_f0_df.set_index("bar_index")
+
+        # パッチ1: 3-bar running median to stabilize octave choice
+        medq = deque(maxlen=3)
+        smooth_regs = {}
+        for b in sorted(bass_f0_indexed.index):
+            row = bass_f0_indexed.loc[b]
+            mm = float(row.get("f0_median_midi", np.nan))
+            reg = int(mm // 12) if np.isfinite(mm) else None
+            if reg is not None:
+                medq.append(reg)
+                smooth = int(round(np.median(list(medq))))
+                smooth_regs[b] = smooth
+
+        for idx in bars.index:
+            b = int(bars.loc[idx, "bar_index"])
+            if b in bass_f0_indexed.index:
+                row = bass_f0_indexed.loc[b]
+                # 平滑化されたregister_hintを使用
+                if b in smooth_regs:
+                    bars.loc[idx, "register_hint"] = smooth_regs[b]
+                if row.get("slide_activity", 0.0) > 0.5:
+                    bars.loc[idx, "allow_position_shift"] = True
+                if row.get("vibrato_rate_hz", 0.0) > 4.0:
+                    bars.loc[idx, "add_vibrato"] = True
+        if args.debug:
+            register_count = (
+                int((bars["register_hint"] > 0).sum()) if "register_hint" in bars.columns else 0
+            )
+            slide_count = (
+                int(bars.get("allow_position_shift", False).sum())
+                if "allow_position_shift" in bars.columns
+                else 0
+            )
+            vibrato_count = (
+                int(bars.get("add_vibrato", False).sum()) if "add_vibrato" in bars.columns else 0
+            )
+            print(
+                f"[DEBUG] Bass F0 reflected (3-bar smoothed): register_hint={register_count} bars, slide={slide_count}, vibrato={vibrato_count}"
+            )
+
+    # Piano OaF反映: voicing_complexity, apply_pedal
+    if oaf_piano_data is not None and args.role == "piano":
+        notes = oaf_piano_data.get("notes", [])
+        pedal = oaf_piano_data.get("pedal", [])
+
+        # パッチ2: sec_to_bar_index関数でbars_extendedを使用して正確にマッピング
+        def sec_to_bar_index(sec, bars_df):
+            """bars.parquetのstart_sec/end_secを使って正確なbar_index決定"""
+            if "start_sec" not in bars_df.columns or "end_sec" not in bars_df.columns:
+                # フォールバック: BPM計算
+                return int((sec * bpm / 60.0) // 4)
+            row = bars_df[(bars_df["start_sec"] <= sec) & (sec < bars_df["end_sec"])]
+            return int(row["bar_index"].iloc[0]) if len(row) > 0 else None
+
+        # ボイシング複雑度
+        for idx in bars.index:
+            b = int(bars.loc[idx, "bar_index"])
+            bar_notes = [n for n in notes if n.get("bar") == b]
+            if bar_notes:
+                unique_starts = set(n["start_sec"] for n in bar_notes)
+                avg_polyphony = len(bar_notes) / max(1, len(unique_starts))
+                bars.loc[idx, "voicing_complexity"] = min(4, int(avg_polyphony))
+
+        # ペダル延長（bars_extendedで正確にマッピング）
+        for seg in pedal:
+            bi = sec_to_bar_index(seg["start_sec"], bars)
+            if bi is not None:
+                bars_idx = bars[bars["bar_index"] == bi].index
+                if len(bars_idx) > 0:
+                    bars.loc[bars_idx[0], "apply_pedal"] = True
+
+        if args.debug:
+            voicing_count = (
+                int((bars["voicing_complexity"] > 0).sum())
+                if "voicing_complexity" in bars.columns
+                else 0
+            )
+            pedal_count = (
+                int(bars.get("apply_pedal", False).sum()) if "apply_pedal" in bars.columns else 0
+            )
+            print(
+                f"[DEBUG] Piano OaF reflected (sec→bar mapping): voicing_complexity={voicing_count} bars, pedal={pedal_count}"
+            )
+
+    # Synth/Pad Timbre反映: cc11_expression, cc74_brightness, cc1_modulation, filter_open
+    if timbre_curves_df is not None and args.role in [
+        "strings",
+        "piano",
+    ]:  # stringsをSynth/Pad代表とする
+        timbre_indexed = timbre_curves_df.set_index("bar_index")
+        for idx in bars.index:
+            b = int(bars.loc[idx, "bar_index"])
+            if b in timbre_indexed.index:
+                row = timbre_indexed.loc[b]
+                bars.loc[idx, "cc11_expression"] = int(row.get("am_env", 0.5) * 127)
+                bars.loc[idx, "cc74_brightness"] = int(row.get("brightness", 0.5) * 127)
+                vib = row.get("vibrato_rate_hz", 0.0)
+                bars.loc[idx, "cc1_modulation"] = int(np.clip((vib - 4) / 5 * 63 + 64, 0, 127))
+                if row.get("roughness", 0.0) > 0.7:
+                    bars.loc[idx, "filter_open"] = True
+        if args.debug:
+            cc11_count = (
+                int((bars["cc11_expression"] > 0).sum()) if "cc11_expression" in bars.columns else 0
+            )
+            cc74_count = (
+                int((bars["cc74_brightness"] > 0).sum()) if "cc74_brightness" in bars.columns else 0
+            )
+            cc1_count = (
+                int((bars["cc1_modulation"] > 0).sum()) if "cc1_modulation" in bars.columns else 0
+            )
+            filter_count = (
+                int(bars.get("filter_open", False).sum()) if "filter_open" in bars.columns else 0
+            )
+            print(
+                f"[DEBUG] Timbre curves reflected: CC11={cc11_count}, CC74={cc74_count}, CC1={cc1_count}, filter={filter_count}"
+            )
+
     # セグメント（複数コード/小節内分割対応）
     def segs_from_chordmap():
         evs = chordmap.get("events", [])
 
-        # chordmap形式対応：symbol形式 or root+quality形式
-        def ev_to_symbol(e):
-            if "symbol" in e:
-                return e["symbol"]
-            # root + quality → symbol変換（例: root="F", quality="m7" → "Fm7"）
-            root = e.get("root", "C")
-            qual = e.get("quality", "")
-            return root + qual
-
+        # Phase 113: Use symbol-first parsing (safety net for root/quality inconsistencies)
         times = sorted(
-            [(float(e.get("time", 0)), parse_chord(ev_to_symbol(e), mode_name)) for e in evs],
+            [(float(e.get("time", 0)), parse_chord(_symbol_from_event(e), mode_name)) for e in evs],
             key=lambda x: x[0],
         ) or [(0.0, parse_chord("C", mode_name))]
         segs = []
@@ -1317,6 +1659,29 @@ def main():
         if args.role == "bass":
             ci_next = segs[i + 1].chord if i + 1 < len(segs) else seg.chord
             pitches = bass_line(seg, e_val, args.walking_bass, ci_next)
+
+            # Phase E: register_hint反映（オクターブ補正）
+            bar_row = bars[bars["bar_index"] == b]
+            register_hint = None
+            if len(bar_row) > 0 and "register_hint" in bar_row.columns:
+                reg_val = bar_row.iloc[0].get("register_hint", np.nan)
+                if pd.notna(reg_val):
+                    register_hint = int(reg_val)
+
+            if register_hint is not None:
+                # register_hint: C0=0, C1=1, C2=2, ...
+                # 現在のpitchesの平均オクターブを計算し、register_hintに近づける
+                current_octaves = [p // 12 for p in pitches]
+                avg_octave = sum(current_octaves) / max(1, len(current_octaves))
+                octave_shift = register_hint - avg_octave
+                if abs(octave_shift) >= 0.5:  # 半オクターブ以上ずれている場合
+                    shift_semitones = int(round(octave_shift)) * 12
+                    pitches = [p + shift_semitones for p in pitches]
+                    if args.debug and i == 0:  # 最初のセグメントのみログ
+                        print(
+                            f"[DEBUG] Bass register_hint={register_hint}: shifted {shift_semitones} semitones"
+                        )
+
             grid = [
                 seg.start_b + k * ((seg.end_b - seg.start_b) / max(1, len(pitches)))
                 for k in range(len(pitches))
@@ -1331,6 +1696,24 @@ def main():
                 dur_base = 0.9 if e_val < 0.5 else (0.7 if e_val < 0.7 else 0.5)
                 dur_var = (gi % 3) * 0.1  # 0.0, 0.1, 0.2のバリエーション
                 dur = min(seg.end_b - t, dur_base + dur_var)
+
+                # Phase E: allow_position_shift反映（スライド表現）
+                allow_shift = False
+                if len(bar_row) > 0 and "allow_position_shift" in bar_row.columns:
+                    allow_shift = bool(bar_row.iloc[0].get("allow_position_shift", False))
+                if allow_shift and gi > 0:
+                    # 前のピッチから半音〜全音ずらす（スライド風）
+                    prev_p = pitches[gi - 1]
+                    if abs(p - prev_p) <= 2:  # 近接音
+                        p += random.choice([-1, 1])  # 半音ずらす
+
+                # Phase E: add_vibrato反映（ベロシティ揺らぎ）
+                add_vib = False
+                if len(bar_row) > 0 and "add_vibrato" in bar_row.columns:
+                    add_vib = bool(bar_row.iloc[0].get("add_vibrato", False))
+                if add_vib:
+                    vel += random.choice([-3, 0, 3])  # ビブラート風揺らぎ
+
                 off = t + dur
                 if not allow_onset(t, anchors):
                     if gi % 2 == 1:
@@ -1377,7 +1760,35 @@ def main():
                 ]
 
         elif args.role == "piano":
-            times, pitches, lens, vels = piano_comp(seg, patt, vo, e_val, seg.section or "")
+            # Phase E: voicing_complexity反映（ボイシング密度調整）
+            bar_row = bars[bars["bar_index"] == b]
+            voicing_complexity = 2  # デフォルト
+            apply_pedal = False
+            if len(bar_row) > 0:
+                if "voicing_complexity" in bar_row.columns:
+                    vc_val = bar_row.iloc[0].get("voicing_complexity", np.nan)
+                    if pd.notna(vc_val):
+                        voicing_complexity = int(vc_val)
+                if "apply_pedal" in bar_row.columns:
+                    apply_pedal = bool(bar_row.iloc[0].get("apply_pedal", False))
+
+            # voicing_complexityに応じてボイシング拡張
+            expanded_vo = vo[:]
+            if voicing_complexity >= 3 and len(vo) >= 2:
+                # 複雑度3以上: 追加音を挿入（オクターブ上）
+                expanded_vo.append(vo[1] + 12)
+            if voicing_complexity >= 4 and len(vo) >= 3:
+                # 複雑度4: さらに追加（3度上）
+                expanded_vo.append(vo[2] + 12)
+
+            times, pitches, lens, vels = piano_comp(
+                seg, patt, expanded_vo, e_val, seg.section or ""
+            )
+
+            # apply_pedal反映: duration延長
+            if apply_pedal:
+                lens = [min(l * 1.5, seg.end_b - t) for t, l in zip(times, lens)]
+
             for t, p, l, v in zip(times, pitches, lens, vels):
                 if allow_onset(t, anchors):
                     events.append(
@@ -1485,12 +1896,18 @@ def main():
     # --- activity density調整（--activity-col指定時） ---
     if activity_s is not None:
         before_n = len(events)
+
+        # パッチ4: Activity密度間引きの再現性確保
+        song_id = meta.get("song_id", "unknown")
+        seed = abs(hash(f"{song_id}:{args.role}")) % (2**32)
+
         events = _apply_activity_density(
             events,
             activity_s,
             hat_s=hat_s,
             drums_active_s=drums_active,
             follow_drum_density=args.follow_drum_density,
+            seed=seed,  # パッチ4: seed追加
         )
         debug["phases"]["activity_density"] = {
             "applied": True,
@@ -1498,6 +1915,7 @@ def main():
             "follow_drum_density": args.follow_drum_density,
             "notes_before": before_n,
             "notes_after": len(events),
+            "seed": seed,  # パッチ4: seed記録
         }
     else:
         debug["phases"]["activity_density"] = {"applied": False}
@@ -1614,10 +2032,34 @@ def main():
                 "drums_active": (drums_active is not None),
                 "activity": (activity_s is not None),
                 "activity_column": args.activity_col if activity_s is not None else None,
+                # Phase E: 原曲追従強化ガイド
+                "bass_f0": (bass_f0_df is not None),
+                "oaf_piano": (oaf_piano_data is not None),
+                "timbral_curves": (timbre_curves_df is not None),
             },
         },
         "tracks": [{"name": args.role.title(), "role": args.role, "events": events}],
     }
+
+    # Phase E: Timbre CC情報をbarsメタに追加（plan_to_midiで利用）
+    if timbre_curves_df is not None and args.role in ["strings", "piano"]:
+        bars_cc = []
+        for _, row in bars.iterrows():
+            b = int(row["bar_index"])
+            bar_cc = {"bar_index": b}
+            if "cc11_expression" in row and pd.notna(row["cc11_expression"]):
+                bar_cc["cc11"] = int(row["cc11_expression"])
+            if "cc74_brightness" in row and pd.notna(row["cc74_brightness"]):
+                bar_cc["cc74"] = int(row["cc74_brightness"])
+            if "cc1_modulation" in row and pd.notna(row["cc1_modulation"]):
+                bar_cc["cc1"] = int(row["cc1_modulation"])
+            if "filter_open" in row and pd.notna(row["filter_open"]) and row["filter_open"]:
+                bar_cc["filter_open"] = True
+            if len(bar_cc) > 1:  # bar_index以外にデータがあれば追加
+                bars_cc.append(bar_cc)
+        if bars_cc:
+            plan["meta"]["timbre_cc"] = bars_cc
+
     out = Path(args.out)
     out.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
 

@@ -97,6 +97,9 @@ OPTIONS:
   --enable-f0-extract : Enable F0 extraction for bass/lead (Phase D)
   --enable-timbre-curves : Enable timbre curves for synth/pad (Phase D)
   --force-regenerate-drums : Force regenerate Magenta drums (delete cached plan)
+  --enable-emotion-ai : Enable EmotionAI (section-based emotion profiles)
+  --enable-harmony-ai : Enable Harmony AI (adaptive chord progression learning)
+  --emotion-profile P : Emotion profile ("auto", "energetic", "calm", "happy", "sad")
   --stems-dir P   : 外部 stem ディレクトリを明示指定（例: data/.../stemswav_001）
   --stem-drums-pattern  GLOB : Drums 検出パターン（例: 'stem_wav_*_(Drums).wav'）
   --stem-vocals-pattern GLOB : Vocals検出パターン（例: 'stem_wav_*_(Vocals).wav'）
@@ -123,6 +126,10 @@ ENABLE_OAF=true
 ENABLE_F0_EXTRACT=false
 ENABLE_TIMBRE_CURVES=false
 FORCE_REGENERATE_DRUMS=false
+# EmotionAI/和声AI（デフォルトON）
+ENABLE_EMOTION_AI=true
+ENABLE_HARMONY_AI=true
+EMOTION_PROFILE="auto"  # "auto", "energetic", "calm", "happy", "sad"等
 
 # 外部Stemオプション（配列初期化必須）
 declare -a STEMS_ARGS=()
@@ -161,6 +168,9 @@ while [[ $# -gt 0 ]]; do
     --enable-f0-extract) ENABLE_F0_EXTRACT=true; shift;;
     --enable-timbre-curves) ENABLE_TIMBRE_CURVES=true; shift;;
     --force-regenerate-drums) FORCE_REGENERATE_DRUMS=true; shift;;
+    --enable-emotion-ai) ENABLE_EMOTION_AI=true; shift;;
+    --enable-harmony-ai) ENABLE_HARMONY_AI=true; shift;;
+    --emotion-profile) EMOTION_PROFILE="${2:-auto}"; shift 2;;
     --stems-dir) STEMS_DIR_CLI="${2:-}"; shift 2;;
     --stem-drums-pattern) STEM_DRUMS_PATTERN="${2:-}"; shift 2;;
     --stem-vocals-pattern) STEM_VOCALS_PATTERN="${2:-}"; shift 2;;
@@ -183,9 +193,10 @@ echo "   Onsets-Frames: $ENABLE_OAF"
 echo "   F0 Extract   : $ENABLE_F0_EXTRACT"
 echo "   Timbre Curves: $ENABLE_TIMBRE_CURVES"
 echo "   Force Regen Drums: $FORCE_REGENERATE_DRUMS"
+echo "   EmotionAI    : $ENABLE_EMOTION_AI"
+echo "   Harmony AI   : $ENABLE_HARMONY_AI"
+echo "   Emotion Profile: $EMOTION_PROFILE"
 echo
-echo "   Onsets-Frames: $ENABLE_OAF"
-echo "   Force Regen Drums: $FORCE_REGENERATE_DRUMS"
 echo
 
 # 1. SongPackage読み込み
@@ -692,6 +703,17 @@ if [[ -f "$SONG_DIR/bass_f0.parquet" ]]; then
     BASS_F0_OPT="--bass-f0 $SONG_DIR/bass_f0.parquet"
     echo "      [Phase E] Bass F0 detected: $SONG_DIR/bass_f0.parquet"
 fi
+# EmotionAI/和声AIオプション
+EMOTION_AI_OPTS=()
+if [[ "$ENABLE_EMOTION_AI" == "true" ]]; then
+    EMOTION_AI_OPTS+=("--enable-emotion-ai")
+    EMOTION_AI_OPTS+=("--emotion-profile" "$EMOTION_PROFILE")
+    echo "      [EmotionAI] Enabled with profile: $EMOTION_PROFILE"
+fi
+if [[ "$ENABLE_HARMONY_AI" == "true" ]]; then
+    EMOTION_AI_OPTS+=("--enable-harmony-ai")
+    echo "      [Harmony AI] Enabled"
+fi
 if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     --role bass \
     "${INSTR_ARGS[@]}" \
@@ -702,6 +724,7 @@ if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     --anchors-strict \
     --follow-drum-density \
     $BASS_F0_OPT \
+    "${EMOTION_AI_OPTS[@]}" \
     --out "$SONG_DIR/bass_plan.json" \
     2>&1 | tee "$SONG_DIR/bass_plan.log"
 then
@@ -738,6 +761,7 @@ if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     $GUITAR_ACTIVITY \
     --anchors-strict \
     --follow-drum-density \
+    "${EMOTION_AI_OPTS[@]}" \
     --out "$SONG_DIR/guitar_plan.json" \
     2>&1 | tee "$SONG_DIR/guitar_plan.log"
 then
@@ -773,8 +797,8 @@ if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     $PIANO_ACTIVITY \
     $PIANO_OAF_OPT \
     --anchors-strict \
-    --anchors-strict \
     --follow-drum-density \
+    "${EMOTION_AI_OPTS[@]}" \
     --out "$SONG_DIR/piano_plan.json" \
     2>&1 | tee "$SONG_DIR/piano_plan.log"
 then
@@ -815,6 +839,7 @@ if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     $TIMBRE_CURVES_OPT \
     --anchors-strict \
     --follow-drum-density \
+    "${EMOTION_AI_OPTS[@]}" \
     --out "$SONG_DIR/strings_plan.json" \
     2>&1 | tee "$SONG_DIR/strings_plan.log"
 then
