@@ -1295,6 +1295,8 @@ def main():
         default=None,
         help="emotion_mapping.yamlパス（未指定時はconfig/emotion_mapping.yaml）",
     )
+    ap.add_argument(
+        "--bass-f0",
         type=str,
         default=None,
         help="bass_f0.parquet (Phase D: Bass F0抽出、レジスター/スライド/ビブラート反映用)",
