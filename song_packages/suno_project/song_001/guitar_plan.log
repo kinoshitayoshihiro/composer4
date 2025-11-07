@@ -1,6 +1,6 @@
 /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
-✅ guitar_plan written → song_packages/suno_project/song_001/guitar_plan.json (events=247)
-   [RICHNESS] uniq_pitches=16 uniq_vels=42 uniq_durs=9
+✅ guitar_plan written → song_packages/suno_project/song_001/guitar_plan.json (events=266)
+   [RICHNESS] uniq_pitches=15 uniq_vels=43 uniq_durs=9
    [CONTEXT] energy=True drums_active=True activity=True mode=ionian
    [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=True

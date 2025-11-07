@@ -1,0 +1,2 @@
+Running serially (parallel not available or MAX_WORKERS=1)
+✅ Batch complete → batch_test_song002.csv

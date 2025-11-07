@@ -1,0 +1,1 @@
+timestamp,song_dir,status,attempts,e2e_exit,kpi_pass_rate,kpi_fail_count,kpi_evaluated_bars,kpi_skipped_bars,ci_pass,ci_fail,ci_warn,total_notes,duration_secs

@@ -34,6 +34,78 @@ import numpy as np
 import soundfile as sf
 import librosa
 import librosa.display  # noqa: F401
+import pandas as pd
+
+# ========== v2形式変換ユーティリティ ==========
+LABEL_ALIASES = {
+    "hook": "chorus",
+    "chorus": "chorus",
+    "pre-chorus": "pre_chorus",
+    "pre": "pre_chorus",
+    "verse": "verse",
+    "intro": "intro",
+    "outro": "outro",
+    "bridge": "bridge",
+    "solo": "solo",
+    "break": "break",
+    "interlude": "bridge",
+}
+
+
+def _norm_label(s: str) -> str:
+    """ラベル正規化"""
+    return LABEL_ALIASES.get(s.strip().lower(), s.strip().lower() or "section")
+
+
+def _markers_to_ranges(
+    markers: List[Tuple[int, str]], last_bar: int, merge_same: bool = True, min_bars: int = 2
+) -> List[Dict[str, object]]:
+    """マーカー（bar, label）をスパン（start_bar, end_bar, label）に変換"""
+    if not markers:
+        return [{"start_bar": 0, "end_bar": last_bar, "label": "section"}]
+
+    markers = sorted(markers, key=lambda m: m[0])
+    ranges = []
+    for i, (bar, label) in enumerate(markers):
+        s = int(bar)
+        e = (int(markers[i + 1][0]) - 1) if i < len(markers) - 1 else int(last_bar)
+        ranges.append({"start_bar": s, "end_bar": max(s, e), "label": _norm_label(label)})
+
+    # 連続同ラベルの結合
+    if merge_same and ranges:
+        merged = [ranges[0]]
+        for r in ranges[1:]:
+            if r["label"] == merged[-1]["label"] and r["start_bar"] <= merged[-1]["end_bar"] + 1:
+                merged[-1]["end_bar"] = r["end_bar"]
+            else:
+                merged.append(r)
+        ranges = merged
+
+    # 最小長確保（短区間は隣へ吸収）
+    fixed = []
+    for r in ranges:
+        if (r["end_bar"] - r["start_bar"] + 1) < min_bars and fixed:
+            fixed[-1]["end_bar"] = r["end_bar"]
+        else:
+            fixed.append(r)
+    return fixed
+
+
+def _annotate_seconds(ranges: List[Dict[str, object]], bars_parquet: Optional[str]) -> None:
+    """bars.parquetから秒情報を付与"""
+    if not bars_parquet or not Path(bars_parquet).exists():
+        return
+    try:
+        df = pd.read_parquet(bars_parquet).set_index("bar_index")
+        if not {"start_sec", "end_sec"} <= set(df.columns):
+            return
+        for r in ranges:
+            r["start_sec"] = float(df.loc[r["start_bar"], "start_sec"])
+            r["end_sec"] = float(df.loc[r["end_bar"], "end_sec"])
+    except Exception:
+        # 無音系/可変テンポ未計算でも安全にスキップ
+        pass
+
 
 # 統合ユーティリティ
 try:
@@ -494,6 +566,11 @@ def main():
     ap.add_argument(
         "--no-peak-extractor", action="store_true", help="Disable peak_extractor (use novelty only)"
     )
+    ap.add_argument(
+        "--bars-parquet",
+        default=None,
+        help="bars.parquet path (for start_sec/end_sec annotation in v2 format)",
+    )
     args = ap.parse_args()
 
     # ステムロードまたは単一WAV
@@ -523,14 +600,28 @@ def main():
     # バリデーション
     validate_sections_data(sections, energy)
 
-    # JSON出力（拡張フォーマット）
+    # v2形式JSON出力（start_bar/end_bar/label + start_sec/end_sec）
+    last_bar = max(b for b, _ in sections) if sections else 0
+    if tempo_map:
+        # tempo_mapの最大barも考慮
+        last_bar = max(last_bar, max(b for b, _ in tempo_map))
+    if energy:
+        last_bar = max(last_bar, max(b for b, _ in energy))
+
+    ranges = _markers_to_ranges(sections, last_bar, merge_same=True, min_bars=args.min_bars)
+    _annotate_seconds(ranges, args.bars_parquet)
+
     obj: Dict[str, object] = {
-        "unit": "bar",
-        "sections": [{"bar": b, "label": lab} for b, lab in sections],
-        "energy": [[b, float(e)] for b, e in energy],
-        "tempo_map": [[b, float(bpm)] for b, bpm in tempo_map],
-        "timesig": {"num": args.ts_num, "denom": 4},
-        "key_hint": [[b, key] for b, key in key_hints],
+        "schema": "sections/v2",
+        "generated_at": pd.Timestamp.now().isoformat(),
+        "bpb": args.ts_num,
+        "sections": ranges,
+        "meta": {
+            "energy": [[int(b), float(e)] for b, e in energy],
+            "tempo_map": [[int(b), float(bpm)] for b, bpm in tempo_map],
+            "timesig": {"num": args.ts_num, "denom": 4},
+            "key_hint": [[int(b), str(key)] for b, key in key_hints],
+        },
     }
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
@@ -538,14 +629,21 @@ def main():
         json.dump(obj, f, ensure_ascii=False, indent=2)
 
     print(f"\n{'='*60}")
-    print(f"[SUCCESS] sections.json generated: {args.out}")
+    print(f"[SUCCESS] sections.json (v2) generated: {args.out}")
     print(f"{'='*60}")
-    print(f"Sections: {len(sections)}")
-    for b, lab in sections:
-        print(f"  Bar {b:3d}: {lab}")
-    print(f"\nTempo: {tempo_map[0][1]:.1f} BPM (bar 0)")
-    print(f"Keys: {', '.join([f'Bar {b}: {k}' for b, k in key_hints])}")
-    print(f"Energy range: [{min(e for _, e in energy):.2f}, {max(e for _, e in energy):.2f}]")
+    print(f"Sections: {len(ranges)}")
+    for r in ranges:
+        sec_str = f" ({r['start_sec']:.2f}–{r['end_sec']:.2f}s)" if "start_sec" in r else ""
+        print(f"  Bars {r['start_bar']:3d}–{r['end_bar']:3d}: {r['label']}{sec_str}")
+    print(f"\nTempo: {tempo_map[0][1]:.1f} BPM (bar 0)" if tempo_map else "\nTempo: N/A")
+    print(
+        f"Keys: {', '.join([f'Bar {b}: {k}' for b, k in key_hints])}" if key_hints else "Keys: N/A"
+    )
+    print(
+        f"Energy range: [{min(e for _, e in energy):.2f}, {max(e for _, e in energy):.2f}]"
+        if energy
+        else "Energy: N/A"
+    )
 
 
 if __name__ == "__main__":

@@ -310,7 +310,7 @@ def validate_pattern_enhanced(
             else:
                 messages.append(f"density OK: {value:.2f}")
 
-    # 他のメトリック検証（簡易版 + notes_per_bar/backbeat_strengthセクション別オーバーライド対応）
+    # 他のメトリック検証（簡易版 + notes_per_barセクション別オーバーライド対応）
     for metric in [
         "swing",
         "backbeat_strength",
@@ -327,26 +327,6 @@ def validate_pattern_enhanced(
             # notes_per_barのセクション別オーバーライド適用
             if metric == "notes_per_bar" and section_label in min_notes_overrides:
                 min_val = float(min_notes_overrides[section_label])
-
-            # backbeat_strengthのセクション別しきい値適用（精緻化版）
-            if metric == "backbeat_strength":
-                base_thresh = min_val
-                sec_lower = section_label.lower()
-
-                # セクション別係数（明示的）
-                if sec_lower in ("chorus", "hook"):
-                    # サビは厳しめ（基準値そのまま = 1.0倍）
-                    min_val = base_thresh
-                elif sec_lower in ("intro", "outro", "bridge", "ending"):
-                    # イントロ・アウトロ・ブリッジ・エンディングは緩め（0.75倍、最低0.18）
-                    # 理由: フェードイン/アウト、表現の自由度が高い
-                    min_val = max(0.18, base_thresh * 0.75)
-                elif sec_lower in ("verse", "pre", "pre-chorus"):
-                    # Verse系は中間（0.85倍、最低0.22）
-                    min_val = max(0.22, base_thresh * 0.85)
-                else:
-                    # デフォルト（0.90倍、最低0.25）
-                    min_val = max(0.25, base_thresh * 0.90)
 
             if value < min_val:
                 messages.append(f"{metric} too low: {value:.2f} < {min_val}")
@@ -369,9 +349,6 @@ def kpi_gate_validate_enhanced(
     use_downbeats: bool = True,
     epsilon_sec: Optional[float] = None,
     verbose: bool = True,
-    skip_quiet_bars: bool = False,
-    drums_active_col: str = "drums_active",
-    drums_active_threshold: float = 0.5,
 ):
     """KPI Gate検証（Enhanced版）"""
     # gate_config読み込み
@@ -385,22 +362,16 @@ def kpi_gate_validate_enhanced(
     # bars.parquet（相対判定用）
     targets_by_bar = None
     sections_json_path = None
-    bars_df = None
 
     if bars_parquet and PANDAS_AVAILABLE:
         try:
             bars_df = pd.read_parquet(bars_parquet)
-            # bar/bar_index 正規化
-            if "bar_index" in bars_df.columns and "bar" not in bars_df.columns:
-                bars_df["bar"] = bars_df["bar_index"]
-            bars_df = bars_df.set_index("bar", drop=False)
-
             section_col = "section_label" if "section_label" in bars_df.columns else "section"
             density_col = "density_target" if "density_target" in bars_df.columns else "density"
 
             targets_by_bar = {}
             for _, r in bars_df.iterrows():
-                bar_idx = int(r["bar"])
+                bar_idx = int(r["bar_index"])
                 targets_by_bar[bar_idx] = {
                     "density_target": float(r.get(density_col, 0.0)),
                     "swing_target": float(r.get("swing_target", 0.0)),
@@ -428,17 +399,6 @@ def kpi_gate_validate_enhanced(
         except Exception as e:
             if verbose:
                 print(f"   ⚠️  failed to load bars.parquet: {e}")
-
-    # 静寂バー判定ヘルパー
-    def is_quiet_bar(bar_idx: int) -> bool:
-        if not skip_quiet_bars:
-            return False
-        if bars_df is None or drums_active_col not in bars_df.columns:
-            return False
-        try:
-            return float(bars_df.loc[bar_idx, drums_active_col]) < drums_active_threshold
-        except Exception:
-            return False
 
     # εはテンポから自動推定（4% bar or 20ms）
     # Phase E: 拍子可変対応（bars.parquetからtime_signature参照）
@@ -485,25 +445,11 @@ def kpi_gate_validate_enhanced(
     fail_count = 0
     warning_count = 0
     fail_reasons = []
-    evaluated_bars = 0
 
     for bar_key in sorted(bars_dict.keys(), key=lambda x: int(x.split("_")[1])):
         bar_data = bars_dict[bar_key]
         bar_idx = bar_data["bar_index"]
         pattern = bar_data["pattern"]
-
-        # 静寂バースキップ
-        if is_quiet_bar(bar_idx):
-            results[bar_key] = {
-                "bar_index": bar_idx,
-                "pattern_id": f"midi_bar_{bar_idx}",
-                "kpi_pass": True,
-                "messages": ["skipped (quiet bar)"],
-                "safe_kit_fallback_recommended": False,
-            }
-            continue
-
-        evaluated_bars += 1
 
         pass_flag, messages = validate_pattern_enhanced(
             pattern, gate_config, targets_by_bar=targets_by_bar, bar_idx=bar_idx
@@ -531,11 +477,10 @@ def kpi_gate_validate_enhanced(
 
     # サマリー
     total = len(bars_dict)
-    pass_rate = (pass_count / max(1, evaluated_bars) * 100) if evaluated_bars > 0 else 0.0
+    pass_rate = (pass_count / total * 100) if total > 0 else 0.0
 
     summary = {
         "total_bars": total,
-        "evaluated_bars": evaluated_bars,
         "pass_count": pass_count,
         "fail_count": fail_count,
         "warning_count": warning_count,
@@ -553,10 +498,8 @@ def kpi_gate_validate_enhanced(
         print(f"\n📊 Validation Statistics:")
         print(f"   Total bars: {total}")
         print(f"   Pass: {pass_count} ({pass_rate:.1f}%)")
-        print(f"   Fail: {fail_count} ({(fail_count/max(1,evaluated_bars)*100):.1f}%)")
+        print(f"   Fail: {fail_count} ({100-pass_rate:.1f}%)")
         print(f"   Warning: {warning_count}")
-        if evaluated_bars < total:
-            print(f"   Skipped (quiet): {total - evaluated_bars}")
         print()
         print(f"🔍 Fail原因Top10:")
         for reason, count in fail_reason_top[:10]:
@@ -580,22 +523,6 @@ def main():
     parser.add_argument("--downbeats", action="store_true", help="Use real downbeats")
     parser.add_argument("--epsilon-sec", type=float, default=None, help="Boundary epsilon (sec)")
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
-    parser.add_argument(
-        "--skip-quiet-bars",
-        action="store_true",
-        help="Skip KPI evaluation on bars where drums_active < threshold",
-    )
-    parser.add_argument(
-        "--drums-active-col",
-        default="drums_active",
-        help="Column name in bars.parquet to indicate drum activity",
-    )
-    parser.add_argument(
-        "--drums-active-threshold",
-        type=float,
-        default=0.5,
-        help="Threshold below which a bar is treated as quiet (skipped)",
-    )
 
     args = parser.parse_args()
 
@@ -608,9 +535,6 @@ def main():
         use_downbeats=args.downbeats,
         epsilon_sec=args.epsilon_sec,
         verbose=not args.quiet,
-        skip_quiet_bars=args.skip_quiet_bars,
-        drums_active_col=args.drums_active_col,
-        drums_active_threshold=args.drums_active_threshold,
     )
 
 

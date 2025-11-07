@@ -1,0 +1,577 @@
+timestamp,song_dir,status,attempts,e2e_exit,kpi_pass_rate,kpi_fail_count,kpi_evaluated_bars,kpi_skipped_bars,ci_pass,ci_fail,ci_warn,total_notes,duration_secs
+[2025-11-05 13:58:40] ▶ E2E (attempt 1/3): data/suno_ai/suno_themesong/song_001
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_001
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+   Tempo: 74.5 BPM
+
+📋 Step 1.2: Importing Stage1 Analysis Data
+   Source: data/suno_ai/suno_themesong/song_001/analysis
+
+🎼 Step 1.5: Stem Features Generation (Backend-enabled)
+   Stems dir: data/suno_ai/suno_themesong/song_001/stemswav_001
+
+============================================================
+Stem Features Statistics
+============================================================
+              bar  hat_density  ...  strings_activity  drums_active
+count  149.000000   149.000000  ...        149.000000    149.000000
+mean    74.000000     0.671141  ...          0.060920      0.852349
+std     43.156691     1.105532  ...          0.159060      0.355950
+min      0.000000     0.000000  ...          0.000000      0.000000
+25%     37.000000     0.000000  ...          0.000000      1.000000
+50%     74.000000     0.000000  ...          0.000000      1.000000
+75%    111.000000     1.000000  ...          0.000000      1.000000
+max    148.000000     5.000000  ...          0.722597      1.000000
+
+[8 rows x 12 columns]
+============================================================
+   ✅ stem_features.parquet generated (with instrument activity)
+   ✅ bars.parquet extended (drums_active added)
+
+🔍 Step 1: Pattern Matching (Top-K=5)
+📊 Song Analysis:
+  Tempo: 74.5 BPM
+  Family Hint: STRAIGHT_8
+  Density Hint: 0.3
+
+✅ Rhythm Pickle: 30964 patterns loaded
+
+🎯 Top-5 Rhythm Matches:
+  1. 88_hiphop_75_fill_4-4_21 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  2. 88_hiphop_75_fill_4-4_35 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  3. 88_hiphop_75_fill_4-4_37 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  4. 88_hiphop_75_fill_4-4_4 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  5. 88_hiphop_75_fill_4-4_41 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+
+✅ Output:
+  - data/suno_ai/suno_themesong/song_001/matches_rhythm.json
+
+🎤 Step 1.5: CREPE Vocal F0 Extraction (Phase C)
+⚠️  vocal.wav not found, CREPE skipped (NO-OP)
+
+🎹 Step 1.6: Onsets-and-Frames Piano Transcription (Phase C)
+⚠️  piano.wav not found, OaF skipped (NO-OP)
+
+🎯 Stems features detected: data/suno_ai/suno_themesong/song_001/stem_features.parquet
+🔁 Step 2: Reusing existing data/suno_ai/suno_themesong/song_001/drums_recommendations.json
+
+🎯 Checking instrument activity columns in stem_features...
+   ℹ️  No instrument activity columns found (using default behavior)
+
+🎸 Step 3 & 🎹 Step 4: Instruments via instrument_midi_to_plan_real.py (Phase 13–32)
+   ▸ Bass (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ bass_plan written → data/suno_ai/suno_themesong/song_001/bass_plan.json (events=1180)
+   [RICHNESS] uniq_pitches=28 uniq_vels=77 uniq_durs=10
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=True strum=False
+   bass: uniq(p)=28 v=77 d=10 total=1180
+   ▸ Guitar (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ guitar_plan written → data/suno_ai/suno_themesong/song_001/guitar_plan.json (events=393)
+   [RICHNESS] uniq_pitches=31 uniq_vels=49 uniq_durs=14
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=True
+   guitar: uniq(p)=31 v=49 d=14 total=393
+   ▸ Piano (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ piano_plan written → data/suno_ai/suno_themesong/song_001/piano_plan.json (events=288)
+   [RICHNESS] uniq_pitches=17 uniq_vels=53 uniq_durs=8
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=False
+   piano: uniq(p)=17 v=53 d=8 total=288
+   ▸ Strings (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ strings_plan written → data/suno_ai/suno_themesong/song_001/strings_plan.json (events=224)
+   [RICHNESS] uniq_pitches=31 uniq_vels=48 uniq_durs=8
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=False
+   strings: uniq(p)=31 v=48 d=8 total=224
+
+🥁 Step 5: Drums Plan (hybrid v2: WAV×MIDI fusion)
+   ✅ Using stem features: density/hat_density
+   ✅ Using lyric anchors: vocal ducking
+❌ E2E failed at line 877
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_001/.debug_20251105_140020
+[2025-11-05 14:00:20] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_001
+   ↻ retrying...
+[2025-11-05 14:00:20] ▶ E2E (attempt 2/3): data/suno_ai/suno_themesong/song_001
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_001
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+   Tempo: 74.5 BPM
+
+📋 Step 1.2: Importing Stage1 Analysis Data
+   Source: data/suno_ai/suno_themesong/song_001/analysis
+
+🎼 Step 1.5: Stem Features Generation (Backend-enabled)
+   Stems dir: data/suno_ai/suno_themesong/song_001/stemswav_001
+
+============================================================
+Stem Features Statistics
+============================================================
+              bar  hat_density  ...  strings_activity  drums_active
+count  149.000000   149.000000  ...        149.000000    149.000000
+mean    74.000000     0.671141  ...          0.060920      0.852349
+std     43.156691     1.105532  ...          0.159060      0.355950
+min      0.000000     0.000000  ...          0.000000      0.000000
+25%     37.000000     0.000000  ...          0.000000      1.000000
+50%     74.000000     0.000000  ...          0.000000      1.000000
+75%    111.000000     1.000000  ...          0.000000      1.000000
+max    148.000000     5.000000  ...          0.722597      1.000000
+
+[8 rows x 12 columns]
+============================================================
+   ✅ stem_features.parquet generated (with instrument activity)
+   ✅ bars.parquet extended (drums_active added)
+
+🔍 Step 1: Pattern Matching (Top-K=5)
+📊 Song Analysis:
+  Tempo: 74.5 BPM
+  Family Hint: STRAIGHT_8
+  Density Hint: 0.3
+
+✅ Rhythm Pickle: 30964 patterns loaded
+
+🎯 Top-5 Rhythm Matches:
+  1. 88_hiphop_75_fill_4-4_21 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  2. 88_hiphop_75_fill_4-4_35 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  3. 88_hiphop_75_fill_4-4_37 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  4. 88_hiphop_75_fill_4-4_4 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  5. 88_hiphop_75_fill_4-4_41 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+
+✅ Output:
+  - data/suno_ai/suno_themesong/song_001/matches_rhythm.json
+
+🎤 Step 1.5: CREPE Vocal F0 Extraction (Phase C)
+⚠️  vocal.wav not found, CREPE skipped (NO-OP)
+
+🎹 Step 1.6: Onsets-and-Frames Piano Transcription (Phase C)
+⚠️  piano.wav not found, OaF skipped (NO-OP)
+
+🎯 Stems features detected: data/suno_ai/suno_themesong/song_001/stem_features.parquet
+🔁 Step 2: Reusing existing data/suno_ai/suno_themesong/song_001/drums_recommendations.json
+
+🎯 Checking instrument activity columns in stem_features...
+   ℹ️  No instrument activity columns found (using default behavior)
+
+🎸 Step 3 & 🎹 Step 4: Instruments via instrument_midi_to_plan_real.py (Phase 13–32)
+   ▸ Bass (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ bass_plan written → data/suno_ai/suno_themesong/song_001/bass_plan.json (events=1180)
+   [RICHNESS] uniq_pitches=28 uniq_vels=77 uniq_durs=10
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=True strum=False
+   bass: uniq(p)=28 v=77 d=10 total=1180
+   ▸ Guitar (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ guitar_plan written → data/suno_ai/suno_themesong/song_001/guitar_plan.json (events=393)
+   [RICHNESS] uniq_pitches=31 uniq_vels=49 uniq_durs=14
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=True
+   guitar: uniq(p)=31 v=49 d=14 total=393
+   ▸ Piano (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ piano_plan written → data/suno_ai/suno_themesong/song_001/piano_plan.json (events=288)
+   [RICHNESS] uniq_pitches=17 uniq_vels=54 uniq_durs=8
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=False
+   piano: uniq(p)=17 v=54 d=8 total=288
+   ▸ Strings (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ strings_plan written → data/suno_ai/suno_themesong/song_001/strings_plan.json (events=224)
+   [RICHNESS] uniq_pitches=31 uniq_vels=51 uniq_durs=8
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=False
+   strings: uniq(p)=31 v=51 d=8 total=224
+
+🥁 Step 5: Drums Plan (hybrid v2: WAV×MIDI fusion)
+   ✅ Using stem features: density/hat_density
+   ✅ Using lyric anchors: vocal ducking
+❌ E2E failed at line 877
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_001/.debug_20251105_140206
+[2025-11-05 14:02:06] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_001
+   ↻ retrying...
+[2025-11-05 14:02:06] ▶ E2E (attempt 3/3): data/suno_ai/suno_themesong/song_001
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_001
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+   Tempo: 74.5 BPM
+
+📋 Step 1.2: Importing Stage1 Analysis Data
+   Source: data/suno_ai/suno_themesong/song_001/analysis
+
+🎼 Step 1.5: Stem Features Generation (Backend-enabled)
+   Stems dir: data/suno_ai/suno_themesong/song_001/stemswav_001
+
+============================================================
+Stem Features Statistics
+============================================================
+              bar  hat_density  ...  strings_activity  drums_active
+count  149.000000   149.000000  ...        149.000000    149.000000
+mean    74.000000     0.671141  ...          0.060920      0.852349
+std     43.156691     1.105532  ...          0.159060      0.355950
+min      0.000000     0.000000  ...          0.000000      0.000000
+25%     37.000000     0.000000  ...          0.000000      1.000000
+50%     74.000000     0.000000  ...          0.000000      1.000000
+75%    111.000000     1.000000  ...          0.000000      1.000000
+max    148.000000     5.000000  ...          0.722597      1.000000
+
+[8 rows x 12 columns]
+============================================================
+   ✅ stem_features.parquet generated (with instrument activity)
+   ✅ bars.parquet extended (drums_active added)
+
+🔍 Step 1: Pattern Matching (Top-K=5)
+📊 Song Analysis:
+  Tempo: 74.5 BPM
+  Family Hint: STRAIGHT_8
+  Density Hint: 0.3
+
+✅ Rhythm Pickle: 30964 patterns loaded
+
+🎯 Top-5 Rhythm Matches:
+  1. 88_hiphop_75_fill_4-4_21 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  2. 88_hiphop_75_fill_4-4_35 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  3. 88_hiphop_75_fill_4-4_37 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  4. 88_hiphop_75_fill_4-4_4 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  5. 88_hiphop_75_fill_4-4_41 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+
+✅ Output:
+  - data/suno_ai/suno_themesong/song_001/matches_rhythm.json
+
+🎤 Step 1.5: CREPE Vocal F0 Extraction (Phase C)
+⚠️  vocal.wav not found, CREPE skipped (NO-OP)
+
+🎹 Step 1.6: Onsets-and-Frames Piano Transcription (Phase C)
+⚠️  piano.wav not found, OaF skipped (NO-OP)
+
+🎯 Stems features detected: data/suno_ai/suno_themesong/song_001/stem_features.parquet
+🔁 Step 2: Reusing existing data/suno_ai/suno_themesong/song_001/drums_recommendations.json
+
+🎯 Checking instrument activity columns in stem_features...
+   ℹ️  No instrument activity columns found (using default behavior)
+
+🎸 Step 3 & 🎹 Step 4: Instruments via instrument_midi_to_plan_real.py (Phase 13–32)
+   ▸ Bass (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ bass_plan written → data/suno_ai/suno_themesong/song_001/bass_plan.json (events=1180)
+   [RICHNESS] uniq_pitches=28 uniq_vels=73 uniq_durs=10
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=True strum=False
+   bass: uniq(p)=28 v=73 d=10 total=1180
+   ▸ Guitar (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ guitar_plan written → data/suno_ai/suno_themesong/song_001/guitar_plan.json (events=393)
+   [RICHNESS] uniq_pitches=31 uniq_vels=50 uniq_durs=14
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=True
+   guitar: uniq(p)=31 v=50 d=14 total=393
+   ▸ Piano (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ piano_plan written → data/suno_ai/suno_themesong/song_001/piano_plan.json (events=288)
+   [RICHNESS] uniq_pitches=17 uniq_vels=54 uniq_durs=8
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=False
+   piano: uniq(p)=17 v=54 d=8 total=288
+   ▸ Strings (Stage2 real groove) [STRICT + DEBUG]
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ strings_plan written → data/suno_ai/suno_themesong/song_001/strings_plan.json (events=224)
+   [RICHNESS] uniq_pitches=31 uniq_vels=52 uniq_durs=8
+   [CONTEXT] energy=True drums_active=True activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=False
+   strings: uniq(p)=31 v=52 d=8 total=224
+
+🥁 Step 5: Drums Plan (hybrid v2: WAV×MIDI fusion)
+   ✅ Using stem features: density/hat_density
+   ✅ Using lyric anchors: vocal ducking
+❌ E2E failed at line 877
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_001/.debug_20251105_140314
+[2025-11-05 14:03:14] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_001
+"2025-11-05 13:58:40","data/suno_ai/suno_themesong/song_001","FAIL",3,1,100.0,0,0,149,9,1,0,,275
+[2025-11-05 14:03:15] ▶ E2E (attempt 1/3): data/suno_ai/suno_themesong/song_002
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_002
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_002/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_002/.debug_20251105_140315
+[2025-11-05 14:03:15] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_002
+   ↻ retrying...
+[2025-11-05 14:03:15] ▶ E2E (attempt 2/3): data/suno_ai/suno_themesong/song_002
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_002
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_002/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_002/.debug_20251105_140315
+[2025-11-05 14:03:15] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_002
+   ↻ retrying...
+[2025-11-05 14:03:15] ▶ E2E (attempt 3/3): data/suno_ai/suno_themesong/song_002
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_002
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_002/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_002/.debug_20251105_140316
+[2025-11-05 14:03:16] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_002
+"2025-11-05 14:03:15","data/suno_ai/suno_themesong/song_002","FAIL",3,1,,,0,0,0,0,0,,1
+[2025-11-05 14:03:16] ▶ E2E (attempt 1/3): data/suno_ai/suno_themesong/song_003
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_003
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_003/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_003/.debug_20251105_140316
+[2025-11-05 14:03:16] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_003
+   ↻ retrying...
+[2025-11-05 14:03:16] ▶ E2E (attempt 2/3): data/suno_ai/suno_themesong/song_003
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_003
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_003/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_003/.debug_20251105_140316
+[2025-11-05 14:03:16] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_003
+   ↻ retrying...
+[2025-11-05 14:03:16] ▶ E2E (attempt 3/3): data/suno_ai/suno_themesong/song_003
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_003
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_003/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_003/.debug_20251105_140317
+[2025-11-05 14:03:17] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_003
+"2025-11-05 14:03:16","data/suno_ai/suno_themesong/song_003","FAIL",3,1,,,0,0,0,0,0,,1

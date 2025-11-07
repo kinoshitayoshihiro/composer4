@@ -191,6 +191,17 @@ def _load_stem_midi(path: str, tempo_bpm: float) -> List[Dict[str, Any]]:
     return evts
 
 
+def _load_grooved_midi(path: str, tempo_bpm: float) -> List[Dict[str, Any]]:
+    """
+    Load Magenta grooved MIDI (strong labels for timing/velocity).
+    Returns same format as _load_stem_midi but with higher priority.
+    
+    Note: pretty_midi returns timestamps in seconds, so tempo_bpm is required
+    to convert sec→beats for alignment with bars.parquet.
+    """
+    return _load_stem_midi(path, tempo_bpm)  # Same format
+
+
 def _collect_by_bar(
     events: List[Dict[str, Any]], bars: pd.DataFrame
 ) -> Dict[int, List[Dict[str, Any]]]:
@@ -688,6 +699,13 @@ def main():
         "--stems-features", default=None, help="Parquet with hat_density/fill_likelihood, etc."
     )
     ap.add_argument("--lyric-anchors", default=None, help="JSON with anchors to duck cymbals")
+    # NEW: Magenta grooved MIDI (strong labels for timing/velocity)
+    ap.add_argument(
+        "--grooved-mid",
+        default=None,
+        help="MagentaでhumanizeしたドラムMIDI。タイミング/Velを優先的に参照。"
+             "注: MIDIから秒単位でロードするため、beats変換に--tempo-bpmが必須。",
+    )
     # Tunables
     ap.add_argument("--duck-vel", type=int, default=12)
     ap.add_argument("--seed", type=int, default=7)
@@ -806,6 +824,20 @@ def main():
     # stem MIDI (weak labels)
     stem_evts = _load_stem_midi(args.stem_midi, tempo_bpm) if args.stem_midi else []
     stem_by_bar = _collect_by_bar(stem_evts, bars) if stem_evts else {}
+
+    # grooved MIDI (strong labels from Magenta, higher priority)
+    grooved_evts = _load_grooved_midi(args.grooved_mid, tempo_bpm) if args.grooved_mid else []
+    grooved_by_bar = _collect_by_bar(grooved_evts, bars) if grooved_evts else {}
+    
+    # Priority: grooved > stem (merge, grooved overwrites)
+    if grooved_by_bar:
+        for bidx, gevts in grooved_by_bar.items():
+            if bidx in stem_by_bar:
+                # Replace stem events with grooved events (stronger labels)
+                stem_by_bar[bidx] = gevts
+            else:
+                stem_by_bar[bidx] = gevts
+        print(f"✅ Magenta grooved MIDI loaded: {len(grooved_evts)} events")
 
     # vocal windows (beats)
     vocal_windows = _load_anchors(args.lyric_anchors, tempo_bpm)

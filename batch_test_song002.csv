@@ -1,0 +1,88 @@
+timestamp,song_dir,status,attempts,e2e_exit,kpi_pass_rate,kpi_fail_count,kpi_evaluated_bars,kpi_skipped_bars,ci_pass,ci_fail,ci_warn,total_notes,duration_secs
+[2025-11-05 14:08:02] ▶ E2E (attempt 1/3): data/suno_ai/suno_themesong/song_002
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_002
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_002/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_002/.debug_20251105_140806
+[2025-11-05 14:08:06] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_002
+   ↻ retrying...
+[2025-11-05 14:08:06] ▶ E2E (attempt 2/3): data/suno_ai/suno_themesong/song_002
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_002
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_002/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_002/.debug_20251105_140811
+[2025-11-05 14:08:11] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_002
+   ↻ retrying...
+[2025-11-05 14:08:11] ▶ E2E (attempt 3/3): data/suno_ai/suno_themesong/song_002
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_002
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+
+   Onsets-Frames: true
+   Force Regen Drums: false
+
+❌ song_package.yaml not found: data/suno_ai/suno_themesong/song_002/song_package.yaml
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_002/.debug_20251105_140815
+[2025-11-05 14:08:15] ⚠ E2E failed (rc=1) on data/suno_ai/suno_themesong/song_002
+"2025-11-05 14:08:02","data/suno_ai/suno_themesong/song_002","FAIL",3,1,,,0,0,0,0,0,,13

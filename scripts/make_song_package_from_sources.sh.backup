@@ -1,0 +1,259 @@
+#!/usr/bin/env bash
+#
+# make_song_package_from_sources.sh
+# ------------------------------------------------------------
+# Purpose:
+#   One-button builder for the three core JSONs (sections / lyric_anchors /
+#   chordmap) + a tempo/timing map from your source stems.
+#   It wires exactly these 4 origin scripts as the single source of truth:
+#     - ops/tempo_timing.py
+#     - ops/sections_from_audio.py
+#     - ops/anchors_from_vocal.py
+#     - ops/stem_harmony_bar_level_fusion.py (fallback: stem_harmony_bar_level.py)
+#
+# Inputs (minimal):
+#   SONG_DIR    : song package directory (e.g. song_packages/.../song_001)
+#   --stems-dir : path to separated stems directory (wav files)
+#   --mix-wav   : optional; if omitted, auto-detect from stems ("*Mix*" or "_auto_Other.wav")
+#   --vocal-wav : optional; if omitted, auto-detect ("*Vocals*.wav")
+#   --tempo-bpm : optional; overrides detection; feeds all downstream steps
+#
+# Outputs:
+#   ${SONG_DIR}/analysis/chordmap.json
+#   ${SONG_DIR}/sections.json
+#   ${SONG_DIR}/lyric_anchors.json
+#   ${SONG_DIR}/tempo_map.json  (plus ${SONG_DIR}/bars.parquet when script supports it)
+#   Logs: ${SONG_DIR}/.logs_makepkg/<timestamp>/*.log
+#
+# Notes:
+#   * This is a thin, opinionated wrapper. If a sub-script has slightly different
+#     flags in your repo, tweak COMMAND blocks below (they are clearly marked).
+#   * The wrapper is safe-by-default: missing step ≠ hard error unless --strict.
+#   * Locale is set to UTF-8 so Japanese file/dir names work end-to-end.
+#
+# Usage:
+#   bash scripts/make_song_package_from_sources.sh \
+#        song_packages/suno_project/song_001 \
+#        --stems-dir "data/suno_ai/suno_themesong/song_001/stemswav_001" \
+#        --mix-wav  "data/.../stemswav_001/_auto_Other.wav" \
+#        --vocal-wav "data/.../stemswav_001/stem_wav_001_(Vocals).wav" \
+#        --tempo-bpm 74.677
+#
+#   # Dry run (print commands only)
+#   bash scripts/make_song_package_from_sources.sh <SONG_DIR> --stems-dir <...> --dry-run
+#
+set -euo pipefail
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+# ---------------
+# Pretty logging
+# ---------------
+blue()  { printf "\033[34m%s\033[0m\n" "$*"; }
+green() { printf "\033[32m%s\033[0m\n" "$*"; }
+yellow(){ printf "\033[33m%s\033[0m\n" "$*"; }
+red()   { printf "\033[31m%s\033[0m\n" "$*"; }
+
+usage() {
+  cat << USAGE
+Usage: $0 SONG_DIR --stems-dir DIR [--mix-wav WAV] [--vocal-wav WAV] [--tempo-bpm F]
+                   [--python PY] [--strict] [--dry-run]
+
+Required:
+  SONG_DIR           Song package root (will write outputs inside)
+  --stems-dir DIR    Directory with separated stems (wav)
+
+Optional:
+  --mix-wav WAV      Mix/other wav. If omitted, auto-detect in stems dir
+  --vocal-wav WAV    Vocal wav. If omitted, auto-detect in stems dir
+  --tempo-bpm F      Fixed tempo to pass into steps (overrides detection)
+  --python PY        Python interpreter (default: python3)
+  --strict           Fail hard if any step fails (default: soft-continue)
+  --dry-run          Print commands without executing
+USAGE
+}
+
+# ---------------
+# Parse args
+# ---------------
+SONG_DIR=""
+STEMS_DIR=""
+MIX_WAV=""
+VOCAL_WAV=""
+TEMPO_BPM=""
+PYTHON_BIN="python3"
+STRICT=false
+DRY_RUN=false
+
+while (( "$#" )); do
+  case "$1" in
+    -h|--help) usage; exit 0 ;;
+    --python) PYTHON_BIN="$2"; shift 2 ;;
+    --python=*) PYTHON_BIN="${1#*=}"; shift ;;
+    --stems-dir) STEMS_DIR="$2"; shift 2 ;;
+    --stems-dir=*) STEMS_DIR="${1#*=}"; shift ;;
+    --mix-wav) MIX_WAV="$2"; shift 2 ;;
+    --mix-wav=*) MIX_WAV="${1#*=}"; shift ;;
+    --vocal-wav) VOCAL_WAV="$2"; shift 2 ;;
+    --vocal-wav=*) VOCAL_WAV="${1#*=}"; shift ;;
+    --tempo-bpm) TEMPO_BPM="$2"; shift 2 ;;
+    --tempo-bpm=*) TEMPO_BPM="${1#*=}"; shift ;;
+    --strict) STRICT=true; shift ;;
+    --dry-run) DRY_RUN=true; shift ;;
+    --*) red "Unknown option: $1"; usage; exit 2 ;;
+    *) if [[ -z "$SONG_DIR" ]]; then SONG_DIR="$1"; else red "Unexpected arg: $1"; usage; exit 2; fi; shift ;;
+  esac
+done
+
+if [[ -z "$SONG_DIR" || -z "$STEMS_DIR" ]]; then
+  usage; exit 2
+fi
+
+# Resolve absolute paths
+SONG_DIR=$(python3 - <<PY
+import os,sys
+print(os.path.abspath(sys.argv[1]))
+PY
+"$SONG_DIR")
+STEMS_DIR=$(python3 - <<PY
+import os,sys
+print(os.path.abspath(sys.argv[1]))
+PY
+"$STEMS_DIR")
+
+ANALYSIS_DIR="$SONG_DIR/analysis"
+LOG_ROOT="$SONG_DIR/.logs_makepkg"
+TS=$(date +%Y%m%d_%H%M%S)
+LOG_DIR="$LOG_ROOT/$TS"; mkdir -p "$LOG_DIR" "$ANALYSIS_DIR"
+
+# ---------------
+# Auto-detect WAVs if missing
+# ---------------
+if [[ -z "$MIX_WAV" ]]; then
+  # Prefer explicit _auto_Other.wav, then *Mix*.wav, else any non-vocal stem
+  MIX_WAV=$(ls "$STEMS_DIR"/*_auto_Other.wav 2>/dev/null | head -1 || true)
+  [[ -z "$MIX_WAV" ]] && MIX_WAV=$(ls "$STEMS_DIR"/*[Mm]ix*.wav 2>/dev/null | head -1 || true)
+  if [[ -z "$MIX_WAV" ]]; then
+    # Take first stem that does NOT look like vocals/drums
+    MIX_WAV=$(ls "$STEMS_DIR"/*.wav 2>/dev/null | grep -viE '(Vocal|Voice|Drum|Kick|Snare|Hat)' | head -1 || true)
+  fi
+fi
+if [[ -z "$VOCAL_WAV" ]]; then
+  VOCAL_WAV=$(ls "$STEMS_DIR"/*(Vocal|Vocals|VOX)*.wav 2>/dev/null | head -1 || true)
+fi
+
+blue "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+blue "🎯 Make SongPackage core JSONs from sources"
+blue "SONG_DIR   : $SONG_DIR"
+blue "STEMS_DIR  : $STEMS_DIR"
+blue "MIX_WAV    : ${MIX_WAV:-<auto-detect failed>}"
+blue "VOCAL_WAV  : ${VOCAL_WAV:-<auto-detect failed>}"
+blue "TEMPO_BPM  : ${TEMPO_BPM:-<auto or none>}"
+blue "PYTHON_BIN : $PYTHON_BIN"
+blue "STRICT     : $STRICT | DRY_RUN: $DRY_RUN"
+blue "Logs       : $LOG_DIR"
+blue "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+run() {
+  if $DRY_RUN; then
+    yellow "DRY-RUN> $*"
+  else
+    eval "$@"
+  fi
+}
+
+soft_fail_guard() {
+  if $STRICT; then
+    red "✖ Step failed. (strict mode)"; exit 1
+  else
+    yellow "⚠ Step failed, continuing (soft mode)."
+  fi
+}
+
+# ---------------
+# STEP 1: Tempo / Timing map
+# ---------------
+STEP1_OUT_JSON="$SONG_DIR/tempo_map.json"
+STEP1_OUT_BARS="$SONG_DIR/bars.parquet"
+
+blue "\n[1/4] Tempo & timing"
+if [[ -z "$MIX_WAV" || ! -f "$MIX_WAV" ]]; then
+  yellow "  ↳ Skip: mix wav not found. (Provided: $MIX_WAV)"
+else
+  CMD1=("$PYTHON_BIN" ops/tempo_timing.py \
+        --audio "$MIX_WAV" \
+        --out-json "$STEP1_OUT_JSON" \
+        --out-bars "$STEP1_OUT_BARS")
+  if [[ -n "$TEMPO_BPM" ]]; then CMD1+=(--tempo-bpm "$TEMPO_BPM"); fi
+  run "${CMD1[@]} > '$LOG_DIR/tempo_timing.log' 2>&1" || soft_fail_guard
+  [[ -f "$STEP1_OUT_JSON" ]] && green "  ✓ tempo_map.json → $STEP1_OUT_JSON" || yellow "  • tempo_map.json not written"
+  [[ -f "$STEP1_OUT_BARS" ]] && green "  ✓ bars.parquet   → $STEP1_OUT_BARS" || yellow "  • bars.parquet not written"
+fi
+
+# ---------------
+# STEP 2: Sections from audio
+# ---------------
+blue "\n[2/4] Sections from audio"
+if [[ -z "$MIX_WAV" || ! -f "$MIX_WAV" ]]; then
+  yellow "  ↳ Skip: mix wav not found."
+else
+  CMD2=("$PYTHON_BIN" ops/sections_from_audio.py \
+        --stems "$STEMS_DIR" \
+        --out "$SONG_DIR/sections.json")
+  # Prefer bars if exists
+  [[ -f "$STEP1_OUT_BARS" ]] && CMD2+=(--bars "$STEP1_OUT_BARS")
+  run "${CMD2[@]} > '$LOG_DIR/sections_from_audio.log' 2>&1" || soft_fail_guard
+  [[ -f "$SONG_DIR/sections.json" ]] && green "  ✓ sections.json → $SONG_DIR/sections.json" || yellow "  • sections.json not written"
+fi
+
+# ---------------
+# STEP 3: Lyric anchors from vocal
+# ---------------
+blue "\n[3/4] Lyric anchors from vocal"
+if [[ -z "$VOCAL_WAV" || ! -f "$VOCAL_WAV" ]]; then
+  yellow "  ↳ Skip: vocal wav not found."
+else
+  CMD3=("$PYTHON_BIN" ops/anchors_from_vocal.py \
+        --vocal "$VOCAL_WAV" \
+        --out "$SONG_DIR/lyric_anchors.json")
+  [[ -f "$STEP1_OUT_BARS" ]] && CMD3+=(--bars "$STEP1_OUT_BARS")
+  run "${CMD3[@]} > '$LOG_DIR/anchors_from_vocal.log' 2>&1" || soft_fail_guard
+  [[ -f "$SONG_DIR/lyric_anchors.json" ]] && green "  ✓ lyric_anchors.json → $SONG_DIR/lyric_anchors.json" || yellow "  • lyric_anchors.json not written"
+fi
+
+# ---------------
+# STEP 4: Chordmap (bar-level harmony from stems)
+# ---------------
+blue "\n[4/4] Chordmap (bar-level harmony)"
+CHORDMAP_OUT="$ANALYSIS_DIR/chordmap.json"
+
+if [[ -d "$STEMS_DIR" ]]; then
+  # Prefer fusion script; fallback to legacy script if fusion is absent
+  if [[ -f ops/stem_harmony_bar_level_fusion.py ]]; then
+    CMD4=("$PYTHON_BIN" ops/stem_harmony_bar_level_fusion.py \
+          --stems-dir "$STEMS_DIR" \
+          --out-chordmap "$CHORDMAP_OUT")
+  else
+    CMD4=("$PYTHON_BIN" ops/stem_harmony_bar_level.py \
+          --stems "$STEMS_DIR" \
+          --out "$CHORDMAP_OUT")
+  fi
+  [[ -f "$STEP1_OUT_BARS" ]] && CMD4+=(--bars "$STEP1_OUT_BARS")
+  [[ -n "$TEMPO_BPM" ]] && CMD4+=(--tempo-bpm "$TEMPO_BPM")
+  run "${CMD4[@]} > '$LOG_DIR/chordmap.log' 2>&1" || soft_fail_guard
+  [[ -f "$CHORDMAP_OUT" ]] && green "  ✓ chordmap.json → $CHORDMAP_OUT" || yellow "  • chordmap.json not written"
+else
+  yellow "  ↳ Skip: stems dir not found: $STEMS_DIR"
+fi
+
+# ---------------
+# Summary
+# ---------------
+blue "\nSummary:"
+[[ -f "$STEP1_OUT_JSON" ]]  && echo "  - tempo_map.json      : $STEP1_OUT_JSON"  || echo "  - tempo_map.json      : (not created)"
+[[ -f "$STEP1_OUT_BARS" ]]  && echo "  - bars.parquet        : $STEP1_OUT_BARS"  || echo "  - bars.parquet        : (not created)"
+[[ -f "$SONG_DIR/sections.json" ]] && echo "  - sections.json       : $SONG_DIR/sections.json" || echo "  - sections.json       : (not created)"
+[[ -f "$SONG_DIR/lyric_anchors.json" ]] && echo "  - lyric_anchors.json  : $SONG_DIR/lyric_anchors.json" || echo "  - lyric_anchors.json  : (not created)"
+[[ -f "$CHORDMAP_OUT" ]]  && echo "  - chordmap.json       : $CHORDMAP_OUT"  || echo "  - chordmap.json       : (not created)"
+
+green "\nDone. Logs saved to: $LOG_DIR"

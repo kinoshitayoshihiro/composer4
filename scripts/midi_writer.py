@@ -112,7 +112,6 @@ def write_track_from_abs_notes(
     channel: int = 0,
     debug: bool = False,
     track_name: str = "",
-    song_end_ticks: int | None = None,
 ):
     """
     絶対tick方式で安全にノートを書き出す
@@ -124,7 +123,6 @@ def write_track_from_abs_notes(
         channel: MIDI channel (0-15, drums=9)
         debug: デバッグ出力
         track_name: トラック名（デバッグ用）
-        song_end_ticks: 曲末tick（EOT揃え用、任意）
     """
     # 1) 両端clip（負や逆転を排除）
     cleaned = []
@@ -151,24 +149,10 @@ def write_track_from_abs_notes(
         prev = t
         track.append(Message(kind, note=int(p), velocity=int(v), channel=channel, time=int(delta)))
 
-    # 5) End of Track メタメッセージ追加（song_end_ticks揃え）
-    if song_end_ticks is not None and song_end_ticks > 0:
-        # 最終メッセージの絶対tick位置取得
-        abs_tick = prev  # prevは最後のメッセージのtick位置
-        # song_end_ticksまでの差分でEOT追加
-        if song_end_ticks > abs_tick:
-            track.append(MetaMessage("end_of_track", time=(song_end_ticks - abs_tick)))
-        else:
-            track.append(MetaMessage("end_of_track", time=0))
-    else:
-        # フォールバック: 0 delta でEOT追加
-        track.append(MetaMessage("end_of_track", time=0))
-
     if debug and msgs:
-        last_tick = msgs[-1][0] if msgs else 0
-        eot_tick = song_end_ticks if song_end_ticks else prev
+        last_tick = msgs[-1][0]
         print(
-            f"[writer] track={track_name} ch={channel} last_note_tick={last_tick} EOT_tick={eot_tick} (beats={eot_tick/ppq:.2f})",
+            f"[writer] track={track_name} ch={channel} last_abs_tick={last_tick} (beats={last_tick/ppq:.2f})",
             file=sys.stderr,
         )
 
@@ -473,15 +457,9 @@ def write_plan(
             for p in pitches:
                 abs_notes.append((start_ticks, end_ticks, int(p), vel))
 
-        # 絶対tick方式で安全に書き出し（song_end_ticks揃え）
+        # 絶対tick方式で安全に書き出し
         write_track_from_abs_notes(
-            track,
-            abs_notes,
-            ppq,
-            channel=channel,
-            debug=debug,
-            track_name=name,
-            song_end_ticks=song_end_ticks,
+            track, abs_notes, ppq, channel=channel, debug=debug, track_name=name
         )
 
     # 制御MIDIのマージ

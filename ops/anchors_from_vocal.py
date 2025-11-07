@@ -378,10 +378,10 @@ def main():
             {
                 "time": a.time,
                 "token": a.token,
-                "class": a.classes,  # 先頭要素が主クラス
+                "classes": a.classes,  # 先頭要素が主クラス
                 "section": a.section,
                 "time_ql": a.time_ql,
-                "window_ms": {"pre": a.windows_ms.get("pre", 0.0), "post": a.windows_ms.get("post", 0.0)}
+                "windows_ms": {"pre": a.windows_ms.get("pre", 0.0), "post": a.windows_ms.get("post", 0.0)}
             }
             for a in anchors
         ]

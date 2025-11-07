@@ -1,0 +1,12 @@
+# Magenta専用venv依存（Bus error対策固定ピン）
+# 使用方法:
+#   python3.11 -m venv .venv_magenta
+#   source .venv_magenta/bin/activate
+#   pip install -r requirements-magenta.txt
+
+numpy==1.23.5
+protobuf==3.20.*
+note-seq==0.0.5
+magenta==2.1.4
+pretty-midi>=0.2.9
+tensorflow==2.11.0

@@ -77,11 +77,7 @@ humanize:
       strum:
         enabled: true
         direction: auto           # verse=up/chorus=down を内部推定
-        width_ms: 22              # ストラム幅22ms（最終調整：18→22ms）
-        # セクション別オーバーライド（Chorusだけ少し広め）
-        section_overrides:
-          chorus:
-            width_ms: 24
+        width_ms: 18              # ストラム幅18ms（中庸）
       timing_jitter_ms: 6
       velocity_jitter: 7
     
@@ -91,12 +87,8 @@ humanize:
       velocity_jitter: 6
       pedal:
         enabled: true
-        randomness: 0.10          # ペダルタイミング10%揺れ（最終調整：0.07→0.10）
-        late_ms: 16               # ペダル遅延16ms（最終調整：12→16ms）
-        # セクション別オーバーライド
-        section_overrides:
-          chorus:
-            late_ms: 12
+        randomness: 0.07          # ペダルタイミング7%揺れ
+        late_ms: 12               # ペダル遅延12ms
     
     strings:
       enabled: true
@@ -105,7 +97,7 @@ humanize:
       expr_curve:
         enabled: true
         arc: "gentle"             # gentle | steep | plateau
-        depth: 0.16               # CC11変化幅16%（最終調整：0.12→0.16）
+        depth: 0.12               # CC11変化幅12%
   
   # フェイルセーフ境界
   limits:

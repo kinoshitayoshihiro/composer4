@@ -15,3 +15,18 @@ meta:
   total_bars: 150
 song_id: song_001
 source: wav
+reproducibility:
+  arranger_version: prod-activity-v1
+  backend_profile:
+    chords: probe_only
+    chroma: essentia
+    hat_density: yamnet
+    beats: madmom
+    downbeats: madmom
+    loudness: pyloudnorm
+    essentia_hpcp_harmonics: 4
+    chordino_min_confidence: 0.3
+  generation_timestamp: '2025-11-04T22:34:20.521105+00:00'
+  python_version: 3.11.13
+  kpi_gate_config_hash: 8d81a3e12e8d4426
+  arranger_config_hash: efd19b2167d16130
