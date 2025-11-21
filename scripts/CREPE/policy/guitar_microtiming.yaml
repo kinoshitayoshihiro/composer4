@@ -1,0 +1,16 @@
+phase_ms:
+  base_delay_ms: [20, 40]
+  allow_negative_ms: false
+humanize:
+  start_gauss_std: 8
+  start_clamp: 15
+  dur_gauss_std: 12
+  dur_clamp: 25
+  swing_16th_pct: 6
+  drift_guard_ms: 30
+ql_per_bar: 4
+bpm: 90.0
+section_override:
+  chorus:
+    base_delay_ms: [10, 25]
+    swing_16th_pct: 4

@@ -1,0 +1,83 @@
+*** a/scripts/drums_midi_to_plan_real.py
+--- b/scripts/drums_midi_to_plan_real.py
+***************
+*** 1,6 ****
+--- 1,10 ----
+  #!/usr/bin/env python3
+  # -*- coding: utf-8 -*-
+
++ # パッチ: 空ファイル検知 + スタイルYAML/アクセント計画 + 最小オートリジェネ
++ # 追加ファイル: drums_style_runtime.py / drums_style.yaml
++ # 追加引数: --style-yaml --accent-plan --auto-regen --min-events --seed
++ 
+  import argparse, json
+  from pathlib import Path
+  import pandas as pd
+***************
+*** 12,17 ****
+--- 16,37 ----
+  def jload(p: Path):
+      return json.loads(p.read_text(encoding="utf-8"))
+
++ # パッチ: 追加 import（同ディレクトリ or PYTHONPATHに配置）
++ try:
++     from drums_style_runtime import (
++         ensure_nonempty_drums,
++         load_style_yaml
++     )
++ except Exception as e:
++     ensure_nonempty_drums = None
++     load_style_yaml = None
++ 
+  def main():
+      ap = argparse.ArgumentParser()
++     # 既存引数に追加
++     ap.add_argument("--style-yaml", default=None, help="drums_style.yaml（外部スタイル設定）")
++     ap.add_argument("--accent-plan", default="analysis/drum_accent_plan.json",
++                     help="ドラム・アクセント計画JSON（break/fill/crash 指示）")
++     ap.add_argument("--auto-regen", action="store_true", help="生成0件時に最小オートリジェネで補完")
++     ap.add_argument("--min-events", type=int, default=8, help="オートリジェネに切替る最小イベント数閾値")
++     ap.add_argument("--seed", type=int, default=777, help="オートリジェネの乱数シード")
+      ap.add_argument("--bars", required=True)
+      ap.add_argument("--stems-features", required=False)
+      ap.add_argument("--out", required=True)
+***************
+*** 34,39 ****
+--- 54,95 ----
+      bars = pd.read_parquet(Path(args.bars))
+      sfeat = pd.read_parquet(Path(args.stems_features)) if args.stems_features and Path(args.stems_features).exists() else None
+      energy_s = sfeat.set_index("bar_index")["energy_curve"] if (sfeat is not None and "energy_curve" in sfeat.columns) else None
++ 
++     # ...（中略）既存のドラム生成処理...
++     # events = [{bar:int, start_beats:float, end_beats:float, pitch:int, velocity:int}, ...]
++ 
++     # ▼▼ パッチ本体: 空/少数イベントの自動補完 ▼▼
++     try:
++         # 既存処理で events が得られている前提
++         have_events = isinstance(events, list)
++     except NameError:
++         have_events = False
++ 
++     if not have_events:
++         events = []
++ 
++     meta = {"auto_regen": False}
++     if args.auto_regen and ensure_nonempty_drums is not None:
++         events, regen_meta = ensure_nonempty_drums(
++             events=events,
++             min_events=args.min_events,
++             bars=bars,
++             energy_s=energy_s,
++             style_yaml=args.style_yaml,
++             accent_plan_path=args.accent_plan,
++             seed=int(args.seed)
++         )
++         meta.update(regen_meta)
++ 
++     # 出力（既存の出力に meta を追加してもよい）
++     out = {"events": events, "meta": meta}
++     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
++     print(f"[DRUMS] wrote {len(events)} events → {args.out}")
+
+  if __name__ == "__main__":
+      main()

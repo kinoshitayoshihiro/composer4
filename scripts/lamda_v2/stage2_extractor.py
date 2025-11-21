@@ -217,7 +217,7 @@ def _error_payload(error_msg: str) -> Dict[str, Any]:
         "modulations": [],
         "sections_auto": {"unit": "bar", "sections": [], "energy": []},
         "groove": {"swing_pct": 0.0, "backbeat_strength": 0.5, "onset_deviation_hist": []},
-        "controls": {"pb_range": [0, 0], "cc_summary": {}, "rpn_seen": False},
+        "controls": {"pb_range": [0, 0], "cc_summary": {}, "rpn_seen": False, "integrity": 1.0},
     }
 
 

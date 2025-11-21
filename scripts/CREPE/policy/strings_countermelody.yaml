@@ -1,0 +1,14 @@
+enable_sections: ["chorus","bridge"]
+lane:
+  interval_from_vocal_semitones: [5, 12]
+  avoid_unison: true
+  avoid_minor2: true
+motion:
+  slope_thr_st_per_s: 1.0
+  prefer_contrary_ratio: 0.7
+rhythm:
+  notes_per_bar: [2,4]
+  prefer_offbeat: true
+mixing:
+  sidechain_to_vocal_db: 1.5
+  chorus_boost_db: 1.0

@@ -1,0 +1,21 @@
+   Python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+🎵 Song Package Generation: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004
+   Stems dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav
+🔍 Auto-detecting Mix WAV...
+   Mix WAV: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Strings).wav
+🔍 Auto-detecting Vocal WAV...
+   Vocal WAV: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Vocals).wav
+
+🕐 STEP 1/4: tempo_map.json + bars.parquet
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/tempo_map_cli.py --audio /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Strings).wav --bars /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet --out-bars /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet --out-tempo /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/tempo_map.json --bpb 4 --prefer-madmom
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/madmom/__init__.py:21: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+✅ Wrote tempo_map: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/tempo_map.json
+✅ Wrote bars (start_sec/end_sec): /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet
+   bars: 68 rows | start[25.73] -> end[140.57]
+
+🕐.5 STEP 1.5/5: bars.parquet拡張（完全版生成）
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+  File "<string>", line 5, in <listcomp>
+TypeError: list indices must be integers or slices, not str

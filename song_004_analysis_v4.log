@@ -1,0 +1,236 @@
+   Python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+🎵 Song Package Generation: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004
+   Stems dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav
+🔍 Auto-detecting Mix WAV...
+   Mix WAV: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/_auto_Other.wav
+🔍 Auto-detecting Vocal WAV...
+   Vocal WAV: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Vocals).wav
+
+🕐 STEP 1/4: tempo_map.json + bars.parquet
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/tempo_map_cli.py --audio /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/_auto_Other.wav --bars /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet --out-bars /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet --out-tempo /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/tempo_map.json --bpb 4 --prefer-madmom
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/madmom/__init__.py:21: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+✅ Wrote tempo_map: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/tempo_map.json
+✅ Wrote bars (start_sec/end_sec): /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet
+   bars: 68 rows | start[0.72] -> end[182.16]
+
+🕐.5 STEP 1.5/5: bars.parquet拡張（完全版生成）
+   Median BPM: 89.1029094827589
+✅ Extended bars.parquet: 68 bars
+   Columns: ['bar_index', 'tempo_bpm', 'time_signature', 'start_sec', 'end_sec', 'start_beat', 'end_beat', 'density_target', 'swing_target', 'section_label', 'drums_active', 'energy_curve', 'hat_density', 'kick_peak_db', 'snare_backbeat', 'fill_likelihood', 'loudness_db', 'vocal_stress', 'guitar_activity', 'piano_activity', 'strings_activity']
+
+🕑 STEP 2/5: sections.json
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/sections_from_audio.py --stems /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav --out /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/sections.json
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/sections_from_audio.py:140: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(tempo), beats
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/sections_from_audio.py:140: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(tempo), beats
+[INFO] peak_extractor: 50 energy peaks detected
+[DEBUG] energy curve: min=0.115, max=1.000
+[DEBUG] prominence threshold: 0.060, distance: 3
+[DEBUG] peaks_energy indices: [16, 30, 39, 45]
+[DEBUG] prominence values: [0.58167905 0.43848359 0.54167732 0.07434731]
+[INFO] Combined peaks: 24 (rms=50, energy=4)
+[INFO] Sections: 12, Energy peaks (chorus): 2
+[INFO] Key hints: [(0, 'E'), (16, 'B'), (19, 'E'), (29, 'Cm'), (32, 'E'), (44, 'B'), (47, 'A')]
+[WARN] Section at bar 8 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 16 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 23 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 26 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 29 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 32 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 44 is only 3 bars (recommended >= 8)
+[OK] Validation passed
+
+============================================================
+[SUCCESS] sections.json (v2) generated: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/sections.json
+============================================================
+Sections: 4
+  Bars   0–  7: intro
+  Bars   8– 18: verse
+  Bars  19– 34: pre_chorus
+  Bars  35– 47: verse
+
+Tempo: 89.3 BPM (bar 0)
+Keys: Bar 0: E, Bar 16: B, Bar 19: E, Bar 29: Cm, Bar 32: E, Bar 44: B, Bar 47: A
+Energy range: [0.11, 1.00]
+
+🕑.5 STEP 2.5/5: density_target/swing_target/section_label更新
+✅ Updated density_target/swing_target/section_label for 4 sections
+   intro        bars   0-7  : density=0.50
+   verse        bars   8-18 : density=0.60
+   pre_chorus   bars  19-34 : density=0.75
+   verse        bars  35-47 : density=0.60
+
+🕒 STEP 3/5: lyric_anchors.json
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/anchors_from_vocal.py --vocal /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Vocals).wav --out /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json
+[INFO] Loading vocal: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Vocals).wav
+[INFO] Extracting onset candidates...
+[INFO] No lyrics provided, anchors will have no tokens
+[INFO] Detecting beats...
+[INFO] Detected tempo: 172.3 BPM, 366 beats
+[INFO] Analyzing anchors with window-mode=class...
+[OK] anchors=566 -> /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json
+[INFO] Class distribution:
+  plosive: 6
+  sibilant: 463
+  stress: 102
+
+🕓 STEP 4/5: analysis/chordmap.json
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/stem_harmony_bar_level.py --stems /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav --out /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap.json
+[CACHE] SAVE: chroma_bar_1be0b85f.npz
+[INFO] Aggregated to 52 bars
+[INFO] Using extended templates: 72 states
+[INFO] Estimated key: Cm → (0, 'min')
+[INFO] Greedy recognition (smoothing=0.1)
+[OK] Bar-level chordmap: 52 events -> /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap.json
+[INFO] Density: 52 events / 52 bars = 1.00 chords/bar
+
+🕔 STEP 5/5: stem_features.parquet + drums_active
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/stems_features.py --stems /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav --bars /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet --anchors /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json --output /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_features.parquet --tempo-bpm 89.1029094827589 --inst-activity
+INFO: Loading bars from: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet
+INFO: Loaded 68 bars
+INFO: Extracting drums features from: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Drums).wav
+INFO: Extracted drums features for 68 bars
+INFO: Extracting mix features from: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/_auto_Other.wav
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/numpy/core/fromnumeric.py:3504: RuntimeWarning: Mean of empty slice.
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/numpy/core/_methods.py:129: RuntimeWarning: invalid value encountered in divide
+  ret = ret.dtype.type(ret / rcount)
+INFO: Extracted mix features for 68 bars
+INFO: Extracting vocal stress from: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json
+INFO: Detected 0 stress bars
+INFO: Computing instrument activity (guitar/piano/strings) from Other stem
+INFO:    Applied 3-bar smoothing to activity columns
+INFO:    guitar_activity: mean=0.258, active_bars=31
+INFO:    piano_activity: mean=0.361, active_bars=40
+INFO:    strings_activity: mean=0.320, active_bars=38
+INFO:    drums_active: 44.0 active bars, 24 break bars
+INFO: ✅ Saved stem features to: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_features.parquet
+INFO:    Bars: 68
+INFO:    Columns: ['bar', 'hat_density', 'kick_peak_db', 'snare_backbeat', 'fill_likelihood', 'loudness_db', 'energy_curve', 'vocal_stress', 'guitar_activity', 'piano_activity', 'strings_activity', 'drums_active']
+
+============================================================
+Stem Features Statistics
+============================================================
+            bar  hat_density  ...  strings_activity  drums_active
+count  68.00000    68.000000  ...         68.000000     68.000000
+mean   33.50000     0.463235  ...          0.320073      0.647059
+std    19.77372     0.467737  ...          0.345116      0.481438
+min     0.00000     0.000000  ...          0.000000      0.000000
+25%    16.75000     0.000000  ...          0.000000      0.000000
+50%    33.50000     0.375000  ...          0.184856      1.000000
+75%    50.25000     0.750000  ...          0.684241      1.000000
+max    67.00000     1.750000  ...          0.933972      1.000000
+
+[8 rows x 12 columns]
+============================================================
+   Merging stem_features to bars.parquet (完全版生成)...
+✅ Merged 11 columns from stem_features.parquet to bars.parquet
+   drums_active: 44 active / 68 total bars
+   energy_curve: 0.000 - 1.000
+   guitar_activity: 31 active bars (mean=0.258)
+   piano_activity: 40 active bars (mean=0.361)
+   strings_activity: 38 active bars (mean=0.320)
+✅ bars.parquet完全版保存: 68 bars, 21 columns
+
+📋 Copying files to analysis/ directory...
+✅ Files copied to analysis/
+
+🔗 Step 7: Creating symbolic links for CREPE/OaF
+✅ Created symbolic link: vocal.wav -> stem_wav/oreno_001_(Vocals).wav
+✅ Created symbolic link: piano.wav -> stem_wav/oreno_001_(Keyboard).wav
+
+🎵 Step 8: Extracting stem features...
+✅ Stem features extracted
+
+🎤 Step 9: Extracting vocal features...
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/resampy/filters.py:50: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+  1/182 [..............................] - ETA: 1:46  2/182 [..............................] - ETA: 1:01  3/182 [..............................] - ETA: 1:10  4/182 [..............................] - ETA: 1:06  5/182 [..............................] - ETA: 1:04  6/182 [..............................] - ETA: 1:03  7/182 [>.............................] - ETA: 1:02  8/182 [>.............................] - ETA: 1:01  9/182 [>.............................] - ETA: 1:01 10/182 [>.............................] - ETA: 1:00 11/182 [>.............................] - ETA: 59s  12/182 [>.............................] - ETA: 59s 13/182 [=>............................] - ETA: 1:01 14/182 [=>............................] - ETA: 1:02 15/182 [=>............................] - ETA: 1:03 16/182 [=>............................] - ETA: 1:02 17/182 [=>............................] - ETA: 1:01 18/182 [=>............................] - ETA: 1:01 19/182 [==>...........................] - ETA: 1:00 20/182 [==>...........................] - ETA: 59s  21/182 [==>...........................] - ETA: 59s 22/182 [==>...........................] - ETA: 58s 23/182 [==>...........................] - ETA: 57s 24/182 [==>...........................] - ETA: 57s 25/182 [===>..........................] - ETA: 56s 26/182 [===>..........................] - ETA: 56s 27/182 [===>..........................] - ETA: 55s 28/182 [===>..........................] - ETA: 55s 29/182 [===>..........................] - ETA: 54s 30/182 [===>..........................] - ETA: 54s 31/182 [====>.........................] - ETA: 54s 32/182 [====>.........................] - ETA: 54s 33/182 [====>.........................] - ETA: 53s 34/182 [====>.........................] - ETA: 53s 35/182 [====>.........................] - ETA: 53s 36/182 [====>.........................] - ETA: 52s 37/182 [=====>........................] - ETA: 52s 38/182 [=====>........................] - ETA: 52s 39/182 [=====>........................] - ETA: 51s 40/182 [=====>........................] - ETA: 51s 41/182 [=====>........................] - ETA: 50s 42/182 [=====>........................] - ETA: 50s 43/182 [======>.......................] - ETA: 50s 44/182 [======>.......................] - ETA: 49s 45/182 [======>.......................] - ETA: 49s 46/182 [======>.......................] - ETA: 49s 47/182 [======>.......................] - ETA: 49s 48/182 [======>.......................] - ETA: 48s 49/182 [=======>......................] - ETA: 48s 50/182 [=======>......................] - ETA: 48s 51/182 [=======>......................] - ETA: 47s 52/182 [=======>......................] - ETA: 47s 53/182 [=======>......................] - ETA: 47s 54/182 [=======>......................] - ETA: 47s 55/182 [========>.....................] - ETA: 46s 56/182 [========>.....................] - ETA: 46s 57/182 [========>.....................] - ETA: 46s 58/182 [========>.....................] - ETA: 45s 59/182 [========>.....................] - ETA: 45s 60/182 [========>.....................] - ETA: 45s 61/182 [=========>....................] - ETA: 44s 62/182 [=========>....................] - ETA: 44s 63/182 [=========>....................] - ETA: 44s 64/182 [=========>....................] - ETA: 43s 65/182 [=========>....................] - ETA: 43s 66/182 [=========>....................] - ETA: 43s 67/182 [==========>...................] - ETA: 42s 68/182 [==========>...................] - ETA: 42s 69/182 [==========>...................] - ETA: 41s 70/182 [==========>...................] - ETA: 41s 71/182 [==========>...................] - ETA: 41s 72/182 [==========>...................] - ETA: 40s 73/182 [===========>..................] - ETA: 40s 74/182 [===========>..................] - ETA: 40s 75/182 [===========>..................] - ETA: 39s 76/182 [===========>..................] - ETA: 39s 77/182 [===========>..................] - ETA: 39s 78/182 [===========>..................] - ETA: 38s 79/182 [============>.................] - ETA: 38s 80/182 [============>.................] - ETA: 38s 81/182 [============>.................] - ETA: 37s 82/182 [============>.................] - ETA: 37s 83/182 [============>.................] - ETA: 36s 84/182 [============>.................] - ETA: 36s 85/182 [=============>................] - ETA: 36s 86/182 [=============>................] - ETA: 36s 87/182 [=============>................] - ETA: 35s 88/182 [=============>................] - ETA: 35s 89/182 [=============>................] - ETA: 34s 90/182 [=============>................] - ETA: 34s 91/182 [==============>...............] - ETA: 34s 92/182 [==============>...............] - ETA: 33s 93/182 [==============>...............] - ETA: 33s 94/182 [==============>...............] - ETA: 33s 95/182 [==============>...............] - ETA: 32s 96/182 [==============>...............] - ETA: 32s 97/182 [==============>...............] - ETA: 32s 98/182 [===============>..............] - ETA: 31s 99/182 [===============>..............] - ETA: 31s100/182 [===============>..............] - ETA: 31s101/182 [===============>..............] - ETA: 30s102/182 [===============>..............] - ETA: 30s103/182 [===============>..............] - ETA: 30s104/182 [================>.............] - ETA: 29s105/182 [================>.............] - ETA: 29s106/182 [================>.............] - ETA: 28s107/182 [================>.............] - ETA: 28s108/182 [================>.............] - ETA: 28s109/182 [================>.............] - ETA: 28s110/182 [=================>............] - ETA: 27s111/182 [=================>............] - ETA: 27s112/182 [=================>............] - ETA: 26s113/182 [=================>............] - ETA: 26s114/182 [=================>............] - ETA: 26s115/182 [=================>............] - ETA: 25s116/182 [==================>...........] - ETA: 25s117/182 [==================>...........] - ETA: 25s118/182 [==================>...........] - ETA: 24s119/182 [==================>...........] - ETA: 24s120/182 [==================>...........] - ETA: 23s121/182 [==================>...........] - ETA: 23s122/182 [===================>..........] - ETA: 23s123/182 [===================>..........] - ETA: 22s124/182 [===================>..........] - ETA: 22s125/182 [===================>..........] - ETA: 21s126/182 [===================>..........] - ETA: 21s127/182 [===================>..........] - ETA: 21s128/182 [====================>.........] - ETA: 20s129/182 [====================>.........] - ETA: 20s130/182 [====================>.........] - ETA: 20s131/182 [====================>.........] - ETA: 19s132/182 [====================>.........] - ETA: 19s133/182 [====================>.........] - ETA: 18s134/182 [=====================>........] - ETA: 18s135/182 [=====================>........] - ETA: 18s136/182 [=====================>........] - ETA: 17s137/182 [=====================>........] - ETA: 17s138/182 [=====================>........] - ETA: 17s139/182 [=====================>........] - ETA: 16s140/182 [======================>.......] - ETA: 16s141/182 [======================>.......] - ETA: 16s142/182 [======================>.......] - ETA: 15s143/182 [======================>.......] - ETA: 15s144/182 [======================>.......] - ETA: 14s145/182 [======================>.......] - ETA: 14s146/182 [=======================>......] - ETA: 14s147/182 [=======================>......] - ETA: 13s148/182 [=======================>......] - ETA: 13s149/182 [=======================>......] - ETA: 12s150/182 [=======================>......] - ETA: 12s151/182 [=======================>......] - ETA: 12s152/182 [========================>.....] - ETA: 11s153/182 [========================>.....] - ETA: 11s154/182 [========================>.....] - ETA: 10s155/182 [========================>.....] - ETA: 10s156/182 [========================>.....] - ETA: 10s157/182 [========================>.....] - ETA: 9s 158/182 [=========================>....] - ETA: 9s159/182 [=========================>....] - ETA: 9s160/182 [=========================>....] - ETA: 8s161/182 [=========================>....] - ETA: 8s162/182 [=========================>....] - ETA: 7s163/182 [=========================>....] - ETA: 7s164/182 [==========================>...] - ETA: 7s165/182 [==========================>...] - ETA: 6s166/182 [==========================>...] - ETA: 6s167/182 [==========================>...] - ETA: 5s168/182 [==========================>...] - ETA: 5s169/182 [==========================>...] - ETA: 5s170/182 [===========================>..] - ETA: 4s171/182 [===========================>..] - ETA: 4s172/182 [===========================>..] - ETA: 3s173/182 [===========================>..] - ETA: 3s174/182 [===========================>..] - ETA: 3s175/182 [===========================>..] - ETA: 2s176/182 [============================>.] - ETA: 2s177/182 [============================>.] - ETA: 1s178/182 [============================>.] - ETA: 1s179/182 [============================>.] - ETA: 1s180/182 [============================>.] - ETA: 0s181/182 [============================>.] - ETA: 0s182/182 [==============================] - ETA: 0s182/182 [==============================] - 72s 396ms/step
+✅ Vocal features extracted & merged into bars.parquet
+
+🎵 Step 9.5: Adding energy/valence columns (23-column bars.parquet)
+   energy列は既に存在します
+   valence列は既に存在します
+✅ bars.parquet 23列化完了: 68 bars, 29 columns
+   energy範囲: 0.000 - 1.000
+   valence: 0.5 (暫定)
+
+✅ Song package generation complete!
+   Generated files:
+     - /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/tempo_map.json
+     - /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet
+     - /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/sections.json
+     - /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json
+     - /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap.json
+     - /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_features.parquet
+
+   bars.parquet (完全版) columns:
+     Total bars: 68
+     Total columns: 21
+
+     必須カラム:
+       ✅ bar_index
+       ✅ tempo_bpm
+       ✅ time_signature
+       ✅ start_sec
+       ✅ end_sec
+       ✅ start_beat
+       ✅ end_beat
+       ✅ density_target
+       ✅ swing_target
+       ✅ section_label
+
+     stem_features由来カラム:
+       ✅ drums_active
+       ✅ energy_curve
+       ✅ hat_density
+       ✅ kick_peak_db
+       ✅ snare_backbeat
+       ✅ fill_likelihood
+       ✅ loudness_db
+       ✅ vocal_stress
+       ✅ guitar_activity
+       ✅ piano_activity
+       ✅ strings_activity
+
+     全カラムリスト:
+       - bar_index
+       - tempo_bpm
+       - time_signature
+       - start_sec
+       - end_sec
+       - start_beat
+       - end_beat
+       - density_target
+       - swing_target
+       - section_label
+       - drums_active
+       - energy_curve
+       - hat_density
+       - kick_peak_db
+       - snare_backbeat
+       - fill_likelihood
+       - loudness_db
+       - vocal_stress
+       - guitar_activity
+       - piano_activity
+       - strings_activity
+
+   analysis/ directory files:
+     ✅ .DS_Store                          8196 bytes
+     ✅ bars.parquet                      25569 bytes
+     ✅ bassline_plan.csv                  2680 bytes
+     ✅ chordmap.json                      4049 bytes
+     ✅ drum_accent_plan.json               240 bytes
+     ✅ lyric_anchors.json               131735 bytes
+     ✅ sections.json                      3607 bytes
+     ✅ stem_features.parquet             11329 bytes
+     ✅ stems_features.parquet            14589 bytes
+     ✅ style_presets.yaml                 1491 bytes
+     ✅ tempo_map.json                    11991 bytes
+     ✅ vocal_features.parquet             7072 bytes
+     ✅ voicings_guide.csv                  636 bytes

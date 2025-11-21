@@ -1,0 +1,52 @@
+meta:
+  version: demo
+  description: Minimal rulebook for EmotionAI demo
+rules:
+  - id: demo-intro-soft
+    name: Intro softness
+    domain: emotion
+    emotion_tags: [soft]
+    context:
+      sections: ["intro"]
+    mechanics:
+      emotion:
+        energy_delta: -0.1
+        tension_delta: -0.05
+        brightness_delta: -0.05
+        valence_delta: 0.05
+  - id: demo-verse-drive
+    name: Verse forward drive
+    domain: emotion
+    emotion_tags: [drive]
+    context:
+      sections: ["verse"]
+    mechanics:
+      emotion:
+        energy_delta: 0.05
+        tension_delta: 0.02
+        brightness_delta: 0.05
+  - id: demo-prechorus-lift
+    name: Pre-chorus lift
+    domain: emotion
+    emotion_tags: [lift]
+    context:
+      sections: ["pre_chorus"]
+    mechanics:
+      emotion:
+        energy_delta: 0.08
+        tension_delta: 0.06
+        brightness_delta: 0.04
+        duration_scale: 0.95
+  - id: demo-chorus-climax
+    name: Chorus climax
+    domain: emotion
+    emotion_tags: [climax]
+    context:
+      sections: ["chorus"]
+    mechanics:
+      emotion:
+        energy_delta: 0.12
+        tension_delta: 0.08
+        brightness_delta: 0.06
+        velocity_scale: 1.1
+        duration_scale: 0.9

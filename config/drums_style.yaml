@@ -1,0 +1,27 @@
+# drums_style.yaml (copied from example)
+profile: pop_modern
+density_by_section:
+  intro: 0.55
+  verse: 0.62
+  bridge: 0.72
+  chorus: 0.92
+  outro: 0.50
+break_rate_by_section:
+  intro: 0.12
+  verse: 0.06
+  bridge: 0.08
+  chorus: 0.02
+  outro: 0.10
+fill_freq_by_section:
+  intro: 0.10
+  verse: 0.12
+  bridge: 0.18
+  chorus: 0.24
+  outro: 0.14
+hat_open_ratio:
+  low: 0.06
+  mid: 0.12
+  high: 0.20
+ghost_snare: true
+swing: 0.0
+crash_on_transitions: true

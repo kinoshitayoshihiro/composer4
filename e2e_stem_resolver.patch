@@ -1,0 +1,93 @@
+--- a/e2e_suno_arrangement.sh
++++ b/e2e_suno_arrangement.sh
+@@ -1,4 +1,69 @@
+ #!/usr/bin/env bash
++
++# >>> STEM RESOLVER BEGIN ----------------------------------------------------
++# Resolve stem_wav directory and locate individual stems robustly.
++resolve_stems() {
++  local project_root="${1:-.}"
++  local song_id="${2:-${SONG_ID:-song_004}}"
++
++  # 1) If user set STEMS_DIR, use it; otherwise probe common locations.
++  if [[ -n "${STEMS_DIR:-}" && -d "$STEMS_DIR" ]]; then
++    STEMS_BASE="$STEMS_DIR"
++  else
++    local -a candidates=(
++      "$project_root/data/suno_ai"/*/"$song_id"/stem_wav
++      "$project_root/data/suno_ai"/*/"$song_id"/stems
++      "$project_root/$song_id/stem_wav"
++      "$project_root/stem_wav"
++      "$project_root/stems"
++      "$project_root/audio/stems"
++    )
++    for d in "${candidates[@]}"; do
++      if [[ -d "$d" ]]; then STEMS_BASE="$d"; break; fi
++    done
++  fi
++
++  if [[ -z "${STEMS_BASE:-}" ]]; then
++    echo "⚠️  resolve_stems: no stems directory found (try setting STEMS_DIR)" >&2
++    HAVE_STEMS=0
++    return 1
++  fi
++
++  _find_stem() {
++    local -r patterns=("$@")
++    local f
++    for pat in "${patterns[@]}"; do
++      f=$(ls -1 "$STEMS_BASE"/$pat 2>/dev/null | head -n1 || true)
++      [[ -n "$f" ]] && { echo "$f"; return 0; }
++    done
++    echo ""
++  }
++
++  DRUMS_WAV="${STEM_DRUMS:-$(_find_stem "*[Dd]rum*.wav" "*_(Drums).wav" "*Drums*.wav" "*Perc*.wav")}"
++  VOCALS_WAV="${STEM_VOCALS:-$(_find_stem "*[Vv]ocal*.wav" "*_(Vocals).wav" "*歌*.wav")}"
++  BASS_WAV="${STEM_BASS:-$(_find_stem "*[Bb]ass*.wav" "*_(Bass).wav")}"
++  PIANO_WAV="${STEM_PIANO:-$(_find_stem "*[Pp]iano*.wav" "*Keys*.wav" "*Keyboard*.wav" "*_(Piano).wav")}"
++  GUITAR_WAV="${STEM_GUITAR:-$(_find_stem "*[Gg]uitar*.wav" "*_(Guitar).wav")}"
++  STRINGS_WAV="${STEM_STRINGS:-$(_find_stem "*[Ss]tring*.wav" "*Pad*.wav" "*Synth*.wav")}"
++
++  HAVE_STEMS=1
++  echo "🎧 STEMS_DIR: $STEMS_BASE"
++  [[ -n "${DRUMS_WAV:-}"  ]] && echo "  - drums  : $(basename "$DRUMS_WAV")"
++  [[ -n "${VOCALS_WAV:-}" ]] && echo "  - vocals : $(basename "$VOCALS_WAV")"
++  [[ -n "${BASS_WAV:-}"   ]] && echo "  - bass   : $(basename "$BASS_WAV")"
++  [[ -n "${PIANO_WAV:-}"  ]] && echo "  - piano  : $(basename "$PIANO_WAV")"
++  [[ -n "${GUITAR_WAV:-}" ]] && echo "  - guitar : $(basename "$GUITAR_WAV")"
++  [[ -n "${STRINGS_WAV:-}" ]] && echo "  - strings: $(basename "$STRINGS_WAV")"
++  return 0
++}
++# <<< STEM RESOLVER END ------------------------------------------------------
++
++# --- auto-call resolver early (non-fatal) ---
++if resolve_stems "${PROJECT_ROOT:-.}" "${SONG_ID:-song_004}"; then
++  :
++else
++  echo "⚠️  Continuing without stems; some steps will be skipped."
++fi
+ # e2e_suno_arrangement.sh - Enhanced Version (Phase E)
+ # SunoAI完全アレンジメントE2Eワークフロー（エラーハンドリング強化版）
+ #
+@@ -1457,7 +1522,19 @@
+     echo
+     
+     # 13. 多様性監視（KPI過適合防止）
+-    echo "🔍 Step 12: Diversity Watch (KPI Overfitting Prevention)"
++    echo "🔍 
++# >>> DRUMS REAL GUARD BEGIN ------------------------------------------
++: "${DRUMS_MODE:=real}"
++if [[ "$DRUMS_MODE" == "real" ]]; then
++  if [[ -z "${DRUMS_WAV:-}" || ! -f "${DRUMS_WAV:-/dev/null}" ]]; then
++    echo "❌ --drums-mode=real requires an existing Drums stem (e.g. .../stem_wav/*(Drums).wav)."
++    echo "   Set STEMS_DIR or STEM_DRUMS and re-run."
++    exit 2
++  fi
++fi
++# <<< DRUMS REAL GUARD END --------------------------------------------
++
++Step 12: Diversity Watch (KPI Overfitting Prevention)"
+     CURRENT_STEP="Diversity Watch"
+     
+     BASELINE_MID="$SONG_DIR/full_arrangement_baseline.mid"

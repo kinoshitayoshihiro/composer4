@@ -393,8 +393,8 @@ def extract_vocal_stress_bars(anchors_path: Optional[Path], bars_df: pd.DataFram
 
     anchors = anchors_data.get("anchors", [])
 
-    # Stress anchorの時刻抽出
-    stress_times = [a["time"] for a in anchors if a.get("class") == "stress"]
+    # Stress anchorの時刻抽出（classesはリスト形式）
+    stress_times = [a["time"] for a in anchors if "stress" in a.get("classes", [])]
 
     # バーごとに判定
     vocal_stress = []

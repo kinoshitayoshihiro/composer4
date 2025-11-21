@@ -116,7 +116,7 @@ fi
 
 # 🔍 bars/drums.mid 長さ一致検査＋自動リカバリ
 log "🔍 Validating bars.parquet / drums.mid length consistency..."
-BARS_MISMATCH=$(python3 << 'PYEOF'
+BARS_MISMATCH=$(python3 << PYEOF
 import pandas as pd
 import pretty_midi
 from pathlib import Path
@@ -178,7 +178,7 @@ run python3 scripts/kpi_gate.py \
 log ""
 
 # KPI Gate結果チェック
-KPI_FAIL_COUNT=$(python3 << 'PYEOF'
+KPI_FAIL_COUNT=$(python3 << PYEOF
 import json
 import sys
 

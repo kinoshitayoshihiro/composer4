@@ -1,0 +1,30 @@
+version: 1
+metadata:
+  name: Auto-generated Emotion Profile
+  generated_from: song_packages/suno_project/song_001/bars.parquet
+  phase: 125
+sections:
+  intro:
+    energy: 0.2921540685825148
+    valence: 0.0025220931512669464
+    description: Auto-derived from intro
+  verse:
+    energy: 0.5433578088465785
+    valence: 0.05130993474674082
+    description: Auto-derived from verse
+  chorus:
+    energy: 0.7356877230698775
+    valence: 0.007489582879276674
+    description: Auto-derived from chorus
+  post_chorus:
+    energy: 0.6722388379499846
+    valence: 0.044215525040092574
+    description: Auto-derived from post_chorus
+  bridge:
+    energy: 0.7288606060326152
+    valence: 0.05854502212548457
+    description: Auto-derived from bridge
+  outro:
+    energy: 0.4999658016334362
+    valence: 0.048802444304532705
+    description: Auto-derived from outro

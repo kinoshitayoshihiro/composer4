@@ -1,0 +1,93 @@
+# XMIDI emotion/genre normalization used for Lamda manifest construction
+schema_version: "1.0"
+source: "XMIDI_Dataset"
+id_namespace: "xmidi"
+
+emotions:
+  angry:
+    valence: -0.70
+    arousal: 0.85
+    color: "#d9534f"
+    description: "High-energy, tense cues"
+  exciting:
+    valence: 0.65
+    arousal: 0.90
+    color: "#f0ad4e"
+    description: "Up-tempo, triumphant motifs"
+  fear:
+    valence: -0.80
+    arousal: 0.75
+    color: "#8c54ff"
+    description: "Dark suspense and horror"
+  funny:
+    valence: 0.60
+    arousal: 0.50
+    color: "#f7e463"
+    description: "Playful quirky passages"
+  happy:
+    valence: 0.80
+    arousal: 0.65
+    color: "#5cb85c"
+    description: "Bright uplifting melodies"
+  lazy:
+    valence: 0.20
+    arousal: -0.40
+    color: "#9d9d9d"
+    description: "Loose, swung and sparse"
+  magnificent:
+    valence: 0.55
+    arousal: 0.55
+    color: "#337ab7"
+    description: "Majestic orchestral gestures"
+  quiet:
+    valence: 0.10
+    arousal: -0.60
+    color: "#5bc0de"
+    description: "Soft minimal textures"
+  romantic:
+    valence: 0.45
+    arousal: 0.10
+    color: "#e17cab"
+    description: "Warm lyrical ballads"
+  sad:
+    valence: -0.75
+    arousal: -0.35
+    color: "#6f42c1"
+    description: "Melancholic slow tunes"
+  warm:
+    valence: 0.50
+    arousal: 0.00
+    color: "#ff9966"
+    description: "Cozy mid-tempo grooves"
+
+genres:
+  classical:
+    tempo_bpm_range: [60, 160]
+    swing_hint: 0.02
+    instrumentation: ["strings", "woodwinds", "piano"]
+  country:
+    tempo_bpm_range: [80, 140]
+    swing_hint: 0.08
+    instrumentation: ["acoustic_guitar", "fiddle", "banjo"]
+  jazz:
+    tempo_bpm_range: [90, 180]
+    swing_hint: 0.22
+    instrumentation: ["piano", "bass", "drums", "brass"]
+  pop:
+    tempo_bpm_range: [90, 140]
+    swing_hint: 0.05
+    instrumentation: ["synth", "guitar", "drums"]
+  rock:
+    tempo_bpm_range: [110, 170]
+    swing_hint: 0.03
+    instrumentation: ["electric_guitar", "bass", "drums"]
+  traditional:
+    tempo_bpm_range: [70, 130]
+    swing_hint: 0.12
+    instrumentation: ["folk", "acoustic", "percussion"]
+
+defaults:
+  instrument: "arrangement"
+  source: "XMIDI"
+  signature_digest_mode: "content"
+  include_file_stats: true

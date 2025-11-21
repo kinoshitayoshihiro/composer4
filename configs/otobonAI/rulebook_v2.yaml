@@ -1,0 +1,2877 @@
+rules:
+  - id: HRM_001
+    name: 王道進行 (4536進行)
+    category: harmony
+    scope:
+      - chorus
+      - pre_chorus
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV-V-IIIm-VIm
+      tempo_bpm_range: [80, 180]
+      typical_genres:
+        - J-POP
+        - anime
+        - rock
+        - ballad
+    pattern:
+      description: J-POPで最も多用される進行。サブドミナント(IV)からドミナント(V)へ進む高揚感と、その後にマイナーコード(IIIm, VIm)へ続く切なさを両立できる。
+      bar_span: 4
+      special_devices: []
+    effect:
+      emotions:
+        - hopeful
+        - bittersweet
+        - emotional
+        - uplifting
+      keywords:
+        - 王道
+        - 高揚感
+        - 切ない
+        - J-POP感
+    usage_guidelines:
+      recommended_frequency: 曲中で繰り返し使用可能
+      good_places: サビで最も効果を発揮する。
+      pitfalls: 非常に多用されるため、アレンジで独自性を出す必要がある。
+    example_progressions:
+      - F - G - Em - Am (in Key=C)
+  - id: HRM_002
+    name: 丸の内サディスティック進行 (Just The Two of Us進行)
+    category: harmony
+    scope:
+      - chorus
+      - verse
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_progression: IV△7-III7-VIm7-Vm7-I7
+      tempo_bpm_range: [90, 140]
+      typical_genres:
+        - J-POP
+        - city_pop
+        - anime
+        - R&B
+    pattern:
+      description: 都会的で洗練された浮遊感が特徴のコード進行。IV△7のお洒落な響きから始まり、VIm7へのセカンダリードミナントであるIII7を挟み、最後は次のコードへのマイナーII-V(Vm7-I7)で締めくくる。ループ性が高い。
+      bar_span: 4
+      special_devices:
+        - secondary_dominant
+        - two_five_one
+        - tension_chord
+      variants:
+        - name: III7(#9)の使用
+          description: III7に#9thのテンションを加えることで、よりブルージーで緊張感のある響きを作り出し、次のVIm7への解決感を強調する。
+          effect:
+            emotions:
+              - tense
+              - jazzy
+              - stylish
+            keywords:
+              - ジミヘンコード
+              - ブルージー
+    effect:
+      emotions:
+        - stylish
+        - sentimental
+        - floating
+        - mellow
+      keywords:
+        - 都会的
+        - お洒落
+        - 浮遊感
+        - 椎名林檎
+        - シティポップ
+    usage_guidelines:
+      recommended_frequency: セクション内でループさせると世界観を構築しやすい。
+      good_places: イントロ、Aメロ、サビなど曲の主要部分。
+      pitfalls: 進行自体が非常に個性的であるため、楽曲の世界観と合わない場合は浮いてしまう可能性がある。
+    example_progressions:
+      - Fmaj7 - E7 - Am7 - Gm7-C7 (Key=F/Am)
+      - Fmaj7 - E7(#9) - Am7 - Gm7-C7 (Key=F/Am)
+  - id: HRM_003
+    name: 小室進行 (6451進行)
+    category: harmony
+    scope:
+      - chorus
+      - any
+    layer: chord
+    preconditions:
+      tonality: minor_key_start
+      typical_progression: VIm-IV-V-I
+      tempo_bpm_range: [110, 160]
+      typical_genres:
+        - J-POP
+        - dance
+        - anime
+    pattern:
+      description: マイナーコード(VIm)の切ない響きから始まり、J-POPの定番であるIV-V-Iのカデンツで力強く解決する進行。哀愁と疾走感を両立させやすい。
+      bar_span: 4
+      special_devices: []
+    effect:
+      emotions:
+        - bittersweet
+        - uplifting
+        - dramatic
+        - nostalgic
+      keywords:
+        - 90年代
+        - 切ないけど前向き
+        - 疾走感
+        - 小室哲哉
+    usage_guidelines:
+      recommended_frequency: サビで繰り返し使用されることが多い。
+      good_places: サビ、イントロ。
+      pitfalls: 王道進行と同様、アレンジで差別化が必要。
+    example_progressions:
+      - Am - F - G - C (in Key=C/Am)
+  - id: HRM_004
+    name: 泣きのコード進行 (Ⅱ-Ⅴ to Minor)
+    category: harmony
+    scope:
+      - pre_chorus
+      - bridge
+      - chorus
+    layer: global
+    preconditions:
+      tonality: any
+      typical_progression: IIm7-5 -> V7 -> Im
+      tempo_bpm_range: [60, 140]
+      typical_genres:
+        - ballad
+        - anime
+        - J-POP
+        - rock
+    pattern:
+      description: マイナーキーのトニック(Im)に向かう非常に強い解決感と切なさを持つ進行。セカンダリードミナント(V7/vi)をさらにⅡ-Ⅴ化した形(iim7-5/vi -> V7/vi -> vi)。4度進行（強進行）の連続であり、流れが非常にスムーズかつドラマチック。
+      bar_span: 2
+      special_devices:
+        - secondary_dominant
+        - two_five_one
+        - minor_two_five_one
+    effect:
+      emotions:
+        - sad
+        - dramatic
+        - emotional
+        - crying
+        - sentimental
+      keywords:
+        - 泣き
+        - エモい
+        - 切ない
+        - 感動的
+        - クライマックス
+    usage_guidelines:
+      recommended_frequency: 曲中のクライマックスで1〜2回
+      good_places: サビのキメ、Bメロからサビへの繋ぎ、ブリッジ、落ちサビ。
+      pitfalls: 多用すると安っぽくなる可能性がある。感情が最も高まる場所で使うのが効果的。
+    example_progressions:
+      - Bm7-5 -> E7 -> Am (Targeting Am in Key=C)
+  - id: HRM_005
+    name: 偽終止 (期待の裏切り)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: V -> VIm (or IV)
+      tempo_bpm_range: [60, 200]
+      typical_genres:
+        - J-POP
+        - anime
+        - rock
+    pattern:
+      description: ドミナントコード(V)がトニック(I)に解決するだろうという聴き手の期待を裏切り、代理トニックであるVImに着地させる手法。曲が『終わった』と思わせず、まだ続きがあることを予感させる効果がある。
+      bar_span: 2
+      special_devices:
+        - deceptive_cadence
+    effect:
+      emotions:
+        - surprised
+        - unresolved
+        - continuing
+      keywords:
+        - 裏切り
+        - 意外性
+        - 余韻
+    usage_guidelines:
+      recommended_frequency: セクションの終わりや、展開を変化させたい時に使用。
+      good_places: サビの終わり、Aメロの終わり。
+      pitfalls: 曲の本当の終わりで使うと終止感が弱くなる。
+    example_progressions:
+      - Dm - G - Am (instead of C) (in Key=C)
+      - Dm - G - F (another variant) (in Key=C)
+  - id: HRM_006
+    name: パッシング・ディミニッシュ (滑らかな経過)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_progression: I -> #I dim -> IIm
+      tempo_bpm_range: [60, 200]
+      typical_genres:
+        - J-POP
+        - jazz
+        - anime
+    pattern:
+      description: 全音差で動く2つのコードの間に、半音階で繋ぐディミニッシュコードを挿入する手法。ベースラインが滑らかな半音進行（クロマチック）になり、ドラマチックで物語性のある展開を生み出す。
+      bar_span: 1.5
+      beats_targeted: [3]
+      melodic_motion: chromatic
+      special_devices:
+        - passing_diminished
+    effect:
+      emotions:
+        - dramatic
+        - tense
+        - smooth_transition
+      keywords:
+        - 経過音
+        - ドラマチック
+        - 半音進行
+    usage_guidelines:
+      recommended_frequency: 必要に応じて複数回使用可能。
+      good_places: AメロやBメロで、コード進行に動きを加えたいとき。
+      pitfalls: 響きが独特なため、メロディや他の楽器との調和に注意が必要。
+    example_progressions:
+      - C -> C#dim -> Dm7
+      - G -> G#dim -> Am
+  - id: HRM_007
+    name: サブドミナントマイナー (感動・切なさの演出)
+    category: harmony
+    scope:
+      - pre_chorus
+      - chorus
+      - bridge
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV -> ivm -> I
+      tempo_bpm_range: [60, 160]
+      typical_genres:
+        - J-POP
+        - ballad
+        - anime
+    pattern:
+      description: 同主調のマイナーキーからサブドミナントコード(ivm)を一時的に借用するモーダルインターチェンジの一種。メジャーキーの明るい流れの中で一瞬だけ影を落とし、強い切なさや感動的な雰囲気を生み出すJ-POPの定番テクニック。トップノートが半音下降(6→b6)する動きが特徴的。
+      bar_span: 2
+      special_devices:
+        - modal_interchange
+        - borrowed_chord
+        - subdominant_minor
+    effect:
+      emotions:
+        - sad
+        - dramatic
+        - nostalgic
+        - bittersweet
+      keywords:
+        - エモい
+        - 切ない
+        - 感動
+        - 暗転
+        - 涙腺崩壊
+    usage_guidelines:
+      recommended_frequency: 1曲に1〜2回、最も感情を高めたい箇所で使用
+      good_places: サビの後半、ブリッジ、アウトロなど、曲のクライマックス部分。
+      pitfalls: 多用すると曲全体の調性が曖昧になり、効果が薄れる。
+    example_progressions:
+      - F -> Fm -> C (in Key=C)
+  - id: HRM_008
+    name: 裏コード (トライトーン・サブスティテューション)
+    category: harmony
+    scope:
+      - any
+    layer: global
+    preconditions:
+      tonality: any
+      typical_progression: subV7 -> I
+      tempo_bpm_range: [80, 150]
+      typical_genres:
+        - jazz
+        - city_pop
+        - R&B
+        - anime
+    pattern:
+      description: ドミナントセブンスコード(V7)を、その増4度(トライトーン)上にあるドミナントセブンスコード(bII7)で代理する手法。ジャズ由来のテクニックで、非常に洗練されたお洒落な響きを生む。ベースラインが滑らかな半音下降進行(bII→I)になるのが最大の特徴。
+      bar_span: 1
+      melodic_motion: chromatic
+      interval_semitones: [6]
+      special_devices:
+        - tritone_substitution
+    effect:
+      emotions:
+        - stylish
+        - sophisticated
+        - jazzy
+        - smooth
+      keywords:
+        - お洒落
+        - ジャズ
+        - 都会的
+        - 半音下降
+    usage_guidelines:
+      recommended_frequency: 曲のアクセントとして数回使用
+      good_places: II-V-I進行のV7を置き換える、ターンアラウンドなど。
+      pitfalls: ジャンルによっては浮いてしまう可能性があるため、曲全体の雰囲気に合わせる必要がある。
+    example_progressions:
+      - Dm7 -> Db7 -> Cmaj7 (instead of Dm7 -> G7 -> Cmaj7)
+      - A7 -> Dm7 -> G7 -> Cmaj7 を A7 -> Dm7 -> Db7 -> Cmaj7 に変更
+  - id: HRM_009
+    name: カノン進行
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: I–V–VIm–IIIm–IV–I–IV–V
+      tempo_bpm_range: [70, 140]
+      typical_genres:
+        - J-POP
+        - ballad
+        - pop
+    pattern:
+      description: クラシック曲「パッヘルベルのカノン」を元にした進行で、非常に美しく感動的な響きを持つ。ベースラインが滑らかに順次下降していくのが特徴。J-POPでも数多くのヒット曲で使用されている。
+      bar_span: 8
+      special_devices:
+        - stepwise_bassline
+    effect:
+      emotions:
+        - beautiful
+        - dramatic
+        - nostalgic
+        - grand
+      keywords:
+        - カノン
+        - 感動的
+        - 壮大
+        - 卒業ソング
+    usage_guidelines:
+      recommended_frequency: サビや大サビで使うと非常に効果的。
+      good_places: サビ、ブリッジ、アウトロ。
+      pitfalls: 非常に有名で強力な進行であるため、メロディが負けてしまうことがある。
+    example_progressions:
+      - C - G - Am - Em - F - C - F - G (in Key=C)
+  - id: HRM_010
+    name: ドミナントモーション（V7→I/Imで明確な着地を作る）
+    category: harmony
+    scope:
+      - chorus
+      - pre-chorus
+      - cadence
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_progression: V7-I / V7-Im
+      tempo_bpm_range: [60, 190]
+      typical_genres:
+        - J-POP
+        - rock
+        - ballad
+        - anime
+    pattern:
+      description: |
+        キー内のVコードをセブンス化し（V7）、トニックIまたはImへ解決させることで、不安定さが一気に解消される強い終止感を作る。セクション末尾やフレーズの締めに使うと、ストーリーの区切りが非常に明確になる。([うちやま作曲教室][1])
+      bar_span: 1
+      beats_targeted: [1]
+      melodic_motion: null
+      special_devices:
+        - dominant_motion
+        - functional_harmony
+    effect:
+      emotions:
+        - resolved
+        - satisfied
+        - safe
+        - dramatic
+      keywords:
+        - 終止感
+        - カタルシス
+        - 安定への着地
+        - ストーリー性
+    usage_guidelines:
+      recommended_frequency: 各ブロックの終止や曲中の要所に数回。多用しすぎると予定調和になりがち。
+      good_places: サビ終わり、Aメロ/Bメロの終止、小節の区切り、ラストの大団円。
+      pitfalls: どの終止もV7→Iにすると単調になる。サビ以外ではV→IやIV→Iなど、終止感の強さにグラデーションをつける。
+    example_progressions:
+      - G7 → C (Key=C)
+      - E7 → Am (Key=C)
+      - A7 → D (Key=D)
+  - id: HRM_011
+    name: 強進行（4度上行／5度下行するルートで説得力を作る）
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_progression: 任意のコードから完全4度上（または5度下）へ進む
+      tempo_bpm_range: [60, 200]
+      typical_genres:
+        - J-POP
+        - rock
+        - R&B
+        - anime
+        - idol
+    pattern:
+      description: |
+        コード・ルートを完全4度上（または完全5度下）へ動かすつなぎ方。I→IV，IIIm→VIm，IIm→V，V→I など。ルートの『重力』が自然に働くため、聴きやすく一貫性のあるコード進行の骨格になる。([うちやま作曲教室][2])
+      bar_span: 1
+      beats_targeted: [1]
+      melodic_motion: null
+      special_devices:
+        - strong_root_motion
+    effect:
+      emotions:
+        - natural
+        - cohesive
+        - confident
+      keywords:
+        - 聴きやすさ
+        - 一貫性
+        - 説得力
+        - 安定した推進力
+    usage_guidelines:
+      recommended_frequency: 進行の骨組みとして多用可。全体の6〜8割を強進行で組み、残りを他の動きで彩るイメージ。
+      good_places: Aメロ〜サビ全体の土台、II-V-Iなどの定番連結、転調前後の繋ぎ。
+      pitfalls: すべてを強進行だけで組むと予定調和になる。ときどき平行移動や半音進行、ルート保持などで変化をつける。
+    example_progressions:
+      - C → F → B♭ (I → IV → VII♭)
+      - Em → Am → Dm (IIIm → VIm → IIm)
+      - Dm → G → C (IIm → V → I)
+  - id: HRM_012
+    name: セカンダリードミナント（ターゲットコードを照らすノンダイアトニック）
+    category: harmony
+    scope:
+      - pre-chorus
+      - chorus
+      - bridge
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_progression: X7 → target_chord（X7 = target_chord の V7）
+      tempo_bpm_range: [70, 190]
+      typical_genres:
+        - J-POP
+        - rock
+        - R&B
+        - jazz-influenced pop
+    pattern:
+      description: |
+        ダイアトニック外の『V7 of 〜』を、目的のコード直前に挿入する手法。I以外のコードを一瞬そのキーのIとして扱い、X7→target_chord でミニ終止を作ることで、ターゲットを強調する。ポップスではII、IV、VIm などへのセカンダリードミナントがよく使われる。([うちやま作曲教室][3])
+      bar_span: 1
+      beats_targeted: [1]
+      melodic_motion: null
+      special_devices:
+        - secondary_dominant
+        - nondiatonic_color
+    effect:
+      emotions:
+        - bright
+        - forward
+        - tense
+        - colorful
+      keywords:
+        - 一瞬の転調感
+        - ターゲット強調
+        - 都会的
+        - コードの色彩感
+    usage_guidelines:
+      recommended_frequency: 1曲に数カ所。サビ前やハイライトの直前など『見せ場』で使うと効果的。
+      good_places: サビ頭のコード直前（例：A7→Dm→G→C）、ブリッジでの流れの切り替え、転調の補助。
+      pitfalls: 挿入しすぎると常に落ち着かない印象になる。IIIやVIIm-5へのセカンダリードミナントはポップスでは使用頻度が低いので乱用しない。
+    example_progressions:
+      - C → A7 → Dm → G (I → VI7 → IIm → V)
+      - F → C7 → F (IV → I7/IV → IV in Key=C)
+      - G → E7 → Am (V → III7 → VIm)
+  - id: HRM_013
+    name: クリシェ（コード構成音を半音階で動かして内声ラインを作る）
+    category: harmony
+    scope:
+      - verse
+      - pre-chorus
+      - chorus
+      - bridge
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_progression: I→Imaj7→I7→I6 など
+      tempo_bpm_range: [60, 180]
+      typical_genres:
+        - J-POP
+        - rock
+        - city pop
+        - ballad
+        - R&B
+    pattern:
+      description: |
+        同じコード機能を保ったまま構成音の1つだけを半音〜全音で順次変化させ、縦のコード列に横方向のライン（クリシェ）を作る。Iの根音やIIm/VImの根音を下げていく、Iの5度を上げていくパターンが典型。([うちやま作曲教室][4])
+      bar_span: 4
+      beats_targeted:
+        - 1
+        - 1
+        - 1
+        - 1
+      melodic_motion: stepwise_inner_voice
+      special_devices:
+        - cliche_line
+        - chromatic_inner_voice
+    effect:
+      emotions:
+        - nostalgic
+        - sophisticated
+        - romantic
+      keywords:
+        - 内声ライン
+        - 半音階の色気
+        - 都会的
+        - 大人っぽい
+    usage_guidelines:
+      recommended_frequency: 1ブロックに1〜2回程度。サビ全体をクリシェで埋めるより、要所の装飾として使うと映える。
+      good_places: AメロやBメロの中盤、サビ後半での盛り上げどころ、同一コードが続く部分の退屈さ解消。
+      pitfalls: メロディラインとクリシェラインがぶつかりやすい。歌メロの主役感を損なわないよう、内声として控えめな音域に置く。
+    example_progressions:
+      - C → CM7 → C7 → C6（I→Imaj7→I7→I6）
+      - Dm → DmM7 → Dm7 → Dm6（IIm系クリシェ）
+      - C → Caug → C6 → C7（5度クリシェ）
+  - id: HRM_014
+    name: ディミニッシュコードの活用（パッシング＆ドミナント代理）
+    category: harmony
+    scope:
+      - pre-chorus
+      - bridge
+      - turnaround
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_progression: C→C♯dim→Dm / C→A#dim→Dm など
+      tempo_bpm_range: [70, 180]
+      typical_genres:
+        - J-POP
+        - rock
+        - jazz-influenced pop
+        - idol
+        - enka-pop
+    pattern:
+      description: |
+        短3度ずつ積み重ねた4音からなるディミニッシュコードを、二つのコードの間の『通り道』として挟んだり、ドミナントセブンスやセカンダリードミナントの代理として用いる。ルートを半音上にしたdimでV7（またはVI7など）を置き換えると、鋭いテンションを保ったまま進行を滑らかにできる。([うちやま作曲教室][5])
+      bar_span: 1
+      beats_targeted: [1]
+      melodic_motion: null
+      special_devices:
+        - passing_diminished
+        - dominant_substitution
+    effect:
+      emotions:
+        - tense
+        - mysterious
+        - dramatic
+      keywords:
+        - スパイス
+        - 不安定な色気
+        - ジャジー
+        - 緊張と解放
+    usage_guidelines:
+      recommended_frequency: 1曲に1〜3カ所程度のアクセントとして。
+      good_places: コードが半音ずつ上がる／下がる瞬間、サビ前の最後の一押し、ブリッジでの緊張感のピーク。
+      pitfalls: 連発すると常に落ち着かない曲になる。メロディのスケール外音との衝突に注意し、長く引き伸ばさず短い滞在で抜ける。
+    example_progressions:
+      - C → C♯dim → Dm
+      - C → A7 → Dm → C → A#dim → Dm
+      - F → F#dim → Gm
+  - id: HRM_015
+    name: サブドミナントマイナーとその代理コード（借用和音でほろ苦さを加える）
+    category: harmony
+    scope:
+      - pre-chorus
+      - chorus
+      - bridge
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: I→IVm→V→I / I→IIm7-5→V→I など
+      tempo_bpm_range: [60, 170]
+      typical_genres:
+        - J-POP
+        - ballad
+        - city pop
+        - anime
+    pattern:
+      description: |
+        メジャーキーにおいて、サブドミナント機能を持つコードをマイナー化したもの（IVm や IIm7-5、♭IIM7，♭VI7 など）を用いて、一瞬だけ別の調から借りてきたような色合いを加える。I→IVm→V→I や I→IIm7-5→V→I が典型。([うちやま作曲教室][6])
+      bar_span: 2
+      beats_targeted:
+        - 1
+        - 1
+      melodic_motion: null
+      special_devices:
+        - subdominant_minor
+        - borrowed_chord
+    effect:
+      emotions:
+        - bittersweet
+        - melancholic
+        - deep
+        - dramatic
+      keywords:
+        - 借用和音
+        - ほろ苦さ
+        - 大人っぽいサウンド
+        - 感傷的
+    usage_guidelines:
+      recommended_frequency: サビやブリッジで1〜2回程度。クライマックスの一番おいしい場所に置くイメージ。
+      good_places: サビの中盤〜終盤、Aメロ→サビへの橋渡し、最後のサビでの『もう一段だけ切なくする』ポイント。
+      pitfalls: 多用するとどの場面も同じ色合いになる。歌メロがナチュラルスケールだけで書かれている場合、メロディが浮いて聴こえることがあるので要チェック。
+    example_progressions:
+      - C → Fm → G → C (I→IVm→V→I)
+      - C → Dm7-5 → G → C (I→IIm7-5→V→I)
+      - C → Fm → D♭M7 → G7 → C
+  - id: HRM_016
+    name: J-POP王道進行 (451カデンツ)
+    category: harmony
+    scope:
+      - chorus
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV-V-I
+      tempo_bpm_range: [80, 200]
+      typical_genres:
+        - J-POP
+        - rock
+        - anime
+    pattern:
+      description: サブドミナント(IV)→ドミナント(V)→トニック(I)という、非常に強い解決感とポジティブな印象を与える基本的なカデンツ。多くの楽曲のサビの締めや盛り上がる部分で使用される。
+      bar_span: 2
+      special_devices:
+        - cadence
+    effect:
+      emotions:
+        - resolved
+        - uplifting
+        - powerful
+        - conclusive
+      keywords:
+        - 解決感
+        - 王道
+        - 力強い
+        - 終わり感
+    usage_guidelines:
+      recommended_frequency: 曲の締めくくりとして多用される。
+      good_places: サビの最後、曲の最後。
+      pitfalls: シンプルすぎるため、これだけでは単調になりやすい。
+    example_progressions:
+      - F - G - C (in Key=C)
+  - id: HRM_017
+    name: I–V–I の重力（安定Iと不安定Vでストーリーを作る）
+    category: harmony
+    scope:
+      - any
+    layer: global
+    preconditions:
+      tonality: any
+      typical_progression: I→V→I を基盤に発展させる
+      tempo_bpm_range: [60, 200]
+      typical_genres:
+        - J-POP
+        - rock
+        - ballad
+        - idol
+        - anime
+    pattern:
+      description: |
+        ダイアトニックコード内で、Iは最も安定した『着地点／出発点』、Vは不安定で『Iを連想させる』コードとして機能する。I→V→I という最短のストーリーを骨格として、間に他のコード（II, IV, VImなど）を挟んで複雑化していく。([うちやま作曲教室][8])
+      bar_span: 4
+      beats_targeted:
+        - 1
+        - 1
+        - 1
+        - 1
+      melodic_motion: null
+      special_devices:
+        - functional_harmony
+        - tonal_center
+    effect:
+      emotions:
+        - narrative
+        - resolved
+        - grounded
+      keywords:
+        - 調性の重力
+        - 帰結感
+        - 分かりやすいストーリー
+        - 統一感
+    usage_guidelines:
+      recommended_frequency: ほぼすべての曲で暗黙的に利用。特に曲頭・サビ頭・曲終わりにI、途中にVを絡めて大きな起伏を作る。
+      good_places: 曲の冒頭とラストのI、サビ入り前のV、ブリッジ終わりからラスサビに向かうV→I。
+      pitfalls: 常にIとVだけに頼ると単純すぎる。II, IV, VImなどの機能も理解した上で、I–V–Iの感覚を『見えない骨格』として意識する。
+    example_progressions:
+      - C → G → C (I → V → I)
+      - C → Am → F → G → C (I → VIm → IV → V → I)
+      - G → D → G (I → V → I in Key=G)
+  - id: HRM_018
+    name: add9コード (透明感と切なさ)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - ballad
+        - acoustic
+    pattern:
+      description: 3和音に長9度(9th)の音を加えたコード。7thの音を含まないため、通常のセブンスコードよりもクリアで透明感のある響きになる。爽やかさや切なさを演出するのに非常に効果的。
+      target_scale_degrees: ["9"]
+      special_devices:
+        - tension_chord
+        - add9
+    effect:
+      emotions:
+        - clear
+        - fresh
+        - bittersweet
+        - beautiful
+      keywords:
+        - add9
+        - 透明感
+        - 爽やか
+        - 切ない
+        - お洒落
+    usage_guidelines:
+      recommended_frequency: 曲全体を通して使用可能。
+      good_places: イントロのアルペジオ、Aメロなど。
+      pitfalls: 特になし。トライアドの代わりとして積極的に使える。
+    example_progressions:
+      - Cadd9
+      - Gadd9
+  - id: HRM_019
+    name: Vaundy進行 (4325進行)
+    category: harmony
+    scope:
+      - chorus
+      - verse
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV△7-IIIm7-IIm7-V7
+      tempo_bpm_range: [80, 130]
+      typical_genres:
+        - J-POP
+        - city_pop
+        - R&B
+    pattern:
+      description: アーティスト Vaundy が多用することで知られる、ダイアトニックコードを順次下降していく進行。ベースラインが滑らかに動き、お洒落で少し物憂げな雰囲気を生み出す。セブンスコードやテンションコードで演奏するのが基本。
+      bar_span: 4
+      melodic_motion: stepwise
+      special_devices:
+        - diatonic_seventh_chords
+        - stepwise_bassline
+    effect:
+      emotions:
+        - stylish
+        - mellow
+        - sentimental
+        - urban
+      keywords:
+        - Vaundy
+        - お洒落
+        - 都会的
+        - チル
+        - 順次下降
+    usage_guidelines:
+      recommended_frequency: セクション内でループさせると効果的。
+      good_places: Aメロ、Bメロ、間奏など。
+      pitfalls: 強い解決感がないため、サビで使う場合はメロディやリズムで盛り上がりを作る工夫が必要。
+    example_progressions:
+      - Fmaj7 - Em7 - Dm7 - G7 (in Key=C)
+  - id: HRM_021
+    name: ヒゲダン進行 (多様なドミナント活用)
+    category: harmony
+    scope:
+      - chorus
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: I-V/VII-VIm-III7
+      tempo_bpm_range: [100, 160]
+      typical_genres:
+        - J-POP
+        - pop-rock
+    pattern:
+      description: Official髭男dismの楽曲で多用される、ドミナントコードの多様な活用が特徴的な進行。分数コード(V/VII)による滑らかなベースラインと、セカンダリードミナント(III7)による強い解決感を組み合わせ、ポップでありながら複雑でドラマチックな展開を生み出す。
+      bar_span: 4
+      special_devices:
+        - on_chord
+        - secondary_dominant
+        - substitute_dominant
+    effect:
+      emotions:
+        - dramatic
+        - uplifting
+        - complex
+        - emotional
+      keywords:
+        - ヒゲダン
+        - 展開が早い
+        - ドラマチック
+        - 技巧的
+    usage_guidelines:
+      recommended_frequency: サビで使うと楽曲の個性が際立つ。
+      good_places: サビ、Bメロ。
+      pitfalls: コードチェンジが早く複雑なため、演奏難易度が高い。
+    example_progressions:
+      - C - G/B - Am - E7 (in Key=C)
+  - id: HRM_022
+    name: sus2コード (優しさ・純粋さの表現)
+    category: harmony
+    scope:
+      - intro
+      - verse
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_genres:
+        - ballad
+        - acoustic
+        - J-POP
+    pattern:
+      description: 3度の音の代わりに2度の音を使ったコード。sus4よりも柔らかく、優しさ、純粋さ、儚さといったニュアンスを持つ。特にアルペジオで使うと美しい響きになる。
+      target_scale_degrees:
+        - "2"
+        - "9"
+      special_devices:
+        - sus_chord
+    effect:
+      emotions:
+        - gentle
+        - pure
+        - innocent
+        - calm
+      keywords:
+        - sus2
+        - 優しい
+        - 純粋
+        - 透明感
+        - 儚い
+    usage_guidelines:
+      recommended_frequency: 曲のアクセントとして効果的に使用。
+      good_places: イントロ、Aメロ、静かな間奏部分。
+      pitfalls: 力強いセクションには向かないことが多い。
+    example_progressions:
+      - Csus2
+      - Dsus2
+  - id: HRM_023
+    name: Vaundy進行 (4325進行)
+    category: harmony
+    scope:
+      - chorus
+      - verse
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV△7-IIIm7-IIm7-V7
+      tempo_bpm_range: [80, 130]
+      typical_genres:
+        - J-POP
+        - city_pop
+        - R&B
+    pattern:
+      description: アーティスト Vaundy が多用することで知られる、ダイアトニックコードを順次下降していく進行。ベースラインが滑らかに動き、お洒落で少し物憂げな雰囲気を生み出す。セブンスコードやテンションコードで演奏するのが基本。
+      bar_span: 4
+      melodic_motion: stepwise
+      special_devices:
+        - diatonic_seventh_chords
+        - stepwise_bassline
+    effect:
+      emotions:
+        - stylish
+        - mellow
+        - sentimental
+        - urban
+      keywords:
+        - Vaundy
+        - お洒落
+        - 都会的
+        - チル
+        - 順次下降
+    usage_guidelines:
+      recommended_frequency: セクション内でループさせると効果的。
+      good_places: Aメロ、Bメロ、間奏など。
+      pitfalls: 強い解決感がないため、サビで使う場合はメロディやリズムで盛り上がりを作る工夫が必要。
+    example_progressions:
+      - Fmaj7 - Em7 - Dm7 - G7 (in Key=C)
+  - id: HRM_024
+    name: レミオロメン進行 (436進行アレンジ)
+    category: harmony
+    scope:
+      - chorus
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV-V/IV-IIIm-VIm
+      tempo_bpm_range: [70, 150]
+      typical_genres:
+        - J-POP
+        - rock
+        - ballad
+    pattern:
+      description: 「粉雪」などに代表されるレミオロメンが多用する進行。4(IV)の次に5(V)のコードを弾くが、ベース音は4(IV)のまま留まる(オンコード)。これにより、IV→Vの強い動きを和らげ、切なくも美しい独特の浮遊感を生み出す。
+      bar_span: 4
+      special_devices:
+        - on_chord
+        - pedal_point
+    effect:
+      emotions:
+        - sentimental
+        - sad
+        - beautiful
+        - wistful
+      keywords:
+        - レミオロメン
+        - 粉雪
+        - 切ない
+        - エモい
+        - 浮遊感
+    usage_guidelines:
+      recommended_frequency: サビで効果を発揮する。
+      good_places: サビ、Bメロ。
+      pitfalls: null
+    example_progressions:
+      - F - G/F - Em - Am (in Key=C)
+  - id: HRM_025
+    name: ツーファイブ偽終止
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IIm7-V7-VIm7
+      typical_genres:
+        - J-POP
+        - jazz
+        - R&B
+    pattern:
+      description: 標準的なII-V-I進行の解決先であるトニック(I)を、その代理コードであるVIm7に置き換える手法。偽終止の一種だが、II-Vという強い流れがあるため、より自然でお洒落な「裏切り」を演出できる。
+      bar_span: 2
+      special_devices:
+        - two_five_one
+        - deceptive_cadence
+    effect:
+      emotions:
+        - stylish
+        - unresolved
+        - continuing
+      keywords:
+        - ツーファイブ
+        - 偽終止
+        - お洒落
+        - 裏切り
+    usage_guidelines:
+      recommended_frequency: セクションの繋ぎなどで使用。
+      good_places: Aメロの終わり、Bメロの終わり。
+      pitfalls: null
+    example_progressions:
+      - Dm7 - G7 - Am7 (instead of Cmaj7) (in Key=C)
+  - id: HRM_026
+    name: sus4挿入による浮遊感
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - ballad
+    pattern:
+      description: コード進行の中にsus4コードを挟み込むことで、一時的に解決を保留し、浮遊感や期待感を演出するテクニック。特にドミナントコード(V7)をV7sus4に変えることが多い。
+      bar_span: 0.5
+      special_devices:
+        - sus_chord
+        - suspension
+    effect:
+      emotions:
+        - floating
+        - anticipation
+        - dreamy
+      keywords:
+        - sus4
+        - 浮遊感
+        - 期待感
+        - 解決保留
+    usage_guidelines:
+      recommended_frequency: アクセントとして使用。
+      good_places: コードチェンジの直前、メロディの伸ばし音の部分。
+      pitfalls: 解決先のコードがないと不安定なまま終わってしまう。
+    example_progressions:
+      - Dm7 -> G7sus4 -> G7 -> Cmaj7
+  - id: HRM_027
+    name: 新時代進行 (♭VII-I-V-VIm)
+    category: harmony
+    scope:
+      - chorus
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: ♭VII-I-V-VIm
+      tempo_bpm_range: [120, 190]
+      typical_genres:
+        - J-POP
+        - anime
+        - EDM
+        - rock
+    pattern:
+      description: Ado「新時代」で象徴的に使われる進行。同主短調から借用した♭VIIから始まり、力強いI→V→VImへと続く。浮遊感のある始まりと力強い展開を両立させた、現代的な響きを持つ。
+      bar_span: 4
+      special_devices:
+        - modal_interchange
+        - borrowed_chord
+    effect:
+      emotions:
+        - powerful
+        - modern
+        - uplifting
+        - epic
+        - cool
+      keywords:
+        - 新時代
+        - Ado
+        - 浮遊感
+        - 力強い
+        - ロック
+    usage_guidelines:
+      recommended_frequency: サビで繰り返し使用すると効果的。
+      good_places: サビ、イントロ。
+      pitfalls: ♭VIIの響きが特徴的なため、曲の雰囲気に合わせる必要がある。
+    example_progressions:
+      - Bb - C - G - Am (in Key=C)
+  - id: HRM_028
+    name: 逆循環コード (1-5-6-4進行)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: I-V-VIm-IV
+      tempo_bpm_range: [80, 160]
+      typical_genres:
+        - J-POP
+        - rock
+        - pops
+    pattern:
+      description: 洋楽でも非常にポピュラーな循環コードの一つ。シンプルで覚えやすく、明るくストレートな印象を与える。多くのヒット曲で使われている。
+      bar_span: 4
+      special_devices:
+        - loop
+    effect:
+      emotions:
+        - bright
+        - simple
+        - familiar
+        - straightforward
+      keywords:
+        - 逆循環
+        - 洋楽定番
+        - シンプル
+        - 明るい
+    usage_guidelines:
+      recommended_frequency: 曲全体でループ可能。
+      good_places: Aメロ、Bメロ、サビなど、どこでも使える。
+      pitfalls: 非常にシンプルなので、アレンジに工夫が必要。
+    example_progressions:
+      - C - G - Am - F (in Key=C)
+  - id: HRM_029
+    name: I-VII-VI-V進行 (下がるだけ進行)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: I-VIIm-VIm-Vm
+      tempo_bpm_range: [80, 160]
+      typical_genres:
+        - J-POP
+        - anime
+        - ballad
+    pattern:
+      description: トニック(I)からベース音が半音ずつ下降していく進行。非常にシンプルでありながら、強い切なさや哀愁を表現できる。VIImやVmは借用和音（モーダルインターチェンジ）であり、これが独特の雰囲気を生み出している。
+      bar_span: 4
+      melodic_motion: chromatic
+      special_devices:
+        - modal_interchange
+        - borrowed_chord
+        - stepwise_bassline
+    effect:
+      emotions:
+        - sad
+        - nostalgic
+        - sentimental
+        - descending
+      keywords:
+        - 下がるだけ
+        - 半音下降
+        - 切ない
+        - エモい
+        - King Gnu
+    usage_guidelines:
+      recommended_frequency: 曲のアクセントとして効果的。
+      good_places: Aメロ、Bメロ、ブリッジ。
+      pitfalls: ベースラインが単調になりやすいため、リズムや上物のボイシングで変化をつけることが望ましい。
+    example_progressions:
+      - C - Bm - Am - Gm (in Key=C)
+  - id: HRM_030
+    name: サブドミナント終止 (アーメン終止)
+    category: harmony
+    scope:
+      - outro
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV-I
+      typical_genres:
+        - J-POP
+        - gospel
+        - hymn
+    pattern:
+      description: サブドミナント(IV)からトニック(I)へ直接解決する終止形。讃美歌の「アーメン」で使われることから「アーメン終止」とも呼ばれる。V-Iの全終止に比べて、穏やかで柔らかな終止感、または「まだ続きがある」ような余韻を残す。
+      bar_span: 2
+      special_devices:
+        - plagal_cadence
+    effect:
+      emotions:
+        - calm
+        - gentle
+        - peaceful
+        - conclusive_yet_open
+      keywords:
+        - アーメン終止
+        - サブドミナント終止
+        - 穏やか
+        - 余韻
+        - 教会
+    usage_guidelines:
+      recommended_frequency: 曲の最後に使用することが多い。
+      good_places: アウトロ、セクションの終わり。
+      pitfalls: 全終止ほどの強い終わり感はないため、力強い曲の締めには向かない場合がある。
+    example_progressions:
+      - F - C (in Key=C)
+  - id: HRM_031
+    name: III7によるドミナント代理 (ヒゲダン進行)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: III7 -> IV△7
+      typical_genres:
+        - J-POP
+        - city_pop
+        - pop-rock
+    pattern:
+      description: 通常 V7→I と進むドミナントモーションの代わりに、III7→IV△7 という進行を用いる。V7とIII7は構成音が似ているため代理が可能で、より複雑で洗練された響きになる。Official髭男dismが多用することで知られる。
+      bar_span: 2
+      special_devices:
+        - substitute_dominant
+    effect:
+      emotions:
+        - stylish
+        - sophisticated
+        - unexpected
+        - dramatic
+      keywords:
+        - 代理ドミナント
+        - お洒落
+        - ヒゲダン
+        - シティポップ
+    usage_guidelines:
+      recommended_frequency: 曲のアクセントとして使用。
+      good_places: AメロやBメロなど、少しひねりを加えたい場所。
+      pitfalls: null
+    example_progressions:
+      - E7 -> Fmaj7 (G7の代わりにE7を使用, in Key=C)
+  - id: HRM_032
+    name: IV-IVm進行 (サブドミナントマイナーの変化)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV -> IVm
+      typical_genres:
+        - J-POP
+        - ballad
+    pattern:
+      description: サブドミナント(IV)からサブドミナントマイナー(IVm)へと繋ぐ進行。メジャー3rdの音がマイナー3rdへと半音下降する動きが、強い切なさや感傷的な雰囲気を生み出す。
+      bar_span: 2
+      melodic_motion: chromatic
+      special_devices:
+        - modal_interchange
+        - subdominant_minor
+    effect:
+      emotions:
+        - sad
+        - sentimental
+        - wistful
+      keywords:
+        - サブドミナントマイナー
+        - 切ない
+        - 半音下降
+        - エモい
+    usage_guidelines:
+      recommended_frequency: 感情を表現したい部分で効果的に使用。
+      good_places: Bメロやブリッジ。
+      pitfalls: null
+    example_progressions:
+      - F -> Fm (in Key=C)
+  - id: HRM_033
+    name: I-V-♭VII-IV 進行 (Let it be進行 / 逆循環派生)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: I-V-♭VII-IV
+      tempo_bpm_range: [70, 140]
+      typical_genres:
+        - J-POP
+        - rock
+        - pops
+        - ballad
+    pattern:
+      description: 逆循環コード(I-V-VIm-IV)のVImを、同主短調から借用した♭VIIに置き換えた進行。The Beatlesの「Let It Be」で有名なことからこの名がある。♭VIIのモーダルインターチェンジにより、通常の逆循環よりも少しブルージーで哀愁のある響きになる。
+      bar_span: 4
+      special_devices:
+        - modal_interchange
+        - borrowed_chord
+    effect:
+      emotions:
+        - nostalgic
+        - bittersweet
+        - gentle
+        - grand
+      keywords:
+        - Let it be
+        - The Beatles
+        - 逆循環
+        - 哀愁
+        - モーダルインターチェンジ
+    usage_guidelines:
+      recommended_frequency: セクション内でループ可能。
+      good_places: Aメロ、サビなど幅広い場面で使用できる。
+      pitfalls: null
+    example_progressions:
+      - C - G - Bb - F (in Key=C)
+  - id: HRM_034
+    name: オンコードsus4 (IV/V)
+    category: harmony
+    scope:
+      - pre_chorus
+      - bridge
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV△7/V
+      tempo_bpm_range: [80, 160]
+      typical_genres:
+        - J-POP
+        - ballad
+        - anime
+    pattern:
+      description: サブドミナントコード(IV)をドミナントのベース音(V)の上に乗せる分数コード。響きとしてはV7sus4(9,13)に近く、解決を先延ばしにすることで強い浮遊感とサビへの期待感を生み出す。J-POPのサビ前で非常に多用される。
+      bar_span: 1
+      special_devices:
+        - on_chord
+        - sus_chord
+        - pedal_point
+    effect:
+      emotions:
+        - floating
+        - anticipation
+        - dreamy
+        - tense
+      keywords:
+        - 分数コード
+        - 浮遊感
+        - 解決保留
+        - サビ前
+        - エモい
+    usage_guidelines:
+      recommended_frequency: サビの直前で1〜2小節使うのが最も効果的。
+      good_places: Bメロの最後、ブリッジの最後。
+      pitfalls: このコードの後にはトニック(I)やその代理(VIm)など、解決感のあるコードを置かないと不安定なまま終わってしまう。
+    example_progressions:
+      - Fmaj7/G (in Key=C)
+  - id: HRM_035
+    name: III7によるドミナント代理 (ヒゲダン進行)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: III7 -> IV△7
+      typical_genres:
+        - J-POP
+        - city_pop
+        - pop-rock
+    pattern:
+      description: 通常 V7→I と進むドミナントモーションの代わりに、III7→IV△7 という進行を用いる。V7とIII7は構成音が似ているため代理が可能で、より複雑で洗練された響きになる。Official髭男dismが多用することで知られる。
+      bar_span: 2
+      special_devices:
+        - substitute_dominant
+    effect:
+      emotions:
+        - stylish
+        - sophisticated
+        - unexpected
+        - dramatic
+      keywords:
+        - 代理ドミナント
+        - お洒落
+        - ヒゲダン
+        - シティポップ
+    usage_guidelines:
+      recommended_frequency: 曲のアクセントとして使用。
+      good_places: AメロやBメロなど、少しひねりを加えたい場所。
+      pitfalls: null
+    example_progressions:
+      - E7 -> Fmaj7 (G7の代わりにE7を使用, in Key=C)
+  - id: HRM_036
+    name: ♭III-♭VII-I 進行 (モーダルインターチェンジ)
+    category: harmony
+    scope:
+      - chorus
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: ♭III-♭VII-I
+      typical_genres:
+        - J-POP
+        - rock
+        - anime
+    pattern:
+      description: 同主短調から♭IIIと♭VIIを借用し、トニック(I)に解決する進行。♭VI-♭VII-Iと似ているが、より力強くロックな響きを持つ。サビ頭で使うと強いインパクトを生む。
+      bar_span: 2
+      special_devices:
+        - modal_interchange
+        - borrowed_chord
+    effect:
+      emotions:
+        - powerful
+        - cool
+        - dramatic
+        - uplifting
+      keywords:
+        - モーダルインターチェンジ
+        - 借用和音
+        - ロック
+        - 力強い
+    usage_guidelines:
+      recommended_frequency: サビ頭やキメのフレーズで使用。
+      good_places: サビの1〜2小節目。
+      pitfalls: null
+    example_progressions:
+      - Eb - Bb - C (in Key=C)
+  - id: HRM_037
+    name: ピカルディ終止
+    category: harmony
+    scope:
+      - outro
+    layer: chord
+    preconditions:
+      tonality: minor
+      typical_progression: i -> I
+      typical_genres:
+        - classical
+        - J-POP
+        - ballad
+    pattern:
+      description: 短調の楽曲の最後に、同主調の長調のトニックコード(I)を使って明るく終わる終止形。それまでの悲しい雰囲気から一転して、希望や救いを感じさせる劇的な効果がある。
+      bar_span: 1
+      special_devices:
+        - picardy_third
+    effect:
+      emotions:
+        - hopeful
+        - resolved
+        - bright
+        - surprising
+      keywords:
+        - ピカルディ終止
+        - 希望
+        - 救い
+        - 明るい終わり
+    usage_guidelines:
+      recommended_frequency: 曲の最後の1回のみ。
+      good_places: 楽曲の最後のコード。
+      pitfalls: 曲の雰囲気によっては唐突に聞こえることがある。
+    example_progressions:
+      - 曲の最後で Am の代わりに A major を使用する (in Key=Am)
+  - id: HRM_039
+    name: セカンダリードミナント (V7/X)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - anime
+        - rock
+        - jazz
+    pattern:
+      description: トニック(I)以外のダイアトニックコードを一時的なゴール（仮のトニック）と見なし、そのゴールに対するドミナントコードを挿入するテクニック。スケール外の音を自然に導入し、コード進行に強い推進力と色彩感を与えることができる。
+      bar_span: 1
+      special_devices:
+        - secondary_dominant
+        - dominant_motion
+    effect:
+      emotions:
+        - driving
+        - dramatic
+        - colorful
+        - resolved
+      keywords:
+        - セカンダリードミナント
+        - ドッペルドミナント
+        - 解決感
+        - 転調感
+    usage_guidelines:
+      recommended_frequency: 曲のアクセントとして効果的に使用。
+      good_places: II-V-IのVをさらにドミナント化(V7/V)、VImへ向かうIII7など。
+      pitfalls: 多用すると調性が不安定になる可能性がある。
+    example_progressions:
+      - D7 -> G7 -> C (D7はG7に対するセカンダリードミナント V7/V)
+      - E7 -> Am (E7はAmに対するセカンダリードミナント V7/vi)
+  - id: HRM_042
+    name: aug7コード (浮遊感のある経過音)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: I△7 -> Iaug7 -> IV△7
+      typical_genres:
+        - J-POP
+        - city_pop
+        - ballad
+    pattern:
+      description: ドミナントセブンスコードの5度の音を半音上げたコード(例: E7→E+7)。不安定で不思議な浮遊感があり、次のコードへ滑らかに繋ぐパッシングコード（経過コード）として機能する。特にサブドミナントへ向かう際に効果的。
+      bar_span: 1
+      special_devices:
+        - augmented_chord
+        - passing_chord
+    effect:
+      emotions:
+        - floating
+        - tense
+        - stylish
+        - smooth_transition
+      keywords:
+        - オーギュメントセブンス
+        - aug7
+        - 浮遊感
+        - 経過コード
+        - お洒落
+    usage_guidelines:
+      recommended_frequency: 曲のアクセントとして使用。
+      good_places: コード進行の繋ぎでスパイスを加えたい時。
+      pitfalls: 響きが独特なため、使いどころを選ぶ。
+    example_progressions:
+      - Fmaj7 -> E+7 -> Dm7 (in Key=Am)
+  - id: HRM_043
+    name: ♭V7のブルージーな活用
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_genres:
+        - blues
+        - rock
+        - J-POP
+    pattern:
+      description: サブドミナント(IV)へ向かうドミナントコードとして、通常のI7の代わりに♭V7を使用する。ブルース由来の響きで、楽曲に渋さや哀愁を加える。
+      bar_span: 1
+      special_devices:
+        - secondary_dominant
+    effect:
+      emotions:
+        - bluesy
+        - cool
+        - sad
+      keywords:
+        - ブルース
+        - 渋い
+        - 哀愁
+    usage_guidelines:
+      recommended_frequency: ブルージーな雰囲気を出したい時に使用。
+      good_places: Aメロや間奏。
+      pitfalls: null
+    example_progressions:
+      - Gb7 -> F (in Key=C)
+  - id: HRM_044
+    name: ミ♭レド進行 (43#51進行)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: minor
+      typical_progression: ivm-IIIaug-III-i
+      tempo_bpm_range: [80, 150]
+      typical_genres:
+        - J-POP
+        - vocaloid
+    pattern:
+      description: Ayase氏が多用する、マイナーキーにおける情緒的な進行。サブドミナントマイナー(ivm)から始まり、IIIaug、IIIとベース音が「ミ♭→レ→ド」のように半音階で下降していくのが特徴。非常に強い哀愁と切なさを生み出す。
+      bar_span: 4
+      melodic_motion: chromatic
+      special_devices:
+        - augmented_chord
+        - stepwise_bassline
+    effect:
+      emotions:
+        - sad
+        - sentimental
+        - nostalgic
+        - dark
+      keywords:
+        - ミ♭レド進行
+        - Ayase
+        - 夜撫でるメノウ
+        - 哀愁
+        - 半音下降
+    usage_guidelines:
+      recommended_frequency: 曲のフックとなるセクションで使用。
+      good_places: Aメロ、Bメロ、間奏。
+      pitfalls: マイナーキー専用の進行であり、響きが非常に特徴的なため多用は避けるべき。
+    example_progressions:
+      - Fm - Eaug - E - Am (in Key=Am)
+  - id: HRM_045
+    name: 平行移動 (プラナー・ハーモニー)
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - rock
+        - EDM
+    pattern:
+      description: 同じコードの形（ボイシング）を保ったまま、そのまま平行にスライドさせて移動させる手法。機能和声のルールから逸脱するため、独特の浮遊感や力強さ、非現実的な雰囲気を生み出すことができる。
+      bar_span: 2
+      special_devices:
+        - planing
+        - parallel_harmony
+    effect:
+      emotions:
+        - powerful
+        - floating
+        - unstable
+        - epic
+      keywords:
+        - 平行移動
+        - プラナーハーモニー
+        - 力強い
+        - 非現実的
+    usage_guidelines:
+      recommended_frequency: 曲に強いインパクトを与えたい時に使用。
+      good_places: イントロのリフ、サビ、間奏。
+      pitfalls: 機能和声感が薄れるため、使いどころを間違えると曲のまとまりがなくなる。
+    example_progressions:
+      - Fmaj7 - Gmaj7 - Amaj7
+  - id: HRM_046
+    name: メジャーセブンス(△7)の活用
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - city_pop
+        - ballad
+        - jazz
+    pattern:
+      description: メジャーコードに長7度(Major 7th)の音を加えたコード。通常のメジャーコードよりも浮遊感があり、お洒落で洗練された印象を与える。都会的なコード進行には必須の要素。
+      target_scale_degrees:
+        - △7
+      special_devices:
+        - tension_chord
+        - major_seventh
+    effect:
+      emotions:
+        - stylish
+        - floating
+        - beautiful
+        - mellow
+      keywords:
+        - △7
+        - メジャーセブンス
+        - お洒落
+        - 都会的
+        - 浮遊感
+    usage_guidelines:
+      recommended_frequency: 曲全体を通して多用可能。
+      good_places: 特にトニックコード(I△7)やサブドミナントコード(IV△7)で使うと効果的。
+      pitfalls: メロディのルート音と△7の音がぶつかると不協和音になりやすいので注意が必要。
+    example_progressions:
+      - Cmaj7
+      - Fmaj7
+  - id: HRM_047
+    name: Just the Two of Us進行の代理コードアレンジ
+    category: harmony
+    scope:
+      - any
+    layer: chord
+    preconditions:
+      tonality: any
+      typical_progression: IV△7-III7-VIm7-Vm7-I7
+      typical_genres:
+        - J-POP
+        - city_pop
+        - R&B
+    pattern:
+      description: 「Just the Two of Us進行」のコードを、機能が似ている他のコードに置き換えることで、響きにバリエーションを持たせるアレンジ手法。
+      special_devices:
+        - substitute_chord
+      variants:
+        - name: VIm7をI△7に置換
+          description: VIm7(トニック代理)をI△7(トニック)に置き換える。少し明るく、より安定した響きになる。
+          example_progressions:
+            - Fmaj7 - E7 - Cmaj7 - Gm7-C7
+        - name: III7を♭III dim7に置換
+          description: III7(セカンダリードミナント)を♭IIIdim7に置き換える。構成音が似ているため代理可能で、より怪しげでジャジーな雰囲気になる。
+          example_progressions:
+            - Fmaj7 - Ebdim7 - Am7 - Gm7-C7
+    effect:
+      emotions:
+        - stylish
+        - sophisticated
+        - jazzy
+      keywords:
+        - 代理コード
+        - アレンジ
+        - Just the Two of Us
+    usage_guidelines:
+      recommended_frequency: 原曲の進行に変化をつけたい時に使用。
+      good_places: ループの2周目など。
+      pitfalls: null
+    example_progressions: []
+  - id: HRM_048
+    name: 456進行 (J-POP進行)
+    category: harmony
+    scope:
+      - chorus
+      - pre_chorus
+      - any
+    layer: chord
+    preconditions:
+      tonality: major
+      typical_progression: IV-V-VIm
+      tempo_bpm_range: [100, 180]
+      typical_genres:
+        - J-POP
+        - anime
+        - rock
+    pattern:
+      description: 王道進行からIIImを省略した形で、よりストレートに高揚感から切なさへと移行する進行。3コードで構成されるためシンプルで力強く、多くのJ-POPやアニソンで使用される。
+      bar_span: 2
+      special_devices: []
+    effect:
+      emotions:
+        - uplifting
+        - bittersweet
+        - driving
+      keywords:
+        - 456進行
+        - 高揚感
+        - 切ない
+        - ストレート
+    usage_guidelines:
+      recommended_frequency: サビで多用される。
+      good_places: サビの頭、Bメロ。
+      pitfalls: シンプルなので、メロディやリズムで工夫しないと単調になりがち。
+    example_progressions:
+      - F - G - Am (in Key=C)
+  - id: HRM_049
+    name: 6345進行 (王道進行のマイナー版)
+    category: harmony
+    scope:
+      - verse
+      - chorus
+    layer: chord
+    preconditions:
+      tonality: minor
+      typical_progression: Im-V-VI-VII
+      tempo_bpm_range: [90, 160]
+      typical_genres:
+        - J-POP
+        - anime
+        - rock
+    pattern:
+      description: マイナーキーにおける定番進行。トニックマイナー(Im)から始まり、V-VI-VIIと順次上昇していくような力強い流れを持つ。メジャーキーの王道進行(456)と対比されることが多い。
+      bar_span: 4
+      special_devices: []
+    effect:
+      emotions:
+        - cool
+        - dark
+        - driving
+        - emotional
+      keywords:
+        - マイナーキー
+        - 王道
+        - ダーク
+        - 疾走感
+    usage_guidelines:
+      recommended_frequency: サビやAメロで効果的。
+      good_places: サビ、Aメロ。
+      pitfalls: null
+    example_progressions:
+      - Am - E - F - G (in Key=Am)
+  - id: BASS_001
+    name: 順次進行ベースライン (感情表現)
+    category: bass
+    scope:
+      - any
+    layer: bass
+    preconditions:
+      tonality: any
+      typical_progression: IV-V-VIm
+      typical_genres:
+        - J-POP
+        - ballad
+        - anime
+    pattern:
+      description: ベース音を音階に沿って一音ずつ滑らかに動かすことで、コード進行に方向性と感情的な色彩を与える。特にオンコード（分数コード）を活用することで実現しやすい。
+      melodic_motion: stepwise
+      variants:
+        - name: 上昇ベース
+          description: ベース音を順次上行させることで、希望、高揚感、前向きな気持ちを表現する。
+          effect:
+            emotions:
+              - hopeful
+              - uplifting
+          example_progressions:
+            - F -> G -> Am (ベース: F→G→A)
+            - C -> G/B -> Am (ベース: C→B→A)
+        - name: 下降ベース
+          description: ベース音を順次下行させることで、切なさ、悲しみ、落ち着きを表現する。
+          effect:
+            emotions:
+              - sad
+              - calm
+              - sentimental
+          example_progressions:
+            - Am -> Am/G -> F (ベース: A→G→F)
+    effect:
+      emotions:
+        - emotional
+        - narrative
+      keywords:
+        - クリシェ
+        - なめらか
+        - ストーリー性
+    usage_guidelines:
+      recommended_frequency: 各セクションで効果的に使用可能。
+      good_places: Bメロやサビで感情の起伏を作りたいとき。
+      pitfalls: 常に順次進行だと動きが予測されやすくなるため、跳躍進行と組み合わせることが重要。
+    example_progressions: []
+  - id: BASS_002
+    name: 分数コードによるベースラインの平滑化
+    category: bass
+    scope:
+      - any
+    layer: bass
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - ballad
+        - anime
+    pattern:
+      description: コードのルート音以外の音をベースに置く（分数コード/オンコード）ことで、ベースラインを跳躍させずに滑らかな順次進行にするテクニック。コードの響きは保ちつつ、サウンド全体の一体感と流れの美しさを向上させる。
+      melodic_motion: stepwise
+      special_devices:
+        - on_chord
+        - inversion
+    effect:
+      emotions:
+        - smooth
+        - beautiful
+        - connected
+        - emotional
+      keywords:
+        - 分数コード
+        - オンコード
+        - 順次進行
+        - なめらか
+        - エモい
+    usage_guidelines:
+      recommended_frequency: コードチェンジを滑らかにしたい箇所で多用可能。
+      good_places: 特に王道進行やカノン進行と組み合わせると効果的。
+      pitfalls: ベースの動きが単調にならないよう、跳躍進行とのバランスを取ることが望ましい。
+    example_progressions:
+      - C -> G/B -> Am (ベースがC→B→Aと下降)
+  - id: BASS_003
+    name: ベース・ラン
+    category: bass
+    scope:
+      - any
+    layer: bass
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - rock
+        - funk
+    pattern:
+      description: コードチェンジの合間に、ベースがスケール音や半音を使って次のコードのルート音に向かってメロディックに動くフレーズ。楽曲にグルーヴと躍動感を与え、コード進行をより滑らかに繋ぐ。
+      melodic_motion: stepwise
+      special_devices:
+        - bass_run
+        - passing_tone
+    effect:
+      emotions:
+        - groovy
+        - rhythmic
+        - active
+      keywords:
+        - ベースラン
+        - フィルイン
+        - グルーヴ
+        - 動的
+    usage_guidelines:
+      recommended_frequency: セクションの終わりやコードチェンジの隙間に挿入。
+      good_places: 小節の最後の1〜2拍。
+      pitfalls: 多用しすぎるとコード感が曖昧になり、うるさく聞こえることがある。
+    example_progressions:
+      - CからAmに進行する際、4拍目でベースが「C-B-A」と動く。
+  - id: MEL_001
+    name: 音符の長さでメロディのリズム印象と場面転換を操作する
+    category: melody
+    scope:
+      - verse
+      - pre-chorus
+      - chorus
+      - bridge
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_progression: null
+      tempo_bpm_range: [60, 190]
+      typical_genres:
+        - J-POP
+        - rock
+        - idol
+        - anime
+        - children
+    pattern:
+      description: |
+        短い音価（8分音符・16分音符）を多用すると、アクセントが増えてせわしない・にぎやかなメロディになる。長い音価（付点4分音符・2分音符など）を多用すると、どっしりとした・ゆったりしたメロディになる。ブロックごとに使う音符の長さを変えることで、場面転換をはっきり感じさせられる。([うちやま作曲教室][9])
+      bar_span: null
+      beats_targeted: null
+      melodic_motion: rhythmic_density_control
+      special_devices:
+        - note_value_contrast
+    effect:
+      emotions:
+        - energetic
+        - busy
+        - calm
+        - majestic
+      keywords:
+        - リズムのメリハリ
+        - 場面転換
+        - せわしなさ
+        - どっしり感
+    usage_guidelines:
+      recommended_frequency: 各ブロックの作曲時に『平均音価』を決めて意識的に運用する。
+      good_places: Aメロは細かめ、Bメロはやや中庸、サビは長い音を混ぜてスケール感を出す、などのコントラスト設計。
+      pitfalls: すべてのブロックで同じような音価配分にすると、A/B/サビの違いが弱くなる。歌い手のブレスや発音難度にも配慮する。
+    example_progressions:
+      - Aメロ：8分音符主体の細かいフレーズ
+      - Bメロ：4分音符主体＋ところどころ8分音符
+      - サビ：付点4分＋2分音符で大きく歌う
+  - id: MEL_002
+    name: リディアンスケール (#4の浮遊感)
+    category: melody
+    scope:
+      - any
+    layer: melody
+    preconditions:
+      tonality: modal
+      tempo_bpm_range: [80, 160]
+      typical_genres:
+        - anime
+        - game_music
+        - film_score
+    pattern:
+      description: メジャースケールの第4音を半音上げた音階（リディアンモード）。増4度の音が特徴的で、明るく開放的でありながら、どこか神秘的で浮遊感のある独特の雰囲気を作り出す。トニックコード上でこの音を使うと効果的。
+      target_scale_degrees:
+        - "#4"
+        - "#11"
+      special_devices:
+        - lydian_mode
+    effect:
+      emotions:
+        - dreamy
+        - magical
+        - floating
+        - bright
+        - majestic
+      keywords:
+        - 浮遊感
+        - 神秘的
+        - 壮大
+        - ファンタジー
+        - ゲーム音楽
+    usage_guidelines:
+      recommended_frequency: 特定のセクションで世界観を表現するために使用。
+      good_places: イントロ、間奏、壮大なシーンのBGM。
+      pitfalls: 使いどころを間違えると、調性から外れた違和感のある響きになる。
+    example_progressions:
+      - Cmaj7(#11)のコード上で、F#の音をメロディに使う
+  - id: MEL_005
+    name: アウフタクト (食い)
+    category: melody
+    scope:
+      - any
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - rock
+        - anime
+    pattern:
+      description: メロディが小節の1拍目より前に（食って）始まるリズムのこと。特にサビ頭で使うことで、聴き手に強い印象を与え、楽曲に勢いと疾走感を生み出す。
+      beats_targeted:
+        - 4&
+      rhythm_subdivision: 8th
+      special_devices:
+        - pickup_measure
+        - anacrusis
+    effect:
+      emotions:
+        - energetic
+        - driving
+        - catchy
+      keywords:
+        - アウフタクト
+        - 食い
+        - 疾走感
+        - インパクト
+        - サビ頭
+    usage_guidelines:
+      recommended_frequency: 各セクションの頭で効果的に使用可能。
+      good_places: サビの頭、Aメロの頭。
+      pitfalls: 全てのフレーズをアウフタクトにすると、リズムの起点が曖昧になる可能性がある。
+    example_progressions:
+      - Bメロの4拍目の裏からサビのメロディが始まる。
+  - id: MEL_006
+    name: 倚音 (アポジャトゥーラ)
+    category: melody
+    scope:
+      - any
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_genres:
+        - ballad
+        - J-POP
+        - classical
+    pattern:
+      description: 強拍でコード構成音ではない音（非和声音）を演奏し、その直後に隣のコード構成音へ順次進行で解決するメロディ手法。一瞬の不協和音が解決されることで、強い情緒的な響きや切なさを生む。
+      bar_span: 0.5
+      beats_targeted:
+        - 1
+        - 3
+      melodic_motion: stepwise
+      special_devices:
+        - appoggiatura
+        - non_chord_tone
+    effect:
+      emotions:
+        - emotional
+        - yearning
+        - sad
+        - beautiful
+      keywords:
+        - 倚音
+        - エモい
+        - 切ない
+        - 非和声音
+    usage_guidelines:
+      recommended_frequency: 感情を表現したいメロディのアクセントとして使用。
+      good_places: Aメロやサビの歌いだし。
+      pitfalls: 解決先の音をしっかり鳴らさないと、ただ音が外れたように聞こえてしまう。
+    example_progressions:
+      - Cコード上でメロディが「レ→ド」と動く（レが倚音）。
+  - id: MEL_007
+    name: 刺繍音 (ネイバーノート)
+    category: melody
+    scope:
+      - any
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - pops
+    pattern:
+      description: あるコードトーンから2度上の音または下の音に移動し、すぐに元のコードトーンに戻る動き。メロディに細かな装飾と動きを与え、単調さを回避する効果がある。
+      bar_span: 0.5
+      melodic_motion: stepwise
+      special_devices:
+        - neighbor_tone
+        - non_chord_tone
+    effect:
+      emotions:
+        - playful
+        - decorative
+      keywords:
+        - 刺繍音
+        - 装飾
+        - メロディの動き
+    usage_guidelines:
+      recommended_frequency: メロディの中で自然に多用可能。
+      good_places: 長い音符が続く部分や、同じ音が続く部分に動きを加えたいとき。
+      pitfalls: 多用しすぎるとメロディの骨格が分かりにくくなることがある。
+    example_progressions:
+      - Cコード上でメロディが「ド→レ→ド」と動く。
+  - id: MEL_008
+    name: 共通音を活かしたメロディ
+    category: melody
+    scope:
+      - any
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - pops
+    pattern:
+      description: コードが変わっても、両方のコードに共通する音をメロディで保持し続ける（または強調する）手法。コード進行に統一感と安定感をもたらし、メロディが自然に聞こえる。
+      special_devices:
+        - common_tone
+    effect:
+      emotions:
+        - stable
+        - connected
+        - smooth
+      keywords:
+        - 共通音
+        - 自然なメロディ
+        - 統一感
+    usage_guidelines:
+      recommended_frequency: メロディ作成時に常に意識する。
+      good_places: コードチェンジをまたぐフレーズ。
+      pitfalls: 共通音だけに頼るとメロディが単調になるため、他の音と組み合わせることが重要。
+    example_progressions:
+      - C→Amの進行で、両方に含まれる「ド」や「ミ」の音をメロディの中心に据える。
+  - id: MEL_009
+    name: 半音アプローチ
+    category: melody
+    scope:
+      - any
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - jazz
+        - pops
+    pattern:
+      description: メロディがターゲットとなるコードトーンに対し、その半音上または半音下から解決する動き。強い引力があり、メロディにジャジーでお洒落なニュアンスを加える。
+      melodic_motion: chromatic
+      special_devices:
+        - chromatic_approach
+        - non_chord_tone
+    effect:
+      emotions:
+        - stylish
+        - jazzy
+        - smooth_transition
+      keywords:
+        - 半音アプローチ
+        - クロマチック
+        - お洒落
+        - ジャズ
+    usage_guidelines:
+      recommended_frequency: フレーズの繋ぎやアクセントとして効果的。
+      good_places: コードチェンジをまたぐタイミング。
+      pitfalls: 多用すると調性が曖昧になる。
+    example_progressions:
+      - Cmaj7に向かう直前に、メロディでDbの音を短く鳴らしてからCの音に着地する。
+  - id: MLD_001
+    name: オクターブ跳躍メロディ (Octave Leap Melody)
+    category: melody
+    scope:
+      - chorus
+      - climax
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_progression: null
+      tempo_bpm_range: [60, 180]
+      typical_genres:
+        - J-POP
+        - anime
+        - idol pop
+    pattern:
+      description: A melodic leap spanning a full octave (or other large leap, e.g. a major 6th/7th).
+        Often the melody jumps to a much higher note at a dramatic moment (such as the start
+        of a chorus or on a key lyric) before coming back down or resolving.
+      bar_span: null
+      beats_targeted: null
+      melodic_motion: leap
+      special_devices: []
+    effect:
+      emotions:
+        - excited
+        - surprised
+      keywords:
+        - 大跳躍
+        - インパクト
+        - 高揚
+    usage_guidelines:
+      recommended_frequency: Rarely – typically one or a few standout moments in a song (e.g.
+        the chorus entry or a bridge climax).
+      good_places: The beginning of a chorus or on a crucial word to create a peak moment.
+        A sudden octave jump can also be used to lead into a key change or final chorus for
+        maximum impact.
+      pitfalls: Octave leaps are vocally challenging; ensure the singer can hit the jump comfortably.
+        Overuse of big leaps can make a melody feel disjointed or too difficult to sing
+        along with. Balance leaps with stepwise motion afterwards to give a sense of resolution
+        (listeners often expect a leap to be "answered" by stepwise movement).
+    example_progressions:
+      - (Melodic example) Verse ends on G4, then chorus starts on G5 (one octave higher)
+        on the first syllable for dramatic entry.
+  - id: MLD_002
+    name: 半音階的アプローチ (Chromatic Approach in Melody)
+    category: melody
+    scope:
+      - any
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_progression: null
+      tempo_bpm_range: [60, 140]
+      typical_genres:
+        - J-POP
+        - jazz
+        - fusion
+    pattern:
+      description: Introducing notes outside the diatonic scale by approaching a target note from
+        a half-step above or below. For instance, in C major, a melody might use an F# as
+        a passing tone between F and G or approach a chord tone by a semitone. This technique
+        adds color by briefly touching on chromatic notes.
+      bar_span: null
+      beats_targeted: null
+      melodic_motion: chromatic
+      special_devices:
+        - approach_tone
+        - passing_tone
+    effect:
+      emotions:
+        - sophisticated
+        - tense
+      keywords:
+        - ジャズ風
+        - 艶やか
+        - 非ダイアトニック
+    usage_guidelines:
+      recommended_frequency: Use sparingly within a melody – a few chromatic approach notes
+        can go a long way in a pop context.
+      good_places: Ballads or jazz-influenced pop sections where a subtle "blues" or classical
+        feel is desired. Often on introspective lines or before important chord tones (e.g.
+        approaching a major 3rd or 5th of the chord chromatically).
+      pitfalls: Out-of-scale notes can sound wrong if not resolved properly. Make sure the chromatic
+        note quickly leads to a chord tone or a stable scale tone so it sounds intentional.
+        Overusing chromatic notes in a straightforward genre can make the melody feel stylistically
+        inconsistent or too "old-fashioned". Aim for a tasteful touch of chromaticism to
+        enhance sophistication.
+    example_progressions:
+      - (Melodic line example) E – F – F# – G (chromatic walk-up in C major scale on
+        a melody line)
+  - id: MLD_003
+    name: 四七抜き音階 (Yonánuki/Pentatonic Scale)
+    category: melody
+    scope:
+      - verse
+      - chorus
+    layer: melody
+    preconditions:
+      tonality: major
+      typical_progression: Uses scale tones 1-2-3-5-6 (no 4th or 7th in major scale)
+      tempo_bpm_range: [70, 180]
+      typical_genres:
+        - J-POP
+        - traditional
+        - folk
+        - rock
+    pattern:
+      description: Uses the pentatonic scale that omits the 4th and 7th scale degrees (in major)
+        or analogous pentatonic structures. For example, in C major, the melody would use
+        C, D, E, G, A (no F or B). This scale has no semitone intervals, giving it a distinctive
+        open sound.
+      bar_span: null
+      beats_targeted: null
+      melodic_motion: pentatonic
+      special_devices: []
+    effect:
+      emotions:
+        - nostalgic
+        - friendly
+      keywords:
+        - 和風
+        - 郷愁
+        - キャッチー
+    usage_guidelines:
+      recommended_frequency: Can be used as the primary scale for an entire melody or just
+        in certain sections. Very common in multiple songs (not considered overused if it
+        fits the style).
+      good_places: To evoke a Japanese or folk feeling (often a "Wa" traditional mood) or simply
+        to achieve a catchy, easy-to-sing melody. Many chorus hooks naturally end up pentatonic
+        because they feel familiar and memorable. A song may use yonanuki for an entire
+        chorus to give a bright, nostalgic hook.
+      pitfalls: Sticking strictly to pentatonic can limit harmonic interest (since avoid notes
+        like the 4th and 7th which create tension). If a song is entirely yonanuki, be mindful
+        that it might lack strong leading tones or tension – this can be good for simplicity,
+        but make sure the arrangement provides dynamics elsewhere. Conversely, suddenly
+        switching to pentatonic melody mid-song will strongly change the vibe – use that
+        consciously if done.
+    example_progressions:
+      - (Melody notes example in C) C - D - E - G - A (major pentatonic scale tones, no
+        F/B). Many folk songs and anime tunes use such pentatonic melodies for a warm,
+        familiar feel.
+  - id: MLD_004
+    name: 上昇シークエンス (Rising Sequence)
+    category: melody
+    scope:
+      - build-up
+      - chorus
+    layer: melody
+    preconditions:
+      tonality: any
+      typical_progression: null
+      tempo_bpm_range: [60, 170]
+      typical_genres:
+        - J-POP
+        - anime
+        - musical
+    pattern:
+      description: A melodic or harmonic figure that is repeated multiple times, each time at a
+        higher pitch (usually by a consistent interval such as a step or a diatonic third).
+        This creates a "staircase" effect in the melody or chords, intensifying each repetition.
+      bar_span: null
+      beats_targeted: null
+      melodic_motion: sequential
+      special_devices: []
+    effect:
+      emotions:
+        - anticipation
+        - exhilaration
+      keywords:
+        - 盛り上げ
+        - 反復
+        - クレシェンド
+    usage_guidelines:
+      recommended_frequency: Use for special moments – typically one major rising sequence
+        per song (for instance, leading into the final chorus or during a guitar solo or
+        instrumental break).
+      good_places: Pre-chorus or end of chorus e.g., a motif that repeats three times, each
+        time starting higher, to build excitement into the chorus or climax. It can also
+        be used mid-chorus to continually lift the energy (common in anime songs where the
+        chorus melody ascends in steps).
+      pitfalls: Ensure the sequence logically fits the chord progression – sequences often imply
+        key changes or temporary tonal shifts, so the chords beneath should support each
+        repetition. If the rise is too steep or goes on too long, it can sound forced or
+        become straining for the singer. End the sequence satisfyingly (often the final
+        high point resolves into a chorus payoff or a sustained note).
+    example_progressions:
+      - Melodic example: (in Key=C) First phrase: G-A-E-F, Second phrase a step higher:
+        A-B-F#-G, Third phrase higher: B-C-G-A, culminating into the chorus high C note.
+  - id: RHY_004
+    name: ギターカッティング
+    category: rhythm
+    scope:
+      - any
+    layer: rhythm
+    preconditions:
+      tonality: any
+      tempo_bpm_range: [90, 150]
+      typical_genres:
+        - funk
+        - J-POP
+        - rock
+    pattern:
+      description: ギターの弦を左手で軽くミュートしながらピッキングすることで、「チャカチャカ」というパーカッシブな音を出す奏法。16分音符の細かいリズムで刻むことが多く、楽曲に鋭い切れ味とファンキーなグルーヴを与える。
+      rhythm_subdivision: 16th
+      special_devices:
+        - cutting
+        - mute_stroke
+    effect:
+      emotions:
+        - groovy
+        - funky
+        - rhythmic
+        - sharp
+      keywords:
+        - カッティング
+        - グルーヴ
+        - ファンキー
+        - 16ビート
+    usage_guidelines:
+      recommended_frequency: AメロやBメロでリズムの土台として使用。
+      good_places: ファンクやシティポップ系の楽曲。
+      pitfalls: リズムがヨレるとグルーヴが損なわれるため、正確な演奏が求められる。
+    example_progressions:
+      - 16分音符で「ジャカポコ ジャカポコ」とブラッシングを交えながらコードを刻む。
+  - id: RHY_005
+    name: 符点8分音符 (跳ねるリズム)
+    category: rhythm
+    scope:
+      - any
+    layer: melody
+    preconditions:
+      tonality: any
+      tempo_bpm_range: [100, 180]
+      typical_genres:
+        - J-POP
+        - anime
+        - rock
+    pattern:
+      description: 符点8分音符と16分音符の組み合わせ（「タン・タ」というリズム）。メロディに跳ねるような躍動感と軽快さを与える。3連符のシャッフルとは異なり、より鋭くタイトなグルーヴになる。
+      rhythm_subdivision: dotted_8th
+      special_devices: []
+    effect:
+      emotions:
+        - bouncy
+        - energetic
+        - cheerful
+      keywords:
+        - 符点8分
+        - 跳ねるリズム
+        - 軽快
+        - アニソン
+    usage_guidelines:
+      recommended_frequency: 曲全体のリズムのテーマとして使用可能。
+      good_places: サビやAメロなど、メロディを印象付けたい場所。
+      pitfalls: 歌うのが少し難しい場合がある。
+    example_progressions:
+      - 「おどるポンポコリン」のAメロなど。
+  - id: RHY_006
+    name: 拍の頭を休符にする (食い込み)
+    category: rhythm
+    scope:
+      - any
+    layer: global
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - funk
+        - R&B
+    pattern:
+      description: 小節の1拍目などの強拍を休符にし、その直後の裏拍からフレーズを開始するリズム。シンコペーションの一種で、強い「食った」感じのグルーヴを生み出す。
+      beats_targeted:
+        - '&_of_1'
+      special_devices:
+        - syncopation
+    effect:
+      emotions:
+        - groovy
+        - rhythmic
+        - funky
+      keywords:
+        - シンコペーション
+        - 食う
+        - グルーヴ
+        - 裏拍
+    usage_guidelines:
+      recommended_frequency: リズムにアクセントをつけたい時に使用。
+      good_places: ベースライン、ピアノのバッキング。
+      pitfalls: 多用すると拍の頭が分かりにくくなる。
+    example_progressions:
+      - 1拍目を8分休符にし、1拍目の裏からベースラインを開始する。
+  - id: DRM_002
+    name: 4つ打ち (Four on the Floor)
+    category: rhythm
+    scope:
+      - any
+    layer: drum
+    preconditions:
+      tonality: any
+      tempo_bpm_range: [120, 160]
+      typical_genres:
+        - dance
+        - EDM
+        - J-POP
+        - rock
+    pattern:
+      description: バスドラムが4分音符で全ての拍の頭（1, 2, 3, 4拍目）を叩く、ダンスミュージックの基本となるビート。聴き手が自然に体を動かしたくなるような、力強く安定したグルーヴを生み出す。
+      beats_targeted:
+        - 1
+        - 2
+        - 3
+        - 4
+      rhythm_subdivision: 4th
+      special_devices:
+        - four_on_the_floor
+    effect:
+      emotions:
+        - danceable
+        - energetic
+        - stable
+        - driving
+      keywords:
+        - 4つ打ち
+        - ダンス
+        - ノリやすい
+        - EDM
+    usage_guidelines:
+      recommended_frequency: ダンス系の楽曲では基本的に曲全体で継続する。
+      good_places: サビで使うと非常に盛り上がる。
+      pitfalls: 常に4つ打ちだと単調に聞こえる場合があるため、フィルインや音の抜き差しで変化をつけることが重要。
+    example_progressions:
+      - バスドラム: ドン・ドン・ドン・ドン / スネア: ・タン・ ・タン
+  - id: DRM_003
+    name: スリップビート (変則的バックビート)
+    category: rhythm
+    scope:
+      - any
+    layer: drum
+    preconditions:
+      tonality: any
+      tempo_bpm_range: [90, 160]
+      typical_genres:
+        - J-POP
+        - rock
+    pattern:
+      description: 通常2拍目と4拍目に置かれるスネア（バックビート）を、意図的に8分音符一つ分後ろにずらす（スリップさせる）リズム。リズムに「タメ」や「ヨレ」が生まれ、独特のグルーヴと緊張感を生み出す。
+      beats_targeted:
+        - 2&
+        - 4&
+      rhythm_subdivision: 8th
+      special_devices:
+        - syncopation
+        - displaced_backbeat
+    effect:
+      emotions:
+        - groovy
+        - tense
+        - funky
+        - unstable
+      keywords:
+        - スリップビート
+        - タメ
+        - グルーヴ
+        - ずらし
+    usage_guidelines:
+      recommended_frequency: フィルインや特定のセクションのアクセントとして使用。
+      good_places: Bメロや間奏。
+      pitfalls: 曲全体で多用するとリズムの安定感が失われる。
+    example_progressions:
+      - スネアを2拍目ではなく2拍目の裏で叩く。
+  - id: STR_001
+    name: ブレイク (無音のインパクト)
+    category: structure
+    scope:
+      - pre_chorus
+      - chorus
+    layer: global
+    preconditions:
+      tonality: any
+      tempo_bpm_range: [100, 200]
+      typical_genres:
+        - rock
+        - anime
+        - J-POP
+    pattern:
+      description: サビの直前などで、全ての楽器の演奏を1拍〜2拍程度、一斉に停止させる手法。無音状態を作り出すことで聴き手の注意を引きつけ、その後の展開への期待感を最大化する。
+      bar_span: 0.5
+      special_devices:
+        - break
+        - rest
+    effect:
+      emotions:
+        - anticipation
+        - impactful
+        - dramatic
+      keywords:
+        - ブレイク
+        - キメ
+        - 無音
+        - インパクト
+        - サビ前
+    usage_guidelines:
+      recommended_frequency: 1曲に1〜2回、最も効果的な場所で。
+      good_places: Bメロの最後、サビに入る直前の4拍目。
+      pitfalls: 多用すると効果が薄れる。ブレイク後のフレーズが弱いと肩透かしになる。
+    example_progressions:
+      - Bメロの最後のコードを短く切り、1拍以上の無音を挟んでサビに突入する。
+  - id: STR_003
+    name: イントロリプライズ (サビメロ先出し)
+    category: structure
+    scope:
+      - intro
+    layer: global
+    preconditions:
+      tonality: any
+      typical_genres:
+        - J-POP
+        - anime
+    pattern:
+      description: 楽曲の冒頭（イントロ）で、サビのメロディやコード進行の一部を先行して提示する構成手法。聴き手に最もキャッチーな部分を最初に印象付け、「サビが来るまで待たせる」効果がある。
+      special_devices:
+        - intro_reprise
+    effect:
+      emotions:
+        - catchy
+        - anticipation
+        - memorable
+      keywords:
+        - イントロ
+        - サビメロ
+        - 掴み
+        - 伏線
+    usage_guidelines:
+      recommended_frequency: 曲の冒頭に1回。
+      good_places: 楽曲のイントロ。
+      pitfalls: サビのインパクトが若干弱まる可能性もあるが、J-POPでは非常に効果的な手法とされる。
+    example_progressions:
+      - イントロでピアノやシンセがサビのメロディを演奏し、一度静かになってからAメロが始まる。
+  - id: RHT_001
+    name: バックビート (Backbeat Emphasis)
+    category: rhythm
+    scope:
+      - any
+    layer: drums
+    preconditions:
+      time_signature: 4/4
+      tempo_bpm_range: [60, 180]
+      typical_genres:
+        - J-POP
+        - rock
+        - pop
+    pattern:
+      description: Accenting the 2nd and 4th beats of the measure (typically with the snare drum).
+        The classic pop/rock beat has a kick on 1 and 3 and a snare on 2 and 4, establishing
+        a steady groove.
+      bar_span: 1
+      beats_targeted: [2, 4]
+      special_devices: []
+    effect:
+      emotions:
+        - energetic
+        - grounded
+      keywords:
+        - ノリ
+        - ドライブ感
+        - 定番ビート
+    usage_guidelines:
+      recommended_frequency: Standard for most pop/rock songs – it can run through verses
+        and choruses consistently.
+      good_places: Virtually throughout the song's main sections (verses, choruses) to
+        maintain rhythm and listener engagement. The backbeat gives the music a sense of
+        forward motion and is the backbone of most modern genres.
+      pitfalls: A constant backbeat can feel monotonous if the arrangement doesn't have variation.
+        Usually it's fine, but be mindful in softer sections – sometimes dropping the
+        backbeat (e.g., using half-time or no snare) can create dynamics. Generally, though,
+        backbeat is safe and expected; the main "pitfall" would be deviating from it too
+        much in a genre where it's expected, which could confuse the listener's sense of
+        groove.
+    example_progressions:
+      - (Rhythm pattern example) Kick on beat 1 & 3, Snare on 2 & 4 for each measure
+        – classic backbeat groove.
+  - id: RHT_002
+    name: アップビート強調 (Off-beat/Upbeat Accent)
+    category: rhythm
+    scope:
+      - any
+    layer: rhythm
+    preconditions:
+      time_signature: 4/4
+      tempo_bpm_range: [70, 150]
+      typical_genres:
+        - ska
+        - reggae
+        - funk
+        - J-POP
+    pattern:
+      description: Accenting the "&" (off-beats) of each beat instead of the downbeats. For
+        example, a guitar might skank on the upbeats, or claps on the off-beats. This creates
+        a syncopated, buoyant feel in contrast to straight on-beat playing.
+      bar_span: 1
+      beats_targeted:
+        - 1&
+        - 2&
+        - 3&
+        - 4&
+      special_devices: []
+    effect:
+      emotions:
+        - bouncy
+        - lighthearted
+      keywords:
+        - 裏拍
+        - 軽快
+        - 跳ねた感じ
+    usage_guidelines:
+      recommended_frequency: Can define the groove of an entire song (e.g., reggae uses
+        constant upbeat skanks) or be used in specific measures to add interest.
+      good_places: Styles like ska or reggae use this throughout. In J-Pop, an upbeat accent
+        might appear in a pre-chorus or bridge to create a lifting sensation or in dance-oriented
+        tracks for a groovy feel. Also used in funk and city-pop guitar comping to add
+        bounce.
+      pitfalls: If the listener is not expecting an off-beat pattern, it can feel "off" or
+        jittery. Ensure the rhythm section (drums/bass) still provides enough grounding
+        (often the kick still on 1 and 3) so the groove doesn't feel lost. Mixing backbeat
+        and upbeat accents requires tightness – if band timing is loose, off-beat accents
+        can sound messy. Also be aware that constant off-beat guitar/piano stabs can tire
+        the ear if not balanced with other rhythms.
+    example_progressions:
+      - (Rhythm feel example) In a measure of 4/4, hi-hat emphasizes every "&" between
+        beats, or guitar plays staccato chords on off-beats, creating a skanking rhythm.
+  - id: RHT_003
+    name: シンコペーション (Syncopation)
+    category: rhythm
+    scope:
+      - any
+    layer: global
+    preconditions:
+      time_signature: any
+      tempo_bpm_range: [60, 180]
+      typical_genres:
+        - funk
+        - J-POP
+        - dance
+        - rock
+    pattern:
+      description: Deliberately placing accents on weak beats or off-beats, or tying notes
+        across beats, to disrupt the regular metric pattern. This can include syncopated
+        drum kick/snare patterns, or melodic rhythms that hit off the main beats.
+      bar_span: null
+      beats_targeted:
+        - off-beats
+      special_devices: []
+    effect:
+      emotions:
+        - driving
+        - unexpected
+      keywords:
+        - グルーヴ
+        - アクセント移動
+        - スリリング
+    usage_guidelines:
+      recommended_frequency: Often used to make a groove compelling – can be frequent in
+        a song, but balanced with some on-beat content.
+      good_places: In choruses or energetic sections to increase excitement. A syncopated
+        bassline or drum pattern can define funk and uptempo pop. For example, a syncopated
+        kick on the "16th-note off-beat" just before a snare hit gives a propulsive feel
+        (as in city pop or funk). Also useful in instrumentals or solos to ramp up intensity.
+      pitfalls: Too much syncopation without a steady reference can confuse the listener's
+        sense of rhythm (making it hard to "find the beat"). It can also make a song hard
+        to dance to if overdone. Typically you want a mix: some stable elements (e.g. hi-hat
+        or rhythm guitar keeping time) while other elements syncopate. Ensure that the
+        band hits the syncopated accents tightly together – sloppy syncopation can sound
+        like rhythm errors.
+    example_progressions:
+      - (Rhythm example) In a 4/4 bar: Kick on 1, **(Kick again on the last 16th of
+        2)**, Snare on 3, **(Snare ghost on the & of 3)**, Kick on 4 – this syncopated pattern
+        drives the groove forward unexpectedly.
+  - id: RHT_004
+    name: シャッフル/スウィング (Shuffle Rhythm)
+    category: rhythm
+    scope:
+      - any
+    layer: global
+    preconditions:
+      time_signature: 4/4 or 12/8
+      tempo_bpm_range: [80, 140]
+      typical_genres:
+        - blues
+        - rock
+        - J-POP
+        - city pop
+    pattern:
+      description: A triplet-based rhythmic feel where the beat is divided unequally (first half
+        longer, second half shorter), creating a "long-short" swinging pulse. In notation,
+        often 4/4 with swung 8ths (felt as 12/8). The classic shuffle has a bouncy, galloping
+        feel (ONE-and-uh-TWO-and-uh...).
+      bar_span: 1
+      beats_targeted: null
+      special_devices: []
+    effect:
+      emotions:
+        - soulful
+        - laid-back
+      keywords:
+        - 跳ねる
+        - ブルージー
+        - ゆったり
+    usage_guidelines:
+      recommended_frequency: If chosen, it typically persists throughout the section or entire
+        song as the fundamental groove.
+      good_places: Songs that want a bluesy or nostalgic vibe. A J-Pop ballad might use a
+        slight swing to feel more human and emotional. City pop and older kayoukyoku sometimes
+        use a shuffle beat for a light, swaying groove. Use it for variety if most songs
+        are straight 8ths – a shuffle will stand out.
+      pitfalls: Mixing shuffle feel with straight feel is tricky unless you deliberately
+        shift feel between sections. All instruments must agree on the swing rate – a drummer
+        swinging while a synth line is straight can clash. Also, shuffle feels can sound
+        "old" or retro; if that's not intended, use only a touch of swing (e.g., slightly
+        late off-beats) rather than a full shuffle. Finally, a very fast shuffle can feel
+        jittery (e.g., swinging 16ths at high BPM), so consider the tempo.
+    example_progressions:
+      - (Rhythm description) A drum pattern in shuffle: hi-hat plays swung 8ths (long-short-long-short),
+        snare on 2 & 4, giving a lilting groove reminiscent of blues or some anime ending
+        theme styles.
+meta_rules:
+  - id: META_001
+    name: 進行の方向性と感情
+    description: 上昇するベースラインは希望・高揚感、下降するベースラインは切なさ・落ち着きと結びつきやすい。クリシェやカノン進行、Vaundy進行のベースラインはこの効果を応用している。
+    related_rule_ids:
+      - HRM_009
+      - HRM_019
+  - id: META_002
+    name: 緊張と緩和のサイクル (ドミナント・モーション)
+    description: 音楽は「不安定(緊張)」から「安定(緩和)」への流れで構成される。ドミナントコード(V7, III7など)で緊張感を作り、トニックコード(I, VIm)で解決させるのが基本。このサイクルが楽曲の推進力を生む。
+    related_rule_ids:
+      - HRM_001
+      - HRM_002
+      - HRM_003
+      - HRM_016
+  - id: META_003
+    name: 期待の構築と裏切り
+    description: 王道進行などの定番パターンは聴き手に「次はこの音が来る」という期待を抱かせる。その期待を偽終止(V→VIm)や借用和音で意図的に裏切ることで、強いインパクトや意外性を生み出し、聴き手を飽きさせないフックになる。
+    related_rule_ids:
+      - HRM_025
+  - id: META_004
+    name: 代理コードによる色彩の変化
+    description: 同じ機能を持つコード同士や、構成音が非常に似ているコード（例：III7と♭IIIdim7）は入れ替えが可能（代理）。代理コードを使うことで、コード進行の色彩を豊かにし、より洗練された響きを作ることができる。
+    related_rule_ids:
+      - HRM_047
+  - id: META_005
+    name: 非和声音（繋ぎの音）の美学
+    description: コードとコードの間を繋ぐ経過音（パッシングノート）や、メロディに細かな動きを与える刺繍音（ネイバーノート）、強拍で不協和音を鳴らして解決する倚音（アポジャトゥーラ）は、音楽に滑らかさと強い情緒的表現を与える。
+    related_rule_ids:
+      - MEL_007
+  - id: META_006
+    name: インパクトは「跳躍」と「逸脱」から生まれる
+    description: 聴き手の耳を引くキャッチーな要素は、音程の大きな跳躍（オクターブ跳躍など）や、現在のキーからの逸脱（セカンダリードミナント、モーダルインターチェンジなど）によって生まれることが多い。これらを曲の重要なポイントに配置するのが効果的。
+  - id: META_007
+    name: 借用和音による感情の深化 (Borrowed Chords)
+    description: 同主調など、他のキーから一時的にコードを「借りてくる」モーダルインターチェンジは、曲の感情を瞬時に深化させる強力な手法である。サブドミナントマイナー(ivm)や♭VI-♭VII-I進行、「下がるだけ進行」は、このテクニックを効果的に使用した例である。
+    related_rule_ids:
+      - HRM_029
+      - HRM_032
+  - id: META_008
+    name: セブンスコードは都会へのパスポート
+    description: ダイアトニックコードにセブンスの音を加える（例: C→Cmaj7, Dm→Dm7）だけで、響きに浮遊感と洗練さが生まれ、一気に都会的・現代的なサウンドになる。特にmaj7の響きはお洒落さの象徴。
+    related_rule_ids:
+      - HRM_002
+      - HRM_010
+  - id: META_009
+    name: 4度圏進行の引力
+    description: ルート音が4度ずつ下降（または5度ずつ上昇）していく進行は、物理的な音の倍音関係から非常に自然で強い引力を持つ。「Fly Me to the Moon進行」や「Ⅱ-Ⅴ」はこの法則に基づいている。
+    related_rule_ids:
+      - HRM_013
+  - id: META_010
+    name: I・IV・Vの機能と強進行を骨格にし、ノンダイアトニックで色付けする
+    description: コード進行の重力の中心であるI（安定）とV（不安定）、それらを結ぶ強進行（4度上行）を最初に設計し、その骨格の上にセカンダリードミナント、サブドミナントマイナー、ディミニッシュ、クリシェなどの色付け要素を少量乗せると、ストーリー性と個性のバランスが取りやすい。([うちやま作曲教室][2])
+    related_rule_ids:
+      - HRM_011
+      - HRM_017
+      - HRM_012
+      - HRM_014
+      - HRM_015
+      - HRM_013
+      - HRM_016
+  - id: META_011
+    name: ダイナミクスで感情を増幅させる
+    description: 楽曲全体の音量の強弱（ダイナミクス）や楽器の抜き差しをコントロールすることで、感情の起伏を劇的に演出できる。「落ちサビ」や「ブレイク」は、静と動のコントラストを利用した最も効果的な手法の一つである。
+    related_rule_ids:
+      - STR_001
+  - id: META_012
+    name: シンプルな構成から段階的に複雑なコードへ変形する
+    description: まずは I–IV–V や I–V–VIm–IV など単純なダイアトニック進行で骨組みを作り、そこから代理コード、セカンダリードミナント、テンション付加、クリシェなどを段階的に導入していくと、破綻しにくく『おしゃれ』な進行に発展させられる。R&B風進行の作り方はこの発想の典型例。([うちやま作曲教室][7])
+    related_rule_ids:
+      - HRM_011
+      - HRM_012
+      - HRM_013
+      - HRM_015
+      - HRM_016
+  - id: META_013
+    name: J-POP黄金律は定番進行の組み合わせ
+    description: 現代のヒット曲は、単一のコード進行だけでなく、「王道進行(4536)」と「J-POP王道進行(451)」を組み合わせるなど、複数の定番パターンを1つのセクションに組み込むことで、聴き馴染みの良さと展開の豊かさを両立させている。
+    related_rule_ids:
+      - HRM_001
+      - HRM_010
+      - HRM_016
+  - id: META_014
+    name: 構造的伏線によるキャッチーさの創出
+    description: 楽曲の最もキャッチーな部分（サビメロ）をイントロで先行提示する（イントロリプライズ）ことで、聴き手の記憶にフックをかけ、曲全体への興味と期待感を高めることができる。
+    related_rule_ids:
+      - STR_003
+  - id: META_015
+    name: 自然なメロディはコードとの調和から生まれる
+    description: 心地よいメロディは、コードの構成音（コードトーン）を効果的に使い、コードが変わっても共通音を保持するなど、ハーモニーとの強い関連性を持っている。半音アプローチのような非和声音は、あくまで効果的なスパイスとして機能する。
+    related_rule_ids:
+      - MEL_009
+  - id: META_016
+    name: 終止形の選択が物語の結末を決める
+    description: 曲やセクションの終わり方（終止形）は、物語の結末を象徴する。力強く終わる全終止、穏やかに終わるアーメン終止、希望を残して終わるピカルディ終止など、伝えたいメッセージに合わせて終止形を選択することが重要である。
+    related_rule_ids:
+      - HRM_030
+      - HRM_037
+  - id: META_017
+    name: 機能和声からの逸脱
+    description: 通常のダイアトニックなコード進行のルールから逸脱する「平行移動（プラナー・ハーモニー）」のような手法は、非現実的でパワフルな、あるいは浮遊感のある独特なサウンドスケープを描き出すのに有効である。
+    related_rule_ids:
+      - HRM_045
+  - id: META_018
+    name: J-POPの多様性は定番進行の組み合わせと変形から生まれる
+    description: J-POPのコード進行は、王道進行、カノン進行、丸サ進行、小室進行などのいくつかの強力な「型」をベースにしている。ヒット曲の多くは、これらの型をそのまま使うか、セカンダリードミナントや代理コード、モーダルインターチェンジを加えて巧みに変形させることで、聴き馴染みの良さと独自性を両立させている。
+    related_rule_ids:
+      - HRM_001
+      - HRM_002
+      - HRM_003
+      - HRM_009
+      - HRM_048

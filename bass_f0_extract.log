@@ -1,0 +1,3 @@
+🎵 F0 Extraction: data/suno_ai/suno_themesong/song_001/stemswav_001/stem_wav_001_(Bass).wav
+🎵 Using CREPE (model=tiny, vuv_thresh=0.5) for F0 extraction
+✅ Saved F0 features → data/suno_ai/suno_themesong/song_001/bass_f0.parquet  (rows=240)

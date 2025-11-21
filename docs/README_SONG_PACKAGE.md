@@ -4,20 +4,20 @@
 
 **「入口は二刀流、出口は一本」**を実現するSong Package自動生成ツール一式です。
 
-- **入口（二刀流）**: WAV（MoisesDB/MUSDB18等のstem）+ MIDI（Stage1クリーニング済み）
-- **出口（一本化）**: `song_package.yaml`で論理統合（bars.parquet＋楽曲仕様三点で束ねる）
+### Phase B runner note (2025-11-21)
+
+- `scripts/make_song_package_phase_b.sh` validates the required `bars_with_slots.parquet`, `sections.json`, and `manual_chordmap(_enriched).json` before launching generators, preferring the enriched chordmap when available.
+- Continue Module flags (for example `--continue-enable`, `--continue-dry-run`) now propagate unchanged to the guitar plan step; the parser shifts exactly once per option so positional `song_root` stays intact.
+- Instrument commands are built inline without `local -n`, so stock `bash`/`sh` shells no longer raise `local: -n` errors and successful runs exit 0 alongside the fill/riff QA gate summary.
 
 ### 方針
 
 「**正本＝JSON/YAML/Parquet、DB＝索引、pickleは使わない。キャッシュは任意・短命・再計算可能**」
 
-- **ハブ**: `{song_id}.bars.parquet` — すべての指標をbarキーで左結合できる唯一の土台
-- **楽曲仕様三点**（Stage3の"真"）:
   - `sections.json`: Verse/Pre/Chorus…（QL境界・拍子・テンポヒント）
   - `chordmap.json`: 小節単位のコード（music21準拠）＋転調情報
   - `lyric_anchors.json`: 読み/歌詞のタイムアンカー
 
----
 
 ## 🗂️ フォルダ構成（統合レイアウト）
 
@@ -70,7 +70,6 @@ LOCAL_LAMDA/
 └── local_lamda_registry.db            # DB索引（パス/IDのみ）
 ```
 
----
 
 ## 🛠️ ツール一式
 
@@ -97,11 +96,6 @@ python scripts/generate_song_package_v2.py \
 
 #### オプション
 
-- `--dataset`: 複数指定可（`--dataset moisesdb --dataset musdb18` or `--dataset moisesdb,musdb18`）
-- `--include-dataset-level`: dataset-level diagnostics（vocal_features/mix_diagnostics）を含める
-- `--add-audio-chordmap`: per-song `audio_chordmap.yaml`を含める
-- `--index-out`: 生成したパッケージのCSVインデックス出力
-- `--dry-run`: 書き込みなしの確認実行
 
 #### 出力例: `song_package.yaml`
 
@@ -141,7 +135,6 @@ diagnostics:
     mix_diagnostics: "../../../../Local_Lamda_wav/wav_guide/moisesdb/mix_diagnostics.parquet"
 ```
 
----
 
 ### 2. **render_from_package.py** — クイック試聴stems生成
 
@@ -164,16 +157,10 @@ python scripts/render_from_package.py \
   --preset-map '{"piano":0, "guitar":24, "bass":32, "drums":128, "vocal":0}'
 ```
 
-- `drums=128`: チャンネル10（ドラム）固定の簡易指定
-- Fluidsynth/SF2が無い場合は`render_config.yaml`のみ出力
 
 #### 出力
 
-- `piano.wav`, `guitar.wav`, `bass.wav`, `drums.wav`, `vocal.wav`
-- `render_config.yaml`
-- `render_report.json`
 
----
 
 ### 3. **qa_from_package.py** — 軽量QA
 
@@ -196,10 +183,7 @@ python scripts/qa_from_package.py \
 
 #### 出力
 
-- `qa_report.json`: 詳細レポート
-- `qa.csv`: 簡易サマリー（--csv指定時）
 
----
 
 ### 4. **batch_from_packages.py** — 一括レンダー＆QA
 
@@ -228,17 +212,10 @@ python scripts/batch_from_packages.py \
 
 #### オプション
 
-- `--tasks`: `render,qa` or `render` or `qa`
-- `--dataset`: フィルタ（複数指定可）
-- `--workers`: 並列数（デフォルト2）
-- `--force`: 既存成果物を無視して再実行
-- `--index-out`: バッチ結果のCSVインデックス
 
 #### 出力
 
-- `batch_index.csv`: 成功/失敗/出力パス一覧
 
----
 
 ## 📋 運用フロー
 
@@ -292,7 +269,6 @@ cat data/Los-Angeles-MIDI/LOCAL_LAMDA/batch_index.csv
 cat data/Los-Angeles-MIDI/LOCAL_LAMDA/qa/moisesdb/SONG123_qa.json
 ```
 
----
 
 ## 🎯 重要ポイント
 
@@ -312,16 +288,10 @@ cat data/Los-Angeles-MIDI/LOCAL_LAMDA/qa/moisesdb/SONG123_qa.json
 5. **Dry-run**  
    `--dry-run`で書き込みなしの確認実行ができます。
 
----
 
 ## 📚 参考
 
-- **マニフェスト**: `data/Los-Angeles-MIDI/LOCAL_LAMDA/local_lamda_master_manifest_v2.yaml`
-- **Stage1設定**: `config/stage1_config.yaml`
-- **キャッシュ**: `utils/cache_util.py`
-- **DB索引**: `utils/db_registry.py`
 
----
 
 ## 🆘 トラブルシューティング
 
@@ -345,6 +315,5 @@ python scripts/render_from_package.py --package ... --outdir ... # --soundfont�
 
 `--index-out`を指定し、`--dry-run`を外してください。
 
----
 
 **以上で「入口は二刀流、出口は一本」の運用体制が完成しました！** 🎉

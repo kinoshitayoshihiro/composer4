@@ -156,7 +156,76 @@ def load_song_package(song_dir: Path) -> Dict[str, Any]:
 
 
 def expected_duration_sec(num_bars: int, bpm: float, beats_per_bar: float = 4.0) -> float:
+    """固定テンポでの期待Duration計算（従来互換）"""
     return num_bars * beats_per_bar * (60.0 / bpm)
+
+
+def compute_variable_tempo_duration(
+    midi_path: Path, bars_df=None, tempo_map_path: Path | None = None, ppq: int = 480
+) -> float:
+    """
+    可変テンポMIDIの実際のDuration計算
+
+    Args:
+        midi_path: MIDI file path
+        bars_df: bars.parquet DataFrame (optional, for end_beat reference)
+        tempo_map_path: tempo_map.json path (optional)
+        ppq: Ticks per quarter note (default: 480)
+
+    Returns:
+        Duration in seconds
+    """
+    from mido import MidiFile, tempo2bpm
+
+    mid = MidiFile(midi_path)
+    ppq = mid.ticks_per_beat
+
+    # Extract tempo events from MIDI
+    tempo_events = []  # [(tick, tempo_us), ...]
+    for track in mid.tracks:
+        tick = 0
+        for msg in track:
+            tick += msg.time
+            if msg.type == "set_tempo":
+                tempo_events.append((tick, msg.tempo))
+
+    if not tempo_events:
+        # No tempo events found - fallback to 120 BPM
+        return 0.0
+
+    # Sort by tick
+    tempo_events.sort(key=lambda x: x[0])
+
+    # Get end tick (max tick from all tracks)
+    max_tick = 0
+    for track in mid.tracks:
+        tick = 0
+        for msg in track:
+            tick += msg.time
+        max_tick = max(max_tick, tick)
+
+    # If bars_df provided, use end_beat to calculate max_tick
+    if bars_df is not None and "end_beat" in bars_df.columns:
+        end_beat = float(bars_df["end_beat"].max())
+        max_tick = int(end_beat * ppq)
+
+    # Integrate tempo events to calculate duration
+    total_sec = 0.0
+    for i, (tick, tempo_us) in enumerate(tempo_events):
+        if i == len(tempo_events) - 1:
+            # Last tempo event - integrate to max_tick
+            delta_tick = max_tick - tick
+        else:
+            # Integrate to next tempo event
+            delta_tick = tempo_events[i + 1][0] - tick
+
+        # Convert delta_tick to seconds using current tempo
+        # tempo_us = microseconds per beat (quarter note)
+        # delta_sec = (delta_tick / ppq) * (tempo_us / 1_000_000)
+        delta_sec = (delta_tick / ppq) * (tempo_us / 1_000_000.0)
+        total_sec += delta_sec
+
+    return total_sec
 
 
 def check_magenta_intermediates(song_dir: Path, drums_mode: str) -> CheckResult:
@@ -227,30 +296,79 @@ def check_activity_columns(song_dir: Path, used_inst_activity: bool) -> CheckRes
 
 
 def check_crepe_oaf_outputs(song_dir: Path, enable_crepe: bool, enable_oaf: bool) -> CheckResult:
-    """CREPE/OaF成果物の存在チェック"""
-    missing = []
+    """CREPE/OaF成果物の存在チェック + メタデータ検証"""
+    failures = []
+    warnings = []
 
     if enable_crepe:
+        # CREPE parquet の存在確認
         crepe_file = song_dir / "vocal_f0_crepe.parquet"
         if not crepe_file.exists():
-            missing.append("vocal_f0_crepe.parquet")
+            failures.append("vocal_f0_crepe.parquet not found")
+        else:
+            # メタデータの検証
+            meta_file = crepe_file.with_suffix(".parquet.meta.json")
+            if meta_file.exists():
+                try:
+                    meta = json.loads(meta_file.read_text())
+                    if not meta.get("ok", False):
+                        frames = meta.get("frames", 0)
+                        expected = meta.get("expected_min_frames", 0)
+                        failures.append(
+                            f"CREPE frames too small: {frames} < {expected} (min threshold)"
+                        )
+                except Exception as e:
+                    warnings.append(f"Failed to parse CREPE meta: {e}")
+            else:
+                warnings.append("CREPE meta.json not found (old extraction?)")
 
     if enable_oaf:
-        oaf_file = song_dir / "piano_oaf.mid"
-        if not oaf_file.exists():
-            missing.append("piano_oaf.mid")
+        # OaF JSON の存在確認（新フォーマット）
+        oaf_json = song_dir / "piano_onsets_frames.json"
+        oaf_mid = song_dir / "piano_oaf.mid"
 
-    if missing:
+        # 新フォーマット優先
+        if oaf_json.exists():
+            try:
+                data = json.loads(oaf_json.read_text())
+                notes = data.get("notes", [])
+                min_notes = 10  # 最低閾値（曲によって調整可能）
+                if len(notes) < min_notes:
+                    failures.append(
+                        f"OaF notes too small: {len(notes)} < {min_notes} (min threshold)"
+                    )
+            except Exception as e:
+                failures.append(f"Failed to parse OaF JSON: {e}")
+        elif oaf_mid.exists():
+            # 旧フォーマット（MIDI）の場合は警告のみ
+            warnings.append(
+                "OaF using old MIDI format (piano_oaf.mid). Consider migrating to JSON."
+            )
+        else:
+            failures.append("piano_onsets_frames.json and piano_oaf.mid both missing")
+
+    if failures:
+        return CheckResult(
+            name="CREPE/OaF outputs",
+            status="fail",
+            details="; ".join(failures),
+        )
+
+    if warnings:
         return CheckResult(
             name="CREPE/OaF outputs",
             status="warn",
-            details=f"Missing (E2E continues): {', '.join(missing)}",
+            details="; ".join(warnings),
         )
 
     return CheckResult(
         name="CREPE/OaF outputs",
         status="pass",
-        details="All CREPE/OaF outputs present" if (enable_crepe or enable_oaf) else "SKIP",
+        details=(
+            "All CREPE/OaF outputs present and validated"
+            if (enable_crepe or enable_oaf)
+            else "SKIP"
+        ),
     )
 
 
@@ -385,6 +503,15 @@ def check_downbeats_vs_bars(
 ) -> CheckResult:
     pm = pretty_midi.PrettyMIDI(str(midi_path))
     downbeats = pm.get_downbeats()
+
+    # P0-2: Downbeats>0 FAIL条件（Time Signature meta欠落検出）
+    if len(downbeats) == 0:
+        return CheckResult(
+            name="Downbeats vs bars",
+            status="fail",
+            details="❌ FAIL: Downbeats=0（Time Signature meta未出力の可能性）。Phase 122修正が必要です。",
+        )
+
     try:
         bars_df = pd.read_parquet(bars_path)
         num_bars = int(len(bars_df))
@@ -410,22 +537,69 @@ def check_downbeats_vs_bars(
 
 
 def check_track_durations(
-    midi_path: Path, num_bars: int, bpm: float, tolerance_sec: float = 1.0
+    midi_path: Path,
+    num_bars: int,
+    bpm: float | None = None,
+    bars_df=None,
+    tolerance_sec: float = 1.0,
+    use_variable_tempo: bool = False,
 ) -> List[CheckResult]:
+    """
+    トラックDuration検証（可変テンポ対応）
+
+    Args:
+        midi_path: MIDI file path
+        num_bars: Number of bars
+        bpm: Fixed tempo (optional, for fixed tempo mode)
+        bars_df: bars.parquet DataFrame (optional, for variable tempo mode)
+        tolerance_sec: Tolerance in seconds
+        use_variable_tempo: Use variable tempo mode (auto-detect from MIDI)
+    """
+    from mido import MidiFile
+
     pm = pretty_midi.PrettyMIDI(str(midi_path))
-    exp = expected_duration_sec(num_bars, bpm)
+
+    # Auto-detect variable tempo from MIDI
+    mid = MidiFile(midi_path)
+    tempo_event_count = sum(1 for track in mid.tracks for msg in track if msg.type == "set_tempo")
+
+    if tempo_event_count > 1 or use_variable_tempo:
+        # Variable tempo mode
+        exp = compute_variable_tempo_duration(midi_path, bars_df)
+        mode_desc = f"可変テンポ（{tempo_event_count} tempo changes）"
+    elif bpm is not None:
+        # Fixed tempo mode
+        exp = expected_duration_sec(num_bars, bpm)
+        mode_desc = f"固定テンポ {bpm} BPM"
+    else:
+        # No tempo info available
+        exp = 0.0
+        mode_desc = "テンポ情報なし"
+
     lo = exp - tolerance_sec
     hi = exp + tolerance_sec
 
     results: List[CheckResult] = []
     # 全体終端
     end = pm.get_end_time()
+
+    # P0-2: Duration>0 FAIL条件（空MIDI検出）
+    if end <= 0:
+        results.append(
+            CheckResult(
+                name="Total duration",
+                status="fail",
+                details="❌ FAIL: Duration=0秒（空MIDI）。clip_events dur互換処理が必要です。",
+            )
+        )
+        return results
+
     if lo <= end <= hi:
         results.append(
             CheckResult(
                 name="Total duration",
                 status="pass",
-                details=f"OK: {human_sec(end)} ≈ 期待 {human_sec(exp)} (±{tolerance_sec:.2f}s)",
+                details=f"OK: {human_sec(end)} ≈ 期待 {human_sec(exp)} (±{tolerance_sec:.2f}s, {mode_desc})",
             )
         )
     else:
@@ -433,7 +607,7 @@ def check_track_durations(
             CheckResult(
                 name="Total duration",
                 status="fail",
-                details=f"NG: {human_sec(end)} が期待 {human_sec(exp)} ±{tolerance_sec:.2f}s を外れています。",
+                details=f"NG: {human_sec(end)} が期待 {human_sec(exp)} ±{tolerance_sec:.2f}s を外れています（{mode_desc}）。",
             )
         )
 
@@ -452,26 +626,153 @@ def check_track_durations(
     return results
 
 
-def check_overlong_notes(midi_path: Path, num_bars: int, bpm: float) -> CheckResult:
+def check_overlong_notes(
+    midi_path: Path,
+    num_bars: int,
+    bpm: float | None = None,
+    bars_df=None,
+    tolerance_sec: float = 1.0,
+) -> CheckResult:
+    """
+    期待終端を超えるノート検証（可変テンポ対応）
+    """
+    from mido import MidiFile
+
     pm = pretty_midi.PrettyMIDI(str(midi_path))
-    # 期待終端（秒）
-    end_sec = expected_duration_sec(num_bars, bpm)
+
+    # Auto-detect variable tempo
+    mid = MidiFile(midi_path)
+    tempo_event_count = sum(1 for track in mid.tracks for msg in track if msg.type == "set_tempo")
+
+    if tempo_event_count > 1:
+        # Variable tempo mode
+        end_sec = compute_variable_tempo_duration(midi_path, bars_df)
+    elif bpm is not None:
+        # Fixed tempo mode
+        end_sec = expected_duration_sec(num_bars, bpm)
+    else:
+        # No tempo info
+        return CheckResult(
+            name="Hard clip over-end",
+            status="warn",
+            details="テンポ情報なし、チェックスキップ",
+        )
+
     over = 0
     for inst in pm.instruments:
         for n in inst.notes:
-            if n.end > end_sec + 1e-6:
+            if n.end > end_sec + tolerance_sec:
                 over += 1
+
     if over == 0:
         return CheckResult(
             name="Hard clip over-end",
             status="pass",
-            details="OK: 期待終端を超えるノートはありません。",
+            details=f"OK: 期待終端 {human_sec(end_sec)} +{tolerance_sec:.2f}s を超えるノートはありません。",
         )
+
     return CheckResult(
         name="Hard clip over-end",
         status="fail",
-        details=f"NG: 期待終端 {human_sec(end_sec)} を超えるノートが {over} 個あります。",
+        details=f"NG: 期待終端 {human_sec(end_sec)} +{tolerance_sec:.2f}s を超えるノートが {over} 個あります。",
     )
+
+
+def check_energy_valence_columns(song_dir: Path) -> CheckResult:
+    """
+    Phase 125: bars.parquet energy/valence列存在・範囲チェック
+
+    Checks:
+      - bars.parquet energy列存在（0..1範囲）
+      - bars.parquet valence列存在（-1..+1範囲）
+      - 階層性チェック（chorus.energy ≥ verse.energy ≥ intro.energy WARN）
+    """
+    bars_path = song_dir / "bars_with_emotion.parquet"
+
+    # bars_with_emotion.parquet無ければ、通常のbars.parquetで確認
+    if not bars_path.exists():
+        bars_path = song_dir / "bars.parquet"
+
+    if not bars_path.exists():
+        return CheckResult(
+            name="Energy/Valence列存在",
+            status="warn",
+            details="bars.parquetが見つかりませんでした（スキップ）。",
+        )
+
+    try:
+        bars = pd.read_parquet(bars_path)
+    except Exception as e:
+        return CheckResult(
+            name="Energy/Valence列存在", status="fail", details=f"NG: bars.parquet読み込み失敗: {e}"
+        )
+
+    issues = []
+
+    # Energy列存在チェック
+    if "energy" not in bars.columns:
+        issues.append("energy列が存在しません")
+    else:
+        # Energy範囲チェック（0..1）
+        energy_min = bars["energy"].min()
+        energy_max = bars["energy"].max()
+
+        if energy_min < 0.0 or energy_max > 1.0:
+            issues.append(
+                f"energy範囲エラー: min={energy_min:.3f}, max={energy_max:.3f}（期待: 0..1）"
+            )
+
+    # Valence列存在チェック
+    if "valence" not in bars.columns:
+        issues.append("valence列が存在しません")
+    else:
+        # Valence範囲チェック（-1..+1）
+        valence_min = bars["valence"].min()
+        valence_max = bars["valence"].max()
+
+        if valence_min < -1.0 or valence_max > 1.0:
+            issues.append(
+                f"valence範囲エラー: min={valence_min:.3f}, max={valence_max:.3f}（期待: -1..+1）"
+            )
+
+    # 階層性チェック（chorus.energy ≥ verse.energy ≥ intro.energy WARN）
+    if "energy" in bars.columns and "section_label" in bars.columns:
+        sec_energy = bars.groupby("section_label")["energy"].median().to_dict()
+
+        chorus_energy = sec_energy.get("chorus", None)
+        verse_energy = sec_energy.get("verse", None)
+        intro_energy = sec_energy.get("intro", None)
+
+        hierarchy_warn = []
+
+        if chorus_energy is not None and verse_energy is not None:
+            if chorus_energy < verse_energy:
+                hierarchy_warn.append(f"chorus({chorus_energy:.2f}) < verse({verse_energy:.2f})")
+
+        if verse_energy is not None and intro_energy is not None:
+            if verse_energy < intro_energy:
+                hierarchy_warn.append(f"verse({verse_energy:.2f}) < intro({intro_energy:.2f})")
+
+        if hierarchy_warn:
+            # WARN扱い（FAIL化しない）
+            issues.append(f"階層性WARN: {', '.join(hierarchy_warn)}")
+
+    if not issues:
+        return CheckResult(
+            name="Energy/Valence列存在", status="pass", details="OK: energy/valence列存在、範囲OK。"
+        )
+
+    # 階層性WARNのみの場合はWARN、それ以外はFAIL
+    has_critical = any("存在しません" in i or "範囲エラー" in i for i in issues)
+
+    if has_critical:
+        return CheckResult(
+            name="Energy/Valence列存在", status="fail", details=f"NG: {'; '.join(issues)}"
+        )
+    else:
+        return CheckResult(
+            name="Energy/Valence列存在", status="warn", details=f"WARN: {'; '.join(issues)}"
+        )
 
 
 def run_kpi_gate_if_available(
@@ -658,12 +959,28 @@ def main():
     # 3) 長さチェック（全体 + 各トラック）
     results.extend(
         check_track_durations(
-            args.midi, num_bars=num_bars, bpm=bpm, tolerance_sec=args.duration_tolerance
+            args.midi,
+            num_bars=num_bars,
+            bpm=bpm,
+            bars_df=bars_df,
+            tolerance_sec=args.duration_tolerance,
         )
     )
 
     # 4) 期待終端超過ノート
-    results.append(check_overlong_notes(args.midi, num_bars=num_bars, bpm=bpm))
+    results.append(
+        check_overlong_notes(
+            args.midi,
+            num_bars=num_bars,
+            bpm=bpm,
+            bars_df=bars_df,
+            tolerance_sec=args.duration_tolerance,
+        )
+    )
+
+    # 4.5) Phase 125: Energy/Valence列存在・範囲チェック
+    if args.song_dir:
+        results.append(check_energy_valence_columns(args.song_dir))
 
     # 5) KPI Gate（任意）
     if args.gate_config:

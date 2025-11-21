@@ -1,0 +1,25 @@
+register: {low: 55, high: 91}
+tensions:
+  base_allow: ["9","6"]
+  avoid_global: ["b9","#9"]
+  by_quality:
+    maj:   {allow: ["9","13"],   avoid: ["#11"]}
+    maj7:  {allow: ["9","13"],   avoid: ["#11"]}
+    m:     {allow: ["9","11"],   avoid: ["b13"]}
+    m7:    {allow: ["9","11"],   avoid: ["b13"]}
+    '7':   {allow: ["9","#11","13"], avoid: ["b9","#9"]}    # 弦は歪でのb9/#9は原則回避
+    m7b5:  {allow: ["11"],    avoid: ["13","#11","b9"]}
+    dim7:  {allow: [],      avoid: ["11","13","#11","#9","b9"]}
+  allow_by_label:
+    chorus: ["13","#11"]
+    bridge: ["13","#11"]
+  avoid_by_label:
+    verse:  ["#11","b13"]
+density:
+  scale_by_label:
+    verse: 0.9
+    chorus: 0.8
+    bridge: 0.8
+voicing:
+  omit_third_in_labels: ["chorus"]
+  prefer_inversion_by_quality: {maj: "root", min: "root", "7": "3rd"}

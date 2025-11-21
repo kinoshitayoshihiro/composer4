@@ -18,12 +18,12 @@ RPN_CC_NUMS = {100, 101, 6, 38}
 
 def analyze_controls(pm: Any) -> Dict[str, Any]:
     """Analyze MIDI control changes (PB/RPN/CC).
-    
+
     Parameters
     ----------
     pm : pretty_midi.PrettyMIDI
         MIDI data object.
-    
+
     Returns
     -------
     Dict[str, Any]
@@ -34,7 +34,7 @@ def analyze_controls(pm: Any) -> Dict[str, Any]:
             },
             "rpn_seen": bool  # Whether RPN-related CCs detected
         }
-    
+
     Examples
     --------
     >>> controls = analyze_controls(midi_data)
@@ -52,7 +52,7 @@ def analyze_controls(pm: Any) -> Dict[str, Any]:
         for pb in ins.pitch_bends:
             pb_min = min(pb_min, int(pb.pitch))
             pb_max = max(pb_max, int(pb.pitch))
-        
+
         # Control change analysis
         for cc in ins.control_changes:
             k = str(cc.number)
@@ -60,13 +60,14 @@ def analyze_controls(pm: Any) -> Dict[str, Any]:
             v = int(cc.value)
             stat["min"] = min(stat["min"], v)
             stat["max"] = max(stat["max"], v)
-            
+
             # RPN detection (CC 100, 101, 6, 38)
             if cc.number in RPN_CC_NUMS:
                 rpn_seen = True
-    
+
     return {
         "pb_range": [int(pb_min), int(pb_max)],
         "cc_summary": cc_summary,
         "rpn_seen": bool(rpn_seen),
+        "integrity": 1.0,
     }

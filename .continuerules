@@ -1,0 +1,79 @@
+# .continuerules
+# Sona E2E Pipeline Rules
+# Phase 121: 安易な解決に飛びつかない運用ルール
+
+## 禁止事項
+
+- 禁止: full_arrangement.mid を midi_writer以外で生成
+- 禁止: groove_sampler_v2 等の直書きユーティリティでの最終MIDI生成
+- 禁止: json2midi.py の使用（旧スクリプト、Phase 121で非推奨）
+- 禁止: Plan/Risks/Options/Diff/Tests を省略した即時コード提出
+
+## 必須事項
+
+- 必須: 変更提案時は Plan/Risks/Options/Diff/Tests の5段構成
+- 必須: 生成物に meta.provenance を刻む（crepe/oaf/emotion/harmony/magenta）
+- 必須: E2E_PLAYBOOK.md のチェックリストに合格しない提案は出さない
+- 必須: midi_writer.py 呼び出し時は --fix-overend-ms 20 --clip-to-bars を必ず指定
+- 必須: CREPE/OaF 出力ファイル生成後、plan の context_sources に反映確認
+
+## E2E本線（Golden Path）
+
+1. 素材→パッケージ: scripts/make_song_package_from_sources.sh
+2. ミックス・バリアント: scripts/generate_suno_song_package_v1_1.py
+3. アレンジ生成: scripts/e2e_suno_arrangement.sh
+4. MIDI書き出し: scripts/midi_writer.py（--fix-overend-ms 20 --clip-to-bars）
+5. CI検証: scripts/ci_verify_music_package.py --strict
+
+## 補助動線（plan確定後の再書き出し専用）
+
+- scripts/export_midi_from_plan.sh を使用
+- 直接 midi_writer.py を叩く場合も同じフラグで再現性を担保
+
+## 変更提案フォーマット
+
+すべての変更提案は以下の5段構成で出力：
+
+1. **Plan（最小変更）**: 何を変えるか、なぜ必要か
+2. **Risks（壊れる箇所）**: 既存機能への影響、後方互換性
+3. **Options（A/B案＋採点）**: 複数案を比較、推奨案を明示
+4. **Diff（最小パッチ）**: 実際の差分コード
+5. **Tests（実行/検証手順）**: CI/手動検証の具体的コマンド
+
+## Provenance必須フィールド
+
+全plan JSONに以下を含める：
+
+- meta.provenance.writer: "midi_writer.py"
+- meta.provenance.bass_f0: {enabled: true/false, file: "...", bars: N}
+- meta.provenance.oaf_piano: {enabled: true/false, file: "...", notes: N}
+- meta.provenance.emotion_ai: {enabled: true/false, profile: "..."}
+- meta.provenance.harmony_ai: {enabled: true/false, usage_db: "..."}
+- meta.provenance.magenta: {enabled: true/false, engine: "..."}
+
+## CREPE/OaF検証ルール
+
+- CREPE frames数確認: bass_f0.meta.json の frames フィールド（47,997等、240ではない）
+- OaF適用確認: piano_plan.json の context_sources.oaf_piano = true
+- 解析のみで終わらせない: 出力ファイル生成後、必ずplanに反映
+
+## NO-OP時のルール
+
+変更不要の場合は以下を明記：
+
+- なぜ変更不要か（理由）
+- 既存実装がすでに要件を満たしている証拠
+- 代替案があれば提示
+
+## CI検証必須
+
+すべての変更後に以下を実行：
+
+```bash
+python3 scripts/ci_verify_music_package.py \
+  --song-dir data/suno_ai/suno_themesong/song_001 \
+  --strict
+```
+
+- 11/11 PASS が必須
+- 1つでもFAILなら原因究明してから再提出

@@ -20,7 +20,7 @@ import argparse
 import json
 import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Set
+from typing import Dict, List, Tuple, Optional, Set, Iterable
 from collections import Counter
 import numpy as np
 
@@ -49,6 +49,278 @@ def _hat_pitches_from_config(gate_config: dict) -> Set[int]:
     """ハット密度にカウントするピッチ群を設定から取得"""
     default = [42, 44, 46, 51, 53, 59, 82]  # HH + Ride + Shaker
     return set(gate_config.get("drums", {}).get("kpi", {}).get("hat_pitches", default))
+
+
+def _load_plan_json(path: Optional[Path]) -> Optional[dict]:
+    if not path:
+        return None
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except FileNotFoundError:
+        return None
+    except json.JSONDecodeError as exc:
+        print(f"⚠️  Failed to parse plan JSON {path}: {exc}")
+        return None
+
+
+def _iter_plan_events(plan: Optional[dict]) -> Iterable[dict]:
+    if not plan:
+        return []
+    events = plan.get("events") if isinstance(plan, dict) else None
+    if isinstance(events, list):
+        return events
+    tracks = plan.get("tracks") if isinstance(plan, dict) else None
+    if isinstance(tracks, list):
+        flattened = []
+        for tr in tracks:
+            flattened.extend(tr.get("events", []))
+        return flattened
+    return []
+
+
+def _infer_bar_index(event: dict, beats_per_bar: float = 4.0) -> Optional[int]:
+    for key in ("bar_index", "bar", "bar_idx"):
+        if key in event:
+            try:
+                return int(event[key])
+            except (ValueError, TypeError):
+                pass
+    start = event.get("start_beats") or event.get("time_ql")
+    if start is None:
+        return None
+    try:
+        return int(float(start) // max(1.0, beats_per_bar))
+    except (ValueError, TypeError):
+        return None
+
+
+def _bars_with_predicate(plan: Optional[dict], beats_per_bar: float, predicate) -> Set[int]:
+    bars: Set[int] = set()
+    if not plan:
+        return bars
+    for event in _iter_plan_events(plan):
+        try:
+            if predicate(event):
+                idx = _infer_bar_index(event, beats_per_bar)
+                if idx is not None:
+                    bars.add(int(idx))
+        except Exception:
+            continue
+    return bars
+
+
+def _is_fill_event(event: dict) -> bool:
+    if event.get("is_fill"):
+        return True
+    for key in ("event_type", "type", "label", "role"):
+        val = event.get(key)
+        if isinstance(val, str) and "fill" in val.lower():
+            return True
+    tags = event.get("tags")
+    if isinstance(tags, list):
+        return any(isinstance(t, str) and "fill" in t.lower() for t in tags)
+    return False
+
+
+def _is_riff_event(event: dict) -> bool:
+    if event.get("is_riff"):
+        return True
+    for key in ("event_type", "type", "label", "role"):
+        val = event.get(key)
+        if isinstance(val, str) and "riff" in val.lower():
+            return True
+    tags = event.get("tags")
+    if isinstance(tags, list):
+        return any(isinstance(t, str) and "riff" in t.lower() for t in tags)
+    return False
+
+
+def _has_mute_events(plan: Optional[dict]) -> bool:
+    for event in _iter_plan_events(plan):
+        if event.get("mute") or event.get("is_muted"):
+            return True
+    return False
+
+
+def _calc_active_bar_ratio(plan: Optional[dict], total_bars: int, beats_per_bar: float) -> float:
+    if not plan or total_bars <= 0:
+        return 0.0
+    bars = set()
+    for event in _iter_plan_events(plan):
+        idx = _infer_bar_index(event, beats_per_bar)
+        if idx is not None:
+            bars.add(idx)
+    return len(bars) / float(total_bars) if total_bars > 0 else 0.0
+
+
+def _estimate_tension_ratio(plans: Iterable[Optional[dict]]) -> float:
+    total = 0
+    ext = 0
+    for plan in plans:
+        for event in _iter_plan_events(plan):
+            total += 1
+            if event.get("is_extension"):
+                ext += 1
+            else:
+                etype = event.get("type") or event.get("event_type")
+                if isinstance(etype, str) and any(
+                    kw in etype.lower() for kw in ["9", "11", "13", "sus", "add"]
+                ):
+                    ext += 1
+    if total == 0:
+        return 0.0
+    return ext / float(total)
+
+
+def _build_section_lookup(bars_df: Optional["pd.DataFrame"], sections: Optional[List[dict]]) -> Dict[int, str]:
+    lookup: Dict[int, str] = {}
+    if bars_df is not None and "section_label" in bars_df.columns:
+        for row in bars_df.itertuples():
+            label = getattr(row, "section_label", None)
+            if isinstance(label, str) and label:
+                lookup[int(row.bar_index)] = label.lower()
+    if not lookup and sections:
+        for sec in sections:
+            label = str(sec.get("label", "")).lower()
+            start = int(sec.get("start_bar", sec.get("bar_start", 0)))
+            end = int(sec.get("end_bar", sec.get("bar_end", start)))
+            for bar_idx in range(start, max(start, end)):
+                lookup[bar_idx] = label
+    return lookup
+
+
+def compute_slot_kpis(
+    bars_df: Optional["pd.DataFrame"],
+    plans: Dict[str, dict],
+    section_lookup: Dict[int, str],
+    beats_per_bar: float,
+    fill_threshold: float,
+    riff_threshold: float,
+) -> Optional[dict]:
+    if bars_df is None or not hasattr(bars_df, "itertuples"):
+        return None
+
+    slot_report = {
+        "fill": {"pass": True, "rate": 1.0, "total": 0, "covered": 0, "threshold": fill_threshold},
+        "riff": {"pass": True, "rate": 1.0, "total": 0, "covered": 0, "threshold": riff_threshold},
+    }
+
+    fill_slots = [int(row.bar_index) for row in bars_df.itertuples() if getattr(row, "fill_slot", False)]
+    if fill_slots:
+        fill_events = _bars_with_predicate(plans.get("drums"), beats_per_bar, _is_fill_event)
+        covered = len(set(fill_slots) & fill_events)
+        rate = covered / len(fill_slots) if fill_slots else 1.0
+        slot_report["fill"].update(
+            {
+                "total": len(fill_slots),
+                "covered": covered,
+                "rate": rate,
+                "pass": rate >= fill_threshold if plans.get("drums") else False,
+                "status": "ok" if plans.get("drums") else "plan_missing",
+            }
+        )
+    else:
+        slot_report["fill"].update({"status": "no_slots"})
+
+    chorus_slots = []
+    if "riff_slot" in bars_df.columns:
+        for row in bars_df.itertuples():
+            if getattr(row, "riff_slot", False):
+                label = section_lookup.get(int(row.bar_index), str(getattr(row, "section_label", "")).lower())
+                if isinstance(label, str) and "chorus" in label:
+                    chorus_slots.append(int(row.bar_index))
+
+    riff_sources = [plans.get("guitar"), plans.get("strings")]
+    riff_events = set()
+    for plan in riff_sources:
+        riff_events |= _bars_with_predicate(plan, beats_per_bar, _is_riff_event)
+
+    if chorus_slots:
+        covered = len(set(chorus_slots) & riff_events)
+        rate = covered / len(chorus_slots) if chorus_slots else 1.0
+        slot_report["riff"].update(
+            {
+                "total": len(chorus_slots),
+                "covered": covered,
+                "rate": rate,
+                "pass": rate >= riff_threshold if riff_events else False,
+                "status": "ok" if riff_events else "plan_missing",
+            }
+        )
+    else:
+        slot_report["riff"].update({"status": "no_slots"})
+
+    slot_report["slot_pass"] = slot_report["fill"]["pass"] and slot_report["riff"]["pass"]
+    return slot_report
+
+
+def run_phase1_checks(
+    total_bars: int,
+    beats_per_bar: float,
+    plans: Dict[str, dict],
+    density_floor: Dict[str, float],
+    tension_min: float = 0.02,
+) -> Optional[dict]:
+    if not plans:
+        return None
+
+    report = {
+        "mute_zero": [],
+        "density_floor": [],
+        "tension_events": {},
+        "overall_pass": True,
+    }
+
+    for role, plan in plans.items():
+        if plan is None:
+            report["mute_zero"].append({"role": role, "pass": True, "status": "missing"})
+            continue
+        muted = _has_mute_events(plan)
+        report["mute_zero"].append({"role": role, "pass": not muted, "status": "ok"})
+        if muted:
+            report["overall_pass"] = False
+
+    for role, threshold in density_floor.items():
+        plan = plans.get(role)
+        if plan is None:
+            report["density_floor"].append(
+                {"role": role, "pass": True, "ratio": 0.0, "threshold": threshold, "status": "missing"}
+            )
+            continue
+        ratio = _calc_active_bar_ratio(plan, total_bars, beats_per_bar)
+        passed = ratio >= threshold
+        report["density_floor"].append(
+            {"role": role, "pass": passed, "ratio": ratio, "threshold": threshold, "status": "ok"}
+        )
+        if not passed:
+            report["overall_pass"] = False
+
+    harmonic_plans = [plans.get(r) for r in ("guitar", "piano", "strings") if plans.get(r)]
+    if harmonic_plans:
+        ratio = _estimate_tension_ratio(harmonic_plans)
+        passed = ratio >= tension_min
+        report["tension_events"] = {
+            "pass": passed,
+            "ratio": ratio,
+            "threshold": tension_min,
+            "status": "ok",
+        }
+        if not passed:
+            report["overall_pass"] = False
+    else:
+        report["tension_events"] = {"pass": True, "ratio": 0.0, "threshold": tension_min, "status": "missing"}
+
+    return report
+
+
+DENSITY_FLOOR_DEFAULTS: Dict[str, float] = {
+    "drums": 0.95,
+    "bass": 0.75,
+    "guitar": 0.55,
+    "piano": 0.50,
+    "strings": 0.45,
+}
 
 
 def extract_kpi_from_midi_enhanced(
@@ -349,6 +621,10 @@ def kpi_gate_validate_enhanced(
     use_downbeats: bool = True,
     epsilon_sec: Optional[float] = None,
     verbose: bool = True,
+    plan_paths: Optional[Dict[str, Path]] = None,
+    sections_json: Optional[Path] = None,
+    slot_fill_threshold: float = 0.9,
+    slot_riff_threshold: float = 0.5,
 ):
     """KPI Gate検証（Enhanced版）"""
     # gate_config読み込み
@@ -361,7 +637,11 @@ def kpi_gate_validate_enhanced(
 
     # bars.parquet（相対判定用）
     targets_by_bar = None
-    sections_json_path = None
+    sections_json_path = sections_json if sections_json else None
+    bars_df = None
+    sections_data = None
+
+    beats_per_bar_guess = 4.0
 
     if bars_parquet and PANDAS_AVAILABLE:
         try:
@@ -378,27 +658,88 @@ def kpi_gate_validate_enhanced(
                     "section_label": r.get(section_col, ""),
                 }
 
+            if "beats_per_bar" in bars_df.columns and len(bars_df) > 0:
+                try:
+                    beats_per_bar_guess = float(bars_df.iloc[0].get("beats_per_bar", 4.0))
+                except Exception:
+                    beats_per_bar_guess = 4.0
+
             if verbose:
                 print(f"   bars.parquet loaded: {len(targets_by_bar)} bars")
 
-            # セクション情報がない場合、sections.jsonから取得
-            if not any(targets_by_bar[i]["section_label"] for i in targets_by_bar):
-                sections_json_path = midi_path.parent / "sections.json"
-                if sections_json_path.exists():
-                    with open(sections_json_path, "r", encoding="utf-8") as f:
-                        sections_data = json.load(f)
-                    section_labels = sections_data.get("section_labels", [])
+            # セクション情報がない場合は sections.json をフォールバック
+            has_section_labels = any(
+                targets_by_bar[i]["section_label"] for i in targets_by_bar if targets_by_bar[i]
+            )
+            if not has_section_labels and sections_json_path is None:
+                auto_sections = midi_path.parent / "sections.json"
+                if auto_sections.exists():
+                    sections_json_path = auto_sections
 
+            if sections_json_path and sections_json_path.exists():
+                with open(sections_json_path, "r", encoding="utf-8") as f:
+                    sections_payload = json.load(f)
+                if isinstance(sections_payload, dict):
+            if slot_report:
+                fill = slot_report.get("fill", {})
+                riff = slot_report.get("riff", {})
+                if fill:
+                    fill_rate = fill.get("rate", 0.0) * 100 if fill.get("total") else 100.0
+                    print(
+                        "   Fill slots: "
+                        f"{fill.get('covered', 0)}/{fill.get('total', 0)} ({fill_rate:.1f}%) -> "
+                        f"{'PASS' if fill.get('pass') else 'FAIL'}"
+                    )
+                if riff:
+                    riff_rate = riff.get("rate", 0.0) * 100 if riff.get("total") else 100.0
+                    print(
+                        "   Riff slots: "
+                        f"{riff.get('covered', 0)}/{riff.get('total', 0)} ({riff_rate:.1f}%) -> "
+                        f"{'PASS' if riff.get('pass') else 'FAIL'}"
+                    )
+                print()
+            if phase1_checks:
+                status = "PASS" if phase1_checks.get("overall_pass", True) else "FAIL"
+                print(f"   Phase1 QA: {status}")
+                for item in phase1_checks.get("density_floor", []):
+                    if item.get("status") == "missing":
+                        continue
+                    role = item.get("role")
+                    ratio = item.get("ratio", 0.0)
+                    threshold = item.get("threshold", 0.0)
+                    flag = "PASS" if item.get("pass") else "FAIL"
+                    print(f"      - {role}: {ratio:.2f} vs {threshold:.2f} -> {flag}")
+                print()
+                    sections_data = sections_payload.get("sections") or sections_payload.get(
+                        "section_labels"
+                    )
+                else:
+                    sections_data = sections_payload
+
+                if isinstance(sections_data, list) and sections_data and isinstance(sections_data[0], str):
+                    # section_labels list
                     for bar_idx in targets_by_bar:
-                        if bar_idx < len(section_labels):
-                            targets_by_bar[bar_idx]["section_label"] = section_labels[bar_idx]
-
+                        if bar_idx < len(sections_data):
+                            targets_by_bar[bar_idx]["section_label"] = sections_data[bar_idx]
                     if verbose:
-                        print(f"   sections.json loaded: {len(section_labels)} labels")
+                        print(f"   sections.json loaded: {len(sections_data)} labels")
+                    sections_data = None  # string list handled
+                else:
+                    if verbose:
+                        print("   sections.json loaded (detailed)")
+                    if sections_data and isinstance(sections_data, dict):
+                        sections_data = sections_data.get("sections")
 
         except Exception as e:
             if verbose:
                 print(f"   ⚠️  failed to load bars.parquet: {e}")
+
+    plan_data: Dict[str, dict] = {}
+    if plan_paths:
+        for role, path in plan_paths.items():
+            loaded = _load_plan_json(path)
+            if loaded:
+                plan_data[role] = loaded
 
     # εはテンポから自動推定（4% bar or 20ms）
     # Phase E: 拍子可変対応（bars.parquetからtime_signature参照）
@@ -488,29 +829,94 @@ def kpi_gate_validate_enhanced(
         "fail_reason_top": fail_reason_top,
     }
 
+    slot_report = None
+    phase1_checks = None
+    if plan_data:
+        section_lookup = _build_section_lookup(bars_df, sections_data)
+        slot_report = compute_slot_kpis(
+            bars_df,
+            plan_data,
+            section_lookup,
+            beats_per_bar_guess,
+            slot_fill_threshold,
+            slot_riff_threshold,
+        )
+        phase1_checks = run_phase1_checks(
+            total,
+            beats_per_bar_guess,
+            plan_data,
+            DENSITY_FLOOR_DEFAULTS,
+        )
+
+    phase1_failures: List[str] = []
+    if slot_report and not slot_report.get("slot_pass", True):
+        phase1_failures.append("slot_kpi")
+    if phase1_checks and not phase1_checks.get("overall_pass", True):
+        phase1_failures.append("phase1_checks")
+
+    if phase1_failures:
+        summary["phase1_pass"] = False
+        summary["phase1_failures"] = phase1_failures
+    elif slot_report or phase1_checks:
+        summary["phase1_pass"] = True
+
     # 出力
     report = {"summary": summary, "results": results}
+    if slot_report:
+        report["slot_kpis"] = slot_report
+    if phase1_checks:
+        report["phase1_checks"] = phase1_checks
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
 
     if verbose:
-        print(f"\n📊 Validation Statistics:")
+        print("\n📊 Validation Statistics:")
         print(f"   Total bars: {total}")
         print(f"   Pass: {pass_count} ({pass_rate:.1f}%)")
         print(f"   Fail: {fail_count} ({100-pass_rate:.1f}%)")
         print(f"   Warning: {warning_count}")
         print()
-        print(f"🔍 Fail原因Top10:")
+        print("🔍 Fail原因Top10:")
         for reason, count in fail_reason_top[:10]:
             pct = count / total * 100 if total > 0 else 0.0
             print(f"   {count:3d} ({pct:5.1f}%): {reason}")
         print()
+        if slot_report:
+            fill = slot_report.get("fill", {})
+            riff = slot_report.get("riff", {})
+            if fill:
+                fill_rate = fill.get("rate", 0.0) * 100 if fill.get("total") else 100.0
+                print(
+                    "   Fill slots: "
+                    f"{fill.get('covered', 0)}/{fill.get('total', 0)} ({fill_rate:.1f}%) -> "
+                    f"{'PASS' if fill.get('pass') else 'FAIL'}"
+                )
+            if riff:
+                riff_rate = riff.get("rate", 0.0) * 100 if riff.get("total") else 100.0
+                print(
+                    "   Riff slots: "
+                    f"{riff.get('covered', 0)}/{riff.get('total', 0)} ({riff_rate:.1f}%) -> "
+                    f"{'PASS' if riff.get('pass') else 'FAIL'}"
+                )
+            print()
+        if phase1_checks:
+            status = "PASS" if phase1_checks.get("overall_pass", True) else "FAIL"
+            print(f"   Phase1 QA: {status}")
+            for item in phase1_checks.get("density_floor", []):
+                if item.get("status") == "missing":
+                    continue
+                role = item.get("role")
+                ratio = item.get("ratio", 0.0)
+                threshold = item.get("threshold", 0.0)
+                flag = "PASS" if item.get("pass") else "FAIL"
+                print(f"      - {role}: {ratio:.2f} vs {threshold:.2f} -> {flag}")
+            print()
         print(f"✅ Saved validation report: {output_path}")
 
         if fail_count > 0:
             print(f"\n⚠️  {fail_count} bars failed KPI Gate")
-            print(f"   Recommend Safe-Kit fallback for failed bars")
+            print("   Recommend Safe-Kit fallback for failed bars")
 
 
 def main():
@@ -523,8 +929,42 @@ def main():
     parser.add_argument("--downbeats", action="store_true", help="Use real downbeats")
     parser.add_argument("--epsilon-sec", type=float, default=None, help="Boundary epsilon (sec)")
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
+    parser.add_argument("--plan-dir", type=Path, default=None, help="Directory containing *_plan.json files")
+    parser.add_argument("--drums-plan", type=Path, default=None, help="Explicit drums_plan.json path")
+    parser.add_argument("--guitar-plan", type=Path, default=None, help="Explicit guitar_plan.json path")
+    parser.add_argument("--strings-plan", type=Path, default=None, help="Explicit strings_plan.json path")
+    parser.add_argument("--bass-plan", type=Path, default=None, help="Explicit bass_plan.json path")
+    parser.add_argument("--piano-plan", type=Path, default=None, help="Explicit piano_plan.json path")
+    parser.add_argument("--sections-json", type=Path, default=None, help="Override sections.json path")
+    parser.add_argument(
+        "--slot-fill-threshold", type=float, default=0.9, help="Min boundary fill coverage"
+    )
+    parser.add_argument(
+        "--slot-riff-threshold", type=float, default=0.5, help="Min chorus riff coverage"
+    )
 
     args = parser.parse_args()
+
+    plan_paths: Dict[str, Path] = {}
+    if args.plan_dir:
+        for role in ("drums", "bass", "guitar", "piano", "strings"):
+            candidate = args.plan_dir / f"{role}_plan.json"
+            if candidate.exists():
+                plan_paths[role] = candidate
+
+    overrides = {
+        "drums": args.drums_plan,
+        "guitar": args.guitar_plan,
+        "strings": args.strings_plan,
+        "bass": args.bass_plan,
+        "piano": args.piano_plan,
+    }
+    for role, path in overrides.items():
+        if path:
+            plan_paths[role] = path
+
+    if not plan_paths:
+        plan_paths = None
 
     kpi_gate_validate_enhanced(
         args.midi,
@@ -535,6 +975,10 @@ def main():
         use_downbeats=args.downbeats,
         epsilon_sec=args.epsilon_sec,
         verbose=not args.quiet,
+        plan_paths=plan_paths,
+        sections_json=args.sections_json,
+        slot_fill_threshold=args.slot_fill_threshold,
+        slot_riff_threshold=args.slot_riff_threshold,
     )
 
 

@@ -48,6 +48,22 @@ NOTE_PC = {
     "Cb": 11,
 }
 
+# 逆引き辞書（pitch class → note name）
+NOTE_NAME = {
+    0: "C",
+    1: "C#",
+    2: "D",
+    3: "Eb",
+    4: "E",
+    5: "F",
+    6: "F#",
+    7: "G",
+    8: "Ab",
+    9: "A",
+    10: "Bb",
+    11: "B",
+}
+
 
 def clamp(x, lo, hi):
     return float(max(lo, min(hi, x)))
@@ -86,7 +102,10 @@ import random
 
 
 def _energy_to_vel(base: int, energy: float, depth: float = 0.25) -> int:
-    """energy_curve → velocity 写像"""
+    """energy_curve → velocity 写像（NaN対策付き）"""
+    # NaN対策: energyがNaNの場合は0.5（中央値）にフォールバック
+    if math.isnan(energy):
+        energy = 0.5
     v = int(base + (energy - 0.5) * 127.0 * depth)
     return max(1, min(127, v))
 
@@ -561,6 +580,219 @@ def normalize_mode(name: str) -> str:
     return s if s in MODE_PROFILE else "ionian"
 
 
+# ========== テンション・ポリシー適用（by_quality） ==========
+def _classify_quality(symbol: str, quality: str) -> str:
+    """コード品質分類（symbol/qualityから決定）"""
+    s = (symbol or "").lower()
+    q = (quality or "").lower()
+    if "maj7" in s or q == "maj7":
+        return "maj7"
+    if "maj" in s or q == "maj":
+        return "maj"
+    if "m7b5" in s or q in ("m7b5", "half-diminished", "halfdim"):
+        return "m7b5"
+    if "dim7" in s or q in ("dim7", "dim"):
+        return "dim7"
+    if ("m7" in s) or (q == "m7"):
+        return "m7"
+    if ("m" in s and "maj" not in s) or q in ("m", "min", "minor"):
+        return "m"
+    if "7" in s and "maj7" not in s and "m7" not in s:
+        return "7"
+    return q or "maj"
+
+
+def _merge_tension_policy(
+    base_allow: List,
+    avoid_global: List,
+    by_quality: Dict,
+    section_label: str,
+    allow_by_label: Dict,
+    avoid_by_label: Dict,
+    qual: str,
+) -> List[int]:
+    """
+    テンション許可/回避をマージ（品質→セクション別の順で上書き）
+    返り値: 度数リスト（例: [2, 5, 9] → 9th, #11th, 13th）
+    """
+    allow = set()
+    avoid = set(avoid_global or [])
+
+    # 1) base_allow
+    for t in base_allow or []:
+        allow.add(_parse_tension_deg(t))
+
+    # 2) by_quality
+    if by_quality and qual in by_quality:
+        qd = by_quality[qual] or {}
+        for t in qd.get("allow") or []:
+            allow.add(_parse_tension_deg(t))
+        for t in qd.get("avoid") or []:
+            avoid.add(_parse_tension_deg(t))
+
+    # 3) allow_by_label / avoid_by_label
+    if allow_by_label and section_label in (allow_by_label or {}):
+        for t in allow_by_label[section_label] or []:
+            allow.add(_parse_tension_deg(t))
+    if avoid_by_label and section_label in (avoid_by_label or {}):
+        for t in avoid_by_label[section_label] or []:
+            avoid.add(_parse_tension_deg(t))
+
+    # 4) avoid優先
+    result = sorted([d for d in allow if d not in avoid])
+    return result
+
+
+def _parse_tension_deg(t_str) -> int:
+    """
+    テンション文字列 → 度数（半音）
+    例: "9" → 2, "#11" → 6, "b13" → 8, "13" → 9
+    """
+    s = str(t_str).strip()
+    # b9=1, 9=2, #9=3, 11=5, #11=6, b13=8, 13=9
+    if s in ("b9", "♭9"):
+        return 1
+    if s in ("9",):
+        return 2
+    if s in ("#9", "♯9"):
+        return 3
+    if s in ("11",):
+        return 5
+    if s in ("#11", "♯11"):
+        return 6
+    if s in ("b13", "♭13"):
+        return 8
+    if s in ("13",):
+        return 9
+    # 数字のみ（"6"/"7"等）
+    if s.isdigit():
+        num = int(s)
+        if num == 6:
+            return 9  # 13th扱い
+        if num == 7:
+            return 10  # 7th
+        if num == 9:
+            return 2
+        if num == 11:
+            return 5
+        if num == 13:
+            return 9
+    # 不明なら0
+    return 0
+
+
+def _apply_tension_policy(
+    chord_event: Dict,
+    section_label: str,
+    policy: Dict,
+    roman_by_bar: Dict = None,
+    melody_hotspots: Dict = None,
+) -> List[int]:
+    """
+    chord_eventに対してpolicy（tensions.by_quality等）を適用し、
+    許可されたテンション度数リストを返す。
+
+    NEW (Phase B):
+      - roman_by_bar: bar→{roman, function, target} (副V/SubV検出)
+      - melody_hotspots: {9/​#11/13: {bar: hit_rate}} (F0度数ホットスポット)
+
+    Roman連動:
+      - V系（V/ii, V/V, SubV/x等）のみ #11/13 解禁
+    Melody例外:
+      - メロディホットスポット（bar単位で9/#11/13のヒット率≥閾値）があればpromote
+    """
+    p = (policy or {}).get("tensions", {})
+    base_allow = p.get("base_allow", [])
+    avoid_global = p.get("avoid_global", [])
+    by_quality = p.get("by_quality", {})
+    allow_by_label = p.get("allow_by_label", {})
+    avoid_by_label = p.get("avoid_by_label", {})
+
+    qual = _classify_quality(chord_event.get("symbol", ""), chord_event.get("quality", ""))
+    allowed = _merge_tension_policy(
+        base_allow, avoid_global, by_quality, section_label, allow_by_label, avoid_by_label, qual
+    )
+
+    # NEW: Roman機能連動（V系のみ #11/13 解禁）
+    if roman_by_bar:
+        bar = chord_event.get("bar")
+        roman_info = roman_by_bar.get(bar)
+        if roman_info:
+            roman_label = roman_info.get("roman", "")
+            # V/ii, V/V, SubV/x等の副V・裏コード判定
+            if roman_label.startswith("V/") or roman_label.startswith("SubV/"):
+                # function_rules.dominant設定チェック
+                func_rules = (policy or {}).get("function_rules", {}).get("dominant", {})
+                if func_rules.get("enable", False):
+                    dom_allow = func_rules.get("allow", [])
+                    for t in dom_allow:
+                        if isinstance(t, int):
+                            allowed.append(t)
+                        elif isinstance(t, str):
+                            # "#11"→6, "13"→9等に変換
+                            if t == "#11" and 6 not in allowed:
+                                allowed.append(6)
+                            elif t == "13" and 9 not in allowed:
+                                allowed.append(9)
+                            elif t == "9" and 2 not in allowed:
+                                allowed.append(2)
+
+    # NEW: メロディホットスポット例外（9/#11/13 promote）
+    if melody_hotspots:
+        bar = chord_event.get("bar")
+        mel_exc = (policy or {}).get("melody_exceptions", {})
+        if mel_exc.get("enable", False):
+            thr = mel_exc.get("promote_threshold", 0.25)
+            # 9/#11/13のヒット率チェック
+            for tension_name in ["9", "#11", "13"]:
+                hot = melody_hotspots.get(tension_name, {})
+                hit_rate = hot.get(str(bar), 0.0)  # JSONキーは文字列化されている可能性
+                if hit_rate >= thr:
+                    # tension_name→度数変換
+                    deg = {"9": 2, "#11": 6, "13": 9}.get(tension_name)
+                    if deg is not None and deg not in allowed:
+                        allowed.append(deg)
+
+    return allowed
+
+
+def _final_conflict_guard(tensions: List[int], avoid_global: List) -> List[int]:
+    """
+    最終テンション衝突ガード（#11/11同居、13/♭13同居の禁止）
+
+    - #11(6) と 11(5) の同居 → 11を削除
+    - 13(9) と ♭13(8) の同居 → ♭13を削除（長13系を優先）
+    - avoid_global は最終段で強制削除（メロ昇格より強い）
+    """
+    t = set(tensions)
+
+    # 相互排他: #11 と 11
+    if 6 in t and 5 in t:
+        t.discard(5)  # 11を削除
+
+    # 相互排他: 13 と ♭13
+    if 9 in t and 8 in t:
+        t.discard(8)  # ♭13を削除（長13系を優先）
+
+    # 最終段でavoid_globalは必ず削除（メロ昇格より強い）
+    avoid_set = set()
+    for item in avoid_global or []:
+        if isinstance(item, int):
+            avoid_set.add(item)
+        elif isinstance(item, str):
+            # "b9"→1, "#11"→6等に変換
+            deg_map = {"b9": 1, "9": 2, "#9": 3, "11": 5, "#11": 6, "b13": 8, "13": 9}
+            if item in deg_map:
+                avoid_set.add(deg_map[item])
+
+    t.difference_update(avoid_set)
+
+    return list(t)
+
+
+# =============================================================
+
+
 def apply_mode_tensions(base: List[int], ci: ChordInfo, mode_name: str) -> List[int]:
     prof = MODE_PROFILE.get(normalize_mode(mode_name), MODE_PROFILE["ionian"])
     # base + 明示テンション + モード推奨
@@ -850,10 +1082,45 @@ def chord_segments_by_bar(chordmap: dict, bars: pd.DataFrame, beats_per_bar=4.0)
 
 # ------------------ voicing core ------------------
 def build_voicing(
-    ci: ChordInfo, role: str, energy: float, mode_name: str, policy: str, open_voicing: str
+    ci: ChordInfo,
+    role: str,
+    energy: float,
+    mode_name: str,
+    policy: str,
+    open_voicing: str,
+    section_label: str = "",
+    policy_data: Optional[Dict] = None,
+    chord_event: Optional[Dict] = None,
+    roman_by_bar: Optional[Dict] = None,
+    melody_hotspots: Optional[Dict] = None,
 ) -> List[int]:
+    """
+    コード情報から楽器別ボイシングを生成
+
+    Args:
+        policy_data: policy YAML（tensions.by_quality等）
+        chord_event: コードイベント辞書（symbol/quality含む）
+        section_label: セクション名（verse/chorus等）
+        roman_by_bar: bar→{roman, function, target} (Roman厳密解析)
+        melody_hotspots: {9/​#11/13: {bar: hit_rate}} (F0度数ホットスポット)
+    """
     base = base_degrees(ci.quality)
     full = apply_mode_tensions(base, ci, mode_name if policy == "auto" else "ionian")
+
+    # テンション・ポリシー適用（--policy指定時）
+    if policy_data and chord_event:
+        allowed_tensions = _apply_tension_policy(
+            chord_event, section_label, policy_data, roman_by_bar, melody_hotspots
+        )
+        # 最終衝突ガード適用（#11/11同居、13/♭13同居の禁止）
+        avoid_global = (policy_data or {}).get("tensions", {}).get("avoid_global", [])
+        allowed_tensions = _final_conflict_guard(allowed_tensions, avoid_global)
+
+        # fullをフィルタ（許可されたテンションのみ残す）
+        # 0=root, 4=3rd, 7=5th, 11=7thはコアなので常に許可
+        core_degs = {0, 3, 4, 7, 10, 11}
+        full = [d for d in full if d in core_degs or d in allowed_tensions]
+
     # レジスタ割り当て
     if role == "bass":
         reg = 43
@@ -1195,6 +1462,17 @@ def main():
     ap.add_argument("--sections")
     ap.add_argument("--stems-features")
     ap.add_argument("--lyric-anchors")
+    ap.add_argument(
+        "--role-bars", help="analysis/role_bars/{role}.parquet (activity/density_target)"
+    )
+    # NEW: Phase B view/policy support
+    ap.add_argument("--view", help="instrument chordmap view JSON (chordmap_view_{role}.json)")
+    ap.add_argument("--policy", help="instrument policy YAML (chordmap_view_{role}.yaml)")
+    # NEW: Roman厳密解析 + F0度数推定連携
+    ap.add_argument("--roman-json", default=None, help="roman_map.json (副V/SubV検出)")
+    ap.add_argument(
+        "--melody-hotspots", default=None, help="melody_hotspots.json (bar→9/#11/13 hit rate)"
+    )
     ap.add_argument("--source-midi")
     ap.add_argument("--tension-policy", default="auto", choices=["auto", "none"])
     ap.add_argument("--beats-per-bar", type=float, default=4.0)
@@ -1295,12 +1573,7 @@ def main():
         default=None,
         help="emotion_mapping.yamlパス（未指定時はconfig/emotion_mapping.yaml）",
     )
-    ap.add_argument(
-        "--bass-f0",
-        type=str,
-        default=None,
-        help="bass_f0.parquet (Phase D: Bass F0抽出、レジスター/スライド/ビブラート反映用)",
-    )
+    # NOTE: --bass-f0 already defined above, duplicate removed
     ap.add_argument(
         "--oaf-piano",
         type=str,
@@ -1337,9 +1610,45 @@ def main():
     spath = Path(args.song_package)
     pkg = yaml.safe_load(spath.read_text(encoding="utf-8"))
     base = spath.parent
+
+    # NEW: Roman厳密解析＋メロディホットスポット読み込み
+    roman_by_bar = {}  # bar → {"roman", "function", "target", "key_pc"}
+    if args.roman_json:
+        roman_path = Path(args.roman_json)
+        if roman_path.exists():
+            roman_data = jload(roman_path)
+            roman_by_bar = {r["bar"]: r for r in roman_data}
+            if args.debug:
+                print(f"[DEBUG] Loaded roman_map: {roman_path}, {len(roman_by_bar)} bars")
+        else:
+            print(f"[WARNING] --roman-json not found: {roman_path}")
+
+    melody_hotspots = {"9": {}, "#11": {}, "13": {}}  # bar → hit_rate
+    if args.melody_hotspots:
+        hot_path = Path(args.melody_hotspots)
+        if hot_path.exists():
+            melody_hotspots = jload(hot_path)
+            if args.debug:
+                hot_bars = sum(len(melody_hotspots[t]) for t in ["9", "#11", "13"])
+                print(f"[DEBUG] Loaded melody_hotspots: {hot_path}, {hot_bars} bar×tension entries")
+        else:
+            print(f"[WARNING] --melody-hotspots not found: {hot_path}")
+
     meta = pkg.get("meta", {})
     bpm = float(meta.get("bpm", meta.get("tempo_bpm", 120.0)))
     paths = pkg.get("paths", {})
+
+    # Policy YAML読み込み（--policy指定時）
+    policy_data = {}
+    if args.policy:
+        policy_path = Path(args.policy)
+        if policy_path.exists():
+            policy_data = yaml.safe_load(policy_path.read_text(encoding="utf-8"))
+            if args.debug:
+                print(f"[DEBUG] Loaded policy: {policy_path}")
+        else:
+            print(f"[WARNING] --policy file not found: {policy_path}")
+
     bars_p = Path(args.bars) if args.bars else base / paths.get("bars", "bars.parquet")
     chord_p = (
         Path(args.chordmap) if args.chordmap else base / paths.get("chordmap", "chordmap.json")
@@ -1352,6 +1661,21 @@ def main():
     stems_p = Path(args.stems_features) if args.stems_features else (base / "stem_features.parquet")
 
     bars = safe_parquet(bars_p).sort_values("bar_index")
+
+    # role_barsマージ（activity/density_target統合）
+    if args.role_bars:
+        role_bars_path = Path(args.role_bars)
+        if role_bars_path.exists():
+            role_bars = pd.read_parquet(role_bars_path)
+            bars = bars.merge(role_bars, on="bar_index", how="left")
+            if args.debug:
+                print(f"[DEBUG] Merged role_bars: {role_bars_path}")
+                activity_cols = [c for c in role_bars.columns if "activity" in c.lower()]
+                for col in activity_cols:
+                    if col in bars.columns:
+                        active_bars = int((bars[col] > 0.5).sum())
+                        print(f"        {col}: {active_bars}/{len(bars)} bars active")
+
     chordmap = jload(chord_p)
     mode_name = normalize_mode(args.mode or chordmap.get("mode", "ionian"))
     sfeat = safe_parquet(stems_p) if stems_p.exists() else None
@@ -1632,6 +1956,25 @@ def main():
 
     segs = segs_from_chordmap()
 
+    # activityゲート（role_barsの{role}_activity列でフィルタリング）
+    if args.role_bars:
+        activity_col_map = {
+            "guitar": "guitar_activity",
+            "piano": "piano_activity",
+            "strings": "strings_activity",
+            "bass": "bass_activity",
+        }
+        activity_col = activity_col_map.get(args.role)
+
+        if activity_col and activity_col in bars.columns:
+            active_bar_indices = set(bars[bars[activity_col] > 0.5]["bar_index"])
+            segs_before = len(segs)
+            segs = [s for s in segs if s.bar in active_bar_indices]
+            if args.debug:
+                print(
+                    f"[DEBUG] Activity gate: {activity_col}, segments {segs_before} -> {len(segs)}"
+                )
+
     patt = (
         midi_skeleton(Path(args.source_midi), bpm, bpb=args.beats_per_bar)
         if args.source_midi
@@ -1650,8 +1993,28 @@ def main():
             else False
         )
 
+        # chord_event辞書を構築（policy適用用）
+        # ChordInfoにはsymbol属性がないため、root+qualityから構築
+        chord_symbol = NOTE_NAME[seg.chord.root_pc] + seg.chord.quality
+        chord_event = {
+            "bar": b,
+            "root": NOTE_NAME[seg.chord.root_pc],
+            "quality": seg.chord.quality,
+            "symbol": chord_symbol,
+        }
+
         vo = build_voicing(
-            seg.chord, args.role, e_val, mode_name, args.tension_policy, args.open_voicing
+            seg.chord,
+            args.role,
+            e_val,
+            mode_name,
+            args.tension_policy,
+            args.open_voicing,
+            section_label=seg.section,
+            policy_data=policy_data,
+            chord_event=chord_event,
+            roman_by_bar=roman_by_bar,
+            melody_hotspots=melody_hotspots,
         )
         if args.voice_leading:
             vo = voice_lead(prev_vo, vo)
@@ -1996,6 +2359,9 @@ def main():
                 f"durs={stats['uniq_durs']}/{args.richness_min_durs}"
             )
 
+    # --- out変数定義 ---
+    out = Path(args.out)
+
     # --- debug レポート出力 ---
     if args.debug:
         debug["final_stats"] = _richness_stats(events)
@@ -2062,7 +2428,6 @@ def main():
         if bars_cc:
             plan["meta"]["timbre_cc"] = bars_cc
 
-    out = Path(args.out)
     out.write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # リッチネス統計をstdoutに出力（E2E診断用）

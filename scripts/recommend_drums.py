@@ -252,6 +252,9 @@ def recommend_drums(
     stem_df = None
     if stems_features_path and stems_features_path.exists():
         stem_df = pd.read_parquet(stems_features_path)
+        # bar列をbar_indexに正規化
+        if "bar" in stem_df.columns and "bar_index" not in stem_df.columns:
+            stem_df = stem_df.rename(columns={"bar": "bar_index"})
         if verbose:
             print(f"   Stem features: loaded ({len(stem_df)} bars)")
             print(f"      hat_density: {stem_df['hat_density'].mean():.2f} avg")
@@ -274,16 +277,25 @@ def recommend_drums(
             f"   Stem integration: ENABLED (density_boost={density_boost}, fill_boost={fill_boost})"
         )
 
-    # Stem特徴統合（bars_df更新）
-    if use_stems:
+        # Stem特徴統合（bars_df更新）
+    if use_stems and stem_df is not None:
+        # stem_dfのインデックスをbar_indexに設定してbars_dfと統合
+        stem_df_indexed = stem_df.set_index("bar_index")
+
         # 密度ブースト: target = max(bars.target, stem.hat_density * boost)
-        stem_density_boosted = stem_df["hat_density"] * density_boost
+        stem_density_boosted = stem_df_indexed["hat_density"] * density_boost
         bars_df["density_target_original"] = bars_df["density_target"].copy()
         bars_df["density_target"] = bars_df["density_target"].combine(stem_density_boosted, max)
 
         # Fill優先度（後続でスコア加点）
-        bars_df["fill_priority"] = (stem_df["fill_likelihood"] > 0.6).astype(float) * fill_boost
-        bars_df["vocal_stress"] = stem_df["vocal_stress"]
+        bars_df["fill_priority"] = (stem_df_indexed["fill_likelihood"] > 0.6).astype(
+            float
+        ) * fill_boost
+        bars_df["vocal_stress"] = stem_df_indexed["vocal_stress"]
+
+        # energy_curve列をマージ（bars.parquetにない場合）
+        if "energy_curve" not in bars_df.columns and "energy_curve" in stem_df_indexed.columns:
+            bars_df["energy_curve"] = stem_df_indexed["energy_curve"]
 
         if verbose:
             boosted_count = (bars_df["density_target"] > bars_df["density_target_original"]).sum()

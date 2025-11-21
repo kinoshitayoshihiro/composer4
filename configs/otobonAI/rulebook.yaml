@@ -1,0 +1,978 @@
+version: 0.2
+name: "GuideToneAI / EmotionAI Rulebook"
+description: >
+  J-POP / ポップスを主対象とした作曲ルール集。
+  「どんな状況で」「どのようなコード/メロディ/ベース/リズムを使うと」
+  「どんな感情・効果が出るか」を機械可読な形で整理し、
+  GuideToneAI / EmotionAI / RhythmAI から利用することを目的とする。
+
+sources:
+  - id: soundquest
+    label: "Sound Quest"
+    url: "https://soundquest.jp/quest/"
+  - id: uchiyama
+    label: "ポップス・ロック作曲のうちやま作曲教室"
+    url: "https://uchiyama.a-things.com"
+
+categories:
+  harmony:
+    label: "ハーモニー / コード進行"
+  melody:
+    label: "メロディ / ガイドトーン"
+  bass:
+    label: "ベースライン"
+  rhythm:
+    label: "リズム / グルーヴ"
+  form:
+    label: "曲構成 / 展開"
+  emotion:
+    label: "感情・サウンドイメージ"
+
+# 各ルール：AIから直接参照される単位
+rules:
+  # ========================
+  # HARMONY（和声）系ルール
+  # ========================
+  - id: HRM_001
+    name: "王道進行（IV–V–iii–vi / 4536進行）"
+    category: harmony
+    source_id: soundquest
+    tags: [jpop, diatonic, progression, bright, stable]
+    target_ai: [guide_tone, emotion]
+    when:
+      situation: "メジャーキーで、サビに王道J-POP感と明るい高揚感を出したいとき"
+      sections: [pre_chorus, chorus]
+      tempo_range: [70, 150]   # BPM
+      scale_type: major
+    pattern:
+      key_relative: true
+      progression_degrees: [IV, V, iii, vi]
+      repetition_hint: "2〜4小節単位でループしやすい"
+      cadential_role: "サビ前の助走〜サビ本体で強い安定感を与える"
+      tension:
+        default_allowed: [9]
+        avoid: ["b9_on_major"]
+    effect:
+      short_label: "明るい・安心感・J-POPらしさ"
+      description: >
+        IV–V で上昇感を出し、iii–vi で少し切なさを加えつつも
+        トニック系に戻る安定感を与える。
+        いわゆる「王道進行」として、聞き手にとって非常に馴染みやすい。
+      emotion_vector:
+        energy: 0.7
+        valence: 0.9
+        tension: 0.3
+    guide_tone_policy:
+      focus_degrees: [3, 7]
+      motion_preference: "stepwise"
+      typical_register: "mid-high"
+      usage_notes:
+        - "各コードの3度を主線に置き、要所で7度へ半音で解決させるとJ-POPらしい滑らかさが出る"
+        - "サビではメロディ最高音を V の上の 3rd or 5th あたりに置くと自然に盛り上がる"
+    bass_policy:
+      motion_type: "root_to_5th_or_step"
+      approach_notes: ["chromatic_below", "scale_step_above"]
+      usage_notes:
+        - "IV→V でベースが上昇（4度→5度）することでサビへの期待感を生む"
+        - "iii→vi はベースの下行3度を滑らかに繋ぐ"
+
+  - id: HRM_002
+    name: "カノン系進行（I–V–vi–IV 系）"
+    category: harmony
+    source_id: soundquest
+    tags: [jpop, canon, ballad, progression]
+    target_ai: [guide_tone, emotion]
+    when:
+      situation: "バラード〜ミドルテンポで、安定した循環コードを作りたいとき"
+      sections: [intro, verse, chorus]
+      tempo_range: [60, 130]
+      scale_type: major
+    pattern:
+      key_relative: true
+      progression_degrees: [I, V, vi, IV]
+      repetition_hint: "4小節単位で循環させ、歌メロで変化を付ける"
+      cadential_role: "トニックに長く滞在しつつも程よい動きを保つ"
+      tension:
+        default_allowed: [7, 9]
+        avoid: ["過剰テンション連打"]
+    effect:
+      short_label: "普遍的・懐かしい・安心"
+      description: >
+        典型的なポップスの循環コード。大胆な展開よりも「歌を聴かせる」
+        用途に適し、メロディ次第で明るくも切なくもできる。
+      emotion_vector:
+        energy: 0.5
+        valence: 0.8
+        tension: 0.2
+    guide_tone_policy:
+      focus_degrees: [3, 6]
+      motion_preference: "mixture_step_and_leap"
+      typical_register: "mid"
+      usage_notes:
+        - "Iとviで同じ音を保持し、VとIVで少し動かすと、落ち着きつつ変化も感じられる"
+        - "メロディ最高音は 6度 or 9度 付近が扱いやすい"
+    bass_policy:
+      motion_type: "root_motion"
+      approach_notes: ["diatonic_step", "occasional_fifth"]
+      usage_notes:
+        - "カノンらしさを維持するため、基本はルートを素直に踏む"
+        - "時々オクターブ飛びでダイナミクスを付けるとバンド感が増す"
+
+  - id: HRM_003
+    name: "サブドミナントマイナー導入（IVm）"
+    category: harmony
+    source_id: soundquest
+    tags: [subdominant_minor, bittersweet, coloration]
+    target_ai: [guide_tone, emotion]
+    when:
+      situation: "メジャー曲に一瞬の影・切なさを加えたいとき"
+      sections: [pre_chorus, last_chorus, bridge]
+      tempo_range: [60, 160]
+      scale_type: major
+    pattern:
+      key_relative: true
+      typical_progressions:
+        - [IV, IVm, I]
+        - [IIIm, IVm, I]
+      function_role: "一時的なモーダル借用（bVI のニュアンスを含む）"
+      tension:
+        default_allowed: [7, 9]
+        avoid: ["過度のalter連打"]
+    effect:
+      short_label: "一瞬の翳り・エモさ"
+      description: >
+        IVからIVmへの変化で、メジャーキーの中に短い陰りを作り出す。
+        歌詞の感情の転換点（本音・弱さ・過去の傷）に合わせると、
+        強いエモーションを生む。
+      emotion_vector:
+        energy: 0.6
+        valence: 0.4
+        tension: 0.7
+    guide_tone_policy:
+      focus_degrees: [6, 3]
+      motion_preference: "半音の落下を強調"
+      typical_register: "mid-high"
+      usage_notes:
+        - "IVの3度からIVmの3度への半音落下をガイドトーンとして前面に出す"
+        - "歌詞のキーワードとタイミングを同期させると効果が最大化される"
+
+  # ========================
+  # MELODY / GUIDETONE ルール
+  # ========================
+  - id: MLT_001
+    name: "サビ頭の強拍ガイドトーン（3rd/5th）"
+    category: melody
+    source_id: uchiyama
+    tags: [chorus, strong_beat, hook]
+    target_ai: [guide_tone, emotion]
+    when:
+      situation: "サビ頭を一発で印象付けたいとき"
+      sections: [chorus]
+      tempo_range: [80, 170]
+    pattern:
+      alignment:
+        beat_position: "bar_start"
+        beat_strength: "strong"
+      pitch_choice:
+        relative_to_chord: [3, 5]
+        allowed_extensions: [9]
+      contour: "最初に高めの音、2〜4小節で少し下降"
+    effect:
+      short_label: "サビ一発で覚えさせる"
+      description: >
+        サビ1拍目の強拍に、その時点のコードの3度か5度を置くことで、
+        調性感がはっきりし、J-POPらしい「頭サビ」の強い印象が生まれる。
+      emotion_vector:
+        energy: 0.8
+        valence: 0.8
+        tension: 0.4
+    guide_tone_policy:
+      anchor_priority: [lyric_stress, section_start]
+      focus_degrees: [3, 5]
+      register_hint: "メロディ内で上位25%の高さ"
+      usage_notes:
+        - "歌詞のタイトル語・フック語をサビ頭に合わせる"
+        - "2小節目以降は一段階だけ下がると、Bメロとのコントラストが際立つ"
+
+  - id: MLT_002
+    name: "Aメロの抑えた5度中心メロディ"
+    category: melody
+    source_id: uchiyama
+    tags: [verse, low_energy, story_telling]
+    target_ai: [guide_tone, emotion]
+    when:
+      situation: "Aメロで物語を淡々と語りたいとき"
+      sections: [verse]
+      tempo_range: [60, 140]
+    pattern:
+      alignment:
+        beat_position: "varied"
+        beat_strength: "medium"
+      pitch_choice:
+        relative_to_chord: [5, 3, 2]
+      contour: "まとめて言えば平坦〜やや下降気味"
+      range_relative_to_chorus: "chorus_top_minus_3_to_5_semitones"
+    effect:
+      short_label: "抑えた導入でサビとの対比を作る"
+      description: >
+        Aメロのレンジを意図的に低く抑え、5度付近を中心に据えることで、
+        聴き手を落ち着かせ、サビのレンジ拡大を際立たせる。
+      emotion_vector:
+        energy: 0.3
+        valence: 0.6
+        tension: 0.3
+    guide_tone_policy:
+      focus_degrees: [5, 3]
+      register_hint: "mid-low"
+      usage_notes:
+        - "同じ音を2〜3拍続けて語り口調を演出"
+        - "語尾で2度か4度にわずかに動かすと、単調さを避けつつも落ち着いた印象を保てる"
+
+  # ========================
+  # BASS ルール
+  # ========================
+  - id: BAS_001
+    name: "ルート主体＋クロマチックアプローチ"
+    category: bass
+    source_id: uchiyama
+    tags: [root_based, walking_hint, approach_note]
+    target_ai: [emotion, rhythm]
+    when:
+      situation: "バンド編成で土台の安定感を出したいとき"
+      sections: [verse, chorus]
+      tempo_range: [80, 180]
+    pattern:
+      motion_type: "root_with_approach"
+      default_on_beats: [1, 3]
+      approach_notes:
+        types: ["chromatic_below", "diatonic_step_above"]
+        placement: ["8th_before_bar", "16th_before_strong_beat"]
+    effect:
+      short_label: "安定した土台＋軽い推進力"
+      description: >
+        各小節の頭と3拍目にコードのルートを置き、
+        強拍の手前に半音または全音でアプローチノートを挟むことで、
+        安定感とスムーズな推進力を両立する。
+      emotion_vector:
+        energy: 0.6
+        valence: 0.7
+        tension: 0.5
+    bass_policy:
+      prefer_register: "low"
+      octaves: [2]
+      usage_notes:
+        - "テンション多めのコードのときほど、ベースはシンプルなルート中心にする"
+        - "サビでのみ occasional_octave_jump を許可すると躍動感が出る"
+
+  # ========================
+  # RHYTHM ルール
+  # ========================
+  - id: RHT_001
+    name: "4つ打ちキック＋裏クラップ"
+    category: rhythm
+    source_id: soundquest
+    tags: [four_on_the_floor, dance_pop, standard]
+    target_ai: [rhythm, emotion]
+    when:
+      situation: "ダンス寄り・EDM寄りのJ-POPサビ"
+      sections: [chorus]
+      tempo_range: [110, 140]
+    pattern:
+      drums:
+        kick:
+          on_beats: [1, 2, 3, 4]
+        snare_clap:
+          on_beats: [2, 4]
+          subdivision: "no_shift"
+        hihat:
+          subdivision: "8th"
+          pattern: "straight"
+    effect:
+      short_label: "ダンス感・前進感"
+      description: >
+        キック4つ打ちと2・4拍クラップは、
+        聴き手に最も分かりやすいダンス感を与える。
+        メロディやコードがどれだけ複雑でも、ビートの「土台」として機能する。
+      emotion_vector:
+        energy: 0.9
+        valence: 0.8
+        tension: 0.4
+    rhythm_policy:
+      swing: 0.0
+      velocity_profile: "accent_on_2_and_4"
+      usage_notes:
+        - "Aメロ/Bメロでキック密度を落とし、サビで4つ打ちに解放するとコントラストが強く出る"
+
+  - id: RHT_002
+    name: "ハーフタイムBメロ"
+    category: rhythm
+    source_id: soundquest
+    tags: [half_time, contrast, modern_pop]
+    target_ai: [rhythm, emotion]
+    when:
+      situation: "Aメロ〜サビの間で一度落としてから持ち上げたいとき"
+      sections: [pre_chorus]
+      tempo_range: [70, 170]
+    pattern:
+      drums:
+        kick:
+          on_beats: [1, "3&"]
+        snare:
+          on_beats: [3]
+        hihat:
+          subdivision: "8th_or_16th"
+          pattern: "continuous"
+    effect:
+      short_label: "一度沈んでからの爆発"
+      description: >
+        体感テンポを半分に感じさせることで、
+        サビ頭のフルテンポ復帰をよりドラマチックにする。
+      emotion_vector:
+        energy: 0.5
+        valence: 0.6
+        tension: 0.7
+    rhythm_policy:
+      swing: 0.1
+      velocity_profile: "snare_emphasis_on_3"
+      usage_notes:
+        - "ベースもリズムを間引き、空白を増やしてボーカルにスペースを与える"
+
+  # ========================
+  # EMOTION / FORM 系ルール
+  # ========================
+  - id: EMT_001
+    name: "静かなAメロ → 伸び上がるサビ"
+    category: emotion
+    source_id: uchiyama
+    tags: [contrast, dynamics, song_form]
+    target_ai: [guide_tone, emotion, rhythm]
+    when:
+      situation: "王道J-POPの「Aメロ低く→サビで一気に解放」構造を作りたいとき"
+      sections: [verse, chorus]
+      tempo_range: [70, 160]
+    pattern:
+      form:
+        verse:
+          melody_range: "low_to_mid"
+          chord_density: "low"
+          rhythm_density: "medium"
+        chorus:
+          melody_range: "mid_to_high"
+          chord_density: "medium_to_high"
+          rhythm_density: "high"
+      transition:
+        preferred_tool: "pre_chorus_or_build"
+        build_elements: ["snare_roll", "riser_like_fill", "bass_8th_drive"]
+    effect:
+      short_label: "感情の解放・カタルシス"
+      description: >
+        Aメロで音域・情報量を意図的に抑え、
+        サビで音域・密度・音量をまとめて上げることで、
+        感情の「解放感」「カタルシス」を演出する。
+      emotion_vector:
+        energy: 0.9
+        valence: 0.9
+        tension: 0.8
+    guide_tone_policy:
+      verse:
+        relative_top_to_chorus_semitones: 3
+        focus_degrees: [5, 3]
+      chorus:
+        relative_top_to_verse_semitones: 3
+        focus_degrees: [3, 5, 6]
+    rhythm_policy:
+      verse_density_scale: 0.6
+      chorus_density_scale: 1.0
+
+  - id: EMT_002
+    name: "ラスサビ転調（+2半音）"
+    category: emotion
+    source_id: soundquest
+    tags: [key_change, last_chorus, climax]
+    target_ai: [guide_tone, emotion]
+    when:
+      situation: "最後のサビで最大の盛り上がりを作りたいとき"
+      sections: [last_chorus]
+      tempo_range: [70, 170]
+    pattern:
+      key_change:
+        type: "upward_modulation"
+        semitones: 2
+        timing: "before_last_chorus"
+      pivot:
+        recommended_chords: ["V_of_new_key", "bVII→I_in_new_key"]
+    effect:
+      short_label: "クライマックスの一段階ブースト"
+      description: >
+        同じメロディ・同じアレンジでも、キーを2半音上げるだけで
+        聴感上のエネルギーが大きく増す。
+        歌い手の負荷は増すが、そのギリギリ感がドラマにつながる。
+      emotion_vector:
+        energy: 1.0
+        valence: 0.9
+        tension: 0.9
+    guide_tone_policy:
+      reuse_melody_pattern: true
+      adjust_absolute_pitch: true
+      usage_notes:
+        - "ラスサビ前に8小節程度のブレイク・ブリッジを挟むと転調が自然に感じられる"
+  - id: META_015
+    name: 自然なメロディはコードとの調和から生まれる
+    description: >
+      心地よいメロディは、コードの構成音（コードトーン）を効果的に使い、
+      コードが変わっても共通音を保持するなど、ハーモニーとの強い関連性を持っている。
+      半音アプローチのような非和声音は、あくまで効果的なスパイスとして機能する。
+    related_rule_ids:
+      - MEL_009
+
+  - id: META_016
+    name: 終止形の選択が物語の結末を決める
+    description: >
+      曲やセクションの終わり方（終止形）は、物語の結末を象徴する。
+      力強く終わる全終止、穏やかに終わるアーメン終止、希望を残して終わるピカルディ終止など、
+      伝えたいメッセージに合わせて終止形を選択することが重要である。
+    related_rule_ids:
+      - HRM_030
+      - HRM_037
+
+  - id: META_017
+    name: 機能和声からの逸脱
+    description: >
+      通常のダイアトニックなコード進行のルールから逸脱する
+      「平行移動（プラナー・ハーモニー）」のような手法は、
+      非現実的でパワフルな、あるいは浮遊感のある独特なサウンドスケープを
+      描き出すのに有効である。
+    related_rule_ids:
+      - HRM_045
+
+  - id: META_018
+    name: J-POPの多様性は定番進行の組み合わせと変形から生まれる
+    description: >
+      J-POPのコード進行は、王道進行、カノン進行、丸サ進行、小室進行などの
+      いくつかの強力な「型」をベースにしている。
+      ヒット曲の多くは、これらの型をそのまま使うか、
+      セカンダリードミナントや代理コード、モーダルインターチェンジを加えて
+      巧みに変形させることで、聴き馴染みの良さと独自性を両立させている。
+    related_rule_ids:
+      - HRM_001
+      - HRM_002
+      - HRM_003
+      - HRM_009
+      - HRM_048
+
+  # ========================
+  # PHASE 2.0: Lyric-Aware Rules
+  # ========================
+  - id: LYRIC_001
+    name: "Phrase Start - Uplifting Motion"
+    domain: guide_tone
+    context:
+      phrase_roles: [start]
+      roles: [strings, piano]
+    mechanics:
+      guide_tone:
+        notes_per_bar: 6
+        priority_tones: ["3rd", "5th", "9th"]
+        motion: leap_ok
+        phrase_shape: uphill
+    effect: "フレーズ開始で上昇モーション、エネルギー増"
+
+  - id: LYRIC_002
+    name: "Phrase End - Descending Resolution"
+    domain: guide_tone
+    context:
+      phrase_roles: [end]
+      roles: [strings, piano]
+    mechanics:
+      guide_tone:
+        notes_per_bar: 2
+        priority_tones: ["3rd", "root"]
+        motion: step
+        phrase_shape: downhill
+    effect: "フレーズ終わりで下降解決、安定感"
+
+  - id: EMOTION_001
+    name: "High Energy Chorus"
+    domain: emotion
+    context:
+      sections: [chorus]
+      energy_gte: 0.6
+      roles: [strings, piano]
+    mechanics:
+      emotion:
+        energy_delta: 0.1
+        density_delta: 0.2
+        velocity_scale: 1.2
+    effect: "Chorus高エネルギー時、velocity/density増強"
+
+  - id: EMOTION_002
+    name: "Verse Low Tension"
+    domain: emotion
+    context:
+      sections: [verse, intro]
+      tension_lte: 0.4
+      roles: [strings, piano]
+    mechanics:
+      emotion:
+        duration_scale: 1.2
+        density_delta: -0.1
+    effect: "Verse低テンション時、長音符・低密度"
+
+  - id: GUIDETONE_001
+    name: "Chorus Strings - High Register + Tensions"
+    domain: guide_tone
+    context:
+      sections: [chorus]
+      roles: [strings]
+      energy_gte: 0.6
+    mechanics:
+      guide_tone:
+        notes_per_bar: 6
+        priority_tones: ["9th", "11th", "13th"]
+        register: high
+    effect: "Chorus stringsで高音域・テンション多用"
+
+  - id: GUIDETONE_002
+    name: "Verse Piano - Mid Register + Stable Tones"
+    domain: guide_tone
+    context:
+      sections: [verse]
+      roles: [piano]
+    mechanics:
+      guide_tone:
+        notes_per_bar: 4
+        priority_tones: ["3rd", "5th", "7th"]
+        register: mid
+    effect: "Verse pianoで中音域・安定トーン"
+
+  # ========================================
+  # Phase 2.0 細分化ルール（section × phrase_role）
+  # ChatGPT提案：歌のカーブに揃えるための詳細制御
+  # ========================================
+
+  # Chorus Strings: phrase_start - 高音域上昇アルペジオ
+  - id: GT_STR_CHORUS_PHRASE_START
+    name: "Chorus phrase start strings: upward high register"
+    domain: guide_tone
+    context:
+      sections: [chorus]
+      roles: [strings]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: high
+        motion: leap_ok
+        notes_per_bar: 6
+        priority_tones: ["3rd", "5th", "7th"]
+        phrase_shape: uphill
+    effect: "サビ頭：ストリングス高音域上昇で盛り上げる"
+
+  # Chorus Strings: phrase_inner - 中音域サポート
+  - id: GT_STR_CHORUS_PHRASE_INNER
+    name: "Chorus phrase inner strings: mid register support"
+    domain: guide_tone
+    context:
+      sections: [chorus]
+      roles: [strings]
+      phrase_roles: [mid]
+    mechanics:
+      guide_tone:
+        register: mid
+        motion: step
+        notes_per_bar: 3
+        priority_tones: ["3rd", "7th"]
+    effect: "サビ中腹：ストリングス中音域で歌と絡む"
+
+  # Chorus Strings: phrase_end - 着地を意識して下降
+  - id: GT_STR_CHORUS_PHRASE_END
+    name: "Chorus phrase end strings: gentle landing"
+    domain: guide_tone
+    context:
+      sections: [chorus]
+      roles: [strings]
+      phrase_roles: [end]
+    mechanics:
+      guide_tone:
+        register: mid
+        motion: step
+        notes_per_bar: 2
+        priority_tones: ["3rd", "root"]
+        phrase_shape: downhill
+    effect: "サビ終わり：ストリングス着地で落ち着かせる"
+
+  # Verse Strings: phrase_start - 中音域穏やか上昇
+  - id: GT_STR_VERSE_PHRASE_START
+    name: "Verse phrase start strings: mid gentle lift"
+    domain: guide_tone
+    context:
+      sections: [verse]
+      roles: [strings]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: mid
+        motion: step
+        notes_per_bar: 3
+        priority_tones: ["3rd", "9th"]
+    effect: "バース頭：ストリングス広がりすぎず穏やかに"
+
+  # Verse Strings: phrase_end - 低音域着地
+  - id: GT_STR_VERSE_PHRASE_END
+    name: "Verse phrase end strings: low register rest"
+    domain: guide_tone
+    context:
+      sections: [verse]
+      roles: [strings]
+      phrase_roles: [end]
+    mechanics:
+      guide_tone:
+        register: low
+        motion: step
+        notes_per_bar: 1
+        priority_tones: ["root", "5th"]
+    effect: "バース終わり：ストリングス低音域で休憩"
+
+  # Bridge Strings: phrase_start - 高音域展開
+  - id: GT_STR_BRIDGE_PHRASE_START
+    name: "Bridge phrase start strings: high development"
+    domain: guide_tone
+    context:
+      sections: [bridge]
+      roles: [strings]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: high
+        motion: leap_ok
+        notes_per_bar: 5
+        priority_tones: ["5th", "7th", "9th"]
+    effect: "ブリッジ頭：ストリングス高音域で展開"
+
+  # Emotion: Chorus phrase_start - エネルギーブースト
+  - id: EMO_STR_CHORUS_PHRASE_START
+    name: "Energy boost at chorus phrase start"
+    domain: emotion
+    context:
+      sections: [chorus]
+      roles: [strings]
+      phrase_roles: [start]
+    mechanics:
+      emotion:
+        energy_delta: 0.15
+        tension_delta: 0.10
+        velocity_scale: 1.25
+        density_scale: 1.4
+    effect: "サビ頭：エネルギー増強でインパクト"
+
+  # Emotion: Verse phrase_start - 穏やかエネルギー
+  - id: EMO_STR_VERSE_PHRASE_START
+    name: "Gentle energy at verse phrase start"
+    domain: emotion
+    context:
+      sections: [verse]
+      roles: [strings]
+      phrase_roles: [start]
+    mechanics:
+      emotion:
+        energy_delta: 0.05
+        tension_delta: 0.0
+        velocity_scale: 1.05
+        density_scale: 1.1
+    effect: "バース頭：穏やかなエネルギー上昇"
+
+  # Emotion: phrase_end - 落ち着き
+  - id: EMO_PHRASE_END_CALM
+    name: "Calming effect at phrase end"
+    domain: emotion
+    context:
+      phrase_roles: [end]
+    mechanics:
+      emotion:
+        energy_delta: -0.1
+        tension_delta: -0.05
+        velocity_scale: 0.9
+        duration_scale: 1.15
+    effect: "フレーズ終わり：落ち着かせて着地"
+
+  # ========================================
+  # Instrument-specific LyricAnchorIndex rules
+  # Guitar / Piano / Bass / Drums Phase 2.0 hooks
+  # ========================================
+
+  # Piano phrase-role aware guide tone rules
+  - id: GT_PNO_CHORUS_PHRASE_START
+    name: "Chorus piano phrase start: sparkle arpeggio"
+    domain: guide_tone
+    context:
+      sections: [chorus]
+      roles: [piano]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: high
+        motion: leap_ok
+        notes_per_bar: 7
+        priority_tones: ["3rd", "5th", "9th"]
+        phrase_shape: uphill
+    effect: "サビ頭ピアノは高音域アルペジオでリフトさせる"
+
+  - id: GT_PNO_VERSE_PHRASE_START
+    name: "Verse piano phrase start: storyteller lane"
+    domain: guide_tone
+    context:
+      sections: [verse]
+      roles: [piano]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: mid
+        motion: step
+        notes_per_bar: 4
+        priority_tones: ["5th", "3rd"]
+    effect: "バース頭ピアノは中音域で語り口を支える"
+
+  - id: GT_PNO_PHRASE_END_LANDING
+    name: "Piano phrase end: cadence landing"
+    domain: guide_tone
+    context:
+      sections: [verse, chorus, bridge, pre_chorus]
+      roles: [piano]
+      phrase_roles: [end]
+    mechanics:
+      guide_tone:
+        register: mid
+        motion: hold
+        notes_per_bar: 2
+        priority_tones: ["3rd", "root"]
+        phrase_shape: downhill
+    effect: "フレーズ終端のピアノは着地音を長めに保持"
+
+  - id: EMO_PNO_CHORUS_PHRASE_START
+    name: "Emotion boost for piano at chorus start"
+    domain: emotion
+    context:
+      sections: [chorus]
+      roles: [piano]
+      phrase_roles: [start]
+    mechanics:
+      emotion:
+        energy_delta: 0.08
+        tension_delta: 0.05
+        velocity_scale: 1.12
+        density_scale: 1.15
+    effect: "サビ頭ピアノは強調されたベロシティと密度でリード"
+
+  - id: EMO_PNO_PHRASE_END_RELEASE
+    name: "Piano phrase end: release energy"
+    domain: emotion
+    context:
+      roles: [piano]
+      phrase_roles: [end]
+    mechanics:
+      emotion:
+        energy_delta: -0.05
+        tension_delta: -0.05
+        velocity_scale: 0.92
+        duration_scale: 1.12
+    effect: "フレーズ終わりでピアノは伸ばし気味に減衰"
+
+  # Guitar phrase-role aware rules
+  - id: GT_GTR_CHORUS_PHRASE_START
+    name: "Chorus guitar phrase start: drive voicings"
+    domain: guide_tone
+    context:
+      sections: [chorus]
+      roles: [guitar]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: high
+        motion: leap_ok
+        notes_per_bar: 5
+        priority_tones: ["3rd", "5th", "9th"]
+        phrase_shape: uphill
+    effect: "サビ頭ギターは高音域のカッティングで一気に開く"
+
+  - id: GT_GTR_VERSE_PHRASE_START
+    name: "Verse guitar phrase start: pocket comping"
+    domain: guide_tone
+    context:
+      sections: [verse]
+      roles: [guitar]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: mid
+        motion: step
+        notes_per_bar: 3
+        priority_tones: ["5th", "7th"]
+    effect: "Aメロ導入ギターは中音域の控えめなコードで間を作る"
+
+  - id: GT_GTR_PHRASE_END_RELEASE
+    name: "Guitar phrase end: damped landing"
+    domain: guide_tone
+    context:
+      roles: [guitar]
+      phrase_roles: [end]
+    mechanics:
+      guide_tone:
+        register: mid
+        motion: hold
+        notes_per_bar: 2
+        priority_tones: ["3rd", "root"]
+        phrase_shape: downhill
+    effect: "ギターフレーズ終端はコード減衰でボーカルに隙間を渡す"
+
+  - id: EMO_GTR_CHORUS_PHRASE_START
+    name: "Emotion push for guitar at chorus start"
+    domain: emotion
+    context:
+      sections: [chorus]
+      roles: [guitar]
+      phrase_roles: [start]
+    mechanics:
+      emotion:
+        energy_delta: 0.12
+        tension_delta: 0.08
+        velocity_scale: 1.18
+        density_scale: 1.2
+    effect: "サビ頭ギターは押し出し強めのストロークに"
+
+  - id: EMO_GTR_PHRASE_END_RELAX
+    name: "Guitar phrase end: relax pocket"
+    domain: emotion
+    context:
+      roles: [guitar]
+      phrase_roles: [end]
+    mechanics:
+      emotion:
+        energy_delta: -0.06
+        tension_delta: -0.04
+        velocity_scale: 0.9
+        duration_scale: 1.1
+        density_scale: 0.85
+    effect: "フレーズ終端のギターは音数を抜いて余韻を作る"
+
+  # Bass phrase-role aware rules
+  - id: GT_BASS_CHORUS_PHRASE_START
+    name: "Bass chorus phrase start: driving root motion"
+    domain: guide_tone
+    context:
+      sections: [chorus]
+      roles: [bass]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: low
+        motion: step
+        notes_per_bar: 4
+        priority_tones: ["root", "5th"]
+        phrase_shape: uphill
+    effect: "サビ頭のベースは8分主体で推進力を与える"
+
+  - id: GT_BASS_PHRASE_END_ROOT_HOLD
+    name: "Bass phrase end: root hold"
+    domain: guide_tone
+    context:
+      roles: [bass]
+      phrase_roles: [end]
+    mechanics:
+      guide_tone:
+        register: low
+        motion: hold
+        notes_per_bar: 2
+        priority_tones: ["root"]
+        phrase_shape: downhill
+    effect: "フレーズ終端ベースはルートを保持して着地"
+
+  - id: EMO_BASS_CHORUS_PHRASE_START
+    name: "Bass chorus start: tighten groove"
+    domain: emotion
+    context:
+      sections: [chorus]
+      roles: [bass]
+      phrase_roles: [start]
+    mechanics:
+      emotion:
+        energy_delta: 0.06
+        tension_delta: 0.04
+        velocity_scale: 1.1
+        density_scale: 1.1
+    effect: "サビ頭ベースはベロシティと音数を少し増やす"
+
+  - id: EMO_BASS_PHRASE_END_SPACE
+    name: "Bass phrase end: leave space"
+    domain: emotion
+    context:
+      roles: [bass]
+      phrase_roles: [end]
+    mechanics:
+      emotion:
+        energy_delta: -0.04
+        tension_delta: -0.03
+        velocity_scale: 0.95
+        duration_scale: 1.08
+        density_scale: 0.85
+    effect: "終端のベースは音価を伸ばしスペースを空ける"
+
+  # Drums phrase-role aware rules
+  - id: GT_DRM_CHORUS_PHRASE_START
+    name: "Drums chorus phrase start: accent lifts"
+    domain: guide_tone
+    context:
+      sections: [chorus]
+      roles: [drums]
+      phrase_roles: [start]
+    mechanics:
+      guide_tone:
+        register: high
+        motion: leap_ok
+        notes_per_bar: 8
+        priority_tones: []
+        phrase_shape: uphill
+    effect: "サビ頭ドラムはハイハット/シンバルを多めにして開放"
+
+  - id: GT_DRM_PHRASE_END_TAPER
+    name: "Drums phrase end: taper"
+    domain: guide_tone
+    context:
+      roles: [drums]
+      phrase_roles: [end]
+    mechanics:
+      guide_tone:
+        register: mid
+        motion: hold
+        notes_per_bar: 3
+        priority_tones: []
+        phrase_shape: downhill
+    effect: "フレーズ終端ドラムは音数を減らしブレイクを準備"
+
+  - id: EMO_DRM_CHORUS_PHRASE_START
+    name: "Drums chorus start: energy spike"
+    domain: emotion
+    context:
+      sections: [chorus]
+      roles: [drums]
+      phrase_roles: [start]
+    mechanics:
+      emotion:
+        energy_delta: 0.15
+        tension_delta: 0.08
+        velocity_scale: 1.2
+        density_scale: 1.25
+    effect: "サビ開始のドラムは打点強化と音数増で爆発感"
+
+  - id: EMO_DRM_PHRASE_END_DROP
+    name: "Drums phrase end: drop"
+    domain: emotion
+    context:
+      roles: [drums]
+      phrase_roles: [end]
+    mechanics:
+      emotion:
+        energy_delta: -0.12
+        tension_delta: -0.06
+        velocity_scale: 0.9
+        density_scale: 0.75
+        duration_scale: 1.05
+    effect: "フレーズ締めのドラムは一度抜いて次の展開を待つ"

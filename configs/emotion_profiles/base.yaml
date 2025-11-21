@@ -1,0 +1,125 @@
+# EmotionAI Profile - Base Configuration
+# Phase 125: Energy/Valence統合
+#
+# 階層プリセット設計:
+#   CLI > song-level > project > style > base (this file)
+#
+# energy: 0.0 (静的) ~ 1.0 (爆発)
+# valence: -1.0 (陰) ~ +1.0 (陽)
+
+version: 1
+
+# Energy/Valence スケール定義
+scale:
+  energy:
+    min: 0.0
+    max: 1.0
+    description: "音楽的エネルギー（音量・密度・緊張感）"
+  valence:
+    min: -1.0
+    max: 1.0
+    description: "感情的極性（陽=+1.0、陰=-1.0）"
+
+# デフォルト値（セクション指定なし時）
+defaults:
+  energy: 0.50
+  valence: 0.00
+
+# セクション別基準値
+sections:
+  intro:
+    energy: 0.30
+    valence: -0.10
+    description: "静かな導入、やや陰り"
+  verse:
+    energy: 0.50
+    valence: 0.00
+    description: "中庸、ニュートラル"
+  pre_chorus:
+    energy: 0.70
+    valence: 0.10
+    description: "盛り上がり開始、やや明るい"
+  chorus:
+    energy: 0.90
+    valence: 0.25
+    description: "クライマックス、明るく開放的"
+  bridge:
+    energy: 0.60
+    valence: -0.05
+    description: "展開部、やや落ち着く"
+  outro:
+    energy: 0.35
+    valence: -0.10
+    description: "収束、intro同様の静けさ"
+
+# Energy/Valence推定のための重み（bars.parquet数値化用）
+weights:
+  energy:
+    loudness_db: 0.40       # 音量（正規化後0..1）
+    drums_active: 0.20      # ドラム有無
+    hat_density: 0.10       # ハイハット密度
+    fill_likelihood: 0.10   # フィル頻度
+    chord_tension: 0.20     # 和声テンション
+  valence:
+    harmony_polarity: 0.55  # メジャー/マイナー/減/属の極性
+    cadence_stability: 0.20 # 終止の安定度
+    spectral_brightness: 0.15  # 明るさ（stem_features）
+    lyric_sentiment: 0.10   # 歌詞感情（将来拡張）
+
+# 楽器別パラメータ写像
+instrument_map:
+  piano:
+    velocity_gain_from_energy: 18   # energy=1.0時の最大増分
+    velocity_bias_from_valence: 6   # valence=+1.0時の増分
+    density_scale_from_energy: 0.25 # ノート密度倍率
+    articulation_from_valence:
+      positive: "marcato"           # valence > 0.3
+      neutral: "normal"             # -0.3 <= valence <= 0.3
+      negative: "legato"            # valence < -0.3
+  
+  guitar:
+    velocity_gain_from_energy: 14
+    velocity_bias_from_valence: 5
+    density_scale_from_energy: 0.20
+    articulation_from_valence:
+      positive: "marcato"
+      neutral: "normal"
+      negative: "legato"
+  
+  bass:
+    velocity_gain_from_energy: 12
+    velocity_bias_from_valence: 4
+    octave_bias_from_energy: 12     # energy高で上寄り（半音単位）
+    density_scale_from_energy: 0.15
+  
+  strings:
+    velocity_gain_from_energy: 16
+    velocity_bias_from_valence: 7
+    sustain_from_valence:
+      positive: -80                 # valence > 0.3: 短め（-80ms）
+      negative: 120                 # valence < -0.3: 長め（+120ms）
+    density_scale_from_energy: 0.30
+  
+  drums:
+    velocity_gain_from_energy: 20
+    fill_likelihood_from_energy: 0.35  # energy=1.0時のフィル確率増分
+    hat_density_from_energy: 0.40      # energy=1.0時のハイハット密度増分
+
+# Humanize パラメータ（EmotionAI連動）
+humanize:
+  timing_ms_from_energy:
+    low: 5                          # energy < 0.3
+    mid: 10                         # 0.3 <= energy <= 0.7
+    high: 15                        # energy > 0.7
+  velocity_variance_from_energy:
+    low: 3
+    mid: 6
+    high: 10
+
+# メタデータ
+metadata:
+  name: "Base EmotionAI Profile"
+  version: "1.0.0"
+  phase: 125
+  description: "階層プリセット設計のベース設定"
+  created: "2025-11-08"

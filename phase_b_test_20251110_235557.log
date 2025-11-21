@@ -1,0 +1,256 @@
+================================================================================
+🎵 song_004 パッケージ生成（パイプライン順序最適化版）
+   Phase: phaseB
+   Song root: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004
+   Stems dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav
+================================================================================
+
+🚀 Phase B: LOCK→plan→MIDI→監査（STEP 16-22）開始...
+
+
+🔧 STEP 16: Generate chordmap_locked.json
+
+✅ Merged chordmap:
+   Base: 68 events
+   Overrides: 37 events
+   Locked: 104 events
+
+📊 QA Report:
+   Errors: 0
+   Warnings: 120
+
+✅ Output:
+   /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_locked.json
+   /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_lock_qa.csv
+✅ STEP 16 done: chordmap_locked.json
+
+🔧 STEP 17: Generate chordmap_m21.json (Roman化)
+
+[INFO] No symbol/quality mismatches detected.
+✅ STEP 17 done: chordmap_m21.json
+
+🔧 STEP 17.2: Roman strict analysis (V/x, SubV/x detection)
+
+✅ Generated: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/roman_map.json
+   Total bars: 104
+   Secondary dominants (V/x, SubV/x): 72
+✅ STEP 17.2 done: roman_map.json
+
+🎼 STEP 17.4: CREPE F0 -> scale degree estimation (HMM smoothing)
+
+✅ Generated F0 degrees: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/f0_degrees.parquet
+   Total frames: 13485
+   Unique degrees: ['#2', '#4', '1', '2', '3', '4', '5', '6', '7', 'b2', 'b6', 'b7']
+✅ Generated melody hotspots: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/melody_hotspots.json
+   9: 1 bars with hits
+   #11: 1 bars with hits
+   13: 1 bars with hits
+✅ STEP 17.4 done: f0_degrees.parquet, melody_hotspots.json
+
+🔧 STEP 17.5: Generate standard SongPackage (for plan generation)
+
+✅ Generated: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_standard.yaml
+
+Summary:
+  Song ID:        song_004
+  Total Bars:     68
+  Duration:       182.2 sec
+  Tempo (median): 89.1 BPM
+  Key Center:     G# (confidence: 1.000)
+  Sections:       4
+  Chord Events:   68
+
+Harmony KPI (measured):
+  tension_usage            : 0.500
+  cadence_score            : 0.820
+  anchor_near_change       : 0.218
+  key_confidence           : 0.282
+  enharmonic_consistency   : 1.000
+
+Quality Gate:   PASS
+Synchro Policy: original_stems
+✅ STEP 17.5 done: song_package_standard.yaml
+
+🔧 STEP 18: Generate instrument chordmap views (with policy)
+
+Wrote: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_pad.json and /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/voicings_guide_pad.csv
+Wrote: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_guitar.json and /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/voicings_guide_guitar.csv
+Wrote: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_piano.json and /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/voicings_guide_piano.csv
+Wrote: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_strings.json and /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/voicings_guide_strings.csv
+Wrote: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_bass.json and /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/voicings_guide_bass.csv
+✅ STEP 18 done: chordmap_view_*.json
+
+🔧 STEP 19: Generate plans (bass/guitar/piano/strings/drums)
+   Using: chordmap_locked.json (LOCK基準) + view + policy
+
+   Generating bass_plan.json...
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ bass_plan written → /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/bass_plan.json (events=600)
+   [RICHNESS] uniq_pitches=12 uniq_vels=56 uniq_durs=197
+   [CONTEXT] energy=False drums_active=False activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=True strum=False
+   Generating guitar_plan.json...
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ guitar_plan written → /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/guitar_plan.json (events=456)
+   [RICHNESS] uniq_pitches=6 uniq_vels=49 uniq_durs=9
+   [CONTEXT] energy=False drums_active=False activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=True
+   Generating piano_plan.json...
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ piano_plan written → /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/piano_plan.json (events=183)
+   [RICHNESS] uniq_pitches=5 uniq_vels=43 uniq_durs=20
+   [CONTEXT] energy=False drums_active=False activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=False
+   Generating strings_plan.json...
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[GUIDE] bass_f0=OFF oaf_piano=OFF timbre_cc=OFF
+✅ strings_plan written → /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/strings_plan.json (events=181)
+   [RICHNESS] uniq_pitches=3 uniq_vels=38 uniq_durs=59
+   [CONTEXT] energy=False drums_active=False activity=False mode=ionian
+   [OPTIONS] multi_chords=True voice_leading=True walking_bass=False strum=False
+   Generating drums_plan.json...
+⚠️  Required files not found:
+      - drums_recommendations.json
+   Creating minimal drums_plan.json...
+
+✅ STEP 19 done: plans at /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans
+
+🔧 STEP 20: Deep harmony audit (LOCK-based KPI evaluation)
+
+   deep_harmony_audit.py not found, creating placeholder...
+✅ STEP 20 done: harmony_audit_final.json (placeholder)
+
+🔧 STEP 21: Generate final SongPackages (soft/standard/bright)
+
+   Generating song_package_soft.yaml...
+✅ Generated: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_soft.yaml
+
+Summary:
+  Song ID:        song_004
+  Total Bars:     68
+  Duration:       182.2 sec
+  Tempo (median): 89.1 BPM
+  Key Center:     G# (confidence: 1.000)
+  Sections:       4
+  Chord Events:   68
+
+Harmony KPI (measured):
+  tension_usage            : 0.500
+  cadence_score            : 0.820
+  anchor_near_change       : 0.218
+  key_confidence           : 0.282
+  enharmonic_consistency   : 1.000
+
+Quality Gate:   PASS
+Synchro Policy: original_stems
+   Generating song_package_standard.yaml...
+✅ Generated: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_standard.yaml
+
+Summary:
+  Song ID:        song_004
+  Total Bars:     68
+  Duration:       182.2 sec
+  Tempo (median): 89.1 BPM
+  Key Center:     G# (confidence: 1.000)
+  Sections:       4
+  Chord Events:   68
+
+Harmony KPI (measured):
+  tension_usage            : 0.500
+  cadence_score            : 0.820
+  anchor_near_change       : 0.218
+  key_confidence           : 0.282
+  enharmonic_consistency   : 1.000
+
+Quality Gate:   PASS
+Synchro Policy: original_stems
+   Generating song_package_bright.yaml...
+✅ Generated: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_bright.yaml
+
+Summary:
+  Song ID:        song_004
+  Total Bars:     68
+  Duration:       182.2 sec
+  Tempo (median): 89.1 BPM
+  Key Center:     G# (confidence: 1.000)
+  Sections:       4
+  Chord Events:   68
+
+Harmony KPI (measured):
+  tension_usage            : 0.500
+  cadence_score            : 0.820
+  anchor_near_change       : 0.218
+  key_confidence           : 0.282
+  enharmonic_consistency   : 1.000
+
+Quality Gate:   PASS
+Synchro Policy: original_stems
+✅ STEP 21 done: song_package_{soft|standard|bright}.yaml
+
+🔧 STEP 22: Generate integrated MIDI (tempo_map.json based)
+
+   e2e_suno_arrangement.py not found, skipping MIDI generation
+✅ STEP 22 skipped
+
+✅ Phase B完了
+
+================================================================================
+📁 生成ファイル確認:
+================================================================================
+STEP 16: chordmap_locked.json (LOCK - 唯一の和声事実源)
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_locked.json
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_lock_qa.csv
+
+STEP 17: chordmap_m21.json (Roman化・表記正規化)
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_m21.json
+
+STEP 17.5: song_package_standard.yaml (plan生成用基礎パッケージ)
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_standard.yaml
+
+STEP 18: chordmap_view_*.json (楽器別ビュー + policy)
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_bass.json
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_guitar.json
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_piano.json
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_strings.json
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap_view_pad.json
+
+STEP 19: *_plan.json (楽器別プラン)
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/bass_plan.json
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/guitar_plan.json
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/piano_plan.json
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/strings_plan.json
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/plans/drums_plan.json
+
+STEP 20: harmony_audit_final.json (KPI監査)
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/harmony_audit_final.json
+
+STEP 21: song_package_*.yaml (最終3バリアント)
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_soft.yaml
+   ├─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_standard.yaml
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_bright.yaml
+
+STEP 22: song_004_integrated.mid (統合MIDI)
+   └─ /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/midi/song_004_integrated.mid
+================================================================================
+
+
+🎉 完了！
+
+📊 次のステップ（推奨）:
+   1. 監査レポート確認: cat /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/harmony_audit_final.json | jq
+   2. 統合MIDI確認: open /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/midi/song_004_integrated.mid
+   3. Songpackage確認: cat /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/song_package_standard.yaml
+
+🔍 KPIチェックリスト:
+   - clash_rate_minor2 (verse) < 1%
+   - dominant_rule_uptime (chorus) > 80%
+   - strings_3rd_resolution > 90%
+   - pad_tension_density (常時ON区間) ≤ 1 / bar
+

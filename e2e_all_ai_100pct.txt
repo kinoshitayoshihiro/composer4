@@ -1,0 +1,33 @@
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_001
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+   EmotionAI    : true
+   Harmony AI   : true
+   Emotion Profile: auto
+
+
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+   Tempo: 120.0 BPM
+
+📋 Step 1.2: Importing Stage1 Analysis Data
+   Source: data/suno_ai/suno_themesong/song_001/analysis
+
+🎼 Step 1.5: Stem Features Generation (Backend-enabled)
+   Stems dir: data/suno_ai/suno_themesong/song_001/stemswav_001
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):

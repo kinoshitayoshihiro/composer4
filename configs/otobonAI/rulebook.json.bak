@@ -1,0 +1,734 @@
+{
+“version”: “0.1”,
+“meta”: {
+“description”: “GuideToneAI / EmotionAI 用の作曲ルールブック（J-POP / ポップス / ロック向け）。ハーモニー／メロディ／ベース／リズム／フォームを横断して整理し、感情タグ・ガイドトーンタグ・パート別役割を付与した統合版。”,
+“created_at”: “2025-11-15”,
+“language”: “ja”,
+“sections_taxonomy”: [
+“intro”,
+“verse”,
+“pre_chorus”,
+“chorus”,
+“bridge”,
+“c_part”,
+“outro”
+],
+“emotion_tags_taxonomy”: [
+“bright”,
+“light”,
+“happy”,
+“refreshing”,
+“cool”,
+“edgy”,
+“dark”,
+“sad”,
+“nostalgic”,
+“lonely”,
+“dramatic”,
+“epic”,
+“hopeful”,
+“resolute”,
+“relaxed”,
+“tense”,
+“floating”,
+“bittersweet”
+],
+“guide_tone_tags_taxonomy”: [
+“root”,
+“3rd”,
+“5th”,
+“7th”,
+“9th”,
+“11th”,
+“13th”,
+“leading_tone”,
+“pedal”,
+“chord_tone”,
+“non_chord_tone”,
+“passing”,
+“neighbor”,
+“suspension”,
+“anticipation”
+],
+“source_sets”: [
+“aistudio_channel_1”,
+“soundquest”,
+“uchiyama”
+]
+},
+“rules”: [
+{
+“id”: “HRM_001”,
+“name”: “王道進行（IV–V–iii–vi / 4536進行）”,
+“domain”: “harmony”,
+“situation”: “メジャーキーのサビや大サビで「青春・切なさ・前向きさ」を同時に出したいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “メジャースケール中心。各コードの3度・6度を強拍で使い、2度・4度を経過音として扱う。”,
+“contour”: “サビ冒頭で一気にレンジを上げ、進行の後半（iii→vi）にかけて少し落として余韻を作る。”,
+“rhythm”: “歌詞のキーフレーズをIVまたはVの上で表に置き、viでシンコペーション気味に畳みかける。”
+},
+“harmony”: {
+“progression”: [“IV”, “V”, “iii”, “vi”],
+“key_center_relation”: “Iメジャーキーにおける 4→5→3→6。機能としてはサブドミナント→ドミナント→トニック的→トニック的に流れる。”,
+“tension_usage”: “IV, V で9th、iii, vi では7thと9thを控えめに。avoid音（メジャーコード上の♭9など）は避ける。”
+},
+“bass”: {
+“pattern”: “基本はルート中心の8分〜4分音符。V→iii→viの部分で5度→ルート→ルートの流れを明確にして安定感を出す。”,
+“motion”: “IV→V→iii→viでそれぞれ下行3度 or 4度進行になりやすい。下行感を素直に出すことで「切なさ」が増す。”
+},
+“rhythm”: {
+“groove”: “標準的な8ビート。ドラムはバスドラムがコードチェンジの頭をしっかり踏むと安定感が増す。”,
+“density”: “サビではハイハット16分刻み＋スネア裏拍強調で推進力を維持。”
+}
+},
+“emotion_effect”: “安心感のある明るさと、どこか切ないノスタルジーが同居する。「青春ソング」「アニソン」「J-POP王道バラード」でよく使われる。”,
+“emotion_tags”: [“bright”, “nostalgic”, “bittersweet”, “hopeful”],
+“guide_tone_tags”: [“3rd”, “7th”, “chord_tone”],
+“context”: {
+“sections”: [“chorus”, “c_part”, “outro”],
+“tempo_bpm_range”: [70, 150],
+“genre”: [“jpop”, “rock”, “ballad”],
+“difficulty”: “beginner”
+},
+“examples”: {
+“progression_in_C”: [“F”, “G”, “Em”, “Am”],
+“melody_degrees_example”: “IV上で6→5→3, V上で2→1→7, iii上で3→2, vi上で6→5→3”
+},
+“sources”: [“aistudio_channel_1”, “soundquest”]
+},
+{
+“id”: “HRM_002”,
+“name”: “切な系バラード進行（vi–IV–I–V / 6415進行）”,
+“domain”: “harmony”,
+“situation”: “しっとりしたバラードや失恋ソングで「静かな悲しみと前向きさ」を両立させたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “メジャースケール＋ときどきメロディックマイナー的な#4や#6でスパイス。”,
+“contour”: “viで低めに始め、IVとIで徐々にレンジを広げ、Vで一番感情を高める。”,
+“rhythm”: “音数は少なめにして「間」を大事にする。長い音価（2分音符〜付点4分）を多めに。”
+},
+“harmony”: {
+“progression”: [“vi”, “IV”, “I”, “V”],
+“key_center_relation”: “トニック的なviから始まり、IVで少し開き、Iで安堵、Vで次への繋ぎを作る。”,
+“tension_usage”: “IVとIではadd9を多用して柔らかさを出し、Vで7thや9thを入れて感情を盛り上げる。”
+},
+“bass”: {
+“pattern”: “バラードではルート＋オクターブのアルペジオが有効。ペダル的に同じ音を伸ばすと静けさが出る。”,
+“motion”: “vi→IV→I→V は多くの場合下行 or カノン的な動きを作りやすいので、順次進行を活かす。”
+},
+“rhythm”: {
+“groove”: “4分音符主体のゆったりしたフィール。スネアは2拍4拍をキープしつつ、ゴーストノートでニュアンスを加える。”,
+“density”: “Aメロ＜Bメロ＜サビの順にシンバルとフィルの量を増やしてダイナミクスカーブを作る。”
+}
+},
+“emotion_effect”: “「泣き」「切なさ」「諦めきれない想い」を表現しやすい一方で、ポジティブな歌詞と組み合わせると「優しい前向きさ」にも転ぶ。”,
+“emotion_tags”: [“sad”, “nostalgic”, “bittersweet”],
+“guide_tone_tags”: [“3rd”, “7th”, “9th”],
+“context”: {
+“sections”: [“verse”, “chorus”, “outro”],
+“tempo_bpm_range”: [60, 110],
+“genre”: [“ballad”, “jpop”],
+“difficulty”: “beginner”
+},
+“examples”: {
+“progression_in_C”: [“Am”, “F”, “C”, “G”],
+“melody_degrees_example”: “vi上で3→2→1, IV上で4→6→5, I上で3→2, V上で7→1”
+},
+“sources”: [“aistudio_channel_1”, “soundquest”]
+},
+{
+“id”: “HRM_003”,
+“name”: “アンセム系進行（I–V–vi–IV / 1564進行系）”,
+“domain”: “harmony”,
+“situation”: “大きな一体感・シンガロング感のあるサビやラストコーラスを作りたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “メジャースケール中心。IとVではルート〜5度、viとIVでは3度・6度を多用。”,
+“contour”: “Iで高い音から始め、Vで一度下降、viで再び上昇、IVで解放していく。”,
+“rhythm”: “頭打ちを強調し、観客が一緒に歌いやすい単純なリズム（4分＋8分）を中心に組む。”
+},
+“harmony”: {
+“progression”: [“I”, “V”, “vi”, “IV”],
+“key_center_relation”: “強いトニック感を維持しつつ、viで一瞬の陰り、IVで再度開く構造。”,
+“tension_usage”: “I, Vではテンション少なめにして安定感を重視。vi, IV で9th, 6thを足して広がりを出す。”
+},
+“bass”: {
+“pattern”: “4分刻みのルート中心。サビ後半でオクターブジャンプや経過音を足して熱量を上げる。”,
+“motion”: “I→V→vi→IV は上行・下行いずれも可能だが、コーラスでは上行気味にすると前向きな高揚感が出る。”
+},
+“rhythm”: {
+“groove”: “ストレートな8ビートまたは4つ打ち。バスドラムは1拍目＋3拍目（もしくは4つ打ち）で安定させる。”,
+“density”: “サビからはライドやクラッシュを入れて高域のエネルギーを増やす。”
+}
+},
+“emotion_effect”: “「みんなで肩を組んで歌う」ような高揚感・前向きさ・祝祭感が強い。スポーツ、応援歌、アニソンのクライマックスに向く。”,
+“emotion_tags”: [“bright”, “hopeful”, “epic”],
+“guide_tone_tags”: [“root”, “3rd”, “5th”],
+“context”: {
+“sections”: [“chorus”, “c_part”, “outro”],
+“tempo_bpm_range”: [90, 160],
+“genre”: [“jpop”, “rock”, “anthem”],
+“difficulty”: “beginner”
+},
+“examples”: {
+“progression_in_C”: [“C”, “G”, “Am”, “F”],
+“melody_degrees_example”: “Iで5→3→1, Vで2→1→7, viで3→5, IVで4→3→2”
+},
+“sources”: [“soundquest”, “uchiyama”]
+},
+{
+“id”: “HRM_004”,
+“name”: “ロック的モーダル進行（I–♭VII–IV / I–♭VII–♭VI–♭VII）”,
+“domain”: “harmony”,
+“situation”: “ギター主体のロックや疾走感のある曲で、土臭さ・男らしさ・反逆感を出したいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “ミクソリディアン or ドリアン的な音使い。♭7度を多用して「ロック感」を出す。”,
+“contour”: “パワーコード的なリフとユニゾンしやすい、狭いレンジのメロディにする。”,
+“rhythm”: “リフとボーカルのリズムを噛み合わせ（コール＆レスポンス）で作ると効果的。”
+},
+“harmony”: {
+“progression”: [“I”, “♭VII”, “IV”],
+“key_center_relation”: “モーダルなI中心。機能和声よりもリフの反復感を優先。”,
+“tension_usage”: “テンションは少なめ。ギターの歪みとリズムが主役なので、トライアド or パワーコード中心で良い。”
+},
+“bass”: {
+“pattern”: “ルート8分刻みや、I〜♭VII〜IVの行き来を強調するリフパターン。”,
+“motion”: “しばしば I ペダル（同じ音を保続）で上のコード変化に対する緊張感を作る。”
+},
+“rhythm”: {
+“groove”: “ストレートな8ビート or 16ビート。スネア強めで攻撃的なサウンド。”,
+“density”: “ギターの刻みに合わせてバスドラムをロックさせる。フィルは直線的でOK。”
+}
+},
+“emotion_effect”: “力強さ・男前・反骨・ストリート感。爽やかさよりも“カッコよさ”を前面に出したいときに有効。”,
+“emotion_tags”: [“cool”, “edgy”, “resolute”],
+“guide_tone_tags”: [“root”, “5th”, “pedal”],
+“context”: {
+“sections”: [“intro”, “verse”, “chorus”, “bridge”],
+“tempo_bpm_range”: [110, 190],
+“genre”: [“rock”, “punk”, “anime_rock”],
+“difficulty”: “intermediate”
+},
+“examples”: {
+“progression_in_E”: [“E”, “D”, “A”],
+“melody_degrees_example”: “1, ♭7, 4 を中心にしたリフライクなメロディ”
+},
+“sources”: [“soundquest”, “aistudio_channel_1”]
+},
+{
+“id”: “HRM_005”,
+“name”: “サビの明暗コントラスト用モーダルミクスチャ（♭VI, ♭VII, iv）”,
+“domain”: “harmony”,
+“situation”: “基本はメジャーだが、サビやCメロで一瞬だけ“陰り”や“ドラマ”を入れたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “通常はメジャースケール。借用和音上では注意して avoid を回避（例：♭VIメジャー上でメジャースケールの7度は衝突しやすい）。”,
+“contour”: “借用和音で一時的に下行ラインを強め、元のIに戻るときに上行させるとドラマが増す。”,
+“rhythm”: “借用和音は小節頭に置くと“暗くなった”印象が強く出る。サビ後半の2小節だけ使うと効果的。”
+},
+“harmony”: {
+“progression”: [
+“I”,
+“V”,
+“♭VI”,
+“♭VII”,
+“I”
+],
+“key_center_relation”: “Iメジャーを基準に平行短調側の和音（♭VI, ♭VII, ivなど）を部分的に借用する。”,
+“tension_usage”: “借用和音ではテンションは控えめにし、3度と6度の響きを意識して“色”を聞かせる。”
+},
+“bass”: {
+“pattern”: “借用和音の間はルートをしっかり鳴らし、「いつもと違う場所に来た」感覚を強調する。”,
+“motion”: “I→♭VI→♭VII→I など下行3度ラインを作ると強い印象が残る。”
+},
+“rhythm”: {
+“groove”: “基本のグルーヴは変えない方がよい。和声だけ変化させることで“景色だけ変わる”印象を作る。”,
+“density”: “Cメロやサビ後半など、ドラマを最大化したい部分でクラッシュやタムを増やすと効果が増す。”
+}
+},
+“emotion_effect”: “一瞬だけ風景が陰るような切なさ・ドラマ感。アニソン、物語性の強いJ-POPで多用される。”,
+“emotion_tags”: [“dramatic”, “bittersweet”, “tense”],
+“guide_tone_tags”: [“3rd”, “6th”, “chord_tone”],
+“context”: {
+“sections”: [“pre_chorus”, “chorus”, “c_part”],
+“tempo_bpm_range”: [70, 160],
+“genre”: [“jpop”, “anime”, “ballad”],
+“difficulty”: “intermediate”
+},
+“examples”: {
+“progression_in_C”: [“C”, “G”, “Ab”, “Bb”, “C”],
+“melody_degrees_example”: “I→♭VI→♭VII上で 3→♭3→4 など半音変化を活かす”
+},
+“sources”: [“soundquest”, “uchiyama”]
+},
+{
+“id”: “HRM_006”,
+“name”: “Bメロ（pre-chorus）の「持ち上げ」：サブドミナントマイナーとII7”,
+“domain”: “harmony”,
+“situation”: “Aメロからサビへ上手く“持ち上げる”ためのBメロを作るとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “前半はダイアトニック、後半でサブドミナントマイナー上に♭3・♭6などを混ぜて陰影を出す。”,
+“contour”: “Bメロのラストに向かって一方向に上昇するラインを作る。サビ頭の音より少しだけ低く抑えるのが定番。”,
+“rhythm”: “徐々に音数を増やし、サビ直前の1小節で最も細かいリズムを鳴らし、その後サビ頭で一度解放。”
+},
+“harmony”: {
+“progression”: [“IV”, “ii”, “II7”, “V”, “V/V”, “V”],
+“key_center_relation”: “サブドミナント → サブドミナントマイナー or II7 → V と機能を徐々にドミナント側へ寄せる。”,
+“tension_usage”: “II7では9th, 13th、Vでは9th, 11th などテンションを積極的に使い、期待感を高める。”
+},
+“bass”: {
+“pattern”: “前半はルート中心、後半（II7〜V）ではクロマチックアプローチ（例：II7→Vで♯4を経過）を使う。”,
+“motion”: “Bメロ終盤で上昇するベースライン（例：IV→V/IV→I/3→V）がサビへの“登り坂”を演出する。”
+},
+“rhythm”: {
+“groove”: “Aメロよりハイハットの刻みを細かくし、スネアのゴーストノートを増やしてエネルギーを上げる。”,
+“density”: “フィルはBメロラストに集中配置し、サビ頭にクラッシュを置いて解放する。”
+}
+},
+“emotion_effect”: “「何かが起こりそう」という高揚感と、少しの不安・切なさが混ざった感情を作る。”,
+“emotion_tags”: [“tense”, “dramatic”, “hopeful”],
+“guide_tone_tags”: [“3rd”, “7th”, “leading_tone”],
+“context”: {
+“sections”: [“pre_chorus”],
+“tempo_bpm_range”: [80, 160],
+“genre”: [“jpop”, “anime”, “rock”],
+“difficulty”: “advanced”
+},
+“examples”: {
+“progression_in_C”: [“F”, “Dm7”, “D7”, “G7”, “G7”],
+“melody_degrees_example”: “Bメロ最後で 4→#4→5（サビ頭） など、#4を強調”
+},
+“sources”: [“aistudio_channel_1”, “soundquest”, “uchiyama”]
+},
+{
+“id”: “HRM_007”,
+“name”: “ディセプティブ・ケーデンス（V→vi）による裏切り”,
+“domain”: “harmony”,
+“situation”: “サビやフレーズ末尾で“予想を裏切る着地”をしたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “メジャースケール中心。V上で7度や2度を強く聞かせ、Iではなくviに落ちることで切なさを作る。”,
+“contour”: “Vで一度高い音に登り、その直後にviで大きく落とすと“落ちた”感じが強まる。”,
+“rhythm”: “V→viの瞬間にシンコペーションを入れると意外性が増す。”
+},
+“harmony”: {
+“progression”: [“V”, “vi”],
+“key_center_relation”: “Iに行くはずの強いドミナントを、平行短調のトニックに着地させる。”,
+“tension_usage”: “Vでは7th, 9th をしっかり鳴らして「解決したがっている」感じを高める。viではadd9などで柔らかく受け止める。”
+},
+“bass”: {
+“pattern”: “Vのルートからviのルートへ下行2度進行。ベースが半音または全音で落ちる形を強調する。”,
+“motion”: “ベースだけIに行きそうなフレーズを弾いておき、最後の瞬間にviへ落とすという“裏切りパターン”も有効。”
+},
+“rhythm”: {
+“groove”: “全体のグルーヴは維持しつつ、V→viのバーだけシンバルを抑えたり、逆に増やしたりしてコントラストを作る。”,
+“density”: “フィルで強く煽っておきながら静かなviに落とすと、ドラマチックな余韻が残る。”
+}
+},
+“emotion_effect”: “期待していたハッピーエンドが少し外されたような“ほろ苦さ”と“余韻”が生まれる。”,
+“emotion_tags”: [“bittersweet”, “sad”, “nostalgic”],
+“guide_tone_tags”: [“7th”, “leading_tone”, “3rd”],
+“context”: {
+“sections”: [“chorus”, “c_part”, “outro”],
+“tempo_bpm_range”: [60, 140],
+“genre”: [“ballad”, “jpop”],
+“difficulty”: “intermediate”
+},
+“examples”: {
+“progression_in_C”: [“G7”, “Am”],
+“melody_degrees_example”: “G7上で7→1→7, vi着地で6→5 と落ち着かせる”
+},
+“sources”: [“soundquest”, “uchiyama”]
+},
+{
+“id”: “MEL_001”,
+“name”: “メロディの基本：強拍はコードトーン、弱拍に経過音”,
+“domain”: “melody”,
+“situation”: “コードにしっかり乗った“外れない”メロディを作りたいときの基本原則。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “その小節のコードに対し、1拍目と3拍目（4/4の場合）はルート・3度・5度・7度などコードトーンを優先する。”,
+“contour”: “コードトーンを柱に据え、その間を2度ステップの経過音でつなぐのが基本。”,
+“rhythm”: “弱拍や裏拍に2度上・下の経過音を挟み、“話し言葉のような自然な流れ”を作る。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “キー内のダイアトニックコードであればほぼ共通の原則として機能する。”,
+“tension_usage”: “テンションを使う場合も、できるだけ弱拍に置き、強拍ではコードトーンに戻す。”
+},
+“bass”: {
+“pattern”: “ベースがルートを踏んでいるときほど、メロディは3度・5度を使うと安定する。”,
+“motion”: “ベースが動きの少ないペダルのとき、メロディ側でコードチェンジ感を表現する役割を持つ。”
+},
+“rhythm”: {
+“groove”: “ドラムのスネア裏拍に対して、メロディは表拍でコードトーンを置くと安定する。”,
+“density”: “情報量の多いバックの上では、メロディの経過音を減らしコードトーンを増やす。”
+}
+},
+“emotion_effect”: “安定感・歌いやすさ・覚えやすさが増し、“外してない”メロディに聞こえる。”,
+“emotion_tags”: [“bright”, “relaxed”],
+“guide_tone_tags”: [“chord_tone”, “3rd”, “5th”],
+“context”: {
+“sections”: [“verse”, “pre_chorus”, “chorus”],
+“tempo_bpm_range”: [60, 180],
+“genre”: [“all”],
+“difficulty”: “beginner”
+},
+“examples”: {
+“description”: “Cメジャーで C–G–Am–F の上に、1拍目と3拍目はC/E/G/Aなどコードトーン、2拍目と4拍目にD/F/E/Bなど経過音を置く。”
+},
+“sources”: [“aistudio_channel_1”, “soundquest”, “uchiyama”]
+},
+{
+“id”: “MEL_002”,
+“name”: “順次進行をベースに、ジャンプは「感情の山」に限定する”,
+“domain”: “melody”,
+“situation”: ““歌いやすく、それでいて印象に残る”メロディラインを作りたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “全体の7〜8割は2度の順次進行。3度以上の跳躍はサビやキーフレーズに集中させる。”,
+“contour”: “Aメロは順次進行中心で語り口調、サビで跳躍を使って感情を爆発させる。”,
+“rhythm”: “跳躍は長めの音価と組み合わせると“叫び”に聞こえやすく、短い音価と組み合わせると“きらめき”に聞こえる。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “どのキー・どのコード進行にも適用できる一般原則。”,
+“tension_usage”: “跳躍でテンションに着地するときは、直前・直後をコードトーンにして安全性を確保する。”
+},
+“bass”: {
+“pattern”: “ベースが大きく跳躍しているときは、メロディは順次進行を保ちすぎると安定しやすい。”,
+“motion”: “逆に、ベースがペダル的なときにメロディで跳躍を行うと、ドラマ感が出る。”
+},
+“rhythm”: {
+“groove”: “跳躍のタイミングはドラムフィルやクラッシュと合わせると、インパクトが増す。”,
+“density”: “跳躍が多すぎると歌いにくいので、1フレーズ内での回数を制限する。”
+}
+},
+“emotion_effect”: “滑らかな“語り”と、要所の“叫び”のコントラストが付き、感情の起伏が伝わりやすくなる。”,
+“emotion_tags”: [“dramatic”, “hopeful”, “bright”],
+“guide_tone_tags”: [“chord_tone”, “9th”, “6th”],
+“context”: {
+“sections”: [“verse”, “pre_chorus”, “chorus”, “c_part”],
+“tempo_bpm_range”: [70, 180],
+“genre”: [“jpop”, “anime”, “ballad”],
+“difficulty”: “intermediate”
+},
+“examples”: {
+“description”: “Aメロは3度以内の動きのみ、サビ頭で5度以上の跳躍を入れるなど“山”を限定する。”
+},
+“sources”: [“soundquest”, “uchiyama”]
+},
+{
+“id”: “MEL_003”,
+“name”: “Aメロは狭く、サビで最高音を更新するレンジ設計”,
+“domain”: “melody”,
+“situation”: ““サビが高くて気持ちいい”J-POPらしいダイナミクスを作りたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “Aメロ：キー中心付近（3度〜5度） Bメロ：5度〜6度 サビ：6度〜オクターブ上までを使う。”,
+“contour”: “Aメロで低めのレンジに抑え、Bメロで少しだけ上げ、サビ頭でその曲の最高音を更新する。”,
+“rhythm”: “サビの最高音は長めに伸ばし、歌詞の重要語を乗せる。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “コードは同じでも、メロディレンジだけでセクション感を出すことができる。”,
+“tension_usage”: “サビでだけ9thなどのテンションを高音に使うと、開放感と“サビ感”が増す。”
+},
+“bass”: {
+“pattern”: “Aメロでは動きを控えめに、サビではオクターブや経過音を増やしてエネルギーを合わせる。”,
+“motion”: “サビ頭の最高音に合わせて、ベースを安定したルートに置くと安心して“張れる”。”
+},
+“rhythm”: {
+“groove”: “Aメロは音数少なめ、サビで16分系やフィルを増やして上がっていく印象を作る。”,
+“density”: “サビでのみクラッシュシンバルやハイハットオープンを多用し、レンジ感と連動させる。”
+}
+},
+“emotion_effect”: “サビで“解放される”感覚が強まり、リスナーのカタルシスが得られやすい。”,
+“emotion_tags”: [“hopeful”, “epic”, “bright”],
+“guide_tone_tags”: [“9th”, “5th”, “3rd”],
+“context”: {
+“sections”: [“verse”, “pre_chorus”, “chorus”],
+“tempo_bpm_range”: [80, 170],
+“genre”: [“jpop”, “anime”, “ballad”],
+“difficulty”: “beginner”
+},
+“examples”: {
+“description”: “キーCなら Aメロ最高音=G, Bメロ最高音=A, サビ最高音=C’ と段階的に上げる。”
+},
+“sources”: [“aistudio_channel_1”, “soundquest”, “uchiyama”]
+},
+{
+“id”: “MEL_004”,
+“name”: “タイトルフレーズをガイドトーン（3度 or 7度）に乗せる”,
+“domain”: “melody”,
+“situation”: “曲名になるフレーズやサビの決め台詞を強く印象付けたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “その時点のコードの3度 or 7度をタイトルフレーズの中心音にする。”,
+“contour”: “フレーズの頭、もしくは一番長く伸ばす音をガイドトーンに設定する。”,
+“rhythm”: “小節頭 or 強拍にタイトルを置き、その音をガイドトーンにする。裏拍開始なら持続で強拍にまたがらせる。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “3度・7度はコードの性格を決める音なので、ここにタイトルを乗せると“その和音らしさ”が強く出る。”,
+“tension_usage”: “ときどき9thにも置くと“少し外れた”感じで耳を惹くが、解決先は3度 or 7度にする。”
+},
+“bass”: {
+“pattern”: “タイトル着地の瞬間はベースをルートまたは5度にして土台を安定させる。”,
+“motion”: “タイトルフレーズ中はベースの動きをシンプルにし、メロディを際立たせる。”
+},
+“rhythm”: {
+“groove”: “リズムセクションはタイトルフレーズの頭に合わせてアクセントを入れる（クラッシュ、スネア強打など）。”,
+“density”: “タイトル直前の1拍だけ音数を減らし、“吸い込んで吐く”ようにタイトルに向かう。”
+}
+},
+“emotion_effect”: “曲のフックが和声と強く結びつき、記憶に残りやすくなる。”,
+“emotion_tags”: [“bright”, “dramatic”],
+“guide_tone_tags”: [“3rd”, “7th”],
+“context”: {
+“sections”: [“chorus”],
+“tempo_bpm_range”: [70, 180],
+“genre”: [“all”],
+“difficulty”: “intermediate”
+},
+“examples”: {
+“description”: “C–G–Am–F のサビで、C上ではE, G上ではB, Am上ではC, F上ではA など、コード3度/7度にタイトルを配置。”
+},
+“sources”: [“aistudio_channel_1”, “soundquest”]
+},
+{
+“id”: “BAS_001”,
+“name”: “ルート主体の8分刻みは「安心感」のデフォルト”,
+“domain”: “bass”,
+“situation”: “まずは外さないベースラインの基本形を作りたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “ベースがルートを安定して踏んでいるとき、メロディは3度・5度・7度を自由に使いやすい。”,
+“contour”: “ベースが動かない分、メロディ側で動きを作る。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “どのコード進行にも適用可能。和声的な“正しさ”を維持しやすい。”,
+“tension_usage”: “ベースがシンプルなほど、上物でのテンション使用が許容されやすい。”
+},
+“bass”: {
+“pattern”: “各コードのルートを8分音符で1〜2小節刻む。時折5度を挟む程度にとどめる。”,
+“motion”: “コードチェンジ直前の1音だけ経過音（半音 or 全音）を入れて“歩く”感じを作る。”
+},
+“rhythm”: {
+“groove”: “ドラムのバスドラムと一致させすぎると重くなるので、一部をずらして“うねり”を作る。”,
+“density”: “バラードでは4分音符に減らし、テンポが速い曲では16分のゴーストを混ぜるなど、BPMに応じて調整。”
+}
+},
+“emotion_effect”: “安心感・安定感・歌モノらしい“土台”を提供する。上物がどれだけ動いても曲が崩れにくい。”,
+“emotion_tags”: [“relaxed”, “bright”],
+“guide_tone_tags”: [“root”, “5th”],
+“context”: {
+“sections”: [“verse”, “chorus”],
+“tempo_bpm_range”: [60, 180],
+“genre”: [“all”],
+“difficulty”: “beginner”
+},
+“examples”: {
+“description”: “C–G–Am–F の進行で、C,C,C,C / G,G,G,G / A,A,A,A / F,F,F,F のようにルートを刻む。”
+},
+“sources”: [“aistudio_channel_1”, “uchiyama”]
+},
+{
+“id”: “BAS_002”,
+“name”: “アプローチノート（半音/全音下からの踏み込み）でノリを作る”,
+“domain”: “bass”,
+“situation”: “シンプルなコード進行に少し“グルーヴ感”を加えたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “ベースがクロマチックに動く部分では、メロディはあえてシンプルにしてぶつかりを避ける。”,
+“contour”: “メロディのリズムとベースのアプローチが噛み合うと、一体感が出る。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “アプローチノートは非和声音だが、短い音価で弱拍に置けば問題になりにくい。”,
+“tension_usage”: “ベース側のテンションは和声全体で聴く必要があるため、コードのテンションとの兼ね合いに注意。”
+},
+“bass”: {
+“pattern”: “次のコードのルートの半音下/全音下から8分音符でアプローチする（例：Gに行く前にF# or Fを入れる）。”,
+“motion”: “I→vi→IV→V など循環進行で特に有効。”
+},
+“rhythm”: {
+“groove”: “ドラムのバスドラムとアプローチノートをずらして置くと“うねる”。合わせると“重くて太い”フィーリングになる。”,
+“density”: “アプローチを多用しすぎると落ち着きがなくなるので、フレーズ内の2〜3箇所に限定する。”
+}
+},
+“emotion_effect”: ““歩いている”ようなグルーヴ感と、少しジャズ/ソウル的なニュアンスが加わる。”,
+“emotion_tags”: [“cool”, “light”],
+“guide_tone_tags”: [“root”, “passing”],
+“context”: {
+“sections”: [“verse”, “chorus”, “bridge”],
+“tempo_bpm_range”: [80, 160],
+“genre”: [“jpop”, “soul”, “funk”],
+“difficulty”: “intermediate”
+},
+“examples”: {
+“description”: “C→F の進行で、C–C–C–B–B–Bb–F のようにアプローチする。”
+},
+“sources”: [“soundquest”, “uchiyama”]
+},
+{
+“id”: “RHM_001”,
+“name”: “標準J-POP 8ビート：キックとスネアの配置”,
+“domain”: “rhythm”,
+“situation”: ““J-POPらしい”標準的なリズムセクションを作りたいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “リズムに合わせて音価を決める。スネア裏拍に合わせて言葉のアクセントを置くとノリが出る。”,
+“contour”: “メロディの山をスネアの位置に合わせると一体感が出る。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “和声とは独立だが、コードチェンジはキック or スネアの位置に揃えると安定する。”,
+“tension_usage”: “リズムがシンプルな分、和声でのテンションはやや増やしても成立しやすい。”
+},
+“bass”: {
+“pattern”: “キックと一部をユニゾンさせつつ、残りはずらして“うねり”を作る。”,
+“motion”: “キックが鳴る拍でルートを鳴らすと、安定感が増す。”
+},
+“rhythm”: {
+“groove”: “4/4拍子で、キック=1拍目+2拍裏 or 3拍目、スネア=2拍目+4拍目、ハイハット=8分刻みが基本。”,
+“density”: “Aメロはキックを減らし、サビでキックの回数とシンバルの鳴りを増やしてダイナミクスを作る。”
+}
+},
+“emotion_effect”: “クセが少なく、どんな曲調にもフィットしやすい“標準J-POPノリ”が得られる。”,
+“emotion_tags”: [“bright”, “relaxed”],
+“guide_tone_tags”: [],
+“context”: {
+“sections”: [“verse”, “chorus”],
+“tempo_bpm_range”: [80, 150],
+“genre”: [“jpop”, “rock”],
+“difficulty”: “beginner”
+},
+“examples”: {
+“description”: “1小節 8ビートで Kick:1,2&,3,4& / Snare:2,4 / Hihat:1&2&3&4&”
+},
+“sources”: [“soundquest”, “aistudio_channel_1”]
+},
+{
+“id”: “FORM_001”,
+“name”: “基本フォーム：Intro–A–B–S–A’–B–S–C–S’–Outro”,
+“domain”: “form”,
+“situation”: “J-POP標準の構成をベースに曲を設計したいとき。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “A：語り口調（狭いレンジ） B：サビに向けて上昇 S：最高音更新 C：メロディックな変化球。”,
+“contour”: “時間軸全体で右肩上がりになるようにレンジと密度を設計する。”,
+“rhythm”: “Aでは音数控えめ、Bで増やし、Sでシンプル＋高音、Cで変化、ラストS’で最大限に開放。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “A: 安定した進行 / B: ドミナント強化 / S:王道進行系 / C:モーダルミクスチャや転調で変化。”,
+“tension_usage”: “曲全体でテンション使用率を徐々に上げ、ラストサビで最大にする。”
+},
+“bass”: {
+“pattern”: “Aでシンプル、Sで動きを増やし、Cで一時的に静かにして再度S’で解放。”,
+“motion”: “曲のクライマックス（ラストサビ）に向けてベースのオクターブやフィルを増やす。”
+},
+“rhythm”: {
+“groove”: “Aは軽く、Bでエネルギーアップ、Sでフル、Cで一度引き算、S’でフル＋α。”,
+“density”: “ドラムとパーカッションの音数カーブでフォームの起伏を明確にする。”
+}
+},
+“emotion_effect”: “王道J-POPの起伏（静→動→静→大団円）を自然に作ることができる。”,
+“emotion_tags”: [“bright”, “dramatic”, “epic”],
+“guide_tone_tags”: [],
+“context”: {
+“sections”: [“intro”, “verse”, “pre_chorus”, “chorus”, “c_part”, “outro”],
+“tempo_bpm_range”: [70, 180],
+“genre”: [“jpop”, “anime”],
+“difficulty”: “beginner”
+},
+“examples”: {
+“description”: “イントロ8小節→A16→B8→S16→A’16→B8→S16→C8〜16→大サビ16→アウトロ8 など。”
+},
+“sources”: [“uchiyama”, “aistudio_channel_1”]
+},
+{
+“id”: “GDT_001”,
+“name”: “ガイドトーンライン：3度と7度をなめらかにつなぐ”,
+“domain”: “guidetone”,
+“situation”: “コード進行の上に“滑らかな内声ライン”を作りたいとき（GuideToneAIの基本）。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “各コードの3度/7度を中心に、半音〜全音以内の動きで連結する。”,
+“contour”: “大きく跳ねず、ほぼステップで上下する“中声的ライン”を作る。”,
+“rhythm”: “4分音符〜2分音符でゆっくり動かし、表拍に3度/7度を置く。”
+},
+“harmony”: {
+“progression”: [],
+“key_center_relation”: “II–V–IやIV–V–Iなど、機能和声上の重要ポイントで3度と7度を滑らかに接続する。”,
+“tension_usage”: “テンションはガイドトーンの上下に短く挟む程度にとどめ、主役は3度と7度にする。”
+},
+“bass”: {
+“pattern”: “ベースがルートで安定しているときほど、ガイドトーンラインの効果がわかりやすい。”,
+“motion”: “ベースとガイドトーンラインが反行（逆方向）になると、立体感が増す。”
+},
+“rhythm”: {
+“groove”: “ドラムのバックビートに対して、ガイドトーンはあまりシンコペーションさせず“土台”として機能させる。”,
+“density”: “コードチェンジごとに必ずどちらか（3rd/7th）が鳴っている状態をキープする。”
+}
+},
+“emotion_effect”: ““曲としてのまとまり”や“自然な流れ”を感じさせる、耳にはっきり聞こえないが重要なラインを作る。”,
+“emotion_tags”: [“relaxed”, “bright”],
+“guide_tone_tags”: [“3rd”, “7th”],
+“context”: {
+“sections”: [“verse”, “pre_chorus”, “chorus”],
+“tempo_bpm_range”: [60, 180],
+“genre”: [“all”],
+“difficulty”: “intermediate”
+},
+“examples”: {
+“description”: “C–Am–F–G の上で E→C→C→B のように3度/7度をつなげる。”
+},
+“sources”: [“soundquest”, “aistudio_channel_1”]
+},
+{
+“id”: “EMO_001”,
+“name”: “Emotionタグ「bittersweet（甘く切ない）」用プリセット”,
+“domain”: “emotion”,
+“situation”: ““甘さと切なさ”が同居する曲調を作りたいとき（ラブソング、失恋、青春）。”,
+“mechanics”: {
+“melody”: {
+“scale_usage”: “メジャーキーをベースにしつつ、時折♭3, ♭6など平行短調側の音を混ぜる。”,
+“contour”: “サビで最高音を迎えたあと、ディセプティブ・ケーデンスやモーダルミクスチャで少し落とす。”,
+“rhythm”: “語尾を少し食い気味に入れたり、音価を伸ばして余韻を残す。”
+},
+“harmony”: {
+“progression”: [“HRM_001”, “HRM_002”, “HRM_005”, “HRM_007”],
+“key_center_relation”: “メジャー中心＋一部マイナー借用。”,
+“tension_usage”: “add9, maj7, 7(9)など柔らかいテンションを多用。”
+},
+“bass”: {
+“pattern”: “基本はルート中心＋時々アプローチノート。バラードではペダルも多用。”,
+“motion”: “下行3度/4度のラインを多く用いると切なさが増す。”
+},
+“rhythm”: {
+“groove”: “遅め〜中速テンポ。スイングしすぎず、ストレート寄り。”,
+“density”: “Aメロ薄め、サビで厚く、アウトロで再び薄くして余韻を作る。”
+}
+},
+“emotion_effect”: “聞き手に“胸が締め付けられるような”感覚を与えつつも、完全な絶望ではなく前向きさも残す。”,
+“emotion_tags”: [“bittersweet”, “sad”, “hopeful”, “nostalgic”],
+“guide_tone_tags”: [“3rd”, “7th”, “9th”],
+“context”: {
+“sections”: [“verse”, “chorus”, “outro”],
+“tempo_bpm_range”: [60, 130],
+“genre”: [“ballad”, “jpop”],
+“difficulty”: “intermediate”
+},
+“examples”: {
+“description”: “HRM_002（6415進行）＋ HRM_007（V→vi）＋ MEL_003（レンジ設計）を組み合わせる。”
+},
+“sources”: [“aistudio_channel_1”, “soundquest”, “uchiyama”]
+}
+]
+}

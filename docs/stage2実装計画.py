@@ -1,3 +1,8 @@
+# NOTE:
+# このファイルは 2025-10-23 時点の Stage2 計画です。
+# 最新の設計は docs/RealSongRoadmapV1.md および
+# docs/SongPackagePipeline_PhaseABC.md を参照してください。
+
 まずは抽出に専念します。
 
 「拡張システム（Stage2: 13–32 の全機能）」を本気で活かす

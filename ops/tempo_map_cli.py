@@ -14,7 +14,7 @@ python ops/tempo_map_cli.py \
   --out-tempo song_packages/.../tempo_map.json \
   --bpb 4 --bpm-hint 74.677
 """
-import argparse, json, sys, os, math
+import argparse, json, sys, os, math, warnings
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +25,33 @@ try:
     import librosa
 except Exception:
     librosa = None
+
+
+def _get_duration_sec(audio_path: str) -> float:
+    """
+    Robust duration detector with multi-backend fallback.
+    """
+    # 1) soundfile (fast, accurate)
+    try:
+        import soundfile as sf
+
+        info = sf.info(audio_path)
+        if info.duration and info.duration > 0:
+            return float(info.duration)
+    except Exception:
+        pass
+
+    # 2) librosa (universal fallback)
+    try:
+        import librosa
+
+        y, sr = librosa.load(audio_path, sr=None, mono=True)
+        if sr and len(y) > 0:
+            return float(len(y) / sr)
+    except Exception:
+        pass
+
+    raise RuntimeError(f"Failed to detect duration for: {audio_path}")
 
 
 def _madmom_available():
@@ -95,6 +122,18 @@ def make_tempo_map_from_beats(beats):
     return points
 
 
+def _extend_bars_to_duration(bar_starts, est_bar_sec, duration_sec, tail_guard=1e-3):
+    """
+    Ensure bar grid reaches the audio duration.
+    bar_starts: list[float] of bar start times (seconds), strictly increasing.
+    est_bar_sec: estimated seconds per bar (from tempo map median or beats).
+    """
+    bar_starts = list(bar_starts)  # Copy to avoid modifying original
+    while len(bar_starts) == 0 or (bar_starts[-1] + est_bar_sec) < (duration_sec - tail_guard):
+        bar_starts.append((bar_starts[-1] if bar_starts else 0.0) + est_bar_sec)
+    return bar_starts
+
+
 def write_bars_with_times(bars_parquet, out_parquet, bar_starts, song_end_time=None):
     """bars.parquet に start_sec/end_sec を埋める（可変テンポに基づく）"""
     df = pd.read_parquet(bars_parquet)
@@ -140,13 +179,33 @@ def write_bars_with_times(bars_parquet, out_parquet, bar_starts, song_end_time=N
 def main():
     ap = argparse.ArgumentParser(description="Variable tempo map -> bars.parquet (start/end)")
     ap.add_argument("--audio", type=Path, required=True, help="mix/master WAV (テンポ推定用)")
-    ap.add_argument("--bars", type=Path, required=True, help="入力 bars.parquet（bar_index必須）")
-    ap.add_argument("--out-bars", type=Path, required=True, help="出力 bars.parquet（上書きOK）")
+    ap.add_argument("--out-bars", type=Path, required=True, help="出力 bars.parquet")
     ap.add_argument("--out-tempo", type=Path, required=True, help="tempo_map.json 出力先")
+
+    # duration-sec をオプション化（自動検出）
+    ap.add_argument("--duration-sec", type=float, default=0.0, help="曲の長さ（秒）- 0なら自動検出")
+    ap.add_argument(
+        "--num-bars", type=int, help="小節数 - duration-sec の代わりに使用可（新規生成時）"
+    )
+
+    # 既存マージモード: bars-in を指定すると既存を保持してマージ
+    ap.add_argument("--bars-in", type=Path, help="既存 bars.parquet（マージモード）")
+
+    # 拡張パラメータ
     ap.add_argument("--bpb", type=int, default=4, help="beats per bar（通常4）")
+    ap.add_argument("--timesig", default="4/4", help="拍子記号（例: 4/4, 3/4）")
+    ap.add_argument("--ppq", type=int, default=480, help="Pulses per quarter note（参照値）")
     ap.add_argument("--bpm-hint", type=float, default=None, help="初期BPMのヒント（任意）")
     ap.add_argument("--prefer-madmom", action="store_true", help="madmom を優先して使う")
     args = ap.parse_args()
+
+    # ---- Robust duration detection & logging ----
+    if args.duration_sec and args.duration_sec > 0:
+        duration_sec = float(args.duration_sec)
+        print(f"[INFO] Using provided duration: {duration_sec:.2f} sec")
+    else:
+        duration_sec = _get_duration_sec(str(args.audio))
+        print(f"[INFO] Detected duration from audio: {duration_sec:.2f} sec")
 
     # 推定
     use_madmom = args.prefer_madmom and _madmom_available()
@@ -166,15 +225,114 @@ def main():
     # バー境界
     bar_starts = beats_to_bars(beats, bpb=args.bpb)
 
-    # tempo map（可視化・デバッグ用）
+    # tempo map（バー延長前に生成）
     tempo_map = make_tempo_map_from_beats(beats)
+
+    # est_bar_sec: テンポ点/ビート間隔から堅牢に見積もる
+    if tempo_map:
+        tempo_median_bpm = np.median([bpm for _, bpm in tempo_map])
+    else:
+        tempo_median_bpm = 120.0  # fallback
+    est_bar_sec = max(60.0 / max(1e-6, tempo_median_bpm) * args.bpb, 1e-3)
+
+    # 重要修正：楽曲末尾までバーを延長
+    if (len(bar_starts) < 2) and (len(beats) >= args.bpb):
+        # downbeat が信頼できない場合、beats から bpb ごとに bar を復元
+        beat_times = [t for (t, _) in beats]
+        bar_starts = [beat_times[0]]
+        for i in range(args.bpb, len(beat_times), args.bpb):
+            bar_starts.append(beat_times[i])
+        if len(bar_starts) < 2:
+            # それでも足りなければ median テンポからグリッド生成
+            bar_starts = [0.0]
+
+    # duration まで不足分を補完
+    bar_starts = _extend_bars_to_duration(bar_starts, est_bar_sec, duration_sec)
+
+    # tempo map保存（可視化・デバッグ用）
     args.out_tempo.parent.mkdir(parents=True, exist_ok=True)
     with open(args.out_tempo, "w", encoding="utf-8") as f:
         json.dump({"tempo_points": tempo_map}, f, ensure_ascii=False, indent=2)
 
-    # bars へ反映
+    # bars へ反映（新規生成 or マージ）
     args.out_bars.parent.mkdir(parents=True, exist_ok=True)
-    df = write_bars_with_times(args.bars, args.out_bars, bar_starts)
+
+    if args.bars_in and args.bars_in.exists():
+        # === マージモード: 既存 bars の編集列を保持して時間列のみ更新 ===
+        print(f"📋 マージモード: 既存 bars を読み込み中... ({args.bars_in})")
+        df_existing = pd.read_parquet(args.bars_in)
+
+        # bar_index 正規化
+        if "bar_index" not in df_existing.columns and "bar" in df_existing.columns:
+            df_existing["bar_index"] = df_existing["bar"]
+
+        n_bars = len(df_existing)
+
+        # bar_starts を既存の小節数に合わせる
+        if len(bar_starts) < n_bars:
+            # 不足分を補完
+            if len(bar_starts) >= 2:
+                avg_len = float(np.median(np.diff(bar_starts)))
+            else:
+                avg_len = 2.0
+            last = bar_starts[-1]
+            while len(bar_starts) < n_bars + 1:
+                last += avg_len
+                bar_starts.append(last)
+        elif len(bar_starts) > n_bars + 1:
+            bar_starts = bar_starts[: n_bars + 1]
+
+        starts = bar_starts[:n_bars]
+        ends = bar_starts[1 : n_bars + 1]
+
+        # 時間列のみ更新（既存の編集列は保持）
+        df_existing["start_sec"] = starts
+        df_existing["end_sec"] = ends
+
+        # BPM も計算して追加
+        bar_durations = np.array(ends) - np.array(starts)
+        bpms = 60.0 * args.bpb / np.maximum(bar_durations, 0.1)  # bpb拍 / 秒
+        df_existing["bpm"] = bpms
+
+        df_existing.to_parquet(args.out_bars, index=False)
+        df = df_existing
+
+        print(f"✅ マージ完了: 既存列を保持して start_sec/end_sec/bpm を更新")
+
+    else:
+        # === 新規生成モード: ゼロから bars を作成 ===
+        print("🆕 新規生成モード: ダミーなしで bars を作成中...")
+
+        # bar_starts は既に duration_sec まで延長済み
+        n_bars = len(bar_starts) - 1
+        print(f"   曲の長さ: {duration_sec:.2f} 秒 → 生成小節数: {n_bars}")
+
+        # bar_index を生成
+        bar_indices = list(range(n_bars))
+        starts = bar_starts[:n_bars]
+        ends = bar_starts[1 : n_bars + 1]
+
+        # end_sec を duration_sec でクランプ
+        ends = [min(e, duration_sec) for e in ends]
+
+        # BPM 計算
+        bar_durations = np.array(ends) - np.array(starts)
+        bpms = 60.0 * args.bpb / np.maximum(bar_durations, 0.1)
+
+        # DataFrame 作成
+        df = pd.DataFrame(
+            {
+                "bar_index": bar_indices,
+                "start_sec": starts,
+                "end_sec": ends,
+                "bpm": bpms,
+                "beats_per_bar": args.bpb,
+                "time_sig": args.timesig,
+            }
+        )
+
+        df.to_parquet(args.out_bars, index=False)
+        print(f"✅ 新規生成完了: {n_bars} 小節")
 
     print(f"✅ Wrote tempo_map: {args.out_tempo}")
     print(f"✅ Wrote bars (start_sec/end_sec): {args.out_bars}")

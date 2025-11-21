@@ -1,0 +1,80 @@
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+🎵 SunoAI E2E Arrangement Workflow (Hardened)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📂 Song Directory: data/suno_ai/suno_themesong/song_001
+   Top-K        : 5
+   Use ML       : false
+   Force Match  : true
+   KPI Gate     : true
+   Dry Run      : false
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+   EmotionAI    : true
+   Harmony AI   : true
+   Emotion Profile: auto
+
+
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+   Tempo: 120.0 BPM
+
+📋 Step 1.2: Importing Stage1 Analysis Data
+   Source: data/suno_ai/suno_themesong/song_001/analysis
+
+🎼 Step 1.5: Stem Features Generation (Backend-enabled)
+   Stems dir: data/suno_ai/suno_themesong/song_001/stemswav_001
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+INFO: FeaturesBackend initialized:
+INFO:   beats: madmom
+INFO:   downbeats: madmom
+INFO:   hat_density: yamnet
+INFO:   loudness: pyloudnorm
+INFO: Backend config loaded from: configs/arranger_weights.yaml
+INFO: Loading bars from: data/suno_ai/suno_themesong/song_001/bars.parquet
+INFO: Loaded 240 bars
+INFO: Drums detected by pattern: stem_wav_001_(Drums).wav
+INFO: Extracting drums features from: data/suno_ai/suno_themesong/song_001/stemswav_001/stem_wav_001_(Drums).wav
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/tensorflow_hub/__init__.py:61: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import parse_version
+INFO: Using /var/folders/jt/0r734bg17b1_y656x0v7s3x80000gn/T/tfhub_modules to cache modules.
+INFO: Fingerprint not found. Saved model loading will continue.
+INFO:    YAMNet model loaded
+INFO: Extracted drums features for 240 bars
+INFO: Extracting mix features from: data/suno_ai/suno_themesong/song_001/stemswav_001/_auto_Other.wav
+INFO: Extracted mix features for 240 bars
+WARNING: No anchors file, skipping vocal stress detection
+INFO: Computing instrument activity (guitar/piano/strings) from Other stem
+INFO:    Applied 3-bar smoothing to activity columns
+INFO:    guitar_activity: mean=0.110, active_bars=78
+INFO:    piano_activity: mean=0.068, active_bars=46
+INFO:    strings_activity: mean=0.059, active_bars=35
+INFO:    drums_active: 204.0 active bars, 36 break bars
+INFO: ✅ Saved stem features to: data/suno_ai/suno_themesong/song_001/stem_features.parquet
+INFO:    Bars: 240
+INFO:    Columns: ['bar', 'hat_density', 'kick_peak_db', 'snare_backbeat', 'fill_likelihood', 'loudness_db', 'energy_curve', 'vocal_stress', 'guitar_activity', 'piano_activity', 'strings_activity', 'drums_active']
+INFO: ✅ Saved extended bars to: data/suno_ai/suno_themesong/song_001/bars_extended.parquet
+INFO:    Added columns: start_beat, end_beat, start_sec, end_sec, drums_active
+INFO:    drums_active: 204.0 active bars
+
+============================================================
+Stem Features Statistics
+============================================================
+             bar  hat_density  ...  strings_activity  drums_active
+count  240.00000   240.000000  ...        240.000000    240.000000
+mean   119.50000     0.420833  ...          0.059197      0.850000
+std     69.42622     0.733239  ...          0.163029      0.357818
+min      0.00000     0.000000  ...          0.000000      0.000000
+25%     59.75000     0.000000  ...          0.000000      1.000000
+50%    119.50000     0.000000  ...          0.000000      1.000000
+75%    179.25000     1.000000  ...          0.000000      1.000000
+max    239.00000     3.000000  ...          0.749893      1.000000
+
+[8 rows x 12 columns]
+============================================================

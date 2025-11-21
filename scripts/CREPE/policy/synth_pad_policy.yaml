@@ -1,0 +1,15 @@
+enable_sections: ["chorus","bridge"]
+ql_per_bar: 4
+cutoff:
+  midi_min: 100
+  midi_max: 1000
+  f0_midi_range: [60, 84]
+volume:
+  min: 70
+  max: 100
+  use_voicing_prob: true
+lfo:
+  min: 0
+  max: 50
+  vibrato_depth_cents_range: [0, 50]
+downsample_every_ql: 0.25

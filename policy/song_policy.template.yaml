@@ -1,0 +1,376 @@
+global:
+  tempo_grid_ppq: 960
+  tempo_bpm: 120  # Phase 3: Timing humanize 用の BPM 基準
+  swing_percent: 0
+  allow_mute: false
+  register_fallback: "clamp"    # clamp|drop
+  prefer_open_voicings: true
+  double_root_on_strong_beats: true
+
+# ============================================================
+# Phase 3: Humanize Configuration
+# ============================================================
+humanize:
+  profile: pop_easy   # pop_easy | ballad | anthem
+  global:
+    # Timing
+    timing_std_ms: 6.0      # ランダムタイミング揺らぎ (±ms)
+    swing_8th: 0.12         # 8分裏を遅らせる (0.12 = 12%)
+    max_shift_ms: 18.0      # タイミングシフトの上限 (安全マージン)
+    
+    # Velocity
+    velocity_jitter: 6      # ベロシティ揺らぎ (±)
+    accent_pattern_4: [1.1, 1.0, 0.9, 1.0]  # 4拍アクセント倍率
+    energy_scale: 1.0       # セクション全体のエネルギー倍率
+    
+    # Duration (Phase 3.5: Note Length Humanize)
+    duration_scale_mean: 0.95   # ノート長さの基準倍率 (0.95 = 少し短め)
+    duration_scale_jitter: 0.10  # ノート長さの揺らぎ (±0.10)
+    staccato_prob: 0.10          # スタッカート確率 (0.10 = 10%)
+    phrase_end_extend: 1.25      # フレーズ終端ノート延長倍率
+    
+    # Misc
+    legato_chance: 0.15     # レガート確率
+
+  duv:
+    ckpt: checkpoints/duv/phrase_duv_demo.ts   # 実運用時に差し替え
+    program: 0
+    dur_quant: 1/16
+    batch: 64
+
+  sections:
+    verse:
+      # Timing
+      timing_std_ms: 4.0
+      swing_8th: 0.10
+      max_shift_ms: 15.0
+      
+      # Velocity
+      velocity_jitter: 4
+      energy_scale: 0.85    # 控えめ
+      accent_pattern_4: [1.05, 1.0, 0.95, 1.0]
+      
+      # Duration (Phase 3.5)
+      duration_scale_mean: 0.92   # 少し短め
+      duration_scale_jitter: 0.08
+      staccato_prob: 0.15         # スタッカート多め
+      phrase_end_extend: 1.20
+      
+    chorus:
+      # Timing
+      timing_std_ms: 8.0
+      swing_8th: 0.14
+      max_shift_ms: 20.0
+      
+      # Velocity
+      velocity_jitter: 10
+      energy_scale: 1.15    # 強め
+      accent_pattern_4: [1.15, 1.0, 0.9, 1.05]
+      
+      # Duration (Phase 3.5)
+      duration_scale_mean: 0.98   # ほぼフル
+      duration_scale_jitter: 0.12
+      staccato_prob: 0.05         # スタッカート少なめ
+      phrase_end_extend: 1.35     # フレーズ終端は大きく延長
+      
+    bridge:
+      # Timing
+      timing_std_ms: 5.0
+      swing_8th: 0.16       # よりスウィング強め
+      max_shift_ms: 18.0
+      
+      # Velocity
+      velocity_jitter: 7
+      energy_scale: 0.95
+      accent_pattern_4: [1.1, 0.95, 0.9, 1.0]
+      
+      # Duration (Phase 3.5)
+      duration_scale_mean: 0.90   # 短め
+      duration_scale_jitter: 0.15
+      staccato_prob: 0.12
+      phrase_end_extend: 1.30
+
+sections:
+  intro:
+    density: 0.35
+    tension_ratio: 0.10
+    tension_mode: pad       # none|pad|accent|lead
+    roles: {guitar: pad, piano: pad, strings: pad, bass: root, drums: simple}
+  verse:
+    density: 0.55
+    tension_ratio: 0.20
+    tension_mode: accent
+    roles: {guitar: pad, piano: pad, strings: counter, bass: root, drums: groove}
+  pre_chorus:
+    density: 0.70
+    tension_ratio: 0.30
+    tension_mode: accent
+    roles: {guitar: riff, piano: pad, strings: counter, bass: walk, drums: lift}
+  chorus:
+    density: 0.90
+    tension_ratio: 0.45
+    tension_mode: lead
+    roles: {guitar: riff, piano: pad, strings: unison_top, bass: drive, drums: full}
+    guitar_continue:
+      target_bars: 8
+      source_bars: 1
+  bridge:
+    density: 0.70
+    tension_ratio: 0.35
+    tension_mode: accent
+    roles: {guitar: arp, piano: pad, strings: counter, bass: outline, drums: sparse}
+    guitar_continue: true   # instrument defaultsを使用
+  outro:
+    density: 0.45
+    tension_ratio: 0.15
+    tension_mode: pad
+    roles: {guitar: pad, piano: pad, strings: pad, bass: root, drums: simple}
+
+instruments:
+  bass:
+    engine: v2
+    register: {min: 28, max: 43, octave_prefer: 36}   # E1–G2 (prefer C2)
+    range: {low: 28, high: 48}
+    pattern_bank: [root, walk, octave]
+    min_notes_per_bar: 1
+    max_notes_per_bar: 6
+    allow_tension: false
+    prefer_root: true
+    avoid_intervals: []
+    voice_leading: {max_step_semitones: 7, prefer_root_or_fifth: true}
+    # Phase 3.6: Long Note Extension
+    sustain:
+      min_duration_ql: 0.8   # 1拍以上を延長対象に（より多くのノートを延長）
+      max_bar_span: 1        # bar内に収める
+    humanize_duv:
+      ckpt: checkpoints/duv/bass_phrase_duv.ts
+      program: 32
+      dur_quant: 1/16
+      device: auto
+    rhythm_vocab:
+      default_ids: [bass.root_quarter.v1]
+      descriptors: [root, steady]
+      sections:
+        intro:
+          preferred_ids: [bass.root_pedal_half.v1]
+          density: low
+          descriptors: [pedal]
+        verse:
+          preferred_ids: [bass.root_quarter.v1]
+          density: mid
+          descriptors: [pocket]
+        pre_chorus:
+          preferred_ids: [bass.root_eighth_drive.v1]
+          density: mid_high
+          descriptors: [drive]
+        chorus:
+          preferred_ids: [bass.walking_standard.v1, bass.root_eighth_drive.v1]
+          density: high
+          descriptors: [walking, motion]
+        bridge:
+          preferred_ids: [bass.walking_standard.v1]
+          density: high
+          descriptors: [walk]
+        outro:
+          preferred_ids: [bass.root_pedal_half.v1]
+          density: low
+          descriptors: [pedal]
+
+  guitar:
+    engine: v2
+    register: {min: 48, max: 64, octave_prefer: 55}   # C3–E4 (prefer G3)
+    range: {low: 48, high: 72}
+    voicing_style: close
+    allow_sus: true
+    allow_add9: true
+    allow_maj7: true
+    allow_7_9: true
+    allow_tension: true
+    riff_weight: 0.6
+    min_notes_per_bar: 1
+    max_notes_per_bar: 8
+    avoid_pitch_classes: []        # 例: [1,3] で C#dim色を避ける 等
+    voice_leading: {max_step_semitones: 5, keep_common: true}
+    tensions: {allow: [9, 11], forbid: [13]}
+    chordpad_floor: {enable: true, min_notes_per_bar: 2}
+    humanize_duv:
+      ckpt: checkpoints/duv/guitar_phrase_duv.ts
+      program: 24
+      dur_quant: 1/16
+      device: auto
+    rhythm_vocab:
+      default_ids: [guitar.ballad_intro_open.v1]
+      descriptors: [strum, pop]
+      sections:
+        intro:
+          preferred_ids: [guitar.ballad_intro_open.v1]
+          descriptors: [ballad]
+        verse:
+          preferred_ids: [guitar.rock_power8.v1]
+          density: mid
+        pre_chorus:
+          preferred_ids: [guitar.disco_chic_comp.v1]
+          density: mid_high
+          descriptors: [disco, muted]
+        chorus:
+          preferred_ids: [guitar.rock_drive16.v1]
+          density: high
+          descriptors: [drive]
+        bridge:
+          preferred_ids: [guitar.latin_comp_clean.v1]
+          descriptors: [latin]
+        outro:
+          preferred_ids: [guitar.ballad_intro_open.v1]
+    continue:
+      enabled: true
+      sections:
+        chorus:
+          target_bars: 8
+        bridge: {}
+      source_bars: 1
+      target_bars: 8
+      stage3_conditions: outputs/stage3/conditions.parquet
+      stage3_loop_id: null
+      groove_vocab: data/groove_vocab.parquet
+      rhythm_manifest: data/rhythm_vocab.yaml
+      motif_path: null            # 追加モチーフを使う場合に指定
+      require_riff_slot: true
+      seed: 99
+
+  piano:
+    engine: v2
+    register: {min: 43, max: 72, octave_prefer: 60}   # G2–C5 (prefer C4)
+    range: {low: 36, high: 84}
+    voicing: spread
+    split_hands: true
+    min_notes_per_bar: 1
+    max_notes_per_bar: 10
+    allow_tension: true
+    voice_leading: {max_step_semitones: 6, keep_common: true}
+    tensions: {allow: [9, 11, 13]}
+    # Phase 3.6: Long Note Extension
+    sustain:
+      min_duration_ql: 2.0   # 2拍以上を長音扱い
+      max_bar_span: 1        # bar内に収める
+    humanize_duv:
+      ckpt: checkpoints/duv/piano_phrase_duv.ts
+      program: 0
+      dur_quant: 1/16
+      device: auto
+    rhythm_vocab:
+      default_ids: [piano.rh_block_quarters.v1]
+      descriptors: [comping, pop]
+      sections:
+        intro:
+          preferred_ids: [piano.pad_full_bar.v1]
+          descriptors: [pad, airy]
+        verse:
+          preferred_ids: [piano.rh_block_quarters.v1]
+          density: mid
+        pre_chorus:
+          preferred_ids: [piano.rh_syncopated_stabs.v1, piano.disco_octave_pump.v1]
+          descriptors: [syncopated, disco]
+        chorus:
+          preferred_ids: [piano.rh_arpeggio_16ths.v1, piano.disco_octave_pump.v1]
+          density: high
+          descriptors: [drive, shimmer]
+        bridge:
+          preferred_ids: [piano.latin_montuno_pop.v1]
+          descriptors: [latin, montuno]
+        outro:
+          preferred_ids: [piano.pad_full_bar.v1]
+          descriptors: [pad]
+
+  strings:
+    engine: v2
+    register: {min: 60, max: 81, octave_prefer: 69}   # C4–A5 (prefer A4)
+    range: {low: 60, high: 84}
+    role: pad
+    countermelody_prob: 0.35
+    min_notes_per_bar: 1
+    max_notes_per_bar: 6
+    # Phase 3.6: Long Note Extension
+    sustain:
+      min_duration_ql: 3.0   # 3拍以上を長音扱い
+      max_bar_span: 3        # 最大3小節先まで延長（パッド土台化）
+    # Phase 3.7: Guide Tone Melodies (NEW!)
+    guide_tones:
+      enabled: true                # ガイドトーン有効化
+      mode: "3rd7th9th"           # 3rd/7th/9thベースのメロディ
+      notes_per_bar: 1.2          # 平均1〜2ノート/bar（sparse）
+      prefer_tension: 0.4         # 40%の確率で9th使用
+      max_step: 5                 # 最大5半音ジャンプ（滑らか）
+      voice_lead_weight: 0.8      # 80%ボイスリーディング優先
+      target_sections: ["verse", "pre_chorus", "chorus", "bridge"]
+      velocity_base: 85           # ベースベロシティ
+      duration_scale: 0.8         # 少し短め（80%）
+    allow_tension: true
+    role_default: lead
+    countermelody:
+      enable: true
+      sections: [pre_chorus, chorus, bridge]
+      target_density: 0.55
+      prefer_scale_steps: true
+      avoid_on_vocal_stress: true
+      motif_span_beats: [2.0, 4.0]
+    humanize_duv:
+      ckpt: checkpoints/duv/strings_phrase_duv.ts
+      program: 48
+      dur_quant: 1/8
+      device: auto
+    rhythm_vocab:
+      default_ids: [strings.pad_velvet_half.v1]
+      descriptors: [pad, lush]
+      sections:
+        intro:
+          preferred_ids: [strings.pad_velvet_half.v1]
+          descriptors: [swells]
+        verse:
+          preferred_ids: [strings.pad_velvet_half.v1]
+          density: mid
+        pre_chorus:
+          preferred_ids: [strings.disco_riser_swells.v1]
+          descriptors: [disco, riser]
+        chorus:
+          preferred_ids: [strings.disco_riser_swells.v1]
+          density: high
+        bridge:
+          preferred_ids: [strings.latin_cinco_sus.v1]
+          descriptors: [latin]
+        outro:
+          preferred_ids: [strings.pad_velvet_half.v1]
+
+  drums:
+    engine: v2
+    boundary_fill: always
+    hat_density: auto
+    ghost_notes: true
+
+slots:
+  riff_default: 0.6
+  fill_boundary_min: 0.8
+
+qagate:
+  strict: true
+  boundary_fill_coverage: 0.80
+  chorus_riff_coverage: 0.30
+  min_active_ratio:
+    guitar: 0.60
+    piano: 0.70
+    strings: 0.45
+    bass: 0.95
+  min_density:
+    bass:    0.50
+    guitar:  0.50
+    piano:   0.60
+    strings: 0.40
+    drums:   0.80
+  max_density_per_bar:
+    guitar: 8
+    piano: 10
+    strings: 6
+    bass: 4
+  tension_adoption_target:
+    guitar: 0.20
+    piano: 0.35
+    strings: 0.30

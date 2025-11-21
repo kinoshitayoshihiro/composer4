@@ -1,0 +1,136 @@
+# drum_label_mapping.yaml
+# XMIDI emotion/genre → drum label mapping for arranger/QA filtering
+# Used by build_xmidi_manifest.py to enrich Stage3 conditions
+
+defaults:
+  instrument: drums
+  fallback_label: neutral_pocket
+  valence_bounds: [-1.0, 1.0]
+  arousal_bounds: [-1.0, 1.0]
+
+labels:
+  aggressive_halftime:
+    match:
+      emotion: ["angry", "fear"]
+      genre: ["metal", "rock"]
+    drum_traits:
+      feel: halftime
+      kick_density: high
+      hat_motion: tight
+      ghost_notes: minimal
+    axis_bias:
+      timing: -0.05    # push quantization tighter
+      velocity: 0.12   # more punch
+      structure: 0.08  # encourage fills
+      groove_harmony: -0.03
+      drum_cohesion: 0.05
+      articulation: 0.02
+
+  sparkle_shuffle:
+    match:
+      emotion: ["happy", "funny", "warm"]
+      genre: ["jazz", "swing"]
+    drum_traits:
+      feel: shuffle
+      hat_motion: swung
+      ghost_notes: present
+      ride_emphasis: true
+    axis_bias:
+      timing: 0.03
+      velocity: -0.05
+      groove_harmony: 0.10
+      drum_cohesion: 0.02
+      structure: -0.02
+      articulation: 0.05
+
+  intense_energy:
+    match:
+      emotion: ["exciting"]
+      arousal_min: 0.7
+    drum_traits:
+      feel: straight
+      kick_density: very_high
+      hat_motion: dense
+      crash_emphasis: true
+    axis_bias:
+      timing: -0.03
+      velocity: 0.15
+      structure: 0.12
+      groove_harmony: 0.05
+      drum_cohesion: 0.08
+      articulation: 0.03
+
+  melancholic_slow:
+    match:
+      emotion: ["sad", "romantic"]
+      arousal_max: 0.4
+    drum_traits:
+      feel: slow_ballad
+      kick_density: low
+      hat_motion: sparse
+      brush_style: soft
+    axis_bias:
+      timing: 0.05
+      velocity: -0.10
+      structure: -0.05
+      groove_harmony: 0.03
+      drum_cohesion: -0.02
+      articulation: 0.08
+
+  calm_ambient:
+    match:
+      emotion: ["quiet", "lazy", "warm"]
+      arousal_max: 0.3
+    drum_traits:
+      feel: ambient
+      kick_density: minimal
+      hat_motion: very_sparse
+      cymbal_emphasis: true
+    axis_bias:
+      timing: 0.08
+      velocity: -0.15
+      structure: -0.08
+      groove_harmony: 0.05
+      drum_cohesion: -0.05
+      articulation: 0.10
+
+  magnificent_orchestral:
+    match:
+      emotion: ["magnificent"]
+      genre: ["classical", "orchestral"]
+    drum_traits:
+      feel: orchestral
+      kick_density: medium
+      hat_motion: orchestral
+      timpani_style: true
+    axis_bias:
+      timing: 0.02
+      velocity: 0.08
+      structure: 0.10
+      groove_harmony: 0.08
+      drum_cohesion: 0.05
+      articulation: 0.12
+
+  neutral_pocket:
+    match:
+      emotion: []  # fallback for unmatched
+    drum_traits:
+      feel: straight
+      kick_density: medium
+      hat_motion: steady
+      ghost_notes: balanced
+    axis_bias:
+      timing: 0.0
+      velocity: 0.0
+      structure: 0.0
+      groove_harmony: 0.0
+      drum_cohesion: 0.0
+      articulation: 0.0
+
+aliases:
+  energy_high: intense_energy
+  energy_medium: sparkle_shuffle
+  energy_low: calm_ambient
+  sadness: melancholic_slow
+  anger: aggressive_halftime
+  joy: sparkle_shuffle

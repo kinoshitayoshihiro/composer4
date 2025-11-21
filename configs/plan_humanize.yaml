@@ -98,11 +98,199 @@ humanize:
         enabled: true
         arc: "gentle"             # gentle | steep | plateau
         depth: 0.12               # CC11変化幅12%
+
+  # 楽器×セクションの決定表（Phase1 土台）
+  matrix:
+    drums:
+      default:
+        timing_jitter_ms: 4
+        timing_push_ms: -1        # 全体的に前ノリ
+        velocity_jitter: 5
+        velocity_shift: 0
+        duration_scale: 1.0
+        hh_microshift_ms: -1
+        snare_layback_ms: 2
+        kick_anticipation_ms: -1
+      sections:
+        intro:
+          timing_scale: 1.15
+          velocity_shift: -4
+        verse:
+          timing_scale: 1.0
+          velocity_shift: 0
+        prechorus:
+          timing_scale: 0.95
+          velocity_shift: 4
+        chorus:
+          timing_scale: 0.85
+          velocity_shift: 8
+          hh_microshift_ms: -2
+          snare_layback_ms: 4
+          kick_anticipation_ms: -2
+        bridge:
+          timing_scale: 1.05
+          velocity_shift: 2
+        outro:
+          timing_scale: 1.10
+          velocity_shift: -2
+
+    bass:
+      default:
+        timing_jitter_ms: 5
+        velocity_jitter: 4
+        velocity_shift: 0
+        duration_scale: 0.98
+      sections:
+        intro:
+          timing_scale: 1.10
+          velocity_shift: -3
+        verse:
+          timing_scale: 1.0
+        prechorus:
+          velocity_shift: 2
+        chorus:
+          timing_scale: 0.9
+          velocity_shift: 4
+        bridge:
+          velocity_shift: 1
+        outro:
+          timing_scale: 1.05
+          velocity_shift: -2
+
+    guitar:
+      default:
+        timing_jitter_ms: 6
+        velocity_jitter: 6
+        velocity_shift: 0
+        duration_scale: 1.0
+      sections:
+        intro:
+          timing_scale: 1.10
+          velocity_shift: -2
+        verse:
+          timing_scale: 1.0
+        prechorus:
+          velocity_shift: 3
+        chorus:
+          timing_scale: 0.9
+          velocity_shift: 6
+        bridge:
+          timing_scale: 0.95
+          velocity_shift: 4
+        outro:
+          timing_scale: 1.05
+          velocity_shift: -1
+
+    piano:
+      default:
+        timing_jitter_ms: 5
+        velocity_jitter: 6
+        velocity_shift: 1
+        duration_scale: 1.02
+      sections:
+        intro:
+          timing_scale: 1.10
+          velocity_shift: -2
+        verse:
+          timing_scale: 1.0
+        prechorus:
+          velocity_shift: 3
+        chorus:
+          timing_scale: 0.92
+          velocity_shift: 6
+        bridge:
+          velocity_shift: 4
+        outro:
+          timing_scale: 1.05
+          velocity_shift: -1
+
+    strings:
+      default:
+        timing_jitter_ms: 4
+        velocity_jitter: 5
+        velocity_shift: 2
+        duration_scale: 1.04
+      sections:
+        intro:
+          timing_scale: 1.05
+          velocity_shift: -1
+        verse:
+          timing_scale: 1.0
+        prechorus:
+          velocity_shift: 2
+        chorus:
+          timing_scale: 0.9
+          velocity_shift: 5
+        bridge:
+          timing_scale: 1.0
+          velocity_shift: 4
+        outro:
+          timing_scale: 1.05
+          velocity_shift: 0
   
   # フェイルセーフ境界
   limits:
     max_time_jitter_ms: 30        # 時間揺れ上限30ms
     max_velocity_jitter: 20       # ベロシティ揺れ上限20
+
+  # event_typeでの細分化（fill/riff/pad 等）
+  event_types:
+    # 共通設定（fallback）
+    default:
+      timing_jitter_ms: 0         # 追加のランダム揺れ（ms）
+      velocity_jitter: 0          # 追加のベロ揺れ（±）
+      velocity_bias: 0            # ベロシティ定数加算
+      duration_scale: 1.0         # 長さ倍率
+
+    fill:
+      timing_jitter_ms: 8
+      timing_push_ms: -4          # わずかに前ノリ
+      velocity_jitter: 6
+      velocity_bias: 8
+
+    riff:
+      timing_jitter_ms: 5
+      velocity_jitter: 4
+      per_instrument:
+        guitar:
+          timing_push_ms: -3
+        piano:
+          timing_push_ms: -1
+
+    arpeggio:
+      timing_jitter_ms: 4
+      velocity_jitter: 4
+
+    comping:
+      timing_jitter_ms: 2
+      velocity_jitter: 2
+
+    pad:
+      timing_jitter_ms: 1
+      velocity_jitter: 1
+      duration_scale: 1.15
+      timing_push_ms: 5           # 少し遅らせて後ノリ
+
+    groove:
+      timing_jitter_ms: 3
+      velocity_jitter: 3
+
+    countermelody:
+      timing_jitter_ms: 5
+      velocity_jitter: 5
+      velocity_bias: 4
+
+    root_quarter:
+      timing_jitter_ms: 2
+      velocity_jitter: 2
+
+    root_eighth:
+      timing_jitter_ms: 3
+      velocity_jitter: 3
+
+    walking:
+      timing_jitter_ms: 4
+      velocity_jitter: 4
 
 # ======================================================================
 # レビュー改善提案: セクション別バイアス（耳上の効果大）

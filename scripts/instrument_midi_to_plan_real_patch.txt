@@ -1,0 +1,55 @@
+# === Patch guide for instrument_midi_to_plan_real.py ===
+# 1) Add argument:
+#    ap.add_argument("--role-bars", help="Per-role bars parquet (analysis/role_bars/{role}.parquet)")
+#
+# 2) After loading --bars into `bars`, merge role-bars if provided:
+#    if args.role_bars:
+#        rb = pd.read_parquet(args.role_bars)
+#        if "bar_index" not in rb.columns:
+#            raise ValueError("role-bars missing bar_index")
+#        bars = bars.merge(rb, on="bar_index", how="left")
+#
+# 3) Add activity gate:
+#    def is_active(role, row):
+#        col = {
+#          "guitar":"guitar_activity",
+#          "piano":"piano_activity",
+#          "strings":"strings_activity",
+#          "bass":"bass_activity",
+#          "drums":"drums_active"
+#        }.get(role)
+#        if col and col in row and pd.notna(row[col]):
+#            val = row[col]
+#            try:
+#                return bool(int(val))
+#            except Exception:
+#                return bool(val)
+#        # defaults: guitar ON, others fallback to True (compatible)
+#        return True if role == "guitar" else True
+#
+#    bars = bars[bars.apply(lambda r: is_active(args.role, r), axis=1)]
+#
+# 4) In drums pattern selection, use phrase_boundary / vocal_plosive if present:
+#    def next_section_changed(idx):
+#        return (idx+1 in bars.index) and (bars.loc[idx,"section_label"] != bars.loc[idx+1,"section_label"])
+#
+#    def should_fill(idx, row):
+#        base = float(row.get("fill_likelihood", 0) or 0)
+#        vb = 0.0
+#        if "phrase_boundary" in row and int(row["phrase_boundary"]) == 1:
+#            vb += 0.2
+#        if "vocal_plosive" in row and float(row["vocal_plosive"]) > 0.6:
+#            vb += 0.1
+#        return (base + vb) >= 0.6 or next_section_changed(idx)
+#
+#    # when generating per bar:
+#    for idx, row in bars.iterrows():
+#        if args.role == "drums" and should_fill(idx, row):
+#            place_fill(...)
+#        else:
+#            place_groove(...)
+#
+# Save & test:
+#    python scripts/instrument_midi_to_plan_real.py --role guitar \
+#      --song-package ... --bars analysis/bars.parquet \
+#      --role-bars analysis/role_bars/guitar.parquet --out guitar_plan.json

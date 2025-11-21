@@ -1,0 +1,11 @@
+[INFO] Loading vocal: data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Vocals).wav
+[INFO] Extracting onset candidates...
+[INFO] No lyrics provided, anchors will have no tokens
+[INFO] Loading bars from: data/suno_ai/suno_themesong/song_004/analysis/bars.parquet
+[INFO] Loaded 272 beats from bars.parquet, median tempo: 120.0 BPM
+[INFO] Analyzing anchors with window-mode=class...
+[OK] anchors=566 -> data/suno_ai/suno_themesong/song_004/analysis/lyric_anchors.json
+[INFO] Class distribution:
+  plosive: 6
+  sibilant: 463
+  stress: 102

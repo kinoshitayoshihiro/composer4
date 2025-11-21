@@ -1,0 +1,37 @@
+✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
+❌ Unknown option: --verbose
+Usage: ./scripts/e2e_suno_arrangement.sh <song-dir> [OPTIONS]
+  <song-dir>      : song_packages/.../song_XXX
+
+OPTIONS:
+  --topk N        : Top-K for rhythm search (default: 5)
+  --force-match   : Regenerate matches_rhythm.json
+  --use-ml        : (deprecated) Use ML for drums
+  --drums-mode M  : drums source: rule|ml|real|magenta (default: rule)
+  --kpi           : Run KPI Gate validation after generation
+  --dry-run       : Generate plans only, skip MIDI writing
+  --enable-crepe  : Enable CREPE vocal F0 extraction (Phase C)
+  --enable-oaf    : Enable Onsets-and-Frames piano transcription (Phase C)
+  --enable-f0-extract : Enable F0 extraction for bass/lead (Phase D)
+  --enable-timbre-curves : Enable timbre curves for synth/pad (Phase D)
+  --force-regenerate-drums : Force regenerate Magenta drums (delete cached plan)
+  --enable-emotion-ai : Enable EmotionAI (section-based emotion profiles)
+  --enable-harmony-ai : Enable Harmony AI (adaptive chord progression learning)
+  --emotion-profile P : Emotion profile ("auto", "energetic", "calm", "happy", "sad")
+  --stems-dir P   : 外部 stem ディレクトリを明示指定（例: data/.../stemswav_001）
+  --stem-drums-pattern  GLOB : Drums 検出パターン（例: 'stem_wav_*_(Drums).wav'）
+  --stem-vocals-pattern GLOB : Vocals検出パターン（例: 'stem_wav_*_(Vocals).wav'）
+  -h, --help      : Show this help
+
+EXAMPLES:
+  ./scripts/e2e_suno_arrangement.sh song_packages/suno_project/song_001
+  ./scripts/e2e_suno_arrangement.sh song_packages/suno_project/song_001 --topk 10 --drums-mode ml --kpi
+  ./scripts/e2e_suno_arrangement.sh song_packages/suno_project/song_001 --drums-mode real --kpi
+  ./scripts/e2e_suno_arrangement.sh song_packages/suno_project/song_001 --drums-mode magenta --kpi
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ E2E Workflow Failed (exit code: 1)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_001/.debug_20251108_030426

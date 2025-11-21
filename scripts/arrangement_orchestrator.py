@@ -1,123 +1,338 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 arrangement_orchestrator.py
----------------------------
-複数の*_plan.jsonを結合して arrangement_plan.json を生成。
+Plans-only Orchestrator CLI
+ - 可変テンポ (tempo_map.json) / 固定テンポ (--tempo-bpm) に対応
+ - 入力は *_plan.json(複数)。スキーマは:
+     { "tracks": [ { "name": "...", "instrument": "...", "events": [...] }, ... ] }
+   もしくは
+     { "plan": { "tracks": [...] } }
+ - CLIは2系統をサポート(後方互換):
+     A) 楽器別: --bass --guitar --piano --strings --drums
+     B) 汎用   : --plan <path>(複数回指定)
 
-Usage:
-    python3 scripts/arrangement_orchestrator.py \
-      --bass song_packages/suno_project/song_001/bass_plan.json \
-      --guitar song_packages/suno_project/song_001/guitar_plan.json \
-      --piano song_packages/suno_project/song_001/piano_plan.json \
-      --tempo-bpm 75 \
-      --out song_packages/suno_project/song_001/arrangement_plan.json
-"""
-import json
-import argparse
-from pathlib import Path
-from typing import Dict, Any, List
-
-
-def merge_plans(input_plans: Dict[str, Path], tempo_bpm: float, out_path: Path, ppq: int = 480):
-    """
-    複数のPlan JSONを統合
-
-    Args:
-        input_plans: {'bass': Path, 'guitar': Path, ...}
-        tempo_bpm: テンポ（arrangement_plan全体に設定）
-        out_path: 出力パス（arrangement_plan.json）
-        ppq: PPQ（デフォルト480）
-    """
-    merged = {"ppq": ppq, "tempo_bpm": tempo_bpm, "meta": {}, "tracks": []}
-
-    # ロール別のデフォルトchannel/program割り当て
-    ROLE_DEFAULTS = {
-        "bass": {"channel": 1, "program": 33},  # Acoustic Bass
-        "guitar": {"channel": 2, "program": 25},  # Acoustic Guitar (steel)
-        "piano": {"channel": 3, "program": 0},  # Acoustic Grand Piano
-        "strings": {"channel": 4, "program": 48},  # String Ensemble 1
-        "drums": {"channel": 9, "program": 0},  # Drums (channel 9固定)
+出力: arrangement_plan.json
+    {
+      "meta": { "ppq": 480, "tempo_map_path": "...", "tempo_bpm": 120.0 },
+      "tracks": [ ...merged tracks... ]
     }
+"""
 
-    # 最初のPlanから total_bars 取得
-    total_bars = None
+from __future__ import annotations
+import argparse
+import json
+import os
+import sys
+from typing import Any, Dict, List, Optional
 
-    for role, p in input_plans.items():
-        if not p.exists():
-            print(f"⚠️  Plan not found: {p} (skipping)")
+
+def _read_json(path: str) -> Any:
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _copy_metadata(meta: Any) -> Dict[str, Any]:
+    if isinstance(meta, dict):
+        return {k: v for k, v in meta.items()}
+    return {}
+
+
+def _extract_tracks(obj: Any) -> List[Dict[str, Any]]:
+    """
+    Accept:
+      { "tracks": [...] }                                      # Legacy format
+      { "plan": { "tracks": [...] } }                         # Legacy nested format
+      { "instrument": "...", "events": [...] }                # V2 format (instrument at top)
+      { "metadata": {"instrument": "..."}, "events": [...] }  # V2 format (instrument in metadata)
+    """
+    if isinstance(obj, dict):
+        # V2 format: single instrument plan
+        if "instrument" in obj and "events" in obj:
+            track = dict(obj)
+            track.setdefault("metadata", {})
+            if isinstance(track["metadata"], dict):
+                track["metadata"].setdefault("instrument", track.get("instrument"))
+            return [track]
+        # V2 format with metadata wrapper
+        if "metadata" in obj and "events" in obj:
+            metadata = _copy_metadata(obj.get("metadata"))
+            instrument = obj.get("instrument") or metadata.get("instrument")
+            name = metadata.get("role") or metadata.get("name") or obj.get("name")
+            track = {
+                "instrument": instrument or name or "track",
+                "name": name or instrument or "track",
+                "events": obj["events"],
+                "metadata": metadata,
+            }
+            return [track]
+        # Legacy formats
+        if "tracks" in obj and isinstance(obj["tracks"], list):
+            return obj["tracks"]
+        if "plan" in obj and isinstance(obj["plan"], dict):
+            plan = obj["plan"]
+            if "tracks" in plan and isinstance(plan["tracks"], list):
+                return plan["tracks"]
+    return []
+
+
+def _infer_name_from_path(path: str) -> str:
+    base = os.path.basename(path)
+    if base.endswith("_plan.json"):
+        base = base[: -len("_plan.json")]
+    return base
+
+
+def _ensure_track_fields(track: Dict[str, Any], fallback_name: str) -> Dict[str, Any]:
+    # name
+    if not track.get("name"):
+        track["name"] = track.get("instrument") or fallback_name
+    # instrument
+    if not track.get("instrument"):
+        track["instrument"] = track.get("name", fallback_name)
+    # events
+    track.setdefault("events", [])
+    metadata = track.get("metadata")
+    if not isinstance(metadata, dict):
+        metadata = {}
+    if "instrument" not in metadata and track.get("instrument"):
+        metadata["instrument"] = track["instrument"]
+    if "role" not in metadata and track.get("name"):
+        metadata["role"] = track["name"]
+    track["metadata"] = metadata
+    return track
+
+
+def load_plan_file(path: str) -> List[Dict[str, Any]]:
+    obj = _read_json(path)
+    tracks = _extract_tracks(obj)
+    fallback = _infer_name_from_path(path)
+    out: List[Dict[str, Any]] = []
+    for t in tracks:
+        if not isinstance(t, dict):
             continue
+        t = _ensure_track_fields(dict(t), fallback)
+        out.append(t)
+    return out
 
-        data = json.loads(p.read_text(encoding="utf-8"))
 
-        # total_bars取得（最初の有効値を使用）
-        if total_bars is None and "meta" in data and "total_bars" in data["meta"]:
-            total_bars = data["meta"]["total_bars"]
+def merge_plans(
+    plan_paths: List[str],
+    ppq: int,
+    tempo_map_path: Optional[str] = None,
+    tempo_bpm: Optional[float] = None,
+) -> Dict[str, Any]:
+    merged_tracks: List[Dict[str, Any]] = []
+    for p in plan_paths:
+        try:
+            tracks = load_plan_file(p)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load plan: {p}: {e}") from e
 
-        # metadata除外、track配列のみ抽出
-        if "tracks" in data:
-            for tr in data["tracks"]:
-                # roleフィールド補完（未設定時はmeta.roleまたは引数roleを使用）
-                if "role" not in tr or tr["role"] is None:
-                    tr["role"] = data.get("meta", {}).get(
-                        "role", data.get("metadata", {}).get("role", role)
-                    )
+        # 空トラックは落とす(event=0)
+        for t in tracks:
+            ev_cnt = len(t.get("events", []))
+            if ev_cnt > 0:
+                merged_tracks.append(t)
 
-                # channel/program自動割り当て（未設定の場合のみ）
-                if "channel" not in tr or tr["channel"] is None:
-                    tr_role = tr.get("role", role).lower()
-                    defaults = ROLE_DEFAULTS.get(tr_role, {"channel": 0, "program": 0})
-                    tr["channel"] = defaults["channel"]
-                if "program" not in tr or tr["program"] is None:
-                    tr_role = tr.get("role", role).lower()
-                    defaults = ROLE_DEFAULTS.get(tr_role, {"channel": 0, "program": 0})
-                    tr["program"] = defaults["program"]
-                merged["tracks"].append(tr)
-                print(
-                    f"✅ Merged {role}: {tr.get('name', role)} (ch={tr['channel']}, prog={tr['program']}, {len(tr.get('events', []))} events)"
-                )
-        elif "plan" in data:
-            # suno_arranger.py形式（旧互換）
-            merged["tracks"].append(
-                {
-                    "name": data.get("metadata", {}).get("role", role),
-                    "role": data.get("metadata", {}).get("role", role),
-                    "channel": 0,  # 要設定
-                    "program": 0,  # 要設定
-                    "events": data["plan"],
-                }
-            )
+    if not merged_tracks:
+        raise RuntimeError("No events in any provided plans.")
 
-    # total_bars を meta に設定
-    if total_bars is not None:
-        merged["meta"]["total_bars"] = total_bars
+    # 楽器の並びを軽く整える(存在したものだけ)
+    order = ["drums", "bass", "guitar", "piano", "strings", "pad", "synth", "vocals"]
 
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(merged, indent=2), encoding="utf-8")
-    print(f"✅ Saved: {out_path} ({len(merged['tracks'])} tracks)")
+    def key_fn(tr: Dict[str, Any]) -> int:
+        inst = str(tr.get("instrument", "")).lower()
+        for i, k in enumerate(order):
+            if k in inst:
+                return i
+        return len(order) + 1
+
+    merged_tracks.sort(key=key_fn)
+
+    meta: Dict[str, Any] = {"ppq": int(ppq)}
+    if tempo_map_path:
+        meta["tempo_map_path"] = tempo_map_path
+    if tempo_bpm is not None:
+        meta["tempo_bpm"] = float(tempo_bpm)
+
+    reference_layers = _collect_reference_layers(merged_tracks)
+    if reference_layers:
+        meta["reference_layers"] = reference_layers
+
+    return {"meta": meta, "tracks": merged_tracks}
+
+
+def _collect_reference_layers(tracks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    by_instrument: Dict[str, Dict[str, Any]] = {}
+    for track in tracks:
+        metadata = track.get("metadata")
+        if not isinstance(metadata, dict):
+            continue
+        ref = metadata.get("reference_layers")
+        if not isinstance(ref, dict) or not ref:
+            continue
+        names = {
+            str(
+                metadata.get("instrument")
+                or track.get("instrument")
+                or track.get("name")
+                or "track"
+            ).lower()
+        }
+        if metadata.get("role"):
+            names.add(str(metadata["role"]).lower())
+        if track.get("name"):
+            names.add(str(track["name"]).lower())
+        for key in filter(None, names):
+            by_instrument.setdefault(key, ref)
+
+    if not by_instrument:
+        return {}
+
+    global_summary: Dict[str, Dict[str, Any]] = {}
+    for summary in by_instrument.values():
+        for layer_name, payload in summary.items():
+            if not isinstance(payload, dict):
+                continue
+            entry = global_summary.setdefault(layer_name, {"frames": 0, "notes": 0, "paths": []})
+            frames = payload.get("frames")
+            notes = payload.get("notes")
+            try:
+                if frames is not None:
+                    entry["frames"] += int(frames)
+            except (TypeError, ValueError):
+                pass
+            try:
+                if notes is not None:
+                    entry["notes"] += int(notes)
+            except (TypeError, ValueError):
+                pass
+            path = payload.get("path")
+            if path and path not in entry["paths"]:
+                entry["paths"].append(path)
+
+    return {"by_instrument": by_instrument, "global": global_summary}
+
+
+def _format_reference_layers(meta: Dict[str, Any]) -> List[str]:
+    lines: List[str] = []
+    global_summary = meta.get("global", {}) if isinstance(meta, dict) else {}
+    for layer_name, payload in global_summary.items():
+        if not isinstance(payload, dict):
+            continue
+        details: List[str] = []
+        frames = payload.get("frames")
+        notes = payload.get("notes")
+        if isinstance(frames, int) and frames > 0:
+            details.append(f"frames={frames}")
+        if isinstance(notes, int) and notes > 0:
+            details.append(f"notes={notes}")
+        paths = payload.get("paths")
+        if isinstance(paths, list) and paths:
+            details.append(f"paths={len(paths)}")
+        detail_str = ", ".join(details) if details else "no metrics"
+        lines.append(f"      · {layer_name}: {detail_str}")
+    return lines
+
+
+def build_argparser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="Merge *_plan.json files into an arrangement_plan.json")
+    # 出力
+    p.add_argument("--out", required=True, help="Path to output arrangement_plan.json")
+    # テンポ系
+    p.add_argument(
+        "--tempo-map",
+        dest="tempo_map",
+        default=None,
+        help="Path to tempo_map.json (variable tempo)",
+    )
+    p.add_argument(
+        "--tempo-bpm", dest="tempo_bpm", type=float, default=None, help="Fallback fixed tempo BPM"
+    )
+    p.add_argument("--ppq", type=int, default=480, help="PPQ resolution (default: 480)")
+
+    # 2系統の指定方法に対応
+    # A) 楽器別
+    p.add_argument("--bass", default=None, help="bass_plan.json")
+    p.add_argument("--guitar", default=None, help="guitar_plan.json")
+    p.add_argument("--piano", default=None, help="piano_plan.json")
+    p.add_argument("--strings", default=None, help="strings_plan.json")
+    p.add_argument("--drums", default=None, help="drums_plan.json")
+
+    # B) 汎用
+    p.add_argument("--plan", action="append", default=[], help="*_plan.json (repeatable)")
+
+    return p
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    args = build_argparser().parse_args(argv)
+
+    # 収集: --plan 複数 or 楽器別フラグ
+    plan_paths: List[str] = list(args.plan or [])
+
+    for k in ["bass", "guitar", "piano", "strings", "drums"]:
+        v = getattr(args, k, None)
+        if v:
+            plan_paths.append(v)
+
+    # 重複排除 & 存在チェック
+    uniq: List[str] = []
+    seen = set()
+    for p in plan_paths:
+        if p and p not in seen:
+            seen.add(p)
+            uniq.append(p)
+    plan_paths = uniq
+
+    if not plan_paths:
+        print(
+            "ERROR: No plan files provided. Use --plan or instrument-specific flags.",
+            file=sys.stderr,
+        )
+        return 2
+
+    for p in plan_paths:
+        if not os.path.isfile(p):
+            print(f"ERROR: Plan file not found: {p}", file=sys.stderr)
+            return 2
+
+    # 統合
+    try:
+        arrangement = merge_plans(
+            plan_paths=plan_paths,
+            ppq=args.ppq,
+            tempo_map_path=args.tempo_map,
+            tempo_bpm=args.tempo_bpm,
+        )
+    except Exception as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        return 1
+
+    # メタの可視化ログ
+    meta = arrangement.get("meta", {})
+    print("📋 Merge summary")
+    print(f"   PPQ          : {meta.get('ppq')}")
+    if meta.get("tempo_map_path"):
+        print(f"   Tempo Map    : {meta['tempo_map_path']}")
+    if meta.get("tempo_bpm") is not None:
+        print(f"   Fixed BPM    : {meta['tempo_bpm']}")
+    if meta.get("reference_layers"):
+        print("   Reference    : detected")
+        for line in _format_reference_layers(meta["reference_layers"]):
+            print(line)
+    print(f"   Tracks       : {len(arrangement.get('tracks', []))}")
+
+    # 書き出し
+    out_path = args.out
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(arrangement, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ Wrote arrangement plan → {out_path}")
+    return 0
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="複数Plan結合")
-    ap.add_argument("--bass", type=Path, default=None)
-    ap.add_argument("--guitar", type=Path, default=None)
-    ap.add_argument("--piano", type=Path, default=None)
-    ap.add_argument("--strings", type=Path, default=None)
-    ap.add_argument("--drums", type=Path, default=None)
-    ap.add_argument("--tempo-bpm", type=float, required=True)
-    ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--ppq", type=int, default=480)
-    args = ap.parse_args()
-
-    plans = {}
-    if args.bass:
-        plans["bass"] = args.bass
-    if args.guitar:
-        plans["guitar"] = args.guitar
-    if args.piano:
-        plans["piano"] = args.piano
-    if args.strings:
-        plans["strings"] = args.strings
-    if args.drums:
-        plans["drums"] = args.drums
-
-    merge_plans(plans, args.tempo_bpm, args.out, args.ppq)
+    raise SystemExit(main())

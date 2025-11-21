@@ -358,6 +358,7 @@ track = bass.generate()
 
 - **[STEM_HARMONY_IMPLEMENTATION.md](STEM_HARMONY_IMPLEMENTATION.md)**: Complete technical implementation details
 - **[PHASE_22_24_23_IMPLEMENTATION.md](docs/PHASE_22_24_23_IMPLEMENTATION.md)**: Phase 22-24 implementation report
+- **[Real Song Roadmap v2](docs/real_song_roadmap_v2.md)**: Multi-AI 統合ロードマップと各フェーズの受入基準
 - **[scripts/test_stem_harmony.py](scripts/test_stem_harmony.py)**: Validation test suite (7/7 tests passing)
 - **[scripts/test_phase_22_24_23.py](scripts/test_phase_22_24_23.py)**: Phase 22-24 integration tests
 - **[analysis/stem_harmony.py](analysis/stem_harmony.py)**: Core analysis module (421 lines, fully documented)
@@ -1210,6 +1211,35 @@ Velocity scaling now follows each section’s `musical_intent.intensity`.
 Bass patterns map a velocity tier (`low`, `mid`, `high`) to concrete MIDI ranges.
 When `swing_ratio` is set, even eighth-notes are delayed by that amount and the
 preceding note trimmed so the bar length remains intact.
+
+### EmotionAI-driven DurationHumanizeAI payloads
+
+DurationHumanizeAI now blends section policy, RhythmAI metadata, **and** the
+`metadata.emotion_tracking.per_bar` snapshots emitted by the V2 generators. When
+`event.humanize.emotion` is present it includes:
+
+- `energy`, `tension`, `brightness`, `valence`: normalized EmotionAI readings
+- `duration_scale_hint`, `velocity_scale_hint`, `density_scale`: direct Rulebook overrides
+- `phrase_role`/`tags`: phrase-aware cues that re-shape staccato/push heuristics
+- `bar_idx`/`section`: audit trail tying the payload back to plan metadata
+
+To reproduce the demo plan with active EmotionAI knobs:
+
+```bash
+python3 scripts/generate_piano_plan_v2.py \
+  --bars sandbox/bass_demo/bars_with_slots.parquet \
+  --sections sandbox/bass_demo/sections.json \
+  --chordmap sandbox/bass_demo/chordmap_locked_extended.json \
+  --policy policy/song_policy.template.yaml \
+  --out sandbox/humanize_demo/piano_plan_duration_ai.json \
+  --seed 13 \
+  --rhythm-manifest data/rhythm_vocab.yaml \
+  --emotion-profile sandbox/humanize_demo/emotion_profile_demo.json \
+  --rulebook sandbox/humanize_demo/rulebook_demo.yaml
+```
+
+The resulting JSON is covered by `tests/test_humanize_demo_emotion.py`, ensuring
+the `emotion_tracking` map stays in sync with the per-event humanize payloads.
 
 ## Phase 9 – Flexible Phrases
 

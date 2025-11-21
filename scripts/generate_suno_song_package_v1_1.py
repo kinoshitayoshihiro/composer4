@@ -509,8 +509,6 @@ Examples:
     mix_variants_path = base / "mix_variants.yaml"
     if mix_variants_path.exists():
         try:
-            import yaml
-
             with mix_variants_path.open("r", encoding="utf-8") as f:
                 variants_config = yaml.safe_load(f).get("variants", {})
             mix_recipe = apply_variant(mix_recipe, args.variant, variants_config)
@@ -524,6 +522,59 @@ Examples:
     # v1.0: deep_harmony_audit.json実測KPI
     audit_path = song_dir / "deep_harmony_audit.json"
     harmony_kpi = extract_harmony_kpi(audit_path)
+
+    # v1.1: CREPE統計取り込み
+    crepe_stats = {}
+
+    # Strings VoiceLeading KPI
+    strings_vl_kpi = base / "strings_vl_kpi.csv"
+    if strings_vl_kpi.exists():
+        try:
+            vl_df = pd.read_csv(strings_vl_kpi)
+            if len(vl_df) > 0:
+                crepe_stats["strings_vl_resolution_rate"] = float(
+                    vl_df.iloc[0].get("resolution_rate", 0.0)
+                )
+                crepe_stats["strings_vl_resolved_changes"] = int(
+                    vl_df.iloc[0].get("resolved_changes", 0)
+                )
+        except Exception as e:
+            print(f"Warning: Failed to load strings_vl_kpi.csv: {e}")
+
+    # Guitar Microtiming統計
+    guitar_micro = base / "guitar_microtiming.csv"
+    if guitar_micro.exists():
+        try:
+            micro_df = pd.read_csv(guitar_micro)
+            if len(micro_df) > 0:
+                crepe_stats["guitar_microtiming_ms_mean"] = float(micro_df["time_shift_ms"].mean())
+                crepe_stats["guitar_microtiming_ms_std"] = float(micro_df["time_shift_ms"].std())
+                crepe_stats["guitar_microtiming_events"] = len(micro_df)
+        except Exception as e:
+            print(f"Warning: Failed to load guitar_microtiming.csv: {e}")
+
+    # Piano Hybrid統計（plans/piano_plan_hybrid.json）
+    piano_hybrid = song_dir / "plans" / "piano_plan_hybrid.json"
+    if piano_hybrid.exists():
+        try:
+            with open(piano_hybrid) as f:
+                piano_data = json.load(f)
+            total_events = sum(len(t.get("events", [])) for t in piano_data.get("tracks", []))
+            crepe_stats["piano_hybrid_events"] = total_events
+        except Exception as e:
+            print(f"Warning: Failed to load piano_plan_hybrid.json: {e}")
+
+    # vocal_f0.parquet統計
+    vocal_f0 = song_dir / "features" / "vocal_f0.parquet"
+    if vocal_f0.exists():
+        try:
+            f0_df = pd.read_parquet(vocal_f0)
+            crepe_stats["vocal_f0_frames"] = len(f0_df)
+            if "voicing_prob" in f0_df.columns:
+                voiced_frames = (f0_df["voicing_prob"] > 0.5).sum()
+                crepe_stats["vocal_f0_voiced_rate"] = float(voiced_frames / len(f0_df))
+        except Exception as e:
+            print(f"Warning: Failed to load vocal_f0.parquet: {e}")
 
     # v1.1: quality_gates
     thresholds = {
@@ -570,8 +621,17 @@ Examples:
             "chord_events_count": chord_events_count,
         },
         "paths": {
+            "analysis_dir": str(base.relative_to(song_dir).as_posix()),
             "bars": str((base / "bars.parquet").relative_to(song_dir).as_posix()),
-            "chordmap": str((base / "chordmap.json").relative_to(song_dir).as_posix()),
+            "chordmap": str(
+                (
+                    base / "chordmap_locked.json"
+                    if (base / "chordmap_locked.json").exists()
+                    else base / "chordmap.json"
+                )
+                .relative_to(song_dir)
+                .as_posix()
+            ),
             "sections": str((base / "sections.json").relative_to(song_dir).as_posix()),
             "lyric_anchors": str((base / "lyric_anchors.json").relative_to(song_dir).as_posix()),
             "tempo_map": str((base / "tempo_map.json").relative_to(song_dir).as_posix()),
@@ -579,12 +639,30 @@ Examples:
             "voicings_guide": check(base / "voicings_guide.csv"),
             "bassline_plan": check(base / "bassline_plan.csv"),
             "drum_accent_plan": check(base / "drum_accent_plan.json"),
+            "crepe_f0": check(base / "crepe_f0.parquet"),
+            "midi": {
+                "integrated": check(song_dir / "midi" / f"{args.song_id}_hybrid_crepe.mid"),
+            },
+        },
+        "meta": {
+            "tempo_bpm_source": "bars.parquet.median",
+            "sections_count": sections_count,
+            "chord_events_count": chord_events_count,
+            "lock_sha256": None,  # TODO: chordmap_locked.jsonのハッシュ
+            "generated_variant": args.variant,
+            "bootstrap_mode": (base / "chordmap_locked.json").exists(),
+        },
+        "flags": {
+            "use_function_rules": True,  # Roman×V系テンション解禁
+            "use_melody_exceptions": True,  # CREPEメロ例外（#11/9/13プロモート等）
+            "forbid_fixed_bpm": True,  # tempo_map.jsonを唯一のテンポ事実源に
         },
         "harmony": {
             "key_center": key_center,
             "key_confidence": float(round(key_conf, 3)),
             "key_candidates": key_candidates,
             **{k: float(round(v, 3)) for k, v in harmony_kpi.items()},
+            "crepe_ext": crepe_stats if crepe_stats else None,
         },
         "synchro_policy": {
             "reference": "original_stems",

@@ -1,0 +1,147 @@
+   Python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+🎵 Song Package Generation: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004
+   Stems dir: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav
+🔍 Auto-detecting Mix WAV...
+   Mix WAV: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Strings).wav
+🔍 Auto-detecting Vocal WAV...
+   Vocal WAV: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Vocals).wav
+
+🕐 STEP 1/4: tempo_map.json + bars.parquet
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/tempo_map_cli.py --audio /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Strings).wav --bars /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet --out-bars /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet --out-tempo /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/tempo_map.json --bpb 4 --prefer-madmom
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/madmom/__init__.py:21: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+✅ Wrote tempo_map: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/tempo_map.json
+✅ Wrote bars (start_sec/end_sec): /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet
+   bars: 68 rows | start[25.73] -> end[140.57]
+
+🕐.5 STEP 1.5/5: bars.parquet拡張（完全版生成）
+   Median BPM: 143.55468749999827
+✅ Extended bars.parquet: 68 bars
+   Columns: ['bar_index', 'tempo_bpm', 'time_signature', 'start_sec', 'end_sec', 'start_beat', 'end_beat', 'density_target', 'swing_target']
+
+🕑 STEP 2/5: sections.json
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/sections_from_audio.py --stems /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav --out /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/sections.json
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/sections_from_audio.py:140: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(tempo), beats
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/sections_from_audio.py:140: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(tempo), beats
+[INFO] peak_extractor: 64 energy peaks detected
+[DEBUG] energy curve: min=0.107, max=1.000
+[DEBUG] prominence threshold: 0.060, distance: 3
+[DEBUG] peaks_energy indices: [16, 30, 39, 45]
+[DEBUG] prominence values: [0.58589804 0.43433621 0.55943157 0.0728354 ]
+[INFO] Combined peaks: 25 (rms=64, energy=4)
+[INFO] Sections: 12, Energy peaks (chorus): 2
+[INFO] Key hints: [(0, 'E'), (14, 'B'), (19, 'E'), (30, 'A'), (34, 'E'), (39, 'Gm'), (42, 'B'), (47, 'A')]
+[WARN] Section at bar 8 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 11 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 24 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 27 is only 3 bars (recommended >= 8)
+[WARN] Section at bar 39 is only 3 bars (recommended >= 8)
+[OK] Validation passed
+
+============================================================
+[SUCCESS] sections.json (v2) generated: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/sections.json
+============================================================
+Sections: 6
+  Bars   0–  7: intro
+  Bars   8– 13: verse
+  Bars  14– 18: chorus
+  Bars  19– 29: pre_chorus
+  Bars  30– 33: pre_chorus
+  Bars  34– 47: verse
+
+Tempo: 89.3 BPM (bar 0)
+Keys: Bar 0: E, Bar 14: B, Bar 19: E, Bar 30: A, Bar 34: E, Bar 39: Gm, Bar 42: B, Bar 47: A
+Energy range: [0.11, 1.00]
+
+🕑.5 STEP 2.5/5: density_target/swing_target/section_label更新
+✅ Updated density_target/swing_target/section_label for 6 sections
+   intro        bars   0-7  : density=0.50
+   verse        bars   8-13 : density=0.60
+   chorus       bars  14-18 : density=0.90
+   pre_chorus   bars  19-29 : density=0.75
+   pre_chorus   bars  30-33 : density=0.75
+   verse        bars  34-47 : density=0.60
+
+🕒 STEP 3/5: lyric_anchors.json
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/anchors_from_vocal.py --vocal /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Vocals).wav --out /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json
+[INFO] Loading vocal: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Vocals).wav
+[INFO] Extracting onset candidates...
+[INFO] No lyrics provided, anchors will have no tokens
+[INFO] Detecting beats...
+[INFO] Detected tempo: 172.3 BPM, 366 beats
+[INFO] Analyzing anchors with window-mode=class...
+[OK] anchors=566 -> /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json
+[INFO] Class distribution:
+  plosive: 6
+  sibilant: 463
+  stress: 102
+
+🕓 STEP 4/5: analysis/chordmap.json
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/stem_harmony_bar_level.py --stems /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav --out /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap.json
+[CACHE] SAVE: chroma_bar_b8f58cfe.npz
+[INFO] Aggregated to 52 bars
+[INFO] Using extended templates: 72 states
+[INFO] Estimated key: Cm → (0, 'min')
+[INFO] Greedy recognition (smoothing=0.1)
+[OK] Bar-level chordmap: 52 events -> /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/analysis/chordmap.json
+[INFO] Density: 52 events / 52 bars = 1.00 chords/bar
+
+🕔 STEP 5/5: stem_features.parquet + drums_active
+   Running: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/ops/stems_features.py --stems /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav --bars /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet --anchors /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json --output /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_features.parquet --tempo-bpm 143.55468749999827 --inst-activity
+INFO: Loading bars from: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/bars.parquet
+INFO: Loaded 68 bars
+INFO: Extracting drums features from: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/oreno_001_(Drums).wav
+INFO: Extracted drums features for 68 bars
+WARNING: No 'Other' stem, auto-mixing non-drum/vocal stems
+INFO: Built Other from 6 stems -> _auto_Other.wav
+INFO: Extracting mix features from: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_wav/_auto_Other.wav
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/numpy/core/fromnumeric.py:3504: RuntimeWarning: Mean of empty slice.
+  return _methods._mean(a, axis=axis, dtype=dtype,
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/numpy/core/_methods.py:129: RuntimeWarning: invalid value encountered in divide
+  ret = ret.dtype.type(ret / rcount)
+INFO: Extracted mix features for 68 bars
+INFO: Extracting vocal stress from: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/lyric_anchors.json
+INFO: Detected 0 stress bars
+INFO: Computing instrument activity (guitar/piano/strings) from Other stem
+INFO:    Applied 3-bar smoothing to activity columns
+INFO:    guitar_activity: mean=0.443, active_bars=50
+INFO:    piano_activity: mean=0.554, active_bars=60
+INFO:    strings_activity: mean=0.505, active_bars=56
+INFO:    drums_active: 57.0 active bars, 11 break bars
+INFO: ✅ Saved stem features to: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/data/suno_ai/suno_themesong/song_004/stem_features.parquet
+INFO:    Bars: 68
+INFO:    Columns: ['bar', 'hat_density', 'kick_peak_db', 'snare_backbeat', 'fill_likelihood', 'loudness_db', 'energy_curve', 'vocal_stress', 'guitar_activity', 'piano_activity', 'strings_activity', 'drums_active']
+
+============================================================
+Stem Features Statistics
+============================================================
+            bar  hat_density  ...  strings_activity  drums_active
+count  68.00000    68.000000  ...         68.000000     68.000000
+mean   33.50000     0.455882  ...          0.505120      0.838235
+std    19.77372     0.302172  ...          0.330378      0.370973
+min     0.00000     0.000000  ...          0.000000      0.000000
+25%    16.75000     0.250000  ...          0.207799      1.000000
+50%    33.50000     0.500000  ...          0.597149      1.000000
+75%    50.25000     0.750000  ...          0.780934      1.000000
+max    67.00000     1.000000  ...          0.991613      1.000000
+
+[8 rows x 12 columns]
+============================================================
+   Merging stem_features to bars.parquet (完全版生成)...
+✅ Merged 11 columns from stem_features.parquet to bars.parquet
+   drums_active: 57 active / 68 total bars
+   energy_curve: 0.000 - 1.000
+   guitar_activity: 50 active bars (mean=0.443)
+   piano_activity: 60 active bars (mean=0.554)
+   strings_activity: 56 active bars (mean=0.505)
+✅ bars.parquet完全版保存: 68 bars, 21 columns
+
+📋 Copying files to analysis/ directory...
+✅ Files copied to analysis/
+
+🔗 Step 7: Creating symbolic links for CREPE/OaF
+scripts/make_song_package_from_sources.sh: line 562: SONG_DIR: unbound variable

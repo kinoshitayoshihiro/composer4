@@ -224,6 +224,28 @@ def main():
     df.to_parquet(args.out, index=False)
     print(f"✅ Saved F0 features → {args.out}  (rows={len(df)})")
 
+    # Save metadata for sanity checking
+    duration_sec = float(len(y) / sr)
+    hop_ms = args.hop_ms
+    frames = len(times)
+    expected_min_frames = int(0.8 * (duration_sec * 1000 / hop_ms))
+    ok = frames >= expected_min_frames
+
+    meta = {
+        "duration_sec": duration_sec,
+        "hop_ms": hop_ms,
+        "frames": frames,
+        "expected_min_frames": expected_min_frames,
+        "ok": ok,
+        "model_size": args.model_size,
+        "vuv_thresh": args.vuv_thresh,
+    }
+    meta_path = Path(args.out).with_suffix(".meta.json")
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2))
+    print(f"✅ Saved meta → {meta_path}")
+    if not ok:
+        print(f"⚠️  WARNING: Frame count ({frames}) below expected minimum ({expected_min_frames})")
+
 
 if __name__ == "__main__":
     main()

@@ -673,9 +673,9 @@ class Stage3Dataset(Dataset):  # type: ignore[misc]
                 "enabled": self.audio_cache is not None,
                 "queries": self.audio_cache_queries,
                 "hits": self.audio_cache_hits,
-                "cache_dir": str(self.audio_cache.cache_dir)
-                if self.audio_cache is not None
-                else None,
+                "cache_dir": (
+                    str(self.audio_cache.cache_dir) if self.audio_cache is not None else None
+                ),
             },
         }
 
@@ -933,6 +933,7 @@ def train_stage3(args: argparse.Namespace) -> None:
         lr_scheduler_type=args.lr_scheduler,  # Cosine/linear scheduler
         seed=args.seed,
         dataloader_num_workers=args.num_workers,
+        save_safetensors=False,
     )
 
     # Choose collator based on packing option

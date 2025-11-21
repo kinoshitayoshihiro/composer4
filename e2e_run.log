@@ -1,151 +1,91 @@
+🔁 Creating symlink: bars.parquet -> analysis/bars.parquet
 ✅ Activated venv: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311
+[ENV] which python: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] MAGENTA_PY: /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/bin/python
+[ENV] pip show note-seq: Version: 0.0.5
 🎵 SunoAI E2E Arrangement Workflow (Hardened)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📂 Song Directory: data/suno_ai/suno_themesong/song_001
+📂 Song Directory: data/suno_ai/suno_themesong/song_004
    Top-K        : 5
    Use ML       : false
    Force Match  : true
-   KPI Gate     : true
-   Dry Run      : false
+   KPI Gate     : false
+   Dry Run      : true
+   CREPE        : true
+   Onsets-Frames: true
+   F0 Extract   : false
+   Timbre Curves: false
+   Force Regen Drums: false
+   EmotionAI    : true
+   Harmony AI   : true
+   Emotion Profile: auto
 
-   Tempo: 74.5 BPM
+
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+   Tempo: 120.0 BPM
 
 📋 Step 1.2: Importing Stage1 Analysis Data
    Source: data/suno_ai/suno_themesong/song_001/analysis
 
-⏭️  Step 1.5: Stem Features Generation (SKIPPED)
-   Using existing stem_features.parquet / bars.parquet
+⚠️  Step 1.5: No stems directory found, skipping stem features
 
 🔍 Step 1: Pattern Matching (Top-K=5)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
 📊 Song Analysis:
-  Tempo: 74.5 BPM
+  Tempo: 120.0 BPM
   Family Hint: STRAIGHT_8
-  Density Hint: 0.3
+  Density Hint: 0.7
 
 ✅ Rhythm Pickle: 30964 patterns loaded
 
 🎯 Top-5 Rhythm Matches:
-  1. 88_hiphop_75_fill_4-4_21 (score=0.972, tempo=75.0, family=STRAIGHT_8)
-  2. 88_hiphop_75_fill_4-4_35 (score=0.972, tempo=75.0, family=STRAIGHT_8)
-  3. 88_hiphop_75_fill_4-4_37 (score=0.972, tempo=75.0, family=STRAIGHT_8)
-  4. 88_hiphop_75_fill_4-4_4 (score=0.972, tempo=75.0, family=STRAIGHT_8)
-  5. 88_hiphop_75_fill_4-4_41 (score=0.972, tempo=75.0, family=STRAIGHT_8)
+  1. 7_rock_120_beat_4-4_4 (score=0.998, tempo=120.0, family=STRAIGHT_8)
+  2. 7_rock_120_beat_4-4_1 (score=0.998, tempo=120.0, family=STRAIGHT_8)
+  3. 7_rock_120_beat_4-4_5 (score=0.998, tempo=120.0, family=STRAIGHT_8)
+  4. 7_rock_120_beat_4-4_53 (score=0.998, tempo=120.0, family=STRAIGHT_8)
+  5. 7_rock_120_beat_4-4_55 (score=0.998, tempo=120.0, family=STRAIGHT_8)
 
 ✅ Output:
-  - data/suno_ai/suno_themesong/song_001/matches_rhythm.json
+  - data/suno_ai/suno_themesong/song_004/matches_rhythm.json
 
-🎯 Stems features detected: data/suno_ai/suno_themesong/song_001/stem_features.parquet
-🔁 Step 2: Reusing existing data/suno_ai/suno_themesong/song_001/drums_recommendations.json
+🎤 Step 1.5: CREPE Vocal F0 Extraction (Phase C)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/resampy/filters.py:50: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+🎤 CREPE Pitch Extraction
+   Vocal WAV: data/suno_ai/suno_themesong/song_004/vocal.wav
+   Tempo: 120.0 BPM
+   Model: tiny, Hop: 10.0ms
+  1/422 [..............................] - ETA: 1:56  5/422 [..............................] - ETA: 6s    9/422 [..............................] - ETA: 5s 13/422 [..............................] - ETA: 5s 17/422 [>.............................] - ETA: 5s 21/422 [>.............................] - ETA: 5s 24/422 [>.............................] - ETA: 5s 28/422 [>.............................] - ETA: 5s 32/422 [=>............................] - ETA: 5s 36/422 [=>............................] - ETA: 5s 40/422 [=>............................] - ETA: 5s 44/422 [==>...........................] - ETA: 5s 48/422 [==>...........................] - ETA: 5s 52/422 [==>...........................] - ETA: 5s 56/422 [==>...........................] - ETA: 5s 60/422 [===>..........................] - ETA: 5s 64/422 [===>..........................] - ETA: 5s 68/422 [===>..........................] - ETA: 5s 72/422 [====>.........................] - ETA: 5s 76/422 [====>.........................] - ETA: 5s 80/422 [====>.........................] - ETA: 4s 84/422 [====>.........................] - ETA: 4s 88/422 [=====>........................] - ETA: 4s 92/422 [=====>........................] - ETA: 4s 96/422 [=====>........................] - ETA: 4s100/422 [======>.......................] - ETA: 4s104/422 [======>.......................] - ETA: 4s108/422 [======>.......................] - ETA: 4s112/422 [======>.......................] - ETA: 4s116/422 [=======>......................] - ETA: 4s120/422 [=======>......................] - ETA: 4s124/422 [=======>......................] - ETA: 4s128/422 [========>.....................] - ETA: 4s132/422 [========>.....................] - ETA: 4s136/422 [========>.....................] - ETA: 4s140/422 [========>.....................] - ETA: 4s144/422 [=========>....................] - ETA: 3s148/422 [=========>....................] - ETA: 3s152/422 [=========>....................] - ETA: 3s156/422 [==========>...................] - ETA: 3s160/422 [==========>...................] - ETA: 3s164/422 [==========>...................] - ETA: 3s168/422 [==========>...................] - ETA: 3s172/422 [===========>..................] - ETA: 3s176/422 [===========>..................] - ETA: 3s180/422 [===========>..................] - ETA: 3s184/422 [============>.................] - ETA: 3s188/422 [============>.................] - ETA: 3s192/422 [============>.................] - ETA: 3s196/422 [============>.................] - ETA: 3s200/422 [=============>................] - ETA: 3s204/422 [=============>................] - ETA: 3s208/422 [=============>................] - ETA: 3s212/422 [==============>...............] - ETA: 2s216/422 [==============>...............] - ETA: 2s220/422 [==============>...............] - ETA: 2s224/422 [==============>...............] - ETA: 2s228/422 [===============>..............] - ETA: 2s232/422 [===============>..............] - ETA: 2s236/422 [===============>..............] - ETA: 2s240/422 [================>.............] - ETA: 2s244/422 [================>.............] - ETA: 2s248/422 [================>.............] - ETA: 2s251/422 [================>.............] - ETA: 2s255/422 [=================>............] - ETA: 2s259/422 [=================>............] - ETA: 2s263/422 [=================>............] - ETA: 2s267/422 [=================>............] - ETA: 2s271/422 [==================>...........] - ETA: 2s275/422 [==================>...........] - ETA: 2s279/422 [==================>...........] - ETA: 2s283/422 [===================>..........] - ETA: 2s287/422 [===================>..........] - ETA: 1s291/422 [===================>..........] - ETA: 1s295/422 [===================>..........] - ETA: 1s299/422 [====================>.........] - ETA: 1s303/422 [====================>.........] - ETA: 1s307/422 [====================>.........] - ETA: 1s311/422 [=====================>........] - ETA: 1s315/422 [=====================>........] - ETA: 1s319/422 [=====================>........] - ETA: 1s323/422 [=====================>........] - ETA: 1s327/422 [======================>.......] - ETA: 1s331/422 [======================>.......] - ETA: 1s335/422 [======================>.......] - ETA: 1s339/422 [=======================>......] - ETA: 1s343/422 [=======================>......] - ETA: 1s347/422 [=======================>......] - ETA: 1s351/422 [=======================>......] - ETA: 1s355/422 [========================>.....] - ETA: 0s359/422 [========================>.....] - ETA: 0s363/422 [========================>.....] - ETA: 0s367/422 [=========================>....] - ETA: 0s371/422 [=========================>....] - ETA: 0s375/422 [=========================>....] - ETA: 0s379/422 [=========================>....] - ETA: 0s383/422 [==========================>...] - ETA: 0s387/422 [==========================>...] - ETA: 0s391/422 [==========================>...] - ETA: 0s395/422 [===========================>..] - ETA: 0s399/422 [===========================>..] - ETA: 0s403/422 [===========================>..] - ETA: 0s407/422 [===========================>..] - ETA: 0s411/422 [============================>.] - ETA: 0s415/422 [============================>.] - ETA: 0s419/422 [============================>.] - ETA: 0s422/422 [==============================] - 6s 14ms/step
+   Extracted: 13485 frames (134.8sec)
+✅ Saved: data/suno_ai/suno_themesong/song_004/vocal_f0_crepe.parquet (13485 frames)
+✅ Saved anchors: data/suno_ai/suno_themesong/song_004/lyric_anchors_crepe.json (690 events)
+📊 Statistics:
+   Voiced ratio: 65.2%
+   Mean F0 (voiced): 280.3 Hz
+✅ CREPE completed (or NO-OP)
 
-🎸 Step 3: Bass/Guitar Plans (real groove v4 → plan)
+🎹 Step 1.6: Onsets-and-Frames Piano Transcription (Phase C)
+/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/sitecustomize.py:11: FutureWarning: In the future `np.bool` will be defined as the corresponding NumPy scalar.
+  if not hasattr(np, "bool"):
+scikit-learn version 1.7.2 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+XGBoost version 3.1.1 has not been tested with coremltools. You may run into unexpected errors. XGBoost 1.4.2 is the most recent version that has been tested.
+TensorFlow version 2.13.1 has not been tested with coremltools. You may run into unexpected errors. TensorFlow 2.12.0 is the most recent version that has been tested.
+WARNING:root:tflite-runtime is not installed. If you plan to use a TFLite Model, reinstall basic-pitch with `pip install 'basic-pitch tflite-runtime'` or `pip install 'basic-pitch[tf]'
+WARNING:root:onnxruntime is not installed. If you plan to use an ONNX Model, reinstall basic-pitch with `pip install 'basic-pitch[onnx]'`
 /Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
-✅ bass_plan written → data/suno_ai/suno_themesong/song_001/bass_plan.json (events=419)
-/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
-  import pkg_resources
-✅ guitar_plan written → data/suno_ai/suno_themesong/song_001/guitar_plan.json (events=456)
+Predicting MIDI for data/suno_ai/suno_themesong/song_004/piano.wav...
+Saved data/suno_ai/suno_themesong/song_004/piano_onsets_frames.json (notes: 812)
+✅ Onsets-and-Frames completed (or NO-OP)
 
-🎹 Step 4: Piano/Strings Plans (real groove v4 → plan)
-/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
-  import pkg_resources
-✅ piano_plan written → data/suno_ai/suno_themesong/song_001/piano_plan.json (events=166)
-/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
-  import pkg_resources
-✅ strings_plan written → data/suno_ai/suno_themesong/song_001/strings_plan.json (events=68)
-
-🥁 Step 5: Drums Plan (from recommendations)
-✅ Generated drums_plan.json: 2980 events (149 bars)
-
-🎼 Step 6: Full Arrangement (5 tracks)
-✅ Merged bass: Bass (ch=1, prog=33, 419 events)
-✅ Merged guitar: Guitar (ch=2, prog=25, 456 events)
-✅ Merged piano: Piano (ch=3, prog=0, 166 events)
-✅ Merged strings: Strings (ch=4, prog=48, 68 events)
-✅ Merged drums: Drums (ch=9, prog=0, 2980 events)
-✅ Saved: data/suno_ai/suno_themesong/song_001/full_arrangement.json (5 tracks)
-
-🧭 Step 6.1: Plan normalization (bar/beat backfill)
-✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/drums_plan.json
-✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/bass_plan.json
-✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/guitar_plan.json
-✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/piano_plan.json
-✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/strings_plan.json
-
-🧰 Step 6.5: Normalize plan event schema
-✅ wrote: data/suno_ai/suno_themesong/song_001/full_arrangement.json
-  tracks fixed(header channel added): 0
-  events added channel: 4089
-  events added velocity(from vel): 4089
-
-🧭 Step 6.6: Full arrangement bar/beat backfill
-✅ backfilled bar/beat → data/suno_ai/suno_themesong/song_001/full_arrangement.json
-
-🔧 Step 6.7: Fix missing fields (start_beats/end_beats/vel/velocity)
-✅ normalized: 4089 events | fixes: {'bar': 0, 'beat': 0, 'start_beats': 2980, 'end_beats': 2980, 'dur_beats': 0, 'vel': 0, 'velocity': 0, 'channel': 0} | bpb=4
-
-✅ Step 7: Plan Validation
-✅ Valid: data/suno_ai/suno_themesong/song_001/full_arrangement.json
-
-🎵 Step 8: MIDI Generation
-[midi_writer] CLIP_TO_SONG_END=True
-[midi_writer] total_bars=149, song_end_beats=596.0
-[midi_writer] BEFORE CLIP: track=Bass events=419 max_end_beats=595.900
-[midi_writer] BEFORE CLIP: track=Guitar events=456 max_end_beats=592.150
-[midi_writer] BEFORE CLIP: track=Piano events=166 max_end_beats=595.400
-[midi_writer] BEFORE CLIP: track=Strings events=68 max_end_beats=596.000
-[midi_writer] BEFORE CLIP: track=Drums events=2980 max_end_beats=596.875
-[midi_writer] Clipping all tracks to 596.0 beats
-[clip] Bass: 419->419 ev, hard_cut=0
-[clip] Guitar: 456->456 ev, hard_cut=0
-[clip] Piano: 166->166 ev, hard_cut=0
-[clip] Strings: 68->68 ev, hard_cut=1
-[clip] Drums: 2980->2975 ev, hard_cut=0
-✅ Saved MIDI: data/suno_ai/suno_themesong/song_001/full_arrangement.mid (6 tracks, PPQ=480)
-✅ タグ埋め込み完了: humanize_v2_44136fa3 → data/suno_ai/suno_themesong/song_001/full_arrangement.mid
-✅ Humanize tag embedded: humanize_v2_44136fa3
-
-📊 Step 9: MIDI Statistics
-   Tracks: 6
-   PPQ: 480
-   Total notes: 2730
-   Duration: 480.0s (8.0min)
-
-📏 Step 10: KPI Gate Validation (bars.parquet基準)
-/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
-  import pkg_resources
-📖 Loading MIDI: data/suno_ai/suno_themesong/song_001/full_arrangement.mid
-   Hat pitches: [42, 43, 44, 46, 51, 52, 53, 59, 82]
-   bars.parquet loaded: 149 bars
-   Epsilon: 20.0ms
-   Use downbeats: False
-[DEBUG] Loaded 149 bars with time_signature from bars.parquet
-   Total bars: 149
-   Gate config: configs/gate_prod.yaml
-
-📊 Validation Statistics:
-   Total bars: 149
-   Pass: 149 (100.0%)
-   Fail: 0 (0.0%)
-   Warning: 0
-
-🔍 Fail原因Top10:
-
-✅ Saved validation report: data/suno_ai/suno_themesong/song_001/kpi_gate_postgen.json
-
-🛡️  Step 11: CI Regression Guard (Final Verification)
-/Volumes/SSD-SCTU3A/ラジオ用/music_21/composer2-3/.venv311/lib/python3.11/site-packages/pretty_midi/instrument.py:11: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
-  import pkg_resources
-✅ CI レポートを書き出しました: data/suno_ai/suno_themesong/song_001/ci_verify_report.json
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CI Summary:
-  pass : 9
-  warn : 0
-  fail : 1
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   ❌ CI Verification FAILED
-      See details: data/suno_ai/suno_themesong/song_001/ci_verify_report.json
+⚠️  No stem_features.parquet found, using bars.parquet only
+🥁 Step 2: Drums (real MIDI → plan)
+❌ real モードですが data/suno_ai/suno_themesong/song_004/drums.mid がありません
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ❌ E2E Workflow Failed (exit code: 1)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔍 Debug files saved to: data/suno_ai/suno_themesong/song_001/.debug_20251102_013502
+🔍 Debug files saved to: data/suno_ai/suno_themesong/song_004/.debug_20251111_084827

@@ -1,0 +1,481 @@
+#!/usr/bin/env python3
+"""
+generate_piano_plan_v2.py - Slot-based piano renderer for fill/riff system.
+
+Architecture:
+- Slot Planner: bars_with_slots.parquet (fill_slot: where to fire)
+- Policy YAML: density/comping_styles/voicing (how to fire)
+- Chord Source: manual_chordmap.json (what notes to play)
+- Output: plans/piano_plan.json
+
+Design Philosophy:
+"位置決めはbars/sections。造形は楽器別レンダラ。music21は和声支援のみ。"
+"""
+import argparse
+import json
+import sys
+from pathlib import Path
+from typing import Any, Dict, List
+
+import numpy as np
+import pandas as pd
+import yaml
+
+# Import shared chordmap utilities
+sys.path.insert(0, str(Path(__file__).parent))
+from chordmap_utils import (
+    load_chordmap,
+    get_chord_at_bar,
+    parse_symbol,
+    parse_chord_symbol,
+    get_chord_tones,
+)
+from v2_common import (
+    ensure_activity_floor,
+    choose_tension_enabled,
+    apply_humanize,
+    ensure_register,
+    spread_open_voicing,
+    select_role,
+    decide_tension_use,
+)
+
+# Phase 1: Register enforcement handled by ensure_register() from v2_common
+# No longer using hardcoded PIANO_MIN_PITCH/PIANO_MAX_PITCH
+
+
+def load_bars(bars_path: str) -> pd.DataFrame:
+    """Load bars.parquet with fill_slot."""
+    bars = pd.read_parquet(bars_path)
+    required = ["section_label", "fill_slot"]
+    missing = [c for c in required if c not in bars.columns]
+    if missing:
+        raise ValueError(f"bars.parquet missing columns: {missing}")
+
+    # Ensure bar_idx exists
+    if "bar_index" in bars.columns and "bar_idx" not in bars.columns:
+        bars = bars.rename(columns={"bar_index": "bar_idx"})
+    elif "bar_idx" not in bars.columns:
+        bars["bar_idx"] = range(len(bars))
+
+    return bars
+
+
+def load_sections(sections_path: str) -> List[Dict[str, Any]]:
+    """Load sections.json."""
+    with open(sections_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if isinstance(data, list):
+        return data
+    elif isinstance(data, dict) and "sections" in data:
+        return data["sections"]
+    else:
+        raise ValueError('sections.json must be a list or {"sections": [...]}')
+
+
+def load_chordmap(chordmap_path: str) -> List[Dict[str, Any]]:
+    """Load chordmap_locked_extended.json."""
+    with open(chordmap_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if isinstance(data, list):
+        return data
+    elif isinstance(data, dict) and "events" in data:
+        return data["events"]
+    else:
+        raise ValueError('chordmap must be a list or {"events": [...]}')
+
+
+def get_chord_at_bar(chordmap: List[Dict[str, Any]], bar_idx: int) -> Dict[str, Any]:
+    """Find chord event overlapping with bar_idx."""
+    bar_start_ql = bar_idx * 4.0
+    for chord in chordmap:
+        chord_start = chord.get("time_ql", 0.0)
+        chord_end = chord_start + chord.get("duration_ql", 4.0)
+        if chord_start <= bar_start_ql < chord_end:
+            return chord
+    return chordmap[0] if chordmap else {}
+
+
+def is_section_boundary(bar_idx: int, sections: List[Dict[str, Any]]) -> bool:
+    """Check if bar is section boundary (end-1 bar)."""
+    bar_start_ql = bar_idx * 4.0
+    for section in sections:
+        sec_end_ql = section.get("end_ql", 0.0)
+        # Check if bar is last bar before section end (within 1 bar)
+        if abs(bar_start_ql - (sec_end_ql - 4.0)) < 0.1:
+            return True
+    return False
+
+
+def make_fill_decoration(
+    bar_idx: int,
+    bar_data: pd.Series,
+    chord: Dict[str, Any],
+    piano_cfg: Dict[str, Any],
+    policy: Dict[str, Any],
+    section_label: str,
+) -> List[Dict[str, Any]]:
+    """
+    Generate piano fill (2-4 note decoration at section boundary).
+
+    Args:
+        bar_idx: Bar index
+        bar_data: Row from bars.parquet
+        chord: Chord from chordmap
+        piano_cfg: policy['instruments']['piano']
+        policy: Full policy dictionary
+        section_label: verse, chorus, etc.
+
+    Returns:
+        List of piano events
+    """
+    start_ql = bar_idx * 4.0
+    events = []
+
+    # Parse chord - handle both symbol and root+quality formats
+    if "symbol" in chord and chord["symbol"]:
+        parsed = parse_symbol(chord["symbol"])
+    else:
+        root = chord.get("root", "C")
+        quality = chord.get("quality", "")
+        tensions = chord.get("tensions", [])
+        parsed = parse_chord_symbol(root, quality, tensions)
+    
+    chord_tones = get_chord_tones(parsed, bass_octave=4)  # Piano octave 4 (C4=60)
+
+    if not chord_tones:
+        chord_tones = [60, 64, 67]  # C major fallback
+
+    # === Phase 1: Register enforcement ===
+    section_cfg = policy.get("sections", {}).get(section_label, {})
+    role = select_role(section_cfg, "piano", default_role="pad")
+
+    # Enforce register (clamp to piano range)
+    chord_tones = ensure_register(chord_tones, "piano", policy, section_label)
+
+    # Apply open voicing if preferred (for thickness)
+    if policy.get("global", {}).get("prefer_open_voicings", True) and role == "pad":
+        reg_max = policy.get("instruments", {}).get("piano", {}).get("register", {}).get("max", 72)
+        chord_tones = spread_open_voicing(chord_tones, prefer_open=True, top_max=reg_max)
+
+    # Use voicing (max 4 notes for fill)
+    voicing = chord_tones[:4]
+
+    # Humanization
+    humanize_ms = piano_cfg.get("humanize_timing_ms", 12)
+    humanize_vel = piano_cfg.get("humanize_velocity", 7)
+    base_velocity = piano_cfg.get("base_velocity", 75)
+
+    # Fill decoration (last 2 beats of bar)
+    for i, note in enumerate(voicing):
+        time_ql = (
+            start_ql + 2.0 + i * 0.25 + np.random.uniform(-humanize_ms / 1000, humanize_ms / 1000)
+        )
+        # Octave up (bright) with register enforcement
+        note_shifted = ensure_register([note + 12], "piano", policy, section_label)
+        note_octave_up = note_shifted[0] if note_shifted else note
+        
+        vel = base_velocity + 10 + np.random.randint(-humanize_vel, humanize_vel)
+        events.append(
+            {
+                "time_ql": float(time_ql),
+                "note": int(note_octave_up),
+                "velocity": int(np.clip(vel, 60, 100)),
+                "duration_ql": 0.25,
+            }
+        )
+
+    return events
+
+
+def make_comping_pattern(
+    bar_idx: int,
+    bar_data: pd.Series,
+    chord: Dict[str, Any],
+    piano_cfg: Dict[str, Any],
+    policy: Dict[str, Any],
+    section_density: float,
+    section_label: str,
+) -> List[Dict[str, Any]]:
+    """
+    Generate piano comping (offbeat/arpeggio/block chord) with role-based voicing.
+
+    Args:
+        bar_idx: Bar index
+        bar_data: Row from bars.parquet
+        chord: Chord from chordmap
+        piano_cfg: policy['instruments']['piano']
+        policy: Full policy dictionary
+        section_density: sections[section_label]['piano']
+        section_label: verse, chorus, etc.
+
+    Returns:
+        List of piano events
+    """
+    start_ql = bar_idx * 4.0
+    events = []
+
+    # Check if piano is active
+    piano_active = bar_data.get("piano_activity", 1.0)
+    if pd.isna(piano_active):
+        piano_active = 1.0
+
+    if piano_active < 0.3:
+        return []
+
+    # Effective density
+    effective_density = section_density * piano_active
+
+    if effective_density < 0.2:
+        return []
+
+    # Parse chord - handle both symbol and root+quality formats
+    if "symbol" in chord and chord["symbol"]:
+        parsed = parse_symbol(chord["symbol"])
+    else:
+        root = chord.get("root", "C")
+        quality = chord.get("quality", "")
+        tensions = chord.get("tensions", [])
+        parsed = parse_chord_symbol(root, quality, tensions)
+    
+    chord_tones = get_chord_tones(parsed, bass_octave=4)  # Piano octave 4
+
+    if not chord_tones:
+        chord_tones = [60, 64, 67]  # C major fallback
+
+    # === Phase 1: Register enforcement ===
+    section_cfg = policy.get("sections", {}).get(section_label, {})
+    role = select_role(section_cfg, "piano", default_role="pad")
+
+    # Enforce register (clamp to piano range)
+    chord_tones = ensure_register(chord_tones, "piano", policy, section_label)
+
+    # Apply open voicing if preferred (for thickness)
+    if policy.get("global", {}).get("prefer_open_voicings", True) and role == "pad":
+        reg_max = policy.get("instruments", {}).get("piano", {}).get("register", {}).get("max", 72)
+        chord_tones = spread_open_voicing(chord_tones, prefer_open=True, top_max=reg_max)
+
+    # Humanization
+    humanize_ms = piano_cfg.get("humanize_timing_ms", 12)
+    humanize_vel = piano_cfg.get("humanize_velocity", 7)
+    base_velocity = piano_cfg.get("base_velocity", 75)
+
+    # Get comping style from policy (section-based)
+    comping_styles_cfg = piano_cfg.get("comping_styles", {}).get(section_label, [])
+    if isinstance(comping_styles_cfg, list) and len(comping_styles_cfg) > 0:
+        style_weights = {s["type"]: s["probability"] for s in comping_styles_cfg}
+    else:
+        # Default: offbeat_chord 50%, arpeggio 30%, block_chord 20%
+        style_weights = {"offbeat_chord": 0.5, "arpeggio": 0.3, "block_chord": 0.2}
+
+    # Select style
+    style = np.random.choice(list(style_weights.keys()), p=list(style_weights.values()))
+
+    if style == "arpeggio":
+        # Ascending arpeggio (hope feeling) - already in register from ensure_register above
+        arp_prob = piano_cfg.get("arpeggio_probability", 0.15)
+        if np.random.random() < arp_prob:
+            for i, note in enumerate(chord_tones[:4]):
+                time_ql = (
+                    start_ql + i * 0.5 + np.random.uniform(-humanize_ms / 1000, humanize_ms / 1000)
+                )
+                vel = base_velocity + np.random.randint(-humanize_vel, humanize_vel)
+                events.append(
+                    {
+                        "time_ql": float(time_ql),
+                        "note": int(note),  # Already in register
+                        "velocity": int(np.clip(vel, 55, 90)),
+                        "duration_ql": 0.5,
+                    }
+                )
+
+    elif style == "block_chord":
+        # Block chord on beats 1, 3 - already in register
+        for beat in [0, 2]:
+            if np.random.random() < effective_density:
+                time_ql = (
+                    start_ql + beat + np.random.uniform(-humanize_ms / 1000, humanize_ms / 1000)
+                )
+                for note in chord_tones[:4]:
+                    vel = base_velocity + np.random.randint(-humanize_vel, humanize_vel)
+                    events.append(
+                        {
+                            "time_ql": float(time_ql),
+                            "note": int(note),  # Already in register
+                            "velocity": int(np.clip(vel, 60, 95)),
+                            "duration_ql": 1.0,
+                        }
+                    )
+
+    elif style == "offbeat_chord":
+        # Offbeat chord on beats 2, 4 - already in register
+        for beat in [1, 3]:
+            if np.random.random() < effective_density:
+                time_ql = (
+                    start_ql + beat + np.random.uniform(-humanize_ms / 1000, humanize_ms / 1000)
+                )
+                for note in chord_tones[:3]:
+                    vel = base_velocity - 5 + np.random.randint(-humanize_vel, humanize_vel)
+                    events.append(
+                        {
+                            "time_ql": float(time_ql),
+                            "note": int(note),  # Already in register
+                            "velocity": int(np.clip(vel, 55, 85)),
+                            "duration_ql": 0.5,
+                        }
+                    )
+
+    return events
+
+
+def generate_piano_plan(
+    bars: pd.DataFrame,
+    sections: List[Dict[str, Any]],
+    chordmap: List[Dict[str, Any]],
+    policy: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Main logic: Generate slot-based piano plan.
+
+    Args:
+        bars: bars_with_slots.parquet
+        sections: sections.json
+        chordmap: chordmap_locked_extended.json
+        policy: policy YAML
+
+    Returns:
+        Piano plan JSON
+    """
+    piano_cfg = policy.get("instruments", {}).get("piano", {})
+    sections_density = policy.get("sections", {})
+
+    events = []
+
+    # RNG for tension/humanize
+    rng_seed = policy.get("global", {}).get("rng_seed", 137)
+    rng = np.random.RandomState(rng_seed)
+
+    for _, bar_row in bars.iterrows():
+        bar_idx = int(bar_row["bar_idx"])
+        section_label = bar_row.get("section_label", "verse")
+        fill_slot = bar_row.get("fill_slot", False)
+
+        # Get chord
+        chord = get_chord_at_bar(chordmap, bar_idx)
+
+        # Get section density
+        section_cfg = sections_density.get(section_label, {})
+        piano_density = section_cfg.get("piano", 0.5)
+
+        # Decision: Fill or Comping
+        if fill_slot and is_section_boundary(bar_idx, sections):
+            # Fire fill decoration
+            bar_events = make_fill_decoration(
+                bar_idx, bar_row, chord, piano_cfg, policy, section_label
+            )
+        else:
+            # Comping
+            bar_events = make_comping_pattern(
+                bar_idx, bar_row, chord, piano_cfg, policy, piano_density, section_label
+            )
+
+        # Activity floor: ensure min_notes_per_bar
+        bar_start_ql = bar_idx * 4.0
+        bar_end_ql = (bar_idx + 1) * 4.0
+        min_notes = piano_cfg.get("min_notes_per_bar", 2)
+
+        # Get chord tones for chordpad - handle both symbol and root+quality formats
+        if "symbol" in chord and chord["symbol"]:
+            parsed = parse_symbol(chord["symbol"])
+        else:
+            # Use root+quality format (chordmap_locked.json)
+            root = chord.get("root", "C")
+            quality = chord.get("quality", "")
+            tensions = chord.get("tensions", [])
+            parsed = parse_chord_symbol(root, quality, tensions)
+        
+        chord_tones = get_chord_tones(parsed, bass_octave=4)
+        
+        # Ensure chordpad pitches are within register
+        chord_tones_in_register = ensure_register(chord_tones, "piano", policy, section_label)
+        chordpad_pitches = chord_tones_in_register[-3:] if chord_tones_in_register else [60, 64, 67]
+
+        bar_events = ensure_activity_floor(
+            bar_events,
+            bar_start_ql,
+            bar_end_ql,
+            min_notes,
+            chordpad_pitches,
+            velocity=65,
+        )
+
+        events.extend(bar_events)
+
+    # Sort by time
+    events = sorted(events, key=lambda e: e["time_ql"])
+
+    # Apply global humanize
+    global_h = policy.get("global", {}).get("humanize", {})
+    events = apply_humanize(
+        events,
+        timing_std_ms=global_h.get("timing_std_ms", 8),
+        velocity_jitter=global_h.get("velocity_jitter", 6),
+        legato_chance=global_h.get("legato_chance", 0.0),
+    )
+
+    # Metadata
+    metadata = {
+        "instrument": "piano",
+        "num_bars": int(len(bars)),
+        "num_events": len(events),
+        "fill_slots_used": int(bars["fill_slot"].sum()),
+        "generator": "generate_piano_plan_v2.py",
+    }
+
+    return {"metadata": metadata, "events": events}
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate piano plan (slot-based V2)")
+    parser.add_argument("--bars", required=True, help="Path to bars_with_slots.parquet")
+    parser.add_argument("--sections", required=True, help="Path to sections.json")
+    parser.add_argument("--chordmap", required=True, help="Path to chordmap_locked_extended.json")
+    parser.add_argument("--policy", required=True, help="Path to policy YAML")
+    parser.add_argument("--out", required=True, help="Output piano_plan.json")
+    parser.add_argument("--seed", type=int, help="Random seed for reproducibility")
+    args = parser.parse_args()
+
+    # Set random seed for reproducibility
+    if args.seed is not None:
+        np.random.seed(args.seed)
+        print(f"🎲 Random seed set to {args.seed}")
+
+    print(f"📖 Loading bars from {args.bars}")
+    bars = load_bars(args.bars)
+
+    print(f"📖 Loading sections from {args.sections}")
+    sections = load_sections(args.sections)
+
+    print(f"📖 Loading chordmap from {args.chordmap}")
+    chordmap = load_chordmap(args.chordmap)
+
+    print(f"📖 Loading policy from {args.policy}")
+    with open(args.policy, "r", encoding="utf-8") as f:
+        policy = yaml.safe_load(f)
+
+    print(f"🎹 Generating piano plan ({len(bars)} bars)")
+    plan = generate_piano_plan(bars, sections, chordmap, policy)
+
+    # Save
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(plan, f, indent=2, ensure_ascii=False)
+
+    print(f"✅ Piano plan saved to {out_path}")
+    print(f"   Events: {plan['metadata']['num_events']}")
+    print(f"   Fill slots used: {plan['metadata']['fill_slots_used']}/{len(bars)}")
+
+
+if __name__ == "__main__":
+    main()

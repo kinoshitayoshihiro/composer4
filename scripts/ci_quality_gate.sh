@@ -20,6 +20,94 @@ NC='\033[0m' # No Color
 
 FAILED=0
 WARNINGS=0
+ARTIFACT_ERRORS=0
+
+SONG_DIRS=()
+if [[ $# -gt 0 ]]; then
+    for arg in "$@"; do
+        SONG_DIR="${arg%/}"
+        SONG_DIRS+=("$SONG_DIR")
+    done
+else
+    if [[ -d "$PROJECT_ROOT/song_packages" ]]; then
+        while IFS= read -r path; do
+            SONG_DIRS+=("$path")
+        done < <(find "$PROJECT_ROOT/song_packages" -maxdepth 2 -type d -name 'song_*' 2>/dev/null | sort)
+    fi
+fi
+
+require_path_for_song() {
+    local song_dir="$1"
+    local label="$2"
+    shift 2
+    local candidates=("$@")
+    local found_path=""
+    for rel in "${candidates[@]}"; do
+        if [[ -s "$song_dir/$rel" ]]; then
+            found_path="$song_dir/$rel"
+            break
+        fi
+    done
+    if [[ -n "$found_path" ]]; then
+        echo -e "${GREEN}   ✅ ${label}: ${found_path}${NC}"
+        return 0
+    else
+        echo -e "${RED}   ❌ Missing ${label} (searched: ${candidates[*]})${NC}"
+        return 1
+    fi
+}
+
+require_plan_for_song() {
+    local song_dir="$1"
+    local plan_name="$2"
+    local match
+    match=$(find "$song_dir" -maxdepth 2 -name "$plan_name" -print -quit 2>/dev/null)
+    if [[ -n "$match" ]]; then
+        echo -e "${GREEN}   ✅ ${plan_name}: ${match}${NC}"
+        return 0
+    fi
+    echo -e "${RED}   ❌ Missing ${plan_name} under $song_dir${NC}"
+    return 1
+}
+
+check_song_artifacts() {
+    local song_dir="$1"
+    local rel_path="${song_dir#$PROJECT_ROOT/}"
+    local local_failed=0
+    [[ -z "$rel_path" ]] && rel_path="$song_dir"
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Composer4 artifact check: $rel_path"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    require_path_for_song "$song_dir" "tempo_map.json" "analysis/tempo_map.json" "tempo_map.json" || local_failed=1
+    require_path_for_song "$song_dir" "bars_with_slots.parquet" "analysis/bars_with_slots.parquet" "bars_with_slots.parquet" || local_failed=1
+    require_plan_for_song "$song_dir" "drums_plan.json" || local_failed=1
+    require_plan_for_song "$song_dir" "bass_plan.json" || local_failed=1
+    require_plan_for_song "$song_dir" "guitar_plan.json" || local_failed=1
+    require_plan_for_song "$song_dir" "piano_plan.json" || local_failed=1
+    require_plan_for_song "$song_dir" "strings_plan.json" || local_failed=1
+    echo
+
+    if [[ $local_failed -ne 0 ]]; then
+        ((ARTIFACT_ERRORS++))
+    fi
+}
+
+if [[ ${#SONG_DIRS[@]} -gt 0 ]]; then
+    echo "============================================================"
+    echo "Composer4 Artifact Sanity"
+    echo "============================================================"
+    echo ""
+    for dir in "${SONG_DIRS[@]}"; do
+        [[ -d "$dir" ]] || continue
+        check_song_artifacts "$dir"
+    done
+fi
+
+if [[ $ARTIFACT_ERRORS -gt 0 ]]; then
+    echo -e "${RED}❌ CI FAILED: Missing composer4 artifacts ($ARTIFACT_ERRORS song package(s))${NC}"
+    exit 1
+fi
 
 # Function to check instrument quality gate
 check_instrument_gate() {

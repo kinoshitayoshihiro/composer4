@@ -1,0 +1,12 @@
+enable_sections: ["verse","pre","chorus","bridge"]
+comp:
+  notes_per_bar: [2, 6]
+  prefer_offbeat: true
+  stress_guard_ql: 0.08
+line:
+  use_f0: true
+  sustain_min_ql: 0.5
+  sustain_max_ql: 2.0
+  slope_T_st_per_s: 1.2
+  tail_extend_on_vibrato_cents: 25
+ql_per_bar: 4

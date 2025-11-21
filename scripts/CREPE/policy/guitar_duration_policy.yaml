@@ -1,0 +1,14 @@
+enable_sections: ["chorus","bridge"]
+base_qL: 0.5
+min_qL: 0.25
+max_qL: 1.2
+vocal_proximity:
+  stress_window_qL: 0.1
+  shorten_factor: 0.6
+rest_extend:
+  voicing_prob_lt: 0.4
+  extend_factor: 1.4
+slope:
+  T_st_per_s: 1.0
+  when_up:   { mult: 0.85 }
+  when_down: { mult: 1.15 }

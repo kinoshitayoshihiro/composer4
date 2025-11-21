@@ -18,7 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 import copy
 
 import yaml
@@ -65,7 +65,6 @@ class ArticulationRenderer:
         # 例: flam処理
         elif technique == "flam":
             grace_pitch = artic_spec.get("grace_pitch", 37)
-            grace_offset_ms = artic_spec.get("grace_offset_ms", 18)
             grace_velocity = artic_spec.get("grace_velocity", 72)
 
             for track in new_midi.tracks:
@@ -134,8 +133,8 @@ def main():
     print(f"Loading technique map from {args.technique_map}")
     renderer = ArticulationRenderer(args.technique_map)
 
-    # 入力ファイル収集
-    input_files = sorted(args.input_dir.rglob("*.mid"))
+    # 入力ファイル収集 (.mid/.midi両方をサポート)
+    input_files = sorted({*args.input_dir.rglob("*.mid"), *args.input_dir.rglob("*.midi")})
     if args.sample:
         input_files = input_files[: args.sample]
 

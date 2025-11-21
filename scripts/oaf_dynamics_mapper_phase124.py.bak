@@ -1,0 +1,337 @@
+#!/usr/bin/env python3
+"""
+OaF Dynamics Mapper - Phase 124 (P1-2)
+
+OaF転写データ（piano_onsets_frames.json）+ bars/sections を参照し、
+Piano planのvelocityを3因子合成で再設計する。
+
+【3因子合成マッピング式】:
+  v0 = clamp(64 + 32*(conf-0.5), 30, 112)        # OaF信頼度ベース
+  Δdur = map_duration(duration_sec, short=+8, long=-6)  # 音価（短音=強め）
+  Δreg = {pitch<60:-4, 60..72:0, >72:+4}         # レジスター（高域=明るい）
+  Δsec = scale_by_section_intensity(0..+12)      # bars.energy_curve or デフォルト
+  v = clamp(round(v0 + Δdur + Δreg + Δsec), 1, 127)
+
+使い方:
+  python scripts/oaf_dynamics_mapper.py \
+    --oaf-json piano_onsets_frames.json \
+    --plan-in piano_plan_phase121_new.json \
+    --bars bars.parquet \
+    --sections sections.json \
+    --out-plan piano_plan_phase124.json \
+    --report oaf_dynamics_report.json
+
+出力:
+  - velocity再設計済みのPiano plan
+  - meta.provenance.oaf_dynamics（適用ノート数、分布）
+  - oaf_dynamics_report.json（メトリクス）
+"""
+
+import argparse
+import json
+import sys
+import math
+from pathlib import Path
+from typing import Dict, List, Any, Optional
+import pandas as pd
+
+import pandas as pd
+
+def clamp(x: float, a: float, b: float) -> float:
+    """値をa..bの範囲にクランプ"""
+    return max(a, min(b, x))
+
+def section_intensity(bars: pd.DataFrame, sections: Optional[Dict] = None) -> Dict[str, float]:
+    """
+    bars.parquetのenergy_curveからセクション強度を算出
+    
+    Args:
+        bars: bars.parquet DataFrame
+        sections: sections.json（オプション、未使用の場合はデフォルト）
+    
+    Returns:
+        {section_label: intensity (0..1)}
+    """
+    if "energy_curve" in bars.columns and "section_label" in bars.columns:
+        # energy_curve（0..1相当）→ セクション中央値へ集約
+        sec_med = bars.groupby("section_label")["energy_curve"].median().to_dict()
+        # 正規化→0..1
+        vals = list(sec_med.values()) or [0.5]
+        lo, hi = min(vals), max(vals)
+        if hi == lo:
+            return {k: 0.5 for k in sec_med.keys()}
+        return {k: (v - lo) / (hi - lo) for k, v in sec_med.items()}
+    
+    # フォールバック（セクション種別ベース）
+    return {
+        "chorus": 0.9,
+        "pre_chorus": 0.7,
+        "verse": 0.5,
+        "bridge": 0.6,
+        "intro": 0.3,
+        "outro": 0.3
+    }
+
+def map_duration(sec: float, short: int = 8, long: int = -6) -> int:
+    """
+    Duration（秒）からvelocity offsetを計算
+    
+    Args:
+        sec: duration（秒）
+        short: 短音時のoffset（例: +8）
+        long: 長音時のoffset（例: -6）
+    
+    Returns:
+        velocity offset（-6..+8）
+    
+    Example:
+        0.05s → +8（スタッカート）
+        0.25s → +2
+        0.8s → -6（レガート）
+    """
+    x = clamp(sec, 0.05, 0.8)
+    # 対数圧縮（短音→長音への滑らかな遷移）
+    t = (math.log(x) - math.log(0.05)) / (math.log(0.8) - math.log(0.05))
+    return round(short * (1 - t) + long * t)
+
+def base_from_conf(conf: float) -> int:
+    """
+    OaF confidenceからベースvelocityを計算
+    
+    Args:
+        conf: confidence (0..1)
+    
+    Returns:
+        base velocity (30..112)
+    
+    Formula:
+        v0 = clamp(64 + 32*(conf-0.5), 30, 112)
+    """
+    return int(clamp(round(64 + 32 * (conf - 0.5)), 30, 112))
+
+def reg_offset(pitch: int) -> int:
+    """
+    レジスター（音域）によるvelocity offset
+    
+    Args:
+        pitch: MIDI pitch
+    
+    Returns:
+        offset (-4, 0, +4)
+    
+    Logic:
+        pitch < 60: -4（低域=暗め）
+        60 <= pitch <= 72: 0（中域）
+        pitch > 72: +4（高域=明るい）
+    """
+    if pitch < 60:
+        return -4
+    elif pitch > 72:
+        return +4
+    else:
+        return 0
+
+def sec_offset(intensity: float) -> int:
+    """
+    セクション強度からvelocity offsetを計算
+    
+    Args:
+        intensity: section intensity (0..1)
+    
+    Returns:
+        offset (0..+12)
+    
+    Formula:
+        0 → 0, 1 → +12（直線補間）
+    """
+    return round(12 * clamp(float(intensity), 0, 1))
+
+def load_json(p: Path) -> Dict[str, Any]:
+    """JSON読み込みヘルパ"""
+    return json.loads(p.read_text(encoding="utf-8"))
+
+def bar_of_time(t: float, bars_idx: pd.DataFrame) -> Optional[int]:
+    """
+    時刻（秒）からbar_indexを検索
+    
+    Args:
+        t: 時刻（秒）
+        bars_idx: bars DataFrame（start_sec, end_sec, bar_index含む）
+    
+    Returns:
+        bar_index or None
+    """
+    m = bars_idx[(bars_idx["start_sec"] <= t) & (t < bars_idx["end_sec"])]
+    return None if m.empty else int(m.iloc[0]["bar_index"])
+
+def bar_of_time(t: float, bars_idx: pd.DataFrame) -> Optional[int]:
+    """
+    時刻（秒）からbar_indexを検索
+    
+    Args:
+        t: 時刻（秒）
+        bars_idx: bars DataFrame（start_sec, end_sec, bar_index含む）
+    
+    Returns:
+        bar_index or None
+    """
+    m = bars_idx[(bars_idx["start_sec"] <= t) & (t < bars_idx["end_sec"])]
+    return None if m.empty else int(m.iloc[0]["bar_index"])
+
+def beats_to_sec(beats: float, bars: pd.DataFrame) -> float:
+    """
+    Beats（拍）から時刻（秒）へ変換
+    
+    Args:
+        beats: 拍数（bars.parquetのstart_beat基準）
+        bars: bars.parquet DataFrame（start_beat, end_beat, start_sec, end_sec含む）
+    
+    Returns:
+        時刻（秒）
+    """
+    # beatsが属するbar検索
+    m = bars[(bars["start_beat"] <= beats) & (beats < bars["end_beat"])]
+    if m.empty:
+        # フォールバック: tempo_bpm平均から推定（4/4拍子前提）
+        avg_tempo = bars["tempo_bpm"].mean() if "tempo_bpm" in bars.columns else 120.0
+        return (beats / 4.0) * (60.0 / avg_tempo) * 4.0
+    
+    row = m.iloc[0]
+    # bar内の相対位置を計算
+    bar_start_beat = float(row["start_beat"])
+    bar_end_beat = float(row["end_beat"])
+    bar_start_sec = float(row["start_sec"])
+    bar_end_sec = float(row["end_sec"])
+    
+    # 線形補間
+    ratio = (beats - bar_start_beat) / (bar_end_beat - bar_start_beat) if bar_end_beat > bar_start_beat else 0.0
+    return bar_start_sec + ratio * (bar_end_sec - bar_start_sec)
+
+def main():
+    ap = argparse.ArgumentParser(description="OaF Dynamics Mapper - Phase 124")
+    ap.add_argument("--oaf-json", required=True, help="Input OaF JSON (piano_onsets_frames.json)")
+    ap.add_argument("--plan-in", required=True, help="Input Piano plan JSON")
+    ap.add_argument("--bars", required=True, help="bars.parquet")
+    ap.add_argument("--sections", required=False, help="sections.json (optional)")
+    ap.add_argument("--out-plan", required=True, help="Output Piano plan with velocity mapping")
+    ap.add_argument("--report", required=True, help="Output metrics report JSON")
+    args = ap.parse_args()
+    
+    # データ読み込み
+    oaf = load_json(Path(args.oaf_json))  # {notes:[{onset,duration,pitch,confidence,...}]}
+    plan = load_json(Path(args.plan_in))  # {events:[...]} or {tracks:[{role:'piano', events:[...]}]}
+    bars = pd.read_parquet(args.bars)
+    
+    # セクション強度辞書
+    sections = None
+    if args.sections and Path(args.sections).exists():
+        sections = load_json(Path(args.sections))
+    sec_int = section_intensity(bars, sections)
+    
+    # Piano イベント抽出
+    if "tracks" in plan:
+        tr = next((t for t in plan["tracks"] if (t.get("role") or t.get("name")) == "piano"), None)
+        events = tr.get("events", []) if tr else []
+    else:
+        events = plan.get("events", [])
+    
+    # bars index（bar_index, start_sec, end_sec, section_label）
+    bars_idx = bars[["bar_index", "start_sec", "end_sec", "section_label"]].copy()
+    
+    # Velocity写像
+    applied = 0
+    velocity_dist = []
+    
+    for ev in events:
+        # イベント発音時刻取得（start_sec or start_beats → sec変換）
+        onset_sec = ev.get("start_sec")
+        if onset_sec is None:
+            # start_beatsがある場合はbeats→sec変換
+            start_beats = ev.get("start_beats")
+            if start_beats is not None:
+                onset_sec = beats_to_sec(float(start_beats), bars)
+            else:
+                continue
+        
+        # 最近傍OaFノート検索
+        if not oaf.get("notes"):
+            continue
+        cand = min(oaf["notes"], key=lambda n: abs(n["onset"] - onset_sec))
+        
+        # OaFパラメータ取得
+        conf = float(cand.get("confidence", 0.5))
+        dur_s = float(cand.get("duration", 0.25))
+        pit = int(cand.get("pitch", ev.get("pitch", 64)))
+        
+        # bar_index → section_label検索
+        bar_i = bar_of_time(onset_sec, bars_idx)
+        sec_label = None
+        intensity = 0.5
+        
+        if bar_i is not None:
+            sec_rows = bars_idx[bars_idx["bar_index"] == bar_i]
+            if not sec_rows.empty:
+                sec_label = sec_rows.iloc[0]["section_label"]
+                if sec_label in sec_int:
+                    intensity = sec_int[sec_label]
+        
+        # 3因子合成
+        v0 = base_from_conf(conf)
+        delta_dur = map_duration(dur_s)
+        delta_reg = reg_offset(pit)
+        delta_sec = sec_offset(intensity)
+        
+        v = v0 + delta_dur + delta_reg + delta_sec
+        v = int(clamp(v, 1, 127))
+        
+        # イベントに適用
+        ev["velocity"] = v
+        velocity_dist.append(v)
+        applied += 1
+    
+    # Provenance刻印
+    plan.setdefault("meta", {}).setdefault("provenance", {}).update({
+        "oaf_dynamics": {
+            "notes_total": len(oaf.get("notes", [])),
+            "events_applied": applied,
+            "section_intensity_keys": list(sec_int.keys()),
+            "mapper_version": "0.1.0",
+            "velocity_dist": {
+                "min": min(velocity_dist) if velocity_dist else 0,
+                "max": max(velocity_dist) if velocity_dist else 0,
+                "mean": round(sum(velocity_dist) / len(velocity_dist), 1) if velocity_dist else 0,
+            }
+        }
+    })
+    plan.setdefault("meta", {}).setdefault("context_sources", {}).update({
+        "oaf_piano_dynamics": True
+    })
+    
+    # 出力
+    Path(args.out_plan).write_text(json.dumps(plan, ensure_ascii=False, indent=2), encoding="utf-8")
+    
+    # レポート
+    report = {
+        "applied": applied,
+        "oaf_notes": len(oaf.get("notes", [])),
+        "section_intensity": sec_int,
+        "velocity_dist": {
+            "min": min(velocity_dist) if velocity_dist else 0,
+            "max": max(velocity_dist) if velocity_dist else 0,
+            "mean": round(sum(velocity_dist) / len(velocity_dist), 1) if velocity_dist else 0,
+            "count": len(velocity_dist),
+        }
+    }
+    Path(args.report).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    
+    print(f"\n✅ OaF Dynamics Mapping Complete:")
+    print(f"   OaF notes: {report['oaf_notes']}")
+    print(f"   Events applied: {applied}")
+    print(f"   Velocity range: {report['velocity_dist']['min']}-{report['velocity_dist']['max']} (mean={report['velocity_dist']['mean']})")
+    print(f"   Section intensity keys: {list(sec_int.keys())}")
+    print(f"   Saved plan: {args.out_plan}")
+    print(f"   Saved report: {args.report}")
+
+if __name__ == "__main__":
+    main()
+

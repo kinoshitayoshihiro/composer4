@@ -1,0 +1,23 @@
+register: {low: 50, high: 84}
+tensions:
+  base_allow: ["9","11"]     # Pad常時ON時は密度を抑制
+  avoid_global: ["b9","#9","#11","b13"]
+  by_quality:
+    maj:   {allow: ["9"],    avoid: ["#11","13"]}  # 濁り・厚塗り回避
+    maj7:  {allow: ["9"],    avoid: ["#11","13"]}
+    m:     {allow: ["9","11"], avoid: ["b13"]}
+    m7:    {allow: ["9","11"], avoid: ["b13"]}
+    '7':   {allow: ["9","#11"], avoid: ["13","b9","#9"]}
+    m7b5:  {allow: ["11"],   avoid: ["13","#11","b9"]}
+    dim7:  {allow: [],     avoid: ["11","13","#11","#9","b9"]}
+  allow_by_label:
+    chorus: ["11"]           # ほんの少し開ける
+  avoid_by_label:
+    verse:  ["#11","b13","13"]
+density:
+  scale_by_label:
+    chorus: 0.7
+    bridge: 0.8
+voicing:
+  omit_third_in_labels: ["chorus"]
+  prefer_inversion_by_quality: {maj: "root", min: "root", "7": "root"}

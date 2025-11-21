@@ -1,0 +1,9 @@
+cadence:
+  phrase_end_detect: ["boundary","rest_then_voiced<0.4"]
+  target_preference: { "3rd": 0.7, "root": 0.3 }
+  approach: { "step": 0.7, "leap<=3rd": 0.3 }
+dissonance_rules:
+  permit: ["9","4","#11","b9"]
+parallel_guard:
+  avoid_parallel_octaves_with_vocal: true
+  avoid_parallel5_with_bass: true

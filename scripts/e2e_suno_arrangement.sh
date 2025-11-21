@@ -7,6 +7,41 @@
 set -Eeuo pipefail
 IFS=$'\n\t'
 
+# ===== Artifact-Only Mode（デフォルト）=====
+# 0: WAVは一切再参照しない（Phase A生成物のみ使用）
+# 1: WAV参照許可（従来互換、非推奨）
+: "${E2E_ALLOW_WAV:=0}"
+
+artifact_only() { 
+    [[ "${E2E_ALLOW_WAV}" -eq 0 ]]
+}
+
+require_artifact() {
+    local f="$1"
+    local desc="${2:-artifact}"
+    if [[ ! -s "$f" ]]; then
+        echo "❌ Required ${desc} missing: ${f}"
+        echo "   → Phase A を完了させてから再実行してください。"
+        exit 1
+    fi
+}
+
+resolve_phase_a_artifact() {
+    local rel_path="$1"
+    shift || true
+    local explicit_override="${1:-}"
+    local candidates=()
+    [[ -n "$explicit_override" ]] && candidates+=("$explicit_override")
+    candidates+=("$SONG_DIR/analysis/$rel_path" "$SONG_DIR/$rel_path")
+    for candidate in "${candidates[@]}"; do
+        if [[ -n "$candidate" && -e "$candidate" ]]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # パッチ4: 再現性Seed環境変数集約
 export PYTHONHASHSEED=0
 export COMPOSER2_GLOBAL_SEED="${COMPOSER2_GLOBAL_SEED:-42}"
@@ -206,6 +241,29 @@ if [[ ! -f "$SONG_PKG" ]]; then
     exit 1
 fi
 
+# Phase A artifact validation (composer4 spec)
+echo "📦 Phase A artifacts check"
+PHASE_A_REQUIRED=(
+  tempo_map.json
+  sections.json
+  lyric_anchors.json
+  bars.parquet
+  bars_with_slots.parquet
+)
+
+for artifact in "${PHASE_A_REQUIRED[@]}"; do
+    if path=$(resolve_phase_a_artifact "$artifact" 2>/dev/null); then
+        echo "   ✅ $artifact → $path"
+    else
+        require_artifact "$SONG_DIR/analysis/$artifact" "Phase A artifact ($artifact)"
+    fi
+done
+echo
+
+TEMPO_MAP_PATH=$(resolve_phase_a_artifact tempo_map.json || true)
+BARS_WITH_SLOTS_PATH=$(resolve_phase_a_artifact bars_with_slots.parquet || true)
+BARS_PARQUET_PATH=$(resolve_phase_a_artifact bars.parquet || true)
+
 # テンポ抽出（Pythonで堅牢に）
 TEMPO_BPM=$(python3 -c "
 import yaml, sys
@@ -218,8 +276,24 @@ with open('$SONG_PKG', 'r', encoding='utf-8') as f:
 echo "   Tempo: $TEMPO_BPM BPM"
 echo
 
+# bars.parquetパス定義（bars_with_slots を最優先）
+if [[ -n "$BARS_WITH_SLOTS_PATH" ]]; then
+    BARS_FILE="$BARS_WITH_SLOTS_PATH"
+elif [[ -n "$BARS_PARQUET_PATH" ]]; then
+    BARS_FILE="$BARS_PARQUET_PATH"
+else
+    BARS_FILE="$SONG_DIR/analysis/bars.parquet"  # フォールバック: Phase A で生成されている前提
+fi
+echo "   Bars source : $BARS_FILE"
+[[ -n "$TEMPO_MAP_PATH" ]] && echo "   Tempo map    : $TEMPO_MAP_PATH"
+echo
+
+if [[ "$BARS_FILE" != "$SONG_DIR/bars.parquet" && ! -f "$SONG_DIR/bars.parquet" ]]; then
+    ln -sf "$BARS_FILE" "$SONG_DIR/bars.parquet"
+fi
+
 # 共通引数（存在チェックで後続に渡す）
-INSTR_ARGS=( --song-package "$SONG_PKG" --bars "$SONG_DIR/bars.parquet" )
+INSTR_ARGS=( --song-package "$SONG_PKG" --bars "$BARS_FILE" )
 if [[ -f "$SONG_DIR/chordmap.json" ]]; then INSTR_ARGS+=( --chordmap "$SONG_DIR/chordmap.json" ); fi
 if [[ -f "$SONG_DIR/sections.json" ]]; then INSTR_ARGS+=( --sections "$SONG_DIR/sections.json" ); fi
 if [[ -f "$SONG_DIR/lyric_anchors.json" ]]; then INSTR_ARGS+=( --lyric-anchors "$SONG_DIR/lyric_anchors.json" ); fi
@@ -264,9 +338,9 @@ fi
 
 # 1.3. bars.parquet は必須（ダミー生成を原則禁止）
 CURRENT_STEP="Bars Presence Check"
-if [[ ! -f "$SONG_DIR/bars.parquet" ]]; then
+if [[ ! -f "$BARS_FILE" ]]; then
     if [[ "$STRICT_STAGE1" == "true" ]]; then
-        echo "❌ bars.parquet not found. Abort (STRICT_STAGE1)."
+        echo "❌ bars*.parquet not found (expected $BARS_FILE). Abort (STRICT_STAGE1)."
         echo "   → 生成手順: python ops/stems_features.py --extend-bars"
         echo "      で bars_extended.parquet を作成し、bars.parquet に差し替え"
         exit 1
@@ -309,6 +383,8 @@ bars_df.to_parquet(song_dir / 'bars.parquet')
 print(f'   ✅ bars.parquet generated: {len(bars_df)} bars (FALLBACK)')
 "
         fi
+        BARS_PARQUET_PATH="$SONG_DIR/bars.parquet"
+        BARS_FILE="$BARS_PARQUET_PATH"
     fi
     echo
 fi
@@ -316,11 +392,39 @@ fi
 # 1.5. Stem Features & Bars Extension (Phase A自動化)
 CURRENT_STEP="Stem Features Generation"
 
-# SKIP_STEM_FEATURES=true の場合は丸ごとスキップ
-if [[ "$SKIP_STEM_FEATURES" == "true" ]]; then
+# Artifact-Only Mode: 既存stems_features.parquetを優先、WAV再解析スキップ
+if artifact_only; then
+    echo "📋 Step 1.5: Use existing artifacts (Artifact-Only Mode)"
+    
+    # 必須アーティファクト検証（analysis/配下優先）
+    if [[ -f "$SONG_DIR/analysis/stems_features.parquet" ]]; then
+        STEM_FEAT="$SONG_DIR/analysis/stems_features.parquet"
+    elif [[ -f "$SONG_DIR/stem_features.parquet" ]]; then
+        STEM_FEAT="$SONG_DIR/stem_features.parquet"
+    else
+        echo "ℹ️  stems_features.parquet not found (proceeding without stem features)"
+        STEM_FEAT=""
+    fi
+    
+    if [[ -n "$STEM_FEAT" ]]; then
+        echo "   ✅ Using: $STEM_FEAT"
+    fi
+    
+    # bars*.parquet は必須（bars_with_slots を優先）
+    if [[ ! -f "$BARS_FILE" ]]; then
+        echo "❌ bars_with_slots.parquet / bars.parquet not found. Expected: $BARS_FILE"
+        exit 1
+    fi
+    echo "   ✅ Using bars: $BARS_FILE"
+    echo
+    
+elif [[ "$SKIP_STEM_FEATURES" == "true" ]]; then
     echo "⏭️  Step 1.5: Skipped (SKIP_STEM_FEATURES=true)"
     echo
 else
+    # 従来互換（WAV再解析許可時のみ実行）
+    echo "⚠️  WAV re-analysis mode (E2E_ALLOW_WAV=1)"
+    
     # 外部Stem指定を優先、なければ自動探索
     STEMS_DIR_CANDIDATES=()
     if [[ -n "$STEMS_DIR_CLI" ]]; then
@@ -406,75 +510,131 @@ else
 fi
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Phase C: CREPE/Onsets-and-Frames (Optional, NO-OP安全)
+# Phase C: CREPE/Onsets-and-Frames (Artifact-Only: 既存parquet使用)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-if [[ "$ENABLE_CREPE" == "true" ]]; then
-    echo "🎤 Step 1.5: CREPE Vocal F0 Extraction (Phase C)"
-    VOCAL_WAV="$SONG_DIR/vocal.wav"
-    if [[ -f "$VOCAL_WAV" ]]; then
-        "$PYTHON_BIN" ops/crepe_pitch_extract.py \
-            --vocal-wav "$VOCAL_WAV" \
-            --song-package "$SONG_PKG" \
-            --bars "$SONG_DIR/bars.parquet" \
-            --out "$SONG_DIR/vocal_f0_crepe.parquet" \
-            --anchors "$SONG_DIR/lyric_anchors_crepe.json" || echo "⚠️  CREPE failed (NO-OP)"
-        echo "✅ CREPE completed (or NO-OP)"
+if artifact_only; then
+    echo "📋 Phase C: Use existing CREPE/OaF artifacts (no WAV re-analysis)"
+    
+    # CREPE F0（既存parquet確認）
+    if [[ -f "$SONG_DIR/analysis/vocal_f0.parquet" ]]; then
+        echo "   ✅ vocal_f0.parquet (from Phase A)"
+    elif [[ -f "$SONG_DIR/features/vocal_f0.parquet" ]]; then
+        echo "   ✅ features/vocal_f0.parquet (from Phase A)"
     else
-        echo "⚠️  vocal.wav not found, CREPE skipped (NO-OP)"
+        echo "   ℹ️  vocal_f0.parquet not found (proceeding without CREPE data)"
+    fi
+    
+    # OaF Piano（既存データ確認）
+    if [[ -f "$SONG_DIR/piano_onsets_frames.json" ]] || [[ -f "$SONG_DIR/analysis/piano_onsets_frames.json" ]]; then
+        echo "   ✅ piano_onsets_frames data exists"
+    else
+        echo "   ℹ️  OaF data not found (proceeding without piano transcription)"
     fi
     echo
-fi
-
-if [[ "$ENABLE_OAF" == "true" ]]; then
-    echo "🎹 Step 1.6: Onsets-and-Frames Piano Transcription (Phase C)"
-    PIANO_WAV="$SONG_DIR/piano.wav"
-    if [[ -f "$PIANO_WAV" ]]; then
-        "$PYTHON_BIN" ops/transcribe_piano_oaf.py \
-            --piano-wav "$PIANO_WAV" \
-            --song-package "$SONG_PKG" \
-            --bars "$SONG_DIR/bars.parquet" \
-            --out-midi "$SONG_DIR/piano_onsets_frames.mid" \
-            --out-stats "$SONG_DIR/piano_onsets_frames.parquet" || echo "⚠️  OaF failed (NO-OP)"
-        echo "✅ Onsets-and-Frames completed (or NO-OP)"
-    else
-        echo "⚠️  piano.wav not found, OaF skipped (NO-OP)"
-    fi
-    echo
-fi
-
-# Phase D: F0 extraction & Timbre curves (完全NO-OP設計)
-if [[ "$ENABLE_F0_EXTRACT" == "true" ]]; then
-    echo "🎸 Step 1.7: F0 Extraction for Bass/Lead (Phase D)"
-    for stem_role in "Bass" "Lead" "Guitar"; do
-        STEM_WAV=$(find "${STEMS_DIR:-$SONG_DIR}" -name "*${stem_role}*.wav" 2>/dev/null | head -1)
-        if [[ -f "$STEM_WAV" ]]; then
-            OUT_F0="$SONG_DIR/${stem_role,,}_f0.parquet"
-            "$PYTHON_BIN" ops/crepe_extract.py \
-                --audio "$STEM_WAV" \
+    
+else
+    # 従来互換：WAV再解析許可時のみ実行
+    if [[ "$ENABLE_CREPE" == "true" ]]; then
+        echo "🎤 Step 1.5: CREPE Vocal F0 Extraction (WAV re-analysis)"
+        VOCAL_WAV="$SONG_DIR/vocal.wav"
+        if [[ -f "$VOCAL_WAV" ]]; then
+            "$PYTHON_BIN" ops/crepe_pitch_extract.py \
+                --vocal-wav "$VOCAL_WAV" \
+                --song-package "$SONG_PKG" \
                 --bars "$SONG_DIR/bars.parquet" \
-                --out "$OUT_F0" \
-                --hop-ms 10 --smooth-ms 120 || echo "⚠️  F0 extraction failed for $stem_role (NO-OP)"
-            [[ -f "$OUT_F0" ]] && echo "✅ F0 extracted: $OUT_F0"
+                --out "$SONG_DIR/vocal_f0_crepe.parquet" \
+                --anchors "$SONG_DIR/lyric_anchors_crepe.json" || echo "⚠️  CREPE failed (NO-OP)"
+            echo "✅ CREPE completed (or NO-OP)"
+        else
+            echo "⚠️  vocal.wav not found, CREPE skipped (NO-OP)"
+        fi
+        echo
+    fi
+
+    if [[ "$ENABLE_OAF" == "true" ]]; then
+        echo "🎹 Step 1.6: Onsets-and-Frames Piano Transcription (WAV re-analysis)"
+        PIANO_WAV="$SONG_DIR/piano.wav"
+        if [[ -f "$PIANO_WAV" ]]; then
+            # 新しいOaFアダプタを使用（API差分吸収済み）
+            "$PYTHON_BIN" ops/oaf_adapter.py transcribe \
+                --audio "$PIANO_WAV" \
+                --out "$SONG_DIR/piano_onsets_frames.json" \
+                --model-size tiny || {
+                    echo "⚠️  OaF failed (NO-OP)"
+                    # 旧フォーマットへのフォールバック（互換性維持）
+                    if [[ -f "ops/transcribe_piano_oaf.py" ]]; then
+                        "$PYTHON_BIN" ops/transcribe_piano_oaf.py \
+                            --piano-wav "$PIANO_WAV" \
+                            --song-package "$SONG_PKG" \
+                            --bars "$SONG_DIR/bars.parquet" \
+                            --out-midi "$SONG_DIR/piano_onsets_frames.mid" \
+                            --out-stats "$SONG_DIR/piano_onsets_frames.parquet" || echo "⚠️  Fallback also failed (NO-OP)"
+                    fi
+                }
+            echo "✅ Onsets-and-Frames completed (or NO-OP)"
+        else
+            echo "⚠️  piano.wav not found, OaF skipped (NO-OP)"
+        fi
+        echo
+    fi
+fi
+
+# Phase D: F0 extraction & Timbre curves (Artifact-Only: 既存parquet使用)
+if artifact_only; then
+    echo "📋 Phase D: Use existing F0/Timbre artifacts (no WAV re-analysis)"
+    
+    # F0データ確認
+    for role in bass lead guitar; do
+        F0_FILE="$SONG_DIR/${role}_f0.parquet"
+        if [[ -f "$F0_FILE" ]]; then
+            echo "   ✅ ${role}_f0.parquet exists"
+        fi
+    done
+    
+    # Timbreデータ確認
+    for role in synth pad; do
+        TIMBRE_FILE="$SONG_DIR/${role}_timbre.parquet"
+        if [[ -f "$TIMBRE_FILE" ]]; then
+            echo "   ✅ ${role}_timbre.parquet exists"
         fi
     done
     echo
-fi
+    
+else
+    # 従来互換：WAV再解析許可時のみ実行
+    if [[ "$ENABLE_F0_EXTRACT" == "true" ]]; then
+        echo "🎸 Step 1.7: F0 Extraction for Bass/Lead (WAV re-analysis)"
+        for stem_role in "Bass" "Lead" "Guitar"; do
+            STEM_WAV=$(find "${STEMS_DIR:-$SONG_DIR}" -name "*${stem_role}*.wav" 2>/dev/null | head -1)
+            if [[ -f "$STEM_WAV" ]]; then
+                OUT_F0="$SONG_DIR/${stem_role,,}_f0.parquet"
+                "$PYTHON_BIN" ops/crepe_extract.py \
+                    --audio "$STEM_WAV" \
+                    --bars "$SONG_DIR/bars.parquet" \
+                    --out "$OUT_F0" \
+                    --hop-ms 10 --smooth-ms 120 || echo "⚠️  F0 extraction failed for $stem_role (NO-OP)"
+                [[ -f "$OUT_F0" ]] && echo "✅ F0 extracted: $OUT_F0"
+            fi
+        done
+        echo
+    fi
 
-if [[ "$ENABLE_TIMBRE_CURVES" == "true" ]]; then
-    echo "🎨 Step 1.8: Timbre Curves for Synth/Pad (Phase D)"
-    for stem_role in "Synth" "Pad" "SynthPad" "Keys"; do
-        STEM_WAV=$(find "${STEMS_DIR:-$SONG_DIR}" -name "*${stem_role}*.wav" 2>/dev/null | head -1)
-        if [[ -f "$STEM_WAV" ]]; then
-            OUT_TIMBRE="$SONG_DIR/${stem_role,,}_timbre.parquet"
-            "$PYTHON_BIN" ops/ddsp_timbre_curves.py \
-                --audio "$STEM_WAV" \
-                --bars "$SONG_DIR/bars.parquet" \
-                --out "$OUT_TIMBRE" \
-                --hop-ms 20 --smooth-ms 200 || echo "⚠️  Timbre curves failed for $stem_role (NO-OP)"
-            [[ -f "$OUT_TIMBRE" ]] && echo "✅ Timbre curves: $OUT_TIMBRE"
-        fi
-    done
-    echo
+    if [[ "$ENABLE_TIMBRE_CURVES" == "true" ]]; then
+        echo "🎨 Step 1.8: Timbre Curves for Synth/Pad (WAV re-analysis)"
+        for stem_role in "Synth" "Pad" "SynthPad" "Keys"; do
+            STEM_WAV=$(find "${STEMS_DIR:-$SONG_DIR}" -name "*${stem_role}*.wav" 2>/dev/null | head -1)
+            if [[ -f "$STEM_WAV" ]]; then
+                OUT_TIMBRE="$SONG_DIR/${stem_role,,}_timbre.parquet"
+                "$PYTHON_BIN" ops/ddsp_timbre_curves.py \
+                    --audio "$STEM_WAV" \
+                    --bars "$SONG_DIR/bars.parquet" \
+                    --out "$OUT_TIMBRE" \
+                    --hop-ms 20 --smooth-ms 200 || echo "⚠️  Timbre curves failed for $stem_role (NO-OP)"
+                [[ -f "$OUT_TIMBRE" ]] && echo "✅ Timbre curves: $OUT_TIMBRE"
+            fi
+        done
+        echo
+    fi
 fi
 
 # 3. Drums 生成（rule / ml / real）
@@ -785,9 +945,13 @@ if p<10 or v<8 or d<6:
 echo "   ▸ Piano (Stage2 real groove) [STRICT + DEBUG]"
 # Phase E: Piano OaFオプション追加
 PIANO_OAF_OPT=""
-if [[ -f "$SONG_DIR/piano_oaf.json" ]]; then
+if [[ -f "$SONG_DIR/piano_onsets_frames.json" ]]; then
+    PIANO_OAF_OPT="--oaf-piano $SONG_DIR/piano_onsets_frames.json"
+    echo "      [Phase E] Piano OaF detected: $SONG_DIR/piano_onsets_frames.json"
+elif [[ -f "$SONG_DIR/piano_oaf.json" ]]; then
+    # 旧フォーマット互換
     PIANO_OAF_OPT="--oaf-piano $SONG_DIR/piano_oaf.json"
-    echo "      [Phase E] Piano OaF detected: $SONG_DIR/piano_oaf.json"
+    echo "      [Phase E] Piano OaF detected (old): $SONG_DIR/piano_oaf.json"
 fi
 if ! "$PYTHON_BIN" scripts/instrument_midi_to_plan_real.py \
     --role piano \
@@ -817,6 +981,62 @@ print(f'   piano: uniq(p)={p} v={v} d={d} total={len(ev)}')
 if p<10 or v<8 or d<6:
     raise SystemExit(f'RICHNESS FAIL: p={p}/10 v={v}/8 d={d}/6')
 "
+
+# === Piano Post-Processing (Phase 125 P0: plan_doctor + OaF dynamics + velocity gate) ===
+echo "🎹 Step 4.1: Piano Post-Processing (Phase 125 P0 safety net)"
+
+# Step 4.1-a: Plan normalization (dur/dur_beats safety)
+if [[ -f "$SONG_DIR/piano_plan.json" ]]; then
+  echo "   ▸ Plan Doctor (dur/dur_beats normalization)"
+  "$PYTHON_BIN" scripts/plan_doctor.py \
+    --in-plan "$SONG_DIR/piano_plan.json" \
+    --out-plan "$SONG_DIR/piano_plan.doctored.json" \
+    --min-dur-beats 0.03125 || {
+      echo "⚠️  plan_doctor failed (using original)"
+      cp "$SONG_DIR/piano_plan.json" "$SONG_DIR/piano_plan.doctored.json"
+  }
+  
+  # Step 4.1-b: OaF Dynamics Mapping (EmotionAI integration)
+  if [[ -f "$SONG_DIR/piano_onsets_frames.json" ]] && [[ -f "$SONG_DIR/bars.parquet" ]]; then
+    echo "   ▸ OaF Dynamics Mapping (energy/valence integration)"
+    BARS_WITH_EMOTION="${SONG_DIR}/bars_with_emotion.parquet"
+    [[ ! -f "$BARS_WITH_EMOTION" ]] && BARS_WITH_EMOTION="$SONG_DIR/bars.parquet"
+    
+    "$PYTHON_BIN" scripts/oaf_dynamics_mapper.py \
+      --plan "$SONG_DIR/piano_plan.doctored.json" \
+      --oaf-notes "$SONG_DIR/piano_onsets_frames.json" \
+      --bars "$BARS_WITH_EMOTION" \
+      --out "$SONG_DIR/piano_plan.with_oaf.json" \
+      --window-ms 40.0 || {
+        echo "⚠️  OaF dynamics mapper failed (using doctored)"
+        cp "$SONG_DIR/piano_plan.doctored.json" "$SONG_DIR/piano_plan.with_oaf.json"
+    }
+  else
+    echo "   ⚠️  OaF data not available, skipping dynamics mapping"
+    cp "$SONG_DIR/piano_plan.doctored.json" "$SONG_DIR/piano_plan.with_oaf.json"
+  fi
+  
+  # Step 4.1-c: Velocity Gate (smoothing + delta clipping)
+  echo "   ▸ Velocity Gate (smoothing + delta clipping)"
+  "$PYTHON_BIN" scripts/oaf_velocity_gate.py \
+    --plan-in "$SONG_DIR/piano_plan.with_oaf.json" \
+    --out-plan "$SONG_DIR/piano_plan.ready.json" \
+    --role piano \
+    --window-notes 5 \
+    --delta-max 18 \
+    --min-vel 30 \
+    --max-vel 112 || {
+      echo "⚠️  velocity gate failed (using with_oaf)"
+      cp "$SONG_DIR/piano_plan.with_oaf.json" "$SONG_DIR/piano_plan.ready.json"
+  }
+  
+  # Final: Replace piano_plan.json with ready version
+  cp "$SONG_DIR/piano_plan.ready.json" "$SONG_DIR/piano_plan.json"
+  echo "   ✅ Piano Post-Processing Complete (plan_doctor → OaF dynamics → velocity gate)"
+else
+  echo "   ⚠️  piano_plan.json not found, skipping post-processing"
+fi
+echo
 
 # 4-2) Strings
 echo "   ▸ Strings (Stage2 real groove) [STRICT + DEBUG]"
@@ -1345,7 +1565,16 @@ if [[ -f "$SONG_DIR/full_arrangement.mid" ]] && [[ ! $DRY_RUN = true ]]; then
         "--bars" "$SONG_DIR/bars.parquet"
         "--tempo-bpm" "$TEMPO_BPM"
         "--report" "$SONG_DIR/ci_verify_report.json"
+        "--song-dir" "$SONG_DIR"
     )
+    
+    # CREPE/OaF検証を追加
+    if [[ "$ENABLE_F0_EXTRACT" == "true" ]]; then
+        CI_ARGS+=("--enable-crepe")
+    fi
+    if [[ "$ENABLE_OAF" == "true" ]]; then
+        CI_ARGS+=("--enable-oaf")
+    fi
     
     # KPIが有効な場合はCI検証にも含める
     if $RUN_KPI; then

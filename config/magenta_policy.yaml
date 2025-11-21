@@ -1,0 +1,106 @@
+# Magenta Policy Configuration — Phase 4 装飾レイヤ
+#
+# Controls how Magenta fills/arpeggios are injected into the arrangement.
+#
+# 使用方針:
+# - Magentaはスパイスとして使用（主役ではない）
+# - OtosonAI backbone（HarmonyAI, RhythmAI）を崩さない
+# - QA gateで品質担保
+
+# Global enable/disable
+enabled: true
+
+# Probability of using Magenta for any given fill slot
+# 0.0 = never, 1.0 = always
+magenta_use_prob: 0.3
+
+# Fill generation policy
+fill_policy:
+  # Temperature for sampling (higher = more random)
+  temperature: 0.8
+  
+  # Maximum events per fill
+  max_events: 32
+  
+  # Pitch range
+  min_pitch: 36  # C2
+  max_pitch: 96  # C7
+  
+  # Rhythm density (0.0 = sparse, 1.0 = dense)
+  rhythm_density: 0.7
+  
+  # Use guide tones from HarmonyAI
+  use_guide_tones: true
+
+# Arpeggio generation policy
+arpeggio_policy:
+  temperature: 0.6
+  max_events: 16
+  min_pitch: 48
+  max_pitch: 84
+  rhythm_density: 0.5
+
+# Slot targeting
+# Which slots are eligible for Magenta fills?
+eligible_slots:
+  - "fill_pre_chorus"
+  - "fill_post_chorus"
+  - "fill_bridge"
+  - "riff_intro"
+  - "riff_outro"
+
+# Exclude slots (override eligible_slots)
+exclude_slots:
+  - "bass_foundation"
+  - "chord_progression"
+  - "melody_primary"
+
+# Per-section overrides
+section_overrides:
+  intro:
+    magenta_use_prob: 0.5  # Higher for intro variety
+    fill_policy:
+      temperature: 0.9
+  
+  verse:
+    magenta_use_prob: 0.2  # Lower for verse clarity
+  
+  chorus:
+    magenta_use_prob: 0.4  # Higher for chorus energy
+  
+  outro:
+    magenta_use_prob: 0.6  # Higher for outro creativity
+    arpeggio_policy:
+      temperature: 0.7
+
+# QA constraints
+qa_constraints:
+  # Maximum percentage of events from Magenta
+  # (rest must come from OtosonAI backbone)
+  max_magenta_event_ratio: 0.25
+  
+  # Maximum consecutive bars with Magenta fills
+  max_consecutive_magenta_bars: 4
+  
+  # Minimum rest between Magenta fills (in bars)
+  min_rest_bars: 2
+  
+  # Pitch outlier detection
+  max_pitch_outlier_semitones: 12
+  
+  # Velocity range (avoid extremes)
+  min_velocity: 40
+  max_velocity: 110
+
+# Checkpoint paths (optional - fallback to prototype)
+checkpoints:
+  groovae_2bar: "models/groovae_2bar_humanize.ckpt"
+  music_vae_mel: "models/music_vae_mel_2bar_small.ckpt"
+  
+  # Note: If checkpoints not found, generator uses prototype mode
+
+# Logging
+logging:
+  log_fills: true
+  log_qa_failures: true
+  output_dir: "logs/magenta_fills"

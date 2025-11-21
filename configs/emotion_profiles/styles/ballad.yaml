@@ -1,0 +1,74 @@
+# EmotionAI Profile - Ballad Style
+# Phase 125: 朗読×ピアノ用プリセット
+#
+# 優先順位: CLI > song-level > project > style (this file) > base
+#
+# バラード特有の設定を定義（baseからのオーバーライド）
+
+version: 1
+
+# セクション別基準値（バラード用に調整）
+sections:
+  intro:
+    energy: 0.25              # baseより静か
+    valence: -0.20            # より陰り
+    description: "静かな導入、しっとり"
+  
+  verse:
+    energy: 0.45              # baseより抑える
+    valence: -0.10            # やや陰り（朗読×ピアノの雰囲気）
+    description: "朗読的、落ち着いた詩情"
+  
+  pre_chorus:
+    energy: 0.65              # baseより控えめ
+    valence: 0.05             # ややニュートラル
+    description: "徐々に盛り上がる"
+  
+  chorus:
+    energy: 0.85              # baseより控えめ（爆発しない）
+    valence: 0.15             # baseよりニュートラル寄り
+    description: "盛り上がるが朗読的品位保つ"
+  
+  bridge:
+    energy: 0.55              # baseより少し低い
+    valence: -0.15            # より陰り
+    description: "内省的な展開部"
+  
+  outro:
+    energy: 0.20              # baseよりさらに静か
+    valence: -0.25            # より陰り（余韻）
+    description: "静かな余韻、消えゆく"
+
+# Piano特化調整
+instrument_map:
+  piano:
+    velocity_gain_from_energy: 15   # baseの18→15（控えめ）
+    velocity_bias_from_valence: 5   # baseの6→5
+    density_scale_from_energy: 0.20 # baseの0.25→0.20（密度抑える）
+    articulation_from_valence:
+      positive: "normal"            # marcato避ける
+      neutral: "normal"
+      negative: "legato"            # legatoは維持
+  
+  # Guitar/Bass/Stringsはbaseから継承
+  # Drumsは朗読×ピアノではほぼ使わない想定
+
+# Humanize パラメータ（バラード用調整）
+humanize:
+  timing_ms_from_energy:
+    low: 3                          # baseの5→3（より整然）
+    mid: 8                          # baseの10→8
+    high: 12                        # baseの15→12
+  velocity_variance_from_energy:
+    low: 2                          # baseの3→2（より均一）
+    mid: 5                          # baseの6→5
+    high: 8                         # baseの10→8
+
+# メタデータ
+metadata:
+  name: "Ballad Style Profile"
+  version: "1.0.0"
+  phase: 125
+  description: "朗読×ピアノ用スタイルプリセット（baseからオーバーライド）"
+  created: "2025-11-08"
+  base_profile: "configs/emotion_profiles/base.yaml"

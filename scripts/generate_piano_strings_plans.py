@@ -21,7 +21,15 @@ import pandas as pd
 import numpy as np
 import math
 from pathlib import Path
-from typing import Dict, List, Any, Tuple, Callable
+from typing import Dict, List, Any, Tuple, Callable, Optional
+
+from melody_hint_utils import (
+    MelodyHint,
+    apply_melody_hint_filter,
+    build_melody_hint_manifest_payload,
+    build_melody_hint_table,
+    summarize_melody_hints,
+)
 
 
 def make_bar_locator(
@@ -119,6 +127,21 @@ def load_chordmap(chordmap_path: Path) -> List[Dict]:
     return data.get("events", [])
 
 
+def load_vocal_f0(path: Optional[Path]) -> Optional[pd.DataFrame]:
+    """Load vocal F0 parquet if provided."""
+
+    if path is None:
+        return None
+    if not path.exists():
+        print(f"⚠️  vocal_f0 file not found: {path}")
+        return None
+    try:
+        return pd.read_parquet(path)
+    except Exception as exc:
+        print(f"⚠️  Failed to load vocal F0 ({path}): {exc}")
+        return None
+
+
 def _debug_dump_mapping(
     name: str,
     chordmap: List[Dict],
@@ -206,7 +229,11 @@ def _debug_dump_mapping(
 
 
 def generate_piano_plan(
-    bars_df: pd.DataFrame, chordmap: List[Dict], config: Dict, tempo_bpm: float
+    bars_df: pd.DataFrame,
+    chordmap: List[Dict],
+    config: Dict,
+    tempo_bpm: float,
+    melody_hints: Optional[Dict[int, MelodyHint]] = None,
 ) -> Dict:
     """
     Piano Plan生成（chord+voicing展開）
@@ -293,10 +320,27 @@ def generate_piano_plan(
                 }
             )
 
+    filter_stats = {"annotated": 0, "removed": 0}
+    if melody_hints:
+        events, filter_stats = apply_melody_hint_filter(
+            events,
+            melody_hints,
+            instrument="piano",
+            drop_tags=(),
+            annotate=True,
+        )
+
     return {
         "ppq": 480,
         "tempo_bpm": tempo_bpm,
-        "meta": {"total_bars": len(bars_df)},
+        "meta": {
+            "total_bars": len(bars_df),
+            "melody_hint": {
+                "annotated": filter_stats.get("annotated", 0),
+                "removed_for_strings": 0,
+                "bars_with_hints": len(melody_hints or {}),
+            },
+        },
         "tracks": [
             {
                 "name": "Piano",
@@ -310,7 +354,11 @@ def generate_piano_plan(
 
 
 def generate_strings_plan(
-    bars_df: pd.DataFrame, chordmap: List[Dict], config: Dict, tempo_bpm: float
+    bars_df: pd.DataFrame,
+    chordmap: List[Dict],
+    config: Dict,
+    tempo_bpm: float,
+    melody_hints: Optional[Dict[int, MelodyHint]] = None,
 ) -> Dict:
     """
     Strings Plan生成（3パート: violin/viola/cello）
@@ -401,10 +449,28 @@ def generate_strings_plan(
                     }
                 )
 
+    filter_stats = {"annotated": 0, "removed": 0}
+    if melody_hints:
+        events, filter_stats = apply_melody_hint_filter(
+            events,
+            melody_hints,
+            instrument="strings",
+            drop_tags=("melody_hint_long",),
+            drop_threshold_beats=2.0,
+            annotate=True,
+        )
+
     return {
         "ppq": 480,
         "tempo_bpm": tempo_bpm,
-        "meta": {"total_bars": len(bars_df)},
+        "meta": {
+            "total_bars": len(bars_df),
+            "melody_hint": {
+                "annotated": filter_stats.get("annotated", 0),
+                "removed_for_strings": filter_stats.get("removed", 0),
+                "bars_with_hints": len(melody_hints or {}),
+            },
+        },
         "tracks": [
             {
                 "name": "Strings",
@@ -425,6 +491,17 @@ def main():
     )
     ap.add_argument("--emit-piano", action="store_true", help="Generate piano_plan.json")
     ap.add_argument("--emit-strings", action="store_true", help="Generate strings_plan.json")
+    ap.add_argument("--vocal-f0", type=Path, help="Path to vocal_f0_crepe.parquet (optional)")
+    ap.add_argument(
+        "--emit-melody-manifest",
+        action="store_true",
+        help="Write melody_hint_manifest.json (requires --vocal-f0)",
+    )
+    ap.add_argument(
+        "--melody-manifest-path",
+        type=Path,
+        help="Override melody hint manifest path (default: <song_dir>/melody_hint_manifest.json)",
+    )
     ap.add_argument("--debug", action="store_true", help="Verbose mapping debug")
     ap.add_argument(
         "--stems-features",
@@ -453,6 +530,45 @@ def main():
 
     print(f"📂 SongPackage: {args.song_dir.name}")
     print(f"📊 Bars: {len(bars_df)}, Chords: {len(chordmap)}, Tempo: {tempo_bpm} BPM")
+
+    vocal_f0 = load_vocal_f0(args.vocal_f0) if args.vocal_f0 else None
+    melody_hints = build_melody_hint_table(bars_df, vocal_f0) if vocal_f0 is not None else {}
+    if melody_hints:
+        print("📊 Melody hint summary (CREPE):")
+        for section, stats in summarize_melody_hints(melody_hints).items():
+            print(
+                f"   - {section}: bars={stats['bars']} long={stats['long']} phrase={stats['phrase']} gliss={stats['gliss']} avg_len={stats['avg_duration_beats']}"
+            )
+    elif args.emit_melody_manifest:
+        print(
+            "Melody hint manifest requested but no vocal F0 data provided; skipping manifest export."
+        )
+
+    manifest_out = args.melody_manifest_path
+    if manifest_out and not manifest_out.is_absolute():
+        manifest_out = args.song_dir / manifest_out
+    if manifest_out is None:
+        manifest_out = args.song_dir / "melody_hint_manifest.json"
+
+    if args.emit_melody_manifest and melody_hints:
+        manifest_payload = build_melody_hint_manifest_payload(
+            melody_hints,
+            bars_total=len(bars_df),
+            song_id=(song_pkg.get("meta", {}) or {}).get("song_id") or args.song_dir.name,
+            bars_path=bars_path,
+            vocal_f0_path=args.vocal_f0,
+            out_path=manifest_out,
+        )
+        manifest_out.parent.mkdir(parents=True, exist_ok=True)
+        manifest_out.write_text(
+            json.dumps(manifest_payload, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        rel_manifest = (
+            manifest_out.relative_to(args.song_dir)
+            if manifest_out.is_relative_to(args.song_dir)
+            else manifest_out
+        )
+        print(f"melody_hint_manifest: {rel_manifest} (hints={len(melody_hints)})")
 
     # Stem特徴統合（Phase 1）
     stem_df = None
@@ -489,7 +605,7 @@ def main():
 
     # Piano Plan生成
     if args.emit_piano:
-        piano_plan = generate_piano_plan(bars_df, chordmap, config, tempo_bpm)
+        piano_plan = generate_piano_plan(bars_df, chordmap, config, tempo_bpm, melody_hints)
         piano_path = args.song_dir / "piano_plan.json"
         piano_path.write_text(
             json.dumps(piano_plan, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -499,7 +615,7 @@ def main():
 
     # Strings Plan生成
     if args.emit_strings:
-        strings_plan = generate_strings_plan(bars_df, chordmap, config, tempo_bpm)
+        strings_plan = generate_strings_plan(bars_df, chordmap, config, tempo_bpm, melody_hints)
         strings_path = args.song_dir / "strings_plan.json"
         strings_path.write_text(
             json.dumps(strings_plan, indent=2, ensure_ascii=False), encoding="utf-8"
