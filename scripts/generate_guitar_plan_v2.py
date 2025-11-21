@@ -57,9 +57,10 @@ except ImportError as e:  # pragma: no cover - optional dependency
 
 try:
     from otobonAI.duration_humanize_ai import DurationHumanizeAI
-except Exception as exc:  # pragma: no cover - optional dependency
-    print(f"⚠️  DurationHumanizeAI unavailable: {exc}")
-    DurationHumanizeAI = None  # type: ignore
+except Exception as exc:  # pragma: no cover - DurationHumanizeAI is required
+    raise RuntimeError(
+        "DurationHumanizeAI import failed; ensure otobonAI package is installed and configured"
+    ) from exc
 
 # Continue module (Stage3 / RhythmAI)
 try:  # pragma: no cover - optional dependency validated via integration tests
@@ -82,10 +83,21 @@ except Exception as exc:  # pragma: no cover - degrade gracefully when unavailab
         raise RuntimeError("continue_module import failed, motif loading unavailable")
 
 
+# Interpolate module (bridge generator)
+try:  # pragma: no cover - optional dependency validated via integration tests
+    from interpolate_module import InterpolateModule, InterpolateRequest
+except Exception:  # pragma: no cover - degrade gracefully when unavailable
+    InterpolateModule = None  # type: ignore
+    InterpolateRequest = None  # type: ignore
+
+
 # Guitar range: E2 (MIDI 40) - B5 (MIDI 83)
 GUITAR_MIN_PITCH = 40
 GUITAR_MAX_PITCH = 83
 BEATS_PER_BAR = 4.0
+
+# Local shorthand for event dictionaries used by interpolation helpers
+Event = Dict[str, Any]
 
 
 @dataclass
@@ -112,6 +124,23 @@ class ContinueSettings:
 
     def enabled_sections(self) -> List[str]:
         return sorted(self.section_overrides.keys())
+
+
+@dataclass
+class InterpolateTransition:
+    from_section: str
+    to_section: str
+    bridge_bars: int
+    left_bars: int
+    right_bars: int
+
+
+@dataclass
+class InterpolateSettings:
+    enabled: bool = False
+    transitions: List[InterpolateTransition] = field(default_factory=list)
+    beats_per_bar: float = BEATS_PER_BAR
+    seed: int = 77
 
 
 class GuitarContinueController:
@@ -192,6 +221,142 @@ class GuitarContinueController:
             "segments": segments_meta,
             "sections": sorted({seg["section"] for seg in segments_meta}),
         }
+
+
+class GuitarInterpolateController:
+    def __init__(self, settings: InterpolateSettings):
+        if InterpolateModule is None:
+            raise RuntimeError("interpolate_module import failed, bridge generator unavailable")
+        self.settings = settings
+        self._module: InterpolateModule = InterpolateModule(
+            beats_per_bar=settings.beats_per_bar,
+            seed=settings.seed,
+        )
+        self._transition_index = {(t.from_section, t.to_section): t for t in settings.transitions}
+
+    def apply(
+        self, events: List[Dict[str, Any]], bars_df: pd.DataFrame
+    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+        if not self.settings.enabled or not self.settings.transitions:
+            return events, {"applied": False}
+
+        opportunities = self._find_opportunities(bars_df)
+        if not opportunities:
+            return events, {"applied": False}
+
+        skip_ranges: List[Tuple[int, int]] = []
+        injected: List[Dict[str, Any]] = []
+        segments_meta: List[Dict[str, Any]] = []
+        total_bars = int(bars_df["bar_idx"].max()) + 1 if not bars_df.empty else 0
+
+        for opp in opportunities:
+            trans = opp["transition"]
+            left_start = opp["boundary_bar"] - trans.left_bars
+            right_end = opp["boundary_bar"] + trans.right_bars
+            if left_start < 0 or right_end > total_bars:
+                continue
+
+            left_slice = self._slice_events(events, left_start, opp["boundary_bar"])
+            right_slice = self._slice_events(events, opp["boundary_bar"], right_end)
+            if not left_slice or not right_slice:
+                continue
+
+            request = InterpolateRequest(
+                bridge_bars=trans.bridge_bars,
+                left_bars=trans.left_bars,
+                right_bars=trans.right_bars,
+                instrument="guitar",
+                section_from=opp["from_section"],
+                section_to=opp["to_section"],
+            )
+            result = self._module.interpolate(left_slice, right_slice, request=request)
+            bridge_start = opp["boundary_bar"] * self.settings.beats_per_bar
+            bridge_label = f"{opp['from_section']}_bridge_{opp['to_section']}"
+            for evt in result["events"]:
+                cloned = dict(evt)
+                cloned["time_ql"] = evt["time_ql"] + bridge_start
+                cloned["bar_idx"] = int(cloned["time_ql"] // self.settings.beats_per_bar)
+                cloned["section_label"] = bridge_label
+                injected.append(cloned)
+
+            skip_ranges.append((opp["boundary_bar"], opp["boundary_bar"] + trans.bridge_bars))
+            segments_meta.append(
+                {
+                    "from": opp["from_section"],
+                    "to": opp["to_section"],
+                    "start_bar": opp["boundary_bar"],
+                    "bridge_bars": trans.bridge_bars,
+                }
+            )
+
+        if not injected:
+            return events, {"applied": False}
+
+        filtered_events: List[Dict[str, Any]] = []
+        for event in events:
+            bar_idx = self._event_bar(event)
+            if any(start <= bar_idx < end for start, end in skip_ranges):
+                continue
+            filtered_events.append(event)
+        filtered_events.extend(injected)
+
+        return filtered_events, {
+            "applied": True,
+            "segments": segments_meta,
+            "transitions": [
+                {"from": t.from_section, "to": t.to_section} for t in self.settings.transitions
+            ],
+        }
+
+    def _find_opportunities(self, bars_df: pd.DataFrame) -> List[Dict[str, Any]]:
+        opportunities: List[Dict[str, Any]] = []
+        prev_label: Optional[str] = None
+        for row in bars_df.itertuples():
+            label = str(getattr(row, "section_label", "verse")).lower()
+            bar_idx = int(getattr(row, "bar_idx"))
+            if prev_label is not None and label != prev_label:
+                transition = self._transition_index.get((prev_label, label))
+                if transition:
+                    opportunities.append(
+                        {
+                            "transition": transition,
+                            "boundary_bar": bar_idx,
+                            "from_section": prev_label,
+                            "to_section": label,
+                        }
+                    )
+            prev_label = label
+        return opportunities
+
+    def _slice_events(
+        self, events: List[Dict[str, Any]], start_bar: int, end_bar: int
+    ) -> List[Event]:
+        if start_bar >= end_bar:
+            return []
+        lower = start_bar * self.settings.beats_per_bar
+        upper = end_bar * self.settings.beats_per_bar
+        window: List[Event] = []
+        for event in events:
+            start = float(event.get("time_ql", event.get("start_ql", 0.0)))
+            if start < lower or start >= upper:
+                continue
+            cloned = {
+                "time_ql": start - lower,
+                "duration_ql": float(event.get("duration_ql", 0.25)),
+                "velocity": int(event.get("velocity", 80)),
+            }
+            if "note" in event:
+                cloned["note"] = event["note"]
+            if "pitch" in event:
+                cloned["pitch"] = event["pitch"]
+            window.append(cloned)
+        return window
+
+    def _event_bar(self, event: Dict[str, Any]) -> int:
+        if "bar_idx" in event:
+            return int(event["bar_idx"])
+        time_ql = float(event.get("time_ql", event.get("start_ql", 0.0)))
+        return int(time_ql // self.settings.beats_per_bar)
 
     # ------------------------------------------------------------------ helpers
     def _collect_sequences(self, bars_df: pd.DataFrame) -> List[Dict[str, Any]]:
@@ -422,6 +587,70 @@ def resolve_continue_settings(
     return settings
 
 
+def resolve_interpolate_settings(
+    guitar_cfg: Dict[str, Any],
+    policy_sections: Dict[str, Any],
+    overrides: Optional[Dict[str, Any]] = None,
+) -> InterpolateSettings:
+    cfg = guitar_cfg.get("interpolate", {}) if isinstance(guitar_cfg, dict) else {}
+    overrides = overrides or {}
+
+    enabled = bool(cfg.get("enabled", False))
+    if overrides.get("force_disable"):
+        enabled = False
+    if overrides.get("force_enable"):
+        enabled = True
+
+    default_bridge = int(overrides.get("bridge_bars") or cfg.get("default_bridge_bars", 2))
+    default_left = int(overrides.get("left_bars") or cfg.get("default_left_bars", 1))
+    default_right = int(overrides.get("right_bars") or cfg.get("default_right_bars", 1))
+
+    def _coerce(entries: Any) -> List[InterpolateTransition]:
+        transitions: List[InterpolateTransition] = []
+        if not entries:
+            return transitions
+        if isinstance(entries, dict):
+            entries = [entries]
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            from_section = str(entry.get("from") or entry.get("source") or "").lower()
+            to_section = str(entry.get("to") or entry.get("target") or "").lower()
+            if not from_section or not to_section:
+                continue
+            transitions.append(
+                InterpolateTransition(
+                    from_section=from_section,
+                    to_section=to_section,
+                    bridge_bars=int(entry.get("bridge_bars", default_bridge)),
+                    left_bars=int(entry.get("left_bars", default_left)),
+                    right_bars=int(entry.get("right_bars", default_right)),
+                )
+            )
+        return transitions
+
+    transitions = _coerce(cfg.get("transitions"))
+
+    for sec_name, sec_cfg in (policy_sections or {}).items():
+        interp_cfg = None
+        if isinstance(sec_cfg, dict):
+            interp_cfg = sec_cfg.get("guitar_interpolate")
+        if not interp_cfg:
+            continue
+        transitions.extend(_coerce(interp_cfg))
+
+    if overrides.get("transitions"):
+        transitions = _coerce(overrides["transitions"])
+
+    settings = InterpolateSettings(
+        enabled=enabled and bool(transitions),
+        transitions=transitions,
+        beats_per_bar=float(overrides.get("beats_per_bar") or BEATS_PER_BAR),
+        seed=int(overrides.get("seed") or cfg.get("seed", 77)),
+    )
+    return settings
+
+
 def load_bars(bars_path: str) -> pd.DataFrame:
     """Load bars.parquet with riff_slot."""
     bars = pd.read_parquet(bars_path)
@@ -531,8 +760,6 @@ def make_riff_pattern(
     """
     start_ql = bar_idx * 4.0
     events = []
-    emotion_log: Dict[int, Dict[str, Any]] = {}
-    emotion_log: Dict[int, Dict[str, Any]] = {}
 
     velocity_scale = 1.0
     duration_scale = 1.0
@@ -792,8 +1019,8 @@ def ensure_activity_floor(
 
 
 def enforce_bar_note_cap(
-    bar_events: List[Dict[str, Any]], max_notes: int | None
-) -> List[Dict[str, Any]]:
+    self, events: List[Dict[str, Any]], bars_df: pd.DataFrame
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """Trim low-priority events if a bar exceeds the policy max."""
     if not bar_events or not max_notes or max_notes <= 0:
         return bar_events
@@ -1018,6 +1245,7 @@ def generate_guitar_plan(
     guidetone_ai: Optional[GuideToneAIv2] = None,
     reference_layers: Optional[Dict[str, Any]] = None,
     continue_overrides: Optional[Dict[str, Any]] = None,
+    interpolate_overrides: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Main logic: Generate slot-based guitar plan.
@@ -1049,6 +1277,14 @@ def generate_guitar_plan(
     continue_report: Dict[str, Any] = {"applied": False}
     if continue_settings.enabled:
         continue_controller = GuitarContinueController(continue_settings)
+
+    interpolate_settings = resolve_interpolate_settings(
+        guitar_cfg, sections_density, interpolate_overrides
+    )
+    interpolate_controller: Optional[GuitarInterpolateController] = None
+    interpolate_report: Dict[str, Any] = {"applied": False}
+    if interpolate_settings.enabled:
+        interpolate_controller = GuitarInterpolateController(interpolate_settings)
 
     # Riff type distribution
     riff_types_cfg = guitar_cfg.get("riff_types", [])
@@ -1219,6 +1455,9 @@ def generate_guitar_plan(
                 bar_start_ql = bar_idx * BEATS_PER_BAR
                 ev["beat_in_bar"] = (ev.get("time_ql", 0.0) - bar_start_ql) / 1.0
 
+    if interpolate_controller:
+        events, interpolate_report = interpolate_controller.apply(events, bars)
+
     # Sort by time
     events = sorted(events, key=lambda e: e["time_ql"]) if events else events
 
@@ -1255,6 +1494,8 @@ def generate_guitar_plan(
             "emotion_ai": bool(emotion_ai),
             "guide_tone_ai": bool(guidetone_ai),
             "reference_layers": bool(reference_layers),
+            "continue_module": continue_report.get("applied", False),
+            "interpolate_module": interpolate_report.get("applied", False),
         },
     }
 
@@ -1266,6 +1507,14 @@ def generate_guitar_plan(
             "segments": continue_report.get("segments", []),
             "stage3_path": continue_settings.stage3_path,
             "stage3_loop_id": continue_settings.stage3_loop_id,
+        }
+
+    if interpolate_settings.enabled or interpolate_report.get("applied"):
+        metadata["interpolate"] = {
+            "enabled": interpolate_settings.enabled,
+            "applied": interpolate_report.get("applied", False),
+            "segments": interpolate_report.get("segments", []),
+            "transitions": interpolate_report.get("transitions", []),
         }
 
     if reference_layers:
@@ -1334,6 +1583,40 @@ def main():
         action="store_true",
         help="Allow Continue overrides even when riff_slot is 0",
     )
+    parser.add_argument(
+        "--interpolate-enable",
+        action="store_true",
+        help="Force-enable Interpolate bridge synthesis regardless of policy",
+    )
+    parser.add_argument(
+        "--interpolate-disable",
+        action="store_true",
+        help="Force-disable Interpolate even if policy enables it",
+    )
+    parser.add_argument(
+        "--interpolate-transitions",
+        help="Comma-separated list of transitions (from:to[:bridge_bars])",
+    )
+    parser.add_argument(
+        "--interpolate-bridge-bars",
+        type=int,
+        help="Default number of bridge bars to generate",
+    )
+    parser.add_argument(
+        "--interpolate-left-bars",
+        type=int,
+        help="Number of bars sampled from the source section",
+    )
+    parser.add_argument(
+        "--interpolate-right-bars",
+        type=int,
+        help="Number of bars sampled from the target section",
+    )
+    parser.add_argument(
+        "--interpolate-seed",
+        type=int,
+        help="RNG seed used by the Interpolate module",
+    )
     args = parser.parse_args()
 
     # Set random seed for reproducibility
@@ -1397,9 +1680,9 @@ def main():
     if args.continue_disable:
         continue_overrides["force_disable"] = True
     if args.continue_sections:
-        sections = [seg.strip() for seg in args.continue_sections.split(",") if seg.strip()]
-        if sections:
-            continue_overrides["sections"] = sections
+        cont_sections = [seg.strip() for seg in args.continue_sections.split(",") if seg.strip()]
+        if cont_sections:
+            continue_overrides["sections"] = cont_sections
     if args.continue_stage3:
         continue_overrides["stage3_path"] = args.continue_stage3
     if args.continue_loop_id:
@@ -1419,6 +1702,38 @@ def main():
     if args.continue_allow_non_slot:
         continue_overrides["require_riff_slot"] = False
 
+    interpolate_overrides: Dict[str, Any] = {}
+    if args.interpolate_enable:
+        interpolate_overrides["force_enable"] = True
+    if args.interpolate_disable:
+        interpolate_overrides["force_disable"] = True
+    if args.interpolate_bridge_bars is not None:
+        interpolate_overrides["bridge_bars"] = args.interpolate_bridge_bars
+    if args.interpolate_left_bars is not None:
+        interpolate_overrides["left_bars"] = args.interpolate_left_bars
+    if args.interpolate_right_bars is not None:
+        interpolate_overrides["right_bars"] = args.interpolate_right_bars
+    if args.interpolate_seed is not None:
+        interpolate_overrides["seed"] = args.interpolate_seed
+    if args.interpolate_transitions:
+        transitions = []
+        for token in args.interpolate_transitions.split(","):
+            token = token.strip()
+            if not token:
+                continue
+            parts = [part.strip() for part in token.split(":") if part.strip()]
+            if len(parts) < 2:
+                continue
+            entry: Dict[str, Any] = {"from": parts[0], "to": parts[1]}
+            if len(parts) >= 3:
+                try:
+                    entry["bridge_bars"] = int(parts[2])
+                except ValueError:
+                    pass
+            transitions.append(entry)
+        if transitions:
+            interpolate_overrides["transitions"] = transitions
+
     print(f"🎸 Generating guitar plan ({len(bars)} bars)")
     plan = generate_guitar_plan(
         bars,
@@ -1430,6 +1745,7 @@ def main():
         guidetone_ai=guidetone_ai,
         reference_layers=reference_layers,
         continue_overrides=continue_overrides,
+        interpolate_overrides=interpolate_overrides,
     )
 
     plan_meta = plan.setdefault("metadata", {})
@@ -1450,19 +1766,18 @@ def main():
         plan_meta.setdefault("ai_hooks", {}).update({"rhythm_vocab_policy": True})
 
     rhythm_manifest_path = Path(args.rhythm_manifest).expanduser() if args.rhythm_manifest else None
-    if DurationHumanizeAI is not None:
-        try:
-            duration_ai = DurationHumanizeAI(
-                instrument="guitar",
-                policy=policy,
-                tempo_bpm=policy.get("global", {}).get("tempo_bpm", 120),
-                rhythm_manifest_path=rhythm_manifest_path,
-                vocab_instrument="guitar",
-            )
-            duration_ai.annotate_plan(plan)
-            plan_meta.setdefault("ai_hooks", {}).update({"duration_humanize_ai": True})
-        except Exception as exc:
-            print(f"⚠️  DurationHumanizeAI annotation skipped: {exc}")
+    try:
+        duration_ai = DurationHumanizeAI(
+            instrument="guitar",
+            policy=policy,
+            tempo_bpm=policy.get("global", {}).get("tempo_bpm", 120),
+            rhythm_manifest_path=rhythm_manifest_path,
+            vocab_instrument="guitar",
+        )
+        duration_ai.annotate_plan(plan)
+        plan_meta.setdefault("ai_hooks", {}).update({"duration_humanize_ai": True})
+    except Exception as exc:
+        raise RuntimeError(f"DurationHumanizeAI annotation failed for guitar plan: {exc}")
 
     # Save
     out_path = Path(args.out)
