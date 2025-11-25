@@ -5,8 +5,15 @@
 #   pip install -r requirements-magenta.txt
 
 numpy==1.23.5
-protobuf==3.20.*
-note-seq==0.0.5
-magenta==2.1.4
+scipy==1.10.1
+librosa==0.10.1
+protobuf==3.19.6
+note-seq==0.0.3
+magenta @ file:third_party/magenta/magenta-2.1.4-py3-none-any.whl
+numba==0.56.4
+llvmlite==0.39.1
+python-rtmidi==1.5.8
 pretty-midi>=0.2.9
-tensorflow==2.11.0
+tensorflow-macos==2.11.0 ; sys_platform == "darwin" and platform_machine == "arm64"
+tensorflow-metal==0.7.0 ; sys_platform == "darwin" and platform_machine == "arm64"
+tensorflow==2.11.0 ; sys_platform != "darwin" or platform_machine != "arm64"

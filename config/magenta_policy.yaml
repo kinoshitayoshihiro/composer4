@@ -12,7 +12,18 @@ enabled: true
 
 # Probability of using Magenta for any given fill slot
 # 0.0 = never, 1.0 = always
-magenta_use_prob: 0.3
+magenta_use_prob: 0.25
+
+# Generator backend
+generator:
+  # prototype (built-in arpeggio) or music_vae (Magenta checkpoint)
+  backend: music_vae
+  # When specified, resolves to checkpoints.<key>
+  checkpoint_key: groovae_2bar
+  # MusicVAE/GrooVAE config registered in magenta CONFIG_MAP
+  config_name: groovae_2bar_humanize
+  steps_per_quarter: 4
+  bars_per_sample: 1
 
 # Fill generation policy
 fill_policy:
@@ -41,35 +52,77 @@ arpeggio_policy:
   rhythm_density: 0.5
 
 # Slot targeting
+# Slot tags follow the pattern <slot_type>, <slot_type>_<section>, section_<name>
+# Example: a fill slot inside "pre_chorus" emits tags ["fill", "fill_slot", "fill_pre_chorus", "pre_chorus", "section_pre_chorus"].
 # Which slots are eligible for Magenta fills?
 eligible_slots:
   - "fill_pre_chorus"
   - "fill_post_chorus"
   - "fill_bridge"
+  - "fill_chorus"
   - "riff_intro"
+  - "riff_bridge"
   - "riff_outro"
 
 # Exclude slots (override eligible_slots)
 exclude_slots:
-  - "bass_foundation"
-  - "chord_progression"
-  - "melody_primary"
+  - "fill_verse"
+  - "riff_verse"
+  - "section_default"
+
+# Diversity controls keep Magenta sparse even if slot density is high
+diversity_controls:
+  # Hard cap on total slots per song
+  max_total_slots: 8
+  # Cap per section label (e.g., prevent chorus from monopolizing slots)
+  max_slots_per_section: 2
+  # Minimum rest bars required between accepted Magenta slots
+  min_gap_bars: 2
+  # Additional per-slot-type caps
+  slot_type_limits:
+    fill: 6
+    riff: 3
+
 
 # Per-section overrides
 section_overrides:
   intro:
-    magenta_use_prob: 0.5  # Higher for intro variety
+    magenta_use_prob: 0.35  # Moderate intro variety
+    eligible_slots:
+      - "fill_intro"
+      - "riff_intro"
     fill_policy:
       temperature: 0.9
+  pre_chorus:
+    magenta_use_prob: 0.35
+    eligible_slots:
+      - "fill_pre_chorus"
+      - "riff_pre_chorus"
   
   verse:
-    magenta_use_prob: 0.2  # Lower for verse clarity
+    magenta_use_prob: 0.12  # Lower for verse clarity
+    eligible_slots:
+      - "fill_verse"
+    exclude_slots:
+      - "riff_verse"
   
   chorus:
-    magenta_use_prob: 0.4  # Higher for chorus energy
+    magenta_use_prob: 0.5  # Higher for chorus energy
+    eligible_slots:
+      - "fill_chorus"
+      - "riff_chorus"
+  
+  bridge:
+    magenta_use_prob: 0.55
+    eligible_slots:
+      - "fill_bridge"
+      - "riff_bridge"
   
   outro:
-    magenta_use_prob: 0.6  # Higher for outro creativity
+    magenta_use_prob: 0.45  # Keep outro creative but capped
+    eligible_slots:
+      - "fill_outro"
+      - "riff_outro"
     arpeggio_policy:
       temperature: 0.7
 

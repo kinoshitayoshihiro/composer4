@@ -105,3 +105,7 @@ Icon?
 # OCR言語モデル（GitHub上限超過）
 ocr_data/models/modern_ja.bin
 ocr_data/models/modern_ja.arpa
+
+# Allow committed GrooVAE checkpoint for MusicVAE backend
+!models/groovae_2bar_humanize.ckpt/
+!models/groovae_2bar_humanize.ckpt/**
