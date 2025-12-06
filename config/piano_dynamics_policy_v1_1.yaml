@@ -1,0 +1,419 @@
+version: "1.1"
+policy_id: "PIANO_DYN_V1_1"
+instrument: "PIANO"
+
+inputs:
+  sections_json: "plans/sections.json"
+  emotion_profile_json: "plans/emotion_profile.json"
+  bars_parquet: "plans/bars.parquet"
+
+outputs:
+  per_bar_dynamics_json: "plans/piano_dynamics_plan.json"
+
+section_normalization:
+  mapping:
+    intro: INTRO
+    verse: VERSE
+    verse_a: VERSE
+    verse_b: VERSE
+    prechorus: PRE_CHORUS
+    pre_chorus: PRE_CHORUS
+    chorus: CHORUS
+    chorus_a: CHORUS
+    chorus_b: CHORUS
+    bridge: BRIDGE
+    solo: SOLO
+    interlude: INTERLUDE
+    breakdown: BREAKDOWN
+    climax: CLIMAX
+    outro: OUTRO
+    unknown: UNKNOWN
+  priority:
+    - CLIMAX
+    - CHORUS
+    - PRE_CHORUS
+    - SOLO
+    - BRIDGE
+    - VERSE
+    - BREAKDOWN
+    - INTERLUDE
+    - INTRO
+    - OUTRO
+    - UNKNOWN
+
+emotion_buckets:
+  valence:
+    NEG: {min: -1.0, max: -0.3}
+    NEU: {min: -0.3, max: 0.3}
+    POS: {min: 0.3, max: 1.0}
+  arousal:
+    LOW: {min: 0.0, max: 0.35}
+    MID: {min: 0.35, max: 0.7}
+    HIGH: {min: 0.7, max: 1.0}
+  defaults:
+    valence: NEU
+    arousal: MID
+
+defaults:
+  role: COMP
+  voicing_density: 0.60
+  tension_ratio: 0.20
+  voice_leading_strictness: 0.60
+  arpeggio_density: 0.08
+  pedal_sustain_bias: 0.45
+  register_bias: MID
+  articulation: NORMAL
+  playfulness_bias: 0.08
+
+section_profiles:
+  INTRO:
+    LOW:
+      role: COMP
+      voicing_density: 0.50
+      tension_ratio: 0.10
+      voice_leading_strictness: 0.70
+      arpeggio_density: 0.05
+      pedal_sustain_bias: 0.60
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: COMP
+      voicing_density: 0.55
+      tension_ratio: 0.15
+      voice_leading_strictness: 0.65
+      arpeggio_density: 0.08
+      pedal_sustain_bias: 0.50
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.07
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.65
+      tension_ratio: 0.25
+      voice_leading_strictness: 0.55
+      arpeggio_density: 0.12
+      pedal_sustain_bias: 0.35
+      register_bias: MID_HIGH
+      articulation: NORMAL
+      playfulness_bias: 0.10
+
+  VERSE:
+    LOW:
+      role: COMP
+      voicing_density: 0.45
+      tension_ratio: 0.08
+      voice_leading_strictness: 0.75
+      arpeggio_density: 0.04
+      pedal_sustain_bias: 0.65
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: COMP
+      voicing_density: 0.55
+      tension_ratio: 0.12
+      voice_leading_strictness: 0.65
+      arpeggio_density: 0.06
+      pedal_sustain_bias: 0.50
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.06
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.65
+      tension_ratio: 0.20
+      voice_leading_strictness: 0.55
+      arpeggio_density: 0.10
+      pedal_sustain_bias: 0.35
+      register_bias: MID_HIGH
+      articulation: NORMAL
+      playfulness_bias: 0.09
+
+  PRE_CHORUS:
+    LOW:
+      role: COMP
+      voicing_density: 0.60
+      tension_ratio: 0.15
+      voice_leading_strictness: 0.65
+      arpeggio_density: 0.08
+      pedal_sustain_bias: 0.50
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.08
+    MID:
+      role: ACCENT
+      voicing_density: 0.65
+      tension_ratio: 0.22
+      voice_leading_strictness: 0.55
+      arpeggio_density: 0.12
+      pedal_sustain_bias: 0.40
+      register_bias: MID_HIGH
+      articulation: NORMAL
+      playfulness_bias: 0.10
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.70
+      tension_ratio: 0.30
+      voice_leading_strictness: 0.45
+      arpeggio_density: 0.15
+      pedal_sustain_bias: 0.30
+      register_bias: MID_HIGH
+      articulation: STACCATO
+      playfulness_bias: 0.12
+
+  CHORUS:
+    LOW:
+      role: COMP
+      voicing_density: 0.60
+      tension_ratio: 0.18
+      voice_leading_strictness: 0.60
+      arpeggio_density: 0.10
+      pedal_sustain_bias: 0.45
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.08
+    MID:
+      role: ACCENT
+      voicing_density: 0.70
+      tension_ratio: 0.25
+      voice_leading_strictness: 0.50
+      arpeggio_density: 0.15
+      pedal_sustain_bias: 0.35
+      register_bias: MID_HIGH
+      articulation: NORMAL
+      playfulness_bias: 0.12
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.75
+      tension_ratio: 0.35
+      voice_leading_strictness: 0.40
+      arpeggio_density: 0.20
+      pedal_sustain_bias: 0.25
+      register_bias: HIGH
+      articulation: STACCATO
+      playfulness_bias: 0.15
+
+  BRIDGE:
+    LOW:
+      role: COMP
+      voicing_density: 0.50
+      tension_ratio: 0.12
+      voice_leading_strictness: 0.70
+      arpeggio_density: 0.06
+      pedal_sustain_bias: 0.60
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    MID:
+      role: MELODY
+      voicing_density: 0.55
+      tension_ratio: 0.20
+      voice_leading_strictness: 0.60
+      arpeggio_density: 0.10
+      pedal_sustain_bias: 0.45
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.10
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.65
+      tension_ratio: 0.28
+      voice_leading_strictness: 0.50
+      arpeggio_density: 0.15
+      pedal_sustain_bias: 0.35
+      register_bias: MID_HIGH
+      articulation: NORMAL
+      playfulness_bias: 0.12
+
+  SOLO:
+    LOW:
+      role: COMP
+      voicing_density: 0.50
+      tension_ratio: 0.15
+      voice_leading_strictness: 0.65
+      arpeggio_density: 0.08
+      pedal_sustain_bias: 0.55
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.08
+    MID:
+      role: COMP
+      voicing_density: 0.60
+      tension_ratio: 0.22
+      voice_leading_strictness: 0.55
+      arpeggio_density: 0.12
+      pedal_sustain_bias: 0.45
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.10
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.70
+      tension_ratio: 0.30
+      voice_leading_strictness: 0.45
+      arpeggio_density: 0.18
+      pedal_sustain_bias: 0.30
+      register_bias: MID_HIGH
+      articulation: STACCATO
+      playfulness_bias: 0.14
+
+  INTERLUDE:
+    LOW:
+      role: COMP
+      voicing_density: 0.45
+      tension_ratio: 0.10
+      voice_leading_strictness: 0.75
+      arpeggio_density: 0.05
+      pedal_sustain_bias: 0.65
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: COMP
+      voicing_density: 0.55
+      tension_ratio: 0.15
+      voice_leading_strictness: 0.65
+      arpeggio_density: 0.08
+      pedal_sustain_bias: 0.50
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.07
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.65
+      tension_ratio: 0.25
+      voice_leading_strictness: 0.55
+      arpeggio_density: 0.12
+      pedal_sustain_bias: 0.35
+      register_bias: MID_HIGH
+      articulation: NORMAL
+      playfulness_bias: 0.10
+
+  BREAKDOWN:
+    LOW:
+      role: COMP
+      voicing_density: 0.40
+      tension_ratio: 0.08
+      voice_leading_strictness: 0.80
+      arpeggio_density: 0.03
+      pedal_sustain_bias: 0.70
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: COMP
+      voicing_density: 0.50
+      tension_ratio: 0.12
+      voice_leading_strictness: 0.70
+      arpeggio_density: 0.05
+      pedal_sustain_bias: 0.60
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    HIGH:
+      role: COMP
+      voicing_density: 0.60
+      tension_ratio: 0.18
+      voice_leading_strictness: 0.60
+      arpeggio_density: 0.08
+      pedal_sustain_bias: 0.45
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.08
+
+  CLIMAX:
+    LOW:
+      role: ACCENT
+      voicing_density: 0.70
+      tension_ratio: 0.28
+      voice_leading_strictness: 0.50
+      arpeggio_density: 0.15
+      pedal_sustain_bias: 0.35
+      register_bias: MID_HIGH
+      articulation: NORMAL
+      playfulness_bias: 0.12
+    MID:
+      role: ACCENT
+      voicing_density: 0.75
+      tension_ratio: 0.35
+      voice_leading_strictness: 0.40
+      arpeggio_density: 0.20
+      pedal_sustain_bias: 0.25
+      register_bias: HIGH
+      articulation: STACCATO
+      playfulness_bias: 0.15
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.80
+      tension_ratio: 0.45
+      voice_leading_strictness: 0.30
+      arpeggio_density: 0.25
+      pedal_sustain_bias: 0.15
+      register_bias: HIGH
+      articulation: MARCATO
+      playfulness_bias: 0.18
+
+  OUTRO:
+    LOW:
+      role: COMP
+      voicing_density: 0.40
+      tension_ratio: 0.08
+      voice_leading_strictness: 0.80
+      arpeggio_density: 0.03
+      pedal_sustain_bias: 0.75
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: COMP
+      voicing_density: 0.50
+      tension_ratio: 0.12
+      voice_leading_strictness: 0.70
+      arpeggio_density: 0.05
+      pedal_sustain_bias: 0.65
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.60
+      tension_ratio: 0.20
+      voice_leading_strictness: 0.60
+      arpeggio_density: 0.08
+      pedal_sustain_bias: 0.50
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.08
+
+  UNKNOWN:
+    LOW:
+      role: COMP
+      voicing_density: 0.50
+      tension_ratio: 0.10
+      voice_leading_strictness: 0.70
+      arpeggio_density: 0.05
+      pedal_sustain_bias: 0.60
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: COMP
+      voicing_density: 0.60
+      tension_ratio: 0.15
+      voice_leading_strictness: 0.60
+      arpeggio_density: 0.08
+      pedal_sustain_bias: 0.45
+      register_bias: MID
+      articulation: NORMAL
+      playfulness_bias: 0.08
+    HIGH:
+      role: ACCENT
+      voicing_density: 0.70
+      tension_ratio: 0.25
+      voice_leading_strictness: 0.50
+      arpeggio_density: 0.12
+      pedal_sustain_bias: 0.30
+      register_bias: MID_HIGH
+      articulation: NORMAL
+      playfulness_bias: 0.10

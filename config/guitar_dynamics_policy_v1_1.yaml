@@ -1,0 +1,434 @@
+version: "1.1"
+policy_id: "GTR_DYN_V1_1"
+instrument: "GUITAR"
+
+inputs:
+  sections_json: "plans/sections.json"
+  emotion_profile_json: "plans/emotion_profile.json"
+  bars_parquet: "plans/bars.parquet"
+
+outputs:
+  per_bar_dynamics_json: "plans/guitar_dynamics_plan.json"
+
+section_normalization:
+  mapping:
+    intro: INTRO
+    verse: VERSE
+    verse_a: VERSE
+    verse_b: VERSE
+    prechorus: PRE_CHORUS
+    pre_chorus: PRE_CHORUS
+    chorus: CHORUS
+    chorus_a: CHORUS
+    chorus_b: CHORUS
+    bridge: BRIDGE
+    solo: SOLO
+    interlude: INTERLUDE
+    breakdown: BREAKDOWN
+    climax: CLIMAX
+    outro: OUTRO
+    unknown: UNKNOWN
+  priority:
+    - CLIMAX
+    - SOLO
+    - CHORUS
+    - PRE_CHORUS
+    - BRIDGE
+    - VERSE
+    - BREAKDOWN
+    - INTERLUDE
+    - INTRO
+    - OUTRO
+    - UNKNOWN
+
+emotion_buckets:
+  valence:
+    NEG: {min: -1.0, max: -0.3}
+    NEU: {min: -0.3, max: 0.3}
+    POS: {min: 0.3, max: 1.0}
+  arousal:
+    LOW: {min: 0.0, max: 0.35}
+    MID: {min: 0.35, max: 0.7}
+    HIGH: {min: 0.7, max: 1.0}
+  defaults:
+    valence: NEU
+    arousal: MID
+
+defaults:
+  role: RHYTHM
+  strum_mode: LIGHT_8
+  arpeggio_mode: OFF
+  palm_mute: 0.35
+  riff_slot_bias: 0.10
+  lead_fill_probability: 0.05
+  register_bias: MID
+  playfulness_bias: 0.08
+
+section_profiles:
+  INTRO:
+    LOW:
+      role: ARP
+      strum_mode: LIGHT_8
+      arpeggio_mode: SIMPLE_8
+      palm_mute: 0.40
+      riff_slot_bias: 0.05
+      lead_fill_probability: 0.02
+      register_bias: MID
+      playfulness_bias: 0.05
+    MID:
+      role: ARP
+      strum_mode: STD_8
+      arpeggio_mode: SIMPLE_8
+      palm_mute: 0.30
+      riff_slot_bias: 0.08
+      lead_fill_probability: 0.04
+      register_bias: MID
+      playfulness_bias: 0.07
+    HIGH:
+      role: RHYTHM
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.20
+      riff_slot_bias: 0.12
+      lead_fill_probability: 0.06
+      register_bias: MID
+      playfulness_bias: 0.09
+
+  VERSE:
+    LOW:
+      role: RHYTHM
+      strum_mode: LIGHT_8
+      arpeggio_mode: OFF
+      palm_mute: 0.55
+      riff_slot_bias: 0.05
+      lead_fill_probability: 0.02
+      register_bias: LOW
+      playfulness_bias: 0.06
+    MID:
+      role: RHYTHM
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.40
+      riff_slot_bias: 0.10
+      lead_fill_probability: 0.04
+      register_bias: MID
+      playfulness_bias: 0.08
+    HIGH:
+      role: ARP
+      strum_mode: STD_8
+      arpeggio_mode: GRID_16
+      palm_mute: 0.25
+      riff_slot_bias: 0.18
+      lead_fill_probability: 0.08
+      register_bias: MID
+      playfulness_bias: 0.10
+
+  PRE_CHORUS:
+    LOW:
+      role: RHYTHM
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.35
+      riff_slot_bias: 0.10
+      lead_fill_probability: 0.06
+      register_bias: MID
+      playfulness_bias: 0.07
+    MID:
+      role: RHYTHM
+      strum_mode: OPEN_16
+      arpeggio_mode: OFF
+      palm_mute: 0.25
+      riff_slot_bias: 0.18
+      lead_fill_probability: 0.10
+      register_bias: MID
+      playfulness_bias: 0.09
+    HIGH:
+      role: RIFF
+      strum_mode: POWER_8
+      arpeggio_mode: OFF
+      palm_mute: 0.15
+      riff_slot_bias: 0.30
+      lead_fill_probability: 0.12
+      register_bias: MID
+      playfulness_bias: 0.11
+
+  CHORUS:
+    LOW:
+      role: RHYTHM
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.20
+      riff_slot_bias: 0.12
+      lead_fill_probability: 0.06
+      register_bias: MID
+      playfulness_bias: 0.08
+    MID:
+      role: RHYTHM
+      strum_mode: OPEN_16
+      arpeggio_mode: OFF
+      palm_mute: 0.10
+      riff_slot_bias: 0.20
+      lead_fill_probability: 0.10
+      register_bias: MID
+      playfulness_bias: 0.10
+    HIGH:
+      role: RIFF
+      strum_mode: POWER_8
+      arpeggio_mode: OFF
+      palm_mute: 0.05
+      riff_slot_bias: 0.35
+      lead_fill_probability: 0.18
+      register_bias: HIGH
+      playfulness_bias: 0.12
+
+  SOLO:
+    LOW:
+      role: LEAD
+      strum_mode: LIGHT_8
+      arpeggio_mode: OFF
+      palm_mute: 0.20
+      riff_slot_bias: 0.15
+      lead_fill_probability: 0.18
+      register_bias: MID
+      playfulness_bias: 0.10
+    MID:
+      role: LEAD
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.10
+      riff_slot_bias: 0.22
+      lead_fill_probability: 0.28
+      register_bias: HIGH
+      playfulness_bias: 0.12
+    HIGH:
+      role: LEAD
+      strum_mode: POWER_8
+      arpeggio_mode: OFF
+      palm_mute: 0.05
+      riff_slot_bias: 0.30
+      lead_fill_probability: 0.40
+      register_bias: HIGH
+      playfulness_bias: 0.14
+
+  BRIDGE:
+    LOW:
+      role: ARP
+      strum_mode: LIGHT_8
+      arpeggio_mode: FLOW_16
+      palm_mute: 0.30
+      riff_slot_bias: 0.08
+      lead_fill_probability: 0.04
+      register_bias: MID
+      playfulness_bias: 0.06
+    MID:
+      role: RHYTHM
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.25
+      riff_slot_bias: 0.14
+      lead_fill_probability: 0.08
+      register_bias: MID
+      playfulness_bias: 0.08
+    HIGH:
+      role: RIFF
+      strum_mode: POWER_8
+      arpeggio_mode: OFF
+      palm_mute: 0.15
+      riff_slot_bias: 0.28
+      lead_fill_probability: 0.14
+      register_bias: MID
+      playfulness_bias: 0.11
+
+  INTERLUDE:
+    LOW:
+      role: ARP
+      strum_mode: LIGHT_8
+      arpeggio_mode: SIMPLE_8
+      palm_mute: 0.35
+      riff_slot_bias: 0.06
+      lead_fill_probability: 0.03
+      register_bias: MID
+      playfulness_bias: 0.05
+    MID:
+      role: ARP
+      strum_mode: STD_8
+      arpeggio_mode: GRID_16
+      palm_mute: 0.25
+      riff_slot_bias: 0.10
+      lead_fill_probability: 0.06
+      register_bias: MID
+      playfulness_bias: 0.07
+    HIGH:
+      role: RHYTHM
+      strum_mode: OPEN_16
+      arpeggio_mode: OFF
+      palm_mute: 0.18
+      riff_slot_bias: 0.16
+      lead_fill_probability: 0.10
+      register_bias: MID
+      playfulness_bias: 0.09
+
+  BREAKDOWN:
+    LOW:
+      role: RHYTHM
+      strum_mode: LIGHT_8
+      arpeggio_mode: OFF
+      palm_mute: 0.60
+      riff_slot_bias: 0.05
+      lead_fill_probability: 0.02
+      register_bias: LOW
+      playfulness_bias: 0.05
+    MID:
+      role: RHYTHM
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.45
+      riff_slot_bias: 0.10
+      lead_fill_probability: 0.04
+      register_bias: MID
+      playfulness_bias: 0.07
+    HIGH:
+      role: RIFF
+      strum_mode: POWER_8
+      arpeggio_mode: OFF
+      palm_mute: 0.25
+      riff_slot_bias: 0.22
+      lead_fill_probability: 0.08
+      register_bias: MID
+      playfulness_bias: 0.09
+
+  CLIMAX:
+    LOW:
+      role: RHYTHM
+      strum_mode: OPEN_16
+      arpeggio_mode: OFF
+      palm_mute: 0.10
+      riff_slot_bias: 0.18
+      lead_fill_probability: 0.10
+      register_bias: MID
+      playfulness_bias: 0.10
+    MID:
+      role: RIFF
+      strum_mode: POWER_8
+      arpeggio_mode: OFF
+      palm_mute: 0.05
+      riff_slot_bias: 0.30
+      lead_fill_probability: 0.16
+      register_bias: HIGH
+      playfulness_bias: 0.12
+    HIGH:
+      role: RIFF
+      strum_mode: POWER_8
+      arpeggio_mode: OFF
+      palm_mute: 0.00
+      riff_slot_bias: 0.45
+      lead_fill_probability: 0.20
+      register_bias: HIGH
+      playfulness_bias: 0.15
+
+  OUTRO:
+    LOW:
+      role: RHYTHM
+      strum_mode: LIGHT_8
+      arpeggio_mode: OFF
+      palm_mute: 0.40
+      riff_slot_bias: 0.05
+      lead_fill_probability: 0.02
+      register_bias: LOW
+      playfulness_bias: 0.05
+    MID:
+      role: ARP
+      strum_mode: LIGHT_8
+      arpeggio_mode: SIMPLE_8
+      palm_mute: 0.30
+      riff_slot_bias: 0.08
+      lead_fill_probability: 0.04
+      register_bias: MID
+      playfulness_bias: 0.06
+    HIGH:
+      role: RHYTHM
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.20
+      riff_slot_bias: 0.10
+      lead_fill_probability: 0.06
+      register_bias: MID
+      playfulness_bias: 0.07
+
+  UNKNOWN:
+    LOW:
+      role: RHYTHM
+      strum_mode: LIGHT_8
+      arpeggio_mode: OFF
+      palm_mute: 0.45
+      riff_slot_bias: 0.08
+      lead_fill_probability: 0.03
+      register_bias: MID
+      playfulness_bias: 0.06
+    MID:
+      role: RHYTHM
+      strum_mode: STD_8
+      arpeggio_mode: OFF
+      palm_mute: 0.30
+      riff_slot_bias: 0.12
+      lead_fill_probability: 0.05
+      register_bias: MID
+      playfulness_bias: 0.08
+    HIGH:
+      role: RHYTHM
+      strum_mode: OPEN_16
+      arpeggio_mode: OFF
+      palm_mute: 0.15
+      riff_slot_bias: 0.16
+      lead_fill_probability: 0.08
+      register_bias: MID
+      playfulness_bias: 0.09
+
+axis_modifiers:
+  valence_NEG:
+    playfulness_add: -0.02
+    palm_mute_add: 0.10
+    prefer_roles: [ARP, RHYTHM]
+  valence_POS:
+    playfulness_add: 0.03
+    palm_mute_add: -0.08
+    prefer_roles: [RIFF, RHYTHM]
+  arousal_HIGH:
+    riff_slot_add: 0.08
+    lead_fill_probability_add: 0.05
+
+low_tension_guard:
+  enable: true
+  condition:
+    energy_max: 0.35
+  enforce:
+    riff_slot_bias: 0.05
+    lead_fill_probability: 0.03
+    playfulness_bias_max: 0.07
+
+section_edge_rules:
+  enable: true
+  edge_window_bars: 1
+  boost:
+    riff_slot_add_by_arousal:
+      LOW: 0.05
+      MID: 0.10
+      HIGH: 0.16
+    lead_fill_probability_add_by_arousal:
+      LOW: 0.02
+      MID: 0.05
+      HIGH: 0.08
+
+clamp:
+  palm_mute:
+    min: 0.00
+    max: 0.75
+  riff_slot_bias:
+    min: 0.00
+    max: 0.60
+  lead_fill_probability:
+    min: 0.00
+    max: 0.50
+  playfulness_bias:
+    min: 0.00
+    max: 0.18

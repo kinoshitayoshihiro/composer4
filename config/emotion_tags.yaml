@@ -1,0 +1,213 @@
+version: "0.1"
+description: >
+  valence / arousal のカテゴリから導かれる「人間語に近い感情タグ」定義。
+  楽曲 / セクション / 小節レベルで、各AIモジュールの振る舞いを切り替えるための共通語彙。
+  HarmonyAI, RhythmAI, BassPhraseGenerator, EmotionAI が同じラベル空間で連携可能。
+  各タグには default_roles（単一推奨）と suggested_roles（楽器別候補リスト）を定義。
+
+tags:
+  - id: BRIGHT_ENERGETIC
+    label_ja: "明るくエネルギッシュ"
+    label_en: "Bright & Energetic"
+    valence: POS
+    arousal: HIGH
+    description_ja: "前向きでテンションが高く、フェスやサビのクライマックスに向く雰囲気。"
+    description_en: "Positive and high tension, suitable for festival choruses and climaxes."
+    typical_use:
+      section: ["Chorus", "Intro", "Outro"]
+      tempo_range: [120, 180]
+    default_roles:
+      bass_role: "DRIVE_FORWARD"
+      rhythm_density: "DENSE"
+      harmony_tension: "HIGH"
+      phrase_complexity: "MEDIUM"
+    suggested_roles:
+      bass: ["DRIVE_FORWARD", "ROOT_FOUNDATION", "SYNCOPATE_COMPLEX"]
+      drums: ["GROOVE_BASE", "FILL_ACCENT", "BUILD_UP"]
+      guitar: ["RIFF_DRIVE", "CHORD_PAD", "SINGLE_NOTE_LEAD"]
+
+  - id: BRIGHT_CALM
+    label_ja: "穏やかに前向き"
+    label_en: "Bright & Calm"
+    valence: POS
+    arousal: LOW
+    description_ja: "優しく温かいが、過度に激しくはない落ち着いたポジティブさ。Aメロ・間奏など。"
+    description_en: "Gentle and warm positivity without excessive intensity. Suitable for verses and interludes."
+    typical_use:
+      section: ["Verse", "Bridge", "Interlude"]
+      tempo_range: [60, 100]
+    default_roles:
+      bass_role: "FOUNDATION_CALM"
+      rhythm_density: "SPARSE"
+      harmony_tension: "LOW"
+      phrase_complexity: "SIMPLE"
+    suggested_roles:
+      bass: ["FOUNDATION_CALM", "ROOT_FOUNDATION", "FLOAT_AMBIENT"]
+      drums: ["GROOVE_BASE_SOFT", "MINIMAL_KICK"]
+      guitar: ["CHORD_PAD", "ARP_MOTION"]
+
+  - id: NEUTRAL_COOL
+    label_ja: "クール・中立"
+    label_en: "Neutral & Cool"
+    valence: NEU
+    arousal: MID
+    description_ja: "感情を抑えたクールさ、シティポップやLo-fi寄りの淡々とした雰囲気。"
+    description_en: "Emotionally restrained coolness, suitable for city pop and lo-fi aesthetics."
+    typical_use:
+      section: ["Verse", "PreChorus"]
+      tempo_range: [80, 120]
+    default_roles:
+      bass_role: "ROOT_FOUNDATION"
+      rhythm_density: "MEDIUM"
+      harmony_tension: "MEDIUM"
+      phrase_complexity: "MEDIUM"
+    suggested_roles:
+      bass: ["ROOT_FOUNDATION", "DRIVE_FORWARD", "SYNCOPATE_COMPLEX"]
+      drums: ["GROOVE_BASE", "FILL_ACCENT"]
+      guitar: ["CHORD_PAD", "RIFF_DRIVE", "ARP_MOTION"]
+
+  - id: DARK_DRAMATIC
+    label_ja: "暗くドラマチック"
+    label_en: "Dark & Dramatic"
+    valence: NEG
+    arousal: MID
+    description_ja: "シリアスで緊張感があり、物語的な高まりを感じさせるドラマティックな空気。"
+    description_en: "Serious and tense with dramatic narrative tension."
+    typical_use:
+      section: ["PreChorus", "Bridge", "Interlude"]
+      tempo_range: [70, 110]
+    default_roles:
+      bass_role: "DRIVE_FORWARD"
+      rhythm_density: "MEDIUM"
+      harmony_tension: "HIGH"
+      phrase_complexity: "COMPLEX"
+    suggested_roles:
+      bass: ["DRIVE_FORWARD", "ROOT_FOUNDATION", "AGGRESSIVE_ATTACK"]
+      drums: ["GROOVE_BASE", "FILL_ACCENT", "BUILD_UP"]
+      guitar: ["RIFF_DRIVE", "SINGLE_NOTE_LEAD"]
+
+  - id: MELANCHOLIC
+    label_ja: "哀愁・センチメンタル"
+    label_en: "Melancholic"
+    valence: NEG
+    arousal: LOW
+    description_ja: "静かな悲しみやノスタルジー。ピアノバラードや失恋ソングのAメロ向き。"
+    description_en: "Quiet sadness and nostalgia. Suitable for piano ballads and heartbreak verses."
+    typical_use:
+      section: ["Verse", "Intro", "Outro"]
+      tempo_range: [50, 80]
+    default_roles:
+      bass_role: "FOUNDATION_CALM"
+      rhythm_density: "SPARSE"
+      harmony_tension: "MEDIUM"
+      phrase_complexity: "SIMPLE"
+    suggested_roles:
+      bass: ["FOUNDATION_CALM", "ROOT_FOUNDATION", "FLOAT_AMBIENT"]
+      drums: ["GROOVE_BASE_SOFT", "MINIMAL_KICK", "BREAK_SILENCE"]
+      guitar: ["CHORD_PAD", "ARP_MOTION"]
+
+  - id: EPIC_HEROIC
+    label_ja: "勇ましく壮大"
+    label_en: "Epic & Heroic"
+    valence: POS
+    arousal: HIGH
+    description_ja: "劇伴やアニソンのサビに合う、ヒロイックでスケール感のある高揚。"
+    description_en: "Heroic and grand, suitable for soundtrack and anime song choruses."
+    typical_use:
+      section: ["Chorus", "Bridge", "Climax"]
+      tempo_range: [130, 180]
+    default_roles:
+      bass_role: "DRIVE_FORWARD"
+      rhythm_density: "DENSE"
+      harmony_tension: "HIGH"
+      phrase_complexity: "COMPLEX"
+    suggested_roles:
+      bass: ["DRIVE_FORWARD", "ROOT_FOUNDATION", "AGGRESSIVE_ATTACK"]
+      drums: ["GROOVE_BASE", "FILL_ACCENT", "BUILD_UP"]
+      guitar: ["RIFF_DRIVE", "SINGLE_NOTE_LEAD", "CHORD_PAD"]
+
+  - id: TENDER_INTIMATE
+    label_ja: "親密・ささやき"
+    label_en: "Tender & Intimate"
+    valence: POS
+    arousal: LOW
+    description_ja: "距離感の近いボーカルと相性が良い、やわらかく親密な雰囲気。"
+    description_en: "Soft and intimate atmosphere, compatible with close vocal presence."
+    typical_use:
+      section: ["Verse", "Bridge"]
+      tempo_range: [60, 90]
+    default_roles:
+      bass_role: "FOUNDATION_CALM"
+      rhythm_density: "SPARSE"
+      harmony_tension: "LOW"
+      phrase_complexity: "SIMPLE"
+    suggested_roles:
+      bass: ["FOUNDATION_CALM", "FLOAT_AMBIENT", "ROOT_FOUNDATION"]
+      drums: ["GROOVE_BASE_SOFT", "MINIMAL_KICK", "BREAK_SILENCE"]
+      guitar: ["CHORD_PAD", "ARP_MOTION"]
+
+  - id: SAD_RESIGNED
+    label_ja: "静かな諭念"
+    label_en: "Sad & Resigned"
+    valence: NEG
+    arousal: LOW
+    description_ja: "泣き叫ぶのではなく、静かに受け入れているような悲しみ。終章・アウトロ向き。"
+    description_en: "Quiet acceptance rather than crying out. Suitable for final chapters and outros."
+    typical_use:
+      section: ["Verse", "Outro", "Ending"]
+      tempo_range: [50, 70]
+    default_roles:
+      bass_role: "FOUNDATION_CALM"
+      rhythm_density: "SPARSE"
+      harmony_tension: "LOW"
+      phrase_complexity: "SIMPLE"
+    suggested_roles:
+      bass: ["FOUNDATION_CALM", "ROOT_FOUNDATION", "FLOAT_AMBIENT"]
+      drums: ["GROOVE_BASE_SOFT", "MINIMAL_KICK", "BREAK_SILENCE"]
+      guitar: ["CHORD_PAD", "ARP_MOTION"]
+
+  - id: AGGRESSIVE_ANGRY
+    label_ja: "攻撃的・怒り"
+    label_en: "Aggressive & Angry"
+    valence: NEG
+    arousal: HIGH
+    description_ja: "ラウドロックや尖ったEDMに合う、攻撃性と緊張が高い状態。"
+    description_en: "High aggression and tension suitable for loud rock and edgy EDM."
+    typical_use:
+      section: ["Chorus", "Interlude", "Breakdown"]
+      tempo_range: [140, 200]
+    default_roles:
+      bass_role: "DRIVE_FORWARD"
+      rhythm_density: "DENSE"
+      harmony_tension: "HIGH"
+      phrase_complexity: "COMPLEX"
+    suggested_roles:
+      bass: ["AGGRESSIVE_ATTACK", "DRIVE_FORWARD", "SYNCOPATE_COMPLEX"]
+      drums: ["GROOVE_BASE", "FILL_ACCENT", "BUILD_UP"]
+      guitar: ["RIFF_DRIVE", "SINGLE_NOTE_LEAD"]
+
+  - id: MYSTERIOUS_FLOATING
+    label_ja: "ミステリアス・浮遊感"
+    label_en: "Mysterious & Floating"
+    valence: NEU
+    arousal: LOW
+    description_ja: "善悪や明暗がはっきりしない、夢の中のような曖昧な浮遊感。"
+    description_en: "Ambiguous floating sensation like in a dream, neither good nor evil, light nor dark."
+    typical_use:
+      section: ["Intro", "Bridge", "AmbientPart"]
+      tempo_range: [60, 100]
+    default_roles:
+      bass_role: "FLOAT_AMBIENT"
+      rhythm_density: "SPARSE"
+      harmony_tension: "MEDIUM"
+      phrase_complexity: "SIMPLE"
+    suggested_roles:
+      bass: ["FLOAT_AMBIENT", "FOUNDATION_CALM", "ROOT_FOUNDATION"]
+      drums: ["GROOVE_BASE_SOFT", "MINIMAL_KICK", "BREAK_SILENCE"]
+      guitar: ["CHORD_PAD", "ARP_MOTION"]
+
+notes:
+  - "default_roles はあくまで各AIモジュールへのヒントであり、必須の制約ではない。"
+  - "tagの自動付与は valence/arousal カテゴリとの組み合わせで決定し、人手で override できるようにする想定。"
+  - "tempo_range はあくまで参考値で、実際のテンポは楽曲全体の設計に依存する。"
+  - "phrase_complexity は SIMPLE/MEDIUM/COMPLEX の3段階で定義（phrase_roles.yaml で詳細定義）。"

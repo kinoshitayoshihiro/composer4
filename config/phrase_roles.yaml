@@ -1,0 +1,312 @@
+version: "0.1"
+description: >
+  フレーズの役割、ベースの役割、リズム密度など、
+  各AIモジュール（BassPhraseGenerator, RhythmAI, HarmonyAI）が共通で使用する語彙定義。
+  楽器横断的な振る舞いの統一を図るための共通言語。
+
+# ==========================================
+# フレーズ役割（楽器横断）
+# ==========================================
+phrase_roles:
+  - id: MAIN_LINE
+    label_ja: "主旋律"
+    label_en: "Main Melody"
+    description_ja: "楽曲の中心となる旋律ライン。ボーカルメロディやリードギターなど。"
+    description_en: "Central melodic line of the piece. Vocal melody, lead guitar, etc."
+    typical_instruments: ["vocal", "lead_guitar", "synth_lead"]
+
+  - id: COUNTER_MELODY
+    label_ja: "対旋律"
+    label_en: "Counter Melody"
+    description_ja: "主旋律に対して対位的に動く副次的な旋律ライン。"
+    description_en: "Secondary melodic line moving contrapuntally against the main melody."
+    typical_instruments: ["strings", "synth_pad", "guitar"]
+
+  - id: OSTINATO
+    label_ja: "オスティナート（繰り返しパターン）"
+    label_en: "Ostinato (Repeating Pattern)"
+    description_ja: "短いフレーズを執拗に繰り返すパターン。リフやループなど。"
+    description_en: "Short phrase repeated persistently. Riffs, loops, etc."
+    typical_instruments: ["bass", "guitar", "synth"]
+
+  - id: FILL
+    label_ja: "フィル（隙間埋め）"
+    label_en: "Fill"
+    description_ja: "フレーズ間の隙間を埋める装飾的なフレーズ。"
+    description_en: "Ornamental phrase filling gaps between main phrases."
+    typical_instruments: ["drums", "bass", "guitar", "piano"]
+
+  - id: PEDAL
+    label_ja: "ペダルポイント（固定音）"
+    label_en: "Pedal Point"
+    description_ja: "一定の音高を持続させながらハーモニーが変化する。"
+    description_en: "Sustained pitch while harmony changes above or below."
+    typical_instruments: ["bass", "strings", "organ"]
+
+  - id: RHYTHMIC_ACCENT
+    label_ja: "リズムアクセント"
+    label_en: "Rhythmic Accent"
+    description_ja: "リズムを強調するための打撃的なフレーズ。"
+    description_en: "Percussive phrase emphasizing rhythm."
+    typical_instruments: ["drums", "percussion", "brass"]
+
+  # Keys/Piano専用ロール（追加）
+  - id: COMP_FOUNDATION
+    label_ja: "コンピング基盤"
+    label_en: "Comping Foundation"
+    description_ja: "コードコンピングによりハーモニーとリズムの基盤を提供。"
+    description_en: "Chordal comping that anchors harmony and rhythm."
+    typical_instruments: ["piano", "keys", "organ"]
+
+  - id: PAD_WIDE
+    label_ja: "ワイドパッド"
+    label_en: "Wide Pad"
+    description_ja: "持続音やスウェルコードで空間を埋める。リズム競合を避ける。"
+    description_en: "Sustained or swelled chords to fill space without rhythmic competition."
+    typical_instruments: ["synth_pad", "strings", "organ"]
+
+  - id: ARP_MOTION
+    label_ja: "アルペジオモーション"
+    label_en: "Arpeggio Motion"
+    description_ja: "アルペジオパターンで細分化ときらめきを提供。"
+    description_en: "Arpeggiated patterns that provide subdivision and sparkle."
+    typical_instruments: ["piano", "harp", "synth"]
+
+  - id: HOOK_RIFF
+    label_ja: "フックリフ"
+    label_en: "Hook Riff"
+    description_ja: "セクションのアイデンティティを定義するシグネチャーなキーボードリフ。"
+    description_en: "Signature keys riff that defines the section identity."
+    typical_instruments: ["piano", "organ", "synth"]
+
+  - id: PUMP_OFFBEAT
+    label_ja: "オフビートパンプ"
+    label_en: "Offbeat Pump"
+    description_ja: "短い裏拍スタブ。ディスコ/EDMフィール。"
+    description_en: "Short offbeat stabs, often for disco/EDM feel."
+    typical_instruments: ["organ", "synth"]
+
+  - id: GOSPEL_ORGAN
+    label_ja: "ゴスペル/ロックオルガン"
+    label_en: "Gospel/Rock Organ"
+    description_ja: "オルガン駆動のエネルギッシュなコンピング。ロック/パンク的。"
+    description_en: "Organ-driven energetic comping typical of rock/punk."
+    typical_instruments: ["organ", "hammond"]
+
+  - id: SOLO_LEAD
+    label_ja: "ソロリード"
+    label_en: "Solo Lead"
+    description_ja: "キーボードがリードボイスになる（イントロ/アウトロ/ソロ）。"
+    description_en: "Keys becomes the lead voice (intro/outro/solo)."
+    typical_instruments: ["piano", "synth_lead"]
+
+  - id: BREAK_SILENCE
+    label_ja: "ブレイク/沈黙"
+    label_en: "Break / Silence"
+    description_ja: "ダイナミックコントラストのための意図的な休止。"
+    description_en: "Intentional rest for dynamic contrast."
+    typical_instruments: ["any"]
+
+# ==========================================
+# ベース役割（BassPhraseGenerator専用）
+# ==========================================
+bass_roles:
+  - id: ROOT_FOUNDATION
+    label_ja: "ルート基盤型"
+    label_en: "Root Foundation"
+    description_ja: "コードのルート音を中心に、安定した土台を提供する。最も基本的なベースライン。"
+    description_en: "Provides stable foundation centered on chord roots. Most fundamental bass line."
+    typical_sections: ["Verse", "Intro"]
+    rhythm_density: "SPARSE"
+    note_choice_preference: ["root", "fifth"]
+    fill_frequency: "low"
+
+  - id: DRIVE_FORWARD
+    label_ja: "推進力型"
+    label_en: "Drive Forward"
+    description_ja: "前へ前へと押し出すような動き。サビや盛り上がりで使用。"
+    description_en: "Pushing forward with momentum. Used in choruses and climaxes."
+    typical_sections: ["Chorus", "PreChorus"]
+    rhythm_density: "DENSE"
+    note_choice_preference: ["root", "third", "fifth", "chromatic"]
+    fill_frequency: "medium"
+
+  - id: FOUNDATION_CALM
+    label_ja: "落ち着いた土台型"
+    label_en: "Calm Foundation"
+    description_ja: "控えめで落ち着いた土台。バラードや静かなセクション向き。"
+    description_en: "Reserved and calm foundation. Suitable for ballads and quiet sections."
+    typical_sections: ["Verse", "Bridge"]
+    rhythm_density: "SPARSE"
+    note_choice_preference: ["root", "fifth"]
+    fill_frequency: "low"
+
+  - id: MELODIC_SUPPORT
+    label_ja: "メロディック補助型"
+    label_en: "Melodic Support"
+    description_ja: "メロディアスな動きでボーカルやリードを補助する。"
+    description_en: "Supports vocal or lead with melodic movement."
+    typical_sections: ["Bridge", "Interlude"]
+    rhythm_density: "MEDIUM"
+    note_choice_preference: ["root", "third", "fifth", "seventh"]
+    fill_frequency: "medium"
+
+  - id: PEDAL_POINT
+    label_ja: "ペダルポイント型"
+    label_en: "Pedal Point"
+    description_ja: "同じ音を持続しながらハーモニーを支える。"
+    description_en: "Sustains same pitch while supporting changing harmony."
+    typical_sections: ["Intro", "Outro", "Bridge"]
+    rhythm_density: "SPARSE"
+    note_choice_preference: ["root"]
+    fill_frequency: "none"
+
+  - id: RIFF_UNISON
+    label_ja: "リフ・ユニゾン型"
+    label_en: "Riff Unison"
+    description_ja: "ギターなどとユニゾンでリフを演奏。ロック・メタル向き。"
+    description_en: "Plays riff in unison with guitar. Suitable for rock/metal."
+    typical_sections: ["Intro", "Chorus", "Solo"]
+    rhythm_density: "DENSE"
+    note_choice_preference: ["root", "chromatic", "power_chord"]
+    fill_frequency: "high"
+
+  - id: FLOAT_AMBIENT
+    label_ja: "浮遊・アンビエント型"
+    label_en: "Floating Ambient"
+    description_ja: "曖昧で浮遊感のある動き。アンビエント・ポストロック向き。"
+    description_en: "Ambiguous floating movement. Suitable for ambient/post-rock."
+    typical_sections: ["Intro", "Bridge", "AmbientPart"]
+    rhythm_density: "SPARSE"
+    note_choice_preference: ["root", "fifth", "ninth"]
+    fill_frequency: "none"
+
+# ==========================================
+# リズム密度（共通語彙）
+# ==========================================
+rhythm_density:
+  SPARSE:
+    label_ja: "疎"
+    label_en: "Sparse"
+    description_ja: "音符が少なく、空間が多い。4分音符中心。"
+    description_en: "Few notes with much space. Quarter notes centered."
+    notes_per_bar_range: [2, 6]
+    typical_note_values: ["whole", "half", "quarter"]
+
+  MEDIUM:
+    label_ja: "中"
+    label_en: "Medium"
+    description_ja: "標準的な密度。8分音符が中心。"
+    description_en: "Standard density. Eighth notes centered."
+    notes_per_bar_range: [6, 12]
+    typical_note_values: ["quarter", "eighth"]
+
+  DENSE:
+    label_ja: "密"
+    label_en: "Dense"
+    description_ja: "音符が多く、動きが激しい。16分音符を含む。"
+    description_en: "Many notes with active movement. Includes sixteenth notes."
+    notes_per_bar_range: [12, 24]
+    typical_note_values: ["eighth", "sixteenth", "triplet"]
+
+# ==========================================
+# フレーズ複雑度（共通語彙）
+# ==========================================
+phrase_complexity:
+  SIMPLE:
+    label_ja: "シンプル"
+    label_en: "Simple"
+    description_ja: "繰り返しが多く、音程変化が少ない。初心者でも演奏可能。"
+    description_en: "Much repetition, little pitch variation. Playable by beginners."
+    pitch_variety: "low"
+    interval_max: 7  # 完全5度まで
+    syncopation: "none"
+
+  MEDIUM:
+    label_ja: "中程度"
+    label_en: "Medium"
+    description_ja: "適度な音程変化とリズムパターン。標準的な演奏技術が必要。"
+    description_en: "Moderate pitch variation and rhythm patterns. Standard playing skill required."
+    pitch_variety: "medium"
+    interval_max: 12  # オクターブまで
+    syncopation: "light"
+
+  COMPLEX:
+    label_ja: "複雑"
+    label_en: "Complex"
+    description_ja: "大きな跳躍、複雑なリズム、高度な技術が必要。"
+    description_en: "Large leaps, complex rhythms, advanced technique required."
+    pitch_variety: "high"
+    interval_max: 19  # 12度まで
+    syncopation: "heavy"
+
+# ==========================================
+# シンコペーションレベル（共通語彙）
+# ==========================================
+syncopation_level:
+  NONE:
+    label_ja: "なし"
+    label_en: "None"
+    description_ja: "拍の頭で音符が鳴る。最も安定。"
+    description_en: "Notes on the beat. Most stable."
+
+  LIGHT:
+    label_ja: "軽微"
+    label_en: "Light"
+    description_ja: "時々拍をずらす程度。ポップス標準。"
+    description_en: "Occasional off-beat. Standard pop."
+
+  HEAVY:
+    label_ja: "重度"
+    label_en: "Heavy"
+    description_ja: "頻繁に拍をずらす。ファンク・ジャズ向き。"
+    description_en: "Frequent off-beat. Suitable for funk/jazz."
+
+# ==========================================
+# グルーヴタイプ（RhythmAI / BassPhraseGenerator共通）
+# ==========================================
+groove_types:
+  - id: STANDARD_8BEAT_ROCK
+    label_ja: "スタンダード8ビートロック"
+    label_en: "Standard 8-Beat Rock"
+    description_ja: "最も基本的な8ビートロックのグルーヴ。"
+    description_en: "Most fundamental 8-beat rock groove."
+    kick_pattern: [0, 2]  # beat 0 and 2
+    bass_alignment: "tight"  # キックと密に連携
+
+  - id: FUNK_16BEAT_SYNC
+    label_ja: "ファンク16ビート同期"
+    label_en: "Funk 16-Beat Sync"
+    description_ja: "16分音符のファンクグルーヴ。ベースとドラムが強く同期。"
+    description_en: "16th note funk groove. Bass and drums tightly synced."
+    kick_pattern: [0, 1.5, 2.5]
+    bass_alignment: "syncopated"
+
+  - id: FOUR_ON_THE_FLOOR
+    label_ja: "フォーオンザフロア"
+    label_en: "Four on the Floor"
+    description_ja: "全拍にキック。ディスコ・ハウス向き。"
+    description_en: "Kick on every beat. Disco/house oriented."
+    kick_pattern: [0, 1, 2, 3]
+    bass_alignment: "tight"
+
+  - id: SHUFFLE
+    label_ja: "シャッフル"
+    label_en: "Shuffle"
+    description_ja: "跳ねるようなリズム。ブルース・ジャズ向き。"
+    description_en: "Bouncing rhythm. Blues/jazz oriented."
+    kick_pattern: [0, 2]
+    bass_alignment: "loose"  # ややゆるく
+
+  - id: HALF_TIME
+    label_ja: "ハーフタイム"
+    label_en: "Half-Time"
+    description_ja: "テンポ感が半分になったようなグルーヴ。ヒップホップ・トラップ向き。"
+    description_en: "Groove feeling half tempo. Hip-hop/trap oriented."
+    kick_pattern: [0]
+    bass_alignment: "tight"
+
+notes:
+  - "各役割・密度・複雑度は、emotion_tags.yaml の default_roles から参照される。"
+  - "groove_types は将来的に RhythmAI と統合予定。"
+  - "bass_alignment (tight/syncopated/loose) は BassPhraseGenerator でキックとベースの同期度を制御。"

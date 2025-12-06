@@ -1,0 +1,455 @@
+version: "1.1"
+policy_id: "DRM_DYN_V1_1"
+description: >
+  Drumのダイナミクス/奏法ラベルを bar 単位で決定する上流ポリシー。
+  section_types.yaml の標準セクションIDと正規化ルールに準拠し、
+  emotion_axes.yaml の valence/arousal(energy) バケットを共通量子化として使用する。
+  結果は drum_phrase_generator_v2 系が直接参照可能な per-bar 指示に落とす。
+
+# ---------------------------------------------
+# 入出力
+# ---------------------------------------------
+inputs:
+  sections_json: "plans/sections.json"
+  emotion_profile_json: "plans/emotion_profile.json"
+  bars_parquet: "plans/bars.parquet"
+
+  # 公式ラベル定義（参照用）
+  section_types_yaml: "configs/labels/section_types.yaml"
+  emotion_axes_yaml: "configs/labels/emotion_axes.yaml"
+  drum_rulebook_json: "config/drum_rulebook_v1.json"
+
+outputs:
+  per_bar_drum_dynamics_json: "plans/drum_dynamics_plan.json"
+
+# ---------------------------------------------
+# 公式セクションID
+#  section_types.yaml の standard_sections を採用
+#  + classification_rules.mapping で alias正規化する前提
+# ---------------------------------------------
+section_vocab:
+  - INTRO
+  - VERSE
+  - PRE_CHORUS
+  - CHORUS
+  - BRIDGE
+  - SOLO
+  - INTERLUDE
+  - BREAKDOWN
+  - CLIMAX
+  - OUTRO
+  - AMBIENT_PART
+  - UNKNOWN
+
+section_normalization:
+  # section_types.yaml の mapping をミラー。
+  # 実装側で sections.json の section_name をまずこのIDへ正規化する。
+  mapping:
+    intro: INTRO
+    introduction: INTRO
+    opening: INTRO
+
+    verse: VERSE
+    verse1: VERSE
+    verse2: VERSE
+    verse3: VERSE
+    a_section: VERSE
+
+    prechorus: PRE_CHORUS
+    pre_chorus: PRE_CHORUS
+    b_section: PRE_CHORUS
+    buildup: PRE_CHORUS
+
+    chorus: CHORUS
+    hook: CHORUS
+    refrain: CHORUS
+    c_section: CHORUS
+
+    bridge: BRIDGE
+    middle_8: BRIDGE
+    interlude: BRIDGE  # 文脈により INTERLUDE と区別しても良い
+
+    solo: SOLO
+    guitar_solo: SOLO
+    sax_solo: SOLO
+    instrumental: SOLO
+
+    breakdown: BREAKDOWN
+    drop: BREAKDOWN
+    break: BREAKDOWN
+
+    climax: CLIMAX
+    peak: CLIMAX
+    final_chorus: CLIMAX
+
+    outro: OUTRO
+    ending: OUTRO
+    coda: OUTRO
+    fade_out: OUTRO
+
+    ambient: AMBIENT_PART
+    soundscape: AMBIENT_PART
+    atmosphere: AMBIENT_PART
+
+    unknown: UNKNOWN
+    other: UNKNOWN
+
+  priority:
+    - INTRO
+    - VERSE
+    - PRE_CHORUS
+    - CHORUS
+    - BRIDGE
+    - SOLO
+    - BREAKDOWN
+    - CLIMAX
+    - OUTRO
+    - INTERLUDE
+    - AMBIENT_PART
+    - UNKNOWN
+
+# ---------------------------------------------
+# 感情量子化（共通軸）
+# emotion_axes.yaml を準拠ミラー
+# ---------------------------------------------
+emotion_buckets:
+  valence:
+    source_field: "valence"
+    NEG: {min: -1.0, max: -0.3}
+    NEU: {min: -0.3, max: 0.3}
+    POS: {min: 0.3, max: 1.0}
+
+  arousal:
+    source_field: "energy"
+    LOW: {min: 0.0, max: 0.35}
+    MID: {min: 0.35, max: 0.7}
+    HIGH: {min: 0.7, max: 1.0}
+
+  defaults:
+    valence: NEU
+    arousal: MID
+
+# ---------------------------------------------
+# 0) グローバル既定値（ドラム語彙は drum_rulebook_v1.json を想定）
+# ---------------------------------------------
+defaults:
+  cymbal_mode: HH_ONLY
+  hihat_breathing: AUTO_LIGHT
+  snare_ghost_style: LIGHT_16
+  tom_fill_cycle: OFF
+  playfulness_bias: 0.08
+
+  fill_probability_by_arousal:
+    LOW: 0.03
+    MID: 0.08
+    HIGH: 0.18
+
+  crash_punct_probability_by_arousal:
+    LOW: 0.02
+    MID: 0.05
+    HIGH: 0.10
+
+# ---------------------------------------------
+# 1) セクション × arousal の基本プロファイル
+#  "セクション文法が主、arousalが熱量を決める"
+# ---------------------------------------------
+section_profiles:
+
+  INTRO:
+    LOW:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: OFF
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.04
+    MID:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.06
+    HIGH:
+      cymbal_mode: CRASH_GUIDE
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.10
+
+  VERSE:
+    LOW:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.06
+    MID:
+      cymbal_mode: RIDE_8TH
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: FUNK_GRID
+      tom_fill_cycle: EVERY_8_BARS
+      playfulness_bias: 0.10
+    HIGH:
+      cymbal_mode: RIDE_8TH
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: PRE_BACKBEAT
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.14
+
+  PRE_CHORUS:
+    LOW:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: EVERY_8_BARS
+      playfulness_bias: 0.08
+    MID:
+      cymbal_mode: CRASH_GUIDE
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: PRE_BACKBEAT
+      tom_fill_cycle: EVERY_4_BARS
+      playfulness_bias: 0.12
+    HIGH:
+      cymbal_mode: CYM_WASH
+      hihat_breathing: AUTO_STRONG
+      snare_ghost_style: PRE_BACKBEAT
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.16
+
+  CHORUS:
+    LOW:
+      cymbal_mode: RIDE_8TH
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: EVERY_8_BARS
+      playfulness_bias: 0.10
+    MID:
+      cymbal_mode: CRASH_PUNCT
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: FUNK_GRID
+      tom_fill_cycle: EVERY_4_BARS
+      playfulness_bias: 0.16
+    HIGH:
+      cymbal_mode: CRASH_GUIDE
+      hihat_breathing: AUTO_STRONG
+      snare_ghost_style: PRE_BACKBEAT
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.20
+
+  BRIDGE:
+    LOW:
+      cymbal_mode: CYM_WASH
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: OFF
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.06
+    MID:
+      cymbal_mode: RIDE_8TH
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: EVERY_8_BARS
+      playfulness_bias: 0.12
+    HIGH:
+      cymbal_mode: RIDE_BELL_ACCENT
+      hihat_breathing: AUTO_STRONG
+      snare_ghost_style: FUNK_GRID
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.18
+
+  SOLO:
+    LOW:
+      cymbal_mode: RIDE_8TH
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: EVERY_8_BARS
+      playfulness_bias: 0.10
+    MID:
+      cymbal_mode: RIDE_8TH
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: FUNK_GRID
+      tom_fill_cycle: EVERY_4_BARS
+      playfulness_bias: 0.14
+    HIGH:
+      cymbal_mode: RIDE_BELL_ACCENT
+      hihat_breathing: AUTO_STRONG
+      snare_ghost_style: PRE_BACKBEAT
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.18
+
+  INTERLUDE:
+    LOW:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: OFF
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.05
+    MID:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.07
+    HIGH:
+      cymbal_mode: CRASH_PUNCT
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: EVERY_8_BARS
+      playfulness_bias: 0.10
+
+  BREAKDOWN:
+    LOW:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: OFF
+      snare_ghost_style: OFF
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.04
+    MID:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: EVERY_8_BARS
+      playfulness_bias: 0.08
+    HIGH:
+      cymbal_mode: CRASH_PUNCT
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: PRE_BACKBEAT
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.14
+
+  CLIMAX:
+    LOW:
+      cymbal_mode: CRASH_PUNCT
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: EVERY_4_BARS
+      playfulness_bias: 0.14
+    MID:
+      cymbal_mode: CRASH_GUIDE
+      hihat_breathing: AUTO_STRONG
+      snare_ghost_style: FUNK_GRID
+      tom_fill_cycle: EVERY_4_BARS
+      playfulness_bias: 0.18
+    HIGH:
+      cymbal_mode: CRASH_GUIDE
+      hihat_breathing: AUTO_STRONG
+      snare_ghost_style: PRE_BACKBEAT
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.22
+
+  OUTRO:
+    LOW:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: OFF
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.04
+    MID:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.06
+    HIGH:
+      cymbal_mode: CRASH_PUNCT
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.10
+
+  AMBIENT_PART:
+    LOW:
+      cymbal_mode: CYM_WASH
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: OFF
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.03
+    MID:
+      cymbal_mode: CYM_WASH
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: OFF
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.04
+    HIGH:
+      cymbal_mode: CYM_WASH
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.06
+
+  UNKNOWN:
+    LOW:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: OFF
+      playfulness_bias: 0.06
+    MID:
+      cymbal_mode: HH_ONLY
+      hihat_breathing: AUTO_LIGHT
+      snare_ghost_style: LIGHT_16
+      tom_fill_cycle: EVERY_8_BARS
+      playfulness_bias: 0.08
+    HIGH:
+      cymbal_mode: RIDE_8TH
+      hihat_breathing: AUTO_MEDIUM
+      snare_ghost_style: FUNK_GRID
+      tom_fill_cycle: SECTION_EDGE
+      playfulness_bias: 0.12
+
+# ---------------------------------------------
+# 2) valence/arousal 由来の微調整（共通軸で横展開可能）
+# ---------------------------------------------
+axis_modifiers:
+
+  # ネガ寄りなら過剰なクラッシュや遊びを少し抑制
+  valence_NEG:
+    playfulness_add: -0.02
+    prefer_cymbal_modes: [HH_ONLY, CYM_WASH, RIDE_8TH]
+
+  # ポジ寄りなら句読点クラッシュや呼吸を少し前へ
+  valence_POS:
+    playfulness_add: 0.03
+    prefer_cymbal_modes: [CRASH_PUNCT, RIDE_8TH, HH_ONLY]
+
+  # arousal HIGH はフィルやトム循環をアグレッシブに
+  arousal_HIGH:
+    extra_fill_probability_add: 0.05
+    prefer_tom_fill_cycles: [EVERY_4_BARS, SECTION_EDGE]
+
+# ---------------------------------------------
+# 3) 低テンション帯の安全設計
+# ---------------------------------------------
+low_tension_guard:
+  enable: true
+  condition:
+    energy_max: 0.35   # arousal LOW 相当
+  enforce:
+    fill_probability: 0.02
+    crash_punct_probability: 0.01
+    tom_fill_cycle: OFF
+    playfulness_bias_max: 0.08
+
+# ---------------------------------------------
+# 4) セクション境界の"見せ場"増幅
+# ---------------------------------------------
+section_edge_rules:
+  enable: true
+  edge_window_bars: 1
+  preferred_fill_tokens:
+    - SNARE_ROLL_16
+    - TOM_RUN_UP
+    - TOM_RUN_DOWN
+    - KICK_SNARE_ALT
+    - CYM_SWELL
+    - CRASH_CHOKE
+  extra_fill_probability_add_by_arousal:
+    LOW: 0.04
+    MID: 0.08
+    HIGH: 0.12
+
+# ---------------------------------------------
+# 5) 最終クリップ
+# ---------------------------------------------
+clamp:
+  playfulness_bias:
+    min: 0.00
+    max: 0.25

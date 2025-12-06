@@ -1,0 +1,55 @@
+# Drums Policy (Harmony Beat専用)
+# ドラムパターン・ダイナミクス・フィル頻度をセクション×感情で制御
+
+global:
+  tempo_bpm: 120  # デフォルトテンポ（bars.parquetから自動取得推奨）
+  humanize:
+    timing: 0.02
+    velocity: 0.1
+
+instruments:
+  drums:
+    min_notes_per_bar: 4
+    max_notes_per_bar: 32
+    
+    # セクション別密度
+    sections:
+      intro:
+        density: 0.7
+        fill_probability: 0.1
+      verse:
+        density: 0.8
+        fill_probability: 0.15
+      pre_chorus:
+        density: 0.9
+        fill_probability: 0.25
+      chorus:
+        density: 1.0
+        fill_probability: 0.3
+      bridge:
+        density: 0.85
+        fill_probability: 0.2
+      outro:
+        density: 0.6
+        fill_probability: 0.1
+    
+    # 感情別バイアス（harmony_beat.jsonから取得）
+    emotion_modifiers:
+      joy:
+        density_multiplier: 1.1
+        fill_boost: 0.05
+      pride:
+        density_multiplier: 1.05
+        fill_boost: 0.03
+      determination:
+        density_multiplier: 1.0
+        fill_boost: 0.0
+      despair:
+        density_multiplier: 0.9
+        fill_boost: -0.05
+      loyalty:
+        density_multiplier: 0.95
+        fill_boost: 0.0
+      melancholy:
+        density_multiplier: 0.85
+        fill_boost: -0.1

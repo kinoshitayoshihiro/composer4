@@ -1,0 +1,476 @@
+version: "1.1"
+policy_id: "BASS_DYN_V1_1"
+instrument: "BASS"
+
+inputs:
+  sections_json: "plans/sections.json"
+  emotion_profile_json: "plans/emotion_profile.json"
+  bars_parquet: "plans/bars.parquet"
+
+outputs:
+  per_bar_dynamics_json: "plans/bass_dynamics_plan.json"
+
+section_normalization:
+  mapping:
+    intro: INTRO
+    verse: VERSE
+    verse_a: VERSE
+    verse_b: VERSE
+    prechorus: PRE_CHORUS
+    pre_chorus: PRE_CHORUS
+    chorus: CHORUS
+    chorus_a: CHORUS
+    chorus_b: CHORUS
+    bridge: BRIDGE
+    solo: SOLO
+    interlude: INTERLUDE
+    breakdown: BREAKDOWN
+    climax: CLIMAX
+    outro: OUTRO
+    unknown: UNKNOWN
+  priority:
+    - CLIMAX
+    - CHORUS
+    - PRE_CHORUS
+    - SOLO
+    - BRIDGE
+    - VERSE
+    - BREAKDOWN
+    - INTERLUDE
+    - INTRO
+    - OUTRO
+    - UNKNOWN
+
+emotion_buckets:
+  valence:
+    NEG: {min: -1.0, max: -0.3}
+    NEU: {min: -0.3, max: 0.3}
+    POS: {min: 0.3, max: 1.0}
+  arousal:
+    LOW: {min: 0.0, max: 0.35}
+    MID: {min: 0.35, max: 0.7}
+    HIGH: {min: 0.7, max: 1.0}
+  defaults:
+    valence: NEU
+    arousal: MID
+
+defaults:
+  role: FOUNDATION
+  root_anchor_bias: 0.70
+  pedal_point_bias: 0.20
+  passing_tone_density: 0.08
+  octave_motion_bias: 0.06
+  syncopation_bias: 0.08
+  register_bias: LOW_MID
+  articulation: LEGATO
+  playfulness_bias: 0.06
+
+section_profiles:
+  INTRO:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.80
+      pedal_point_bias: 0.35
+      passing_tone_density: 0.03
+      octave_motion_bias: 0.04
+      syncopation_bias: 0.04
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: FOUNDATION
+      root_anchor_bias: 0.75
+      pedal_point_bias: 0.25
+      passing_tone_density: 0.05
+      octave_motion_bias: 0.06
+      syncopation_bias: 0.06
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.70
+      pedal_point_bias: 0.18
+      passing_tone_density: 0.08
+      octave_motion_bias: 0.08
+      syncopation_bias: 0.08
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.07
+
+  VERSE:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.78
+      pedal_point_bias: 0.30
+      passing_tone_density: 0.04
+      octave_motion_bias: 0.04
+      syncopation_bias: 0.04
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: FOUNDATION
+      root_anchor_bias: 0.72
+      pedal_point_bias: 0.20
+      passing_tone_density: 0.08
+      octave_motion_bias: 0.06
+      syncopation_bias: 0.08
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.65
+      pedal_point_bias: 0.12
+      passing_tone_density: 0.12
+      octave_motion_bias: 0.10
+      syncopation_bias: 0.12
+      register_bias: LOW_MID
+      articulation: STACCATO
+      playfulness_bias: 0.08
+
+  PRE_CHORUS:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.72
+      pedal_point_bias: 0.22
+      passing_tone_density: 0.08
+      octave_motion_bias: 0.06
+      syncopation_bias: 0.08
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    MID:
+      role: DRIVE
+      root_anchor_bias: 0.65
+      pedal_point_bias: 0.15
+      passing_tone_density: 0.12
+      octave_motion_bias: 0.10
+      syncopation_bias: 0.10
+      register_bias: LOW_MID
+      articulation: ACCENT
+      playfulness_bias: 0.08
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.60
+      pedal_point_bias: 0.10
+      passing_tone_density: 0.16
+      octave_motion_bias: 0.14
+      syncopation_bias: 0.14
+      register_bias: MID
+      articulation: ACCENT
+      playfulness_bias: 0.10
+
+  CHORUS:
+    LOW:
+      role: DRIVE
+      root_anchor_bias: 0.68
+      pedal_point_bias: 0.18
+      passing_tone_density: 0.10
+      octave_motion_bias: 0.08
+      syncopation_bias: 0.08
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.07
+    MID:
+      role: DRIVE
+      root_anchor_bias: 0.62
+      pedal_point_bias: 0.12
+      passing_tone_density: 0.14
+      octave_motion_bias: 0.12
+      syncopation_bias: 0.12
+      register_bias: LOW_MID
+      articulation: ACCENT
+      playfulness_bias: 0.09
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.55
+      pedal_point_bias: 0.08
+      passing_tone_density: 0.18
+      octave_motion_bias: 0.18
+      syncopation_bias: 0.18
+      register_bias: MID
+      articulation: ACCENT
+      playfulness_bias: 0.10
+
+  BRIDGE:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.75
+      pedal_point_bias: 0.25
+      passing_tone_density: 0.06
+      octave_motion_bias: 0.05
+      syncopation_bias: 0.06
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: MELODIC
+      root_anchor_bias: 0.60
+      pedal_point_bias: 0.15
+      passing_tone_density: 0.14
+      octave_motion_bias: 0.10
+      syncopation_bias: 0.10
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.08
+    HIGH:
+      role: MELODIC
+      root_anchor_bias: 0.55
+      pedal_point_bias: 0.10
+      passing_tone_density: 0.18
+      octave_motion_bias: 0.14
+      syncopation_bias: 0.14
+      register_bias: MID
+      articulation: ACCENT
+      playfulness_bias: 0.10
+
+  SOLO:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.75
+      pedal_point_bias: 0.25
+      passing_tone_density: 0.06
+      octave_motion_bias: 0.05
+      syncopation_bias: 0.06
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: FOUNDATION
+      root_anchor_bias: 0.70
+      pedal_point_bias: 0.18
+      passing_tone_density: 0.10
+      octave_motion_bias: 0.08
+      syncopation_bias: 0.08
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.07
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.62
+      pedal_point_bias: 0.12
+      passing_tone_density: 0.14
+      octave_motion_bias: 0.12
+      syncopation_bias: 0.12
+      register_bias: LOW_MID
+      articulation: STACCATO
+      playfulness_bias: 0.09
+
+  INTERLUDE:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.78
+      pedal_point_bias: 0.28
+      passing_tone_density: 0.04
+      octave_motion_bias: 0.04
+      syncopation_bias: 0.04
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: FOUNDATION
+      root_anchor_bias: 0.72
+      pedal_point_bias: 0.20
+      passing_tone_density: 0.08
+      octave_motion_bias: 0.06
+      syncopation_bias: 0.06
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.65
+      pedal_point_bias: 0.14
+      passing_tone_density: 0.12
+      octave_motion_bias: 0.10
+      syncopation_bias: 0.10
+      register_bias: LOW_MID
+      articulation: STACCATO
+      playfulness_bias: 0.08
+
+  BREAKDOWN:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.85
+      pedal_point_bias: 0.40
+      passing_tone_density: 0.02
+      octave_motion_bias: 0.03
+      syncopation_bias: 0.03
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: FOUNDATION
+      root_anchor_bias: 0.78
+      pedal_point_bias: 0.25
+      passing_tone_density: 0.05
+      octave_motion_bias: 0.05
+      syncopation_bias: 0.05
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.68
+      pedal_point_bias: 0.15
+      passing_tone_density: 0.10
+      octave_motion_bias: 0.08
+      syncopation_bias: 0.08
+      register_bias: LOW_MID
+      articulation: STACCATO
+      playfulness_bias: 0.07
+
+  CLIMAX:
+    LOW:
+      role: DRIVE
+      root_anchor_bias: 0.65
+      pedal_point_bias: 0.15
+      passing_tone_density: 0.12
+      octave_motion_bias: 0.10
+      syncopation_bias: 0.10
+      register_bias: LOW_MID
+      articulation: ACCENT
+      playfulness_bias: 0.08
+    MID:
+      role: DRIVE
+      root_anchor_bias: 0.58
+      pedal_point_bias: 0.10
+      passing_tone_density: 0.16
+      octave_motion_bias: 0.14
+      syncopation_bias: 0.14
+      register_bias: MID
+      articulation: ACCENT
+      playfulness_bias: 0.10
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.52
+      pedal_point_bias: 0.06
+      passing_tone_density: 0.22
+      octave_motion_bias: 0.22
+      syncopation_bias: 0.20
+      register_bias: MID
+      articulation: ACCENT
+      playfulness_bias: 0.12
+
+  OUTRO:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.80
+      pedal_point_bias: 0.30
+      passing_tone_density: 0.04
+      octave_motion_bias: 0.04
+      syncopation_bias: 0.04
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: FOUNDATION
+      root_anchor_bias: 0.75
+      pedal_point_bias: 0.20
+      passing_tone_density: 0.06
+      octave_motion_bias: 0.05
+      syncopation_bias: 0.05
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    HIGH:
+      role: FOUNDATION
+      root_anchor_bias: 0.70
+      pedal_point_bias: 0.15
+      passing_tone_density: 0.08
+      octave_motion_bias: 0.06
+      syncopation_bias: 0.06
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+
+  UNKNOWN:
+    LOW:
+      role: FOUNDATION
+      root_anchor_bias: 0.75
+      pedal_point_bias: 0.22
+      passing_tone_density: 0.06
+      octave_motion_bias: 0.05
+      syncopation_bias: 0.06
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: FOUNDATION
+      root_anchor_bias: 0.70
+      pedal_point_bias: 0.18
+      passing_tone_density: 0.08
+      octave_motion_bias: 0.06
+      syncopation_bias: 0.08
+      register_bias: LOW_MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    HIGH:
+      role: DRIVE
+      root_anchor_bias: 0.62
+      pedal_point_bias: 0.12
+      passing_tone_density: 0.12
+      octave_motion_bias: 0.10
+      syncopation_bias: 0.10
+      register_bias: LOW_MID
+      articulation: ACCENT
+      playfulness_bias: 0.08
+
+axis_modifiers:
+  valence_NEG:
+    playfulness_add: -0.02
+    pedal_point_add: 0.08
+    syncopation_add: -0.03
+  valence_POS:
+    playfulness_add: 0.03
+    pedal_point_add: -0.06
+    octave_motion_add: 0.06
+  arousal_HIGH:
+    passing_tone_add: 0.05
+    syncopation_add: 0.05
+
+low_tension_guard:
+  enable: true
+  condition:
+    energy_max: 0.35
+  enforce:
+    passing_tone_density: 0.03
+    octave_motion_bias: 0.02
+    syncopation_bias: 0.03
+    pedal_point_bias: 0.35
+    playfulness_bias_max: 0.06
+
+section_edge_rules:
+  enable: true
+  edge_window_bars: 1
+  boost:
+    passing_tone_add_by_arousal:
+      LOW: 0.03
+      MID: 0.06
+      HIGH: 0.10
+    syncopation_add_by_arousal:
+      LOW: 0.01
+      MID: 0.03
+      HIGH: 0.05
+
+clamp:
+  root_anchor_bias:
+    min: 0.40
+    max: 0.90
+  pedal_point_bias:
+    min: 0.00
+    max: 0.60
+  passing_tone_density:
+    min: 0.00
+    max: 0.35
+  octave_motion_bias:
+    min: 0.00
+    max: 0.35
+  syncopation_bias:
+    min: 0.00
+    max: 0.30
+  playfulness_bias:
+    min: 0.00
+    max: 0.16

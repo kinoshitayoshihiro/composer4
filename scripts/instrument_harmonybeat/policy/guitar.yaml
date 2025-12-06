@@ -1,0 +1,45 @@
+register: {low: 52, high: 76}
+tensions:
+  base_allow: ["6","9"]
+  avoid_global: ["b9"]
+  by_quality:
+    maj:   {allow: ["9","13"],   avoid: ["#11"]}
+    maj7:  {allow: ["9","13"],   avoid: ["#11"]}
+    m:     {allow: ["9","11"],   avoid: ["b13"]}
+    m7:    {allow: ["9","11"],   avoid: ["b13"]}
+    '7':   {allow: ["9","#11","13","b9","#9"], avoid: []}   # V系想定：Lydian dominant
+    m7b5:  {allow: ["11","b9"],  avoid: ["13","#11"]}
+    dim7:  {allow: ["b9"],     avoid: ["11","13","#11","#9"]}
+  allow_by_label:
+    chorus: ["13","#11"]
+    bridge: ["13","#11"]
+  avoid_by_label:
+    verse:  ["#11","b13"]
+
+function_rules:
+  dominant:
+    enable: true
+    dominant_open_13: true
+    rn_regex: '^(V|V/|SubV/)'
+    allow: [9, "#11", 13, "b9", "#9"]
+    avoid: [11]
+
+melody_exceptions:
+  enable: true
+  f0_source: analysis/crepe_f0.parquet
+  frame_hop_s: 0.01
+  quantize_cents: 35
+  promote_if_melody_contains: [9, "#11", 13]
+  avoid_if_melody_semiminor_second_to: ["#11", "b9"]
+  promote_threshold: 0.25
+  strict_on_verse: true
+  lax_on_chorus: true
+
+density:
+  scale_by_label:
+    verse: 1.0
+    chorus: 1.0
+    bridge: 0.9
+voicing:
+  omit_third_in_labels: []
+  prefer_inversion_by_quality: {maj: "1st", min: "root", "7": "root"}

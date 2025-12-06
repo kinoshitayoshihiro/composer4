@@ -1,0 +1,94 @@
+# chordmap_view_bass.yaml
+# Bass専用chordmap view policy
+# 
+# 原則:
+# - 音域: E2(40)〜G3(55)、必要時C2(36)まで拡張
+# - テンション: 原則禁止（root/fifth中心、必要時3rd）
+# - 密度: セクション別に調整（verse控えめ、chorus積極的）
+# - Voice-leading: アプローチノート（半音/全音）、5度活用
+# - Padとの衝突回避: Pad常時ON区間では密度抑制
+
+register:
+  low: 40    # E2
+  high: 55   # G3
+
+tensions:
+  # Bassはテンション禁止（root/fifth/3rd のみ）
+  base_allow: []
+  avoid_global: ["b9", "#9", "#11", "b13", "9", "11", "13"]
+  by_quality: {}   # Bassはコード品質に関わらずテンション不使用
+
+density:
+  # セクション別密度スケール
+  scale_by_label:
+    intro: 0.7      # 控えめ（root中心）
+    verse: 0.9      # 標準（root + fifth）
+    pre_chorus: 1.0 # 積極的（walking準備）
+    chorus: 1.0     # フル（walking/chromatic許容）
+    bridge: 1.1     # 最大（chromatic approach積極的）
+    outro: 0.6      # 控えめ（root sustain）
+    break: 0.3      # 最小（ほぼ休止）
+
+voicing:
+  # 転回形は原則禁止（Bassはroot position推奨）
+  omit_third_in_labels: []  # 3rdは必要時使用
+  prefer_inversion_by_quality:
+    major: "root"
+    minor: "root"
+    dominant: "root"
+    diminished: "root"
+    augmented: "root"
+
+# Voice-leading設定（Bass専用）
+voiceleading:
+  approach:
+    enable: true         # アプローチノート機能ON
+    chromatic: true      # 半音アプローチ許容
+    whole_tone: true     # 全音アプローチ許容
+    # セクション別アプローチ方針
+    chorus_bias: "up_or_down"     # Chorus: 上下両方向
+    bridge_bias: "towards_next"   # Bridge: 次コードへ向かう
+    verse_bias: "minimal"         # Verse: 最小限
+  
+  fifth_usage:
+    # セクション別5度活用方針
+    intro: "downbeat"             # イントロ: 1拍目のみ
+    verse: "downbeat+beat3"       # ヴァース: 1拍目+3拍目
+    chorus: "beat2"               # コーラス: 2拍目（walking）
+    bridge: "syncopated"          # ブリッジ: シンコペ
+    outro: "none"                 # アウトロ: 5度なし（root sustain）
+
+# リズム設定
+rhythm:
+  sustain_ql: 0.9    # 音価（0.9 = 90%、レガート寄り）
+  microtiming_ms: 0  # Bassはマイクロタイミングなし（Kick同期優先）
+
+# 編曲方針
+arrangement:
+  pad_conflict_avoid: true  # Pad常時ON区間では密度抑制
+  kick_lock_hint: true      # Kickとの同期推奨（drum_accent_plan.json参照）
+
+# セクション別特殊指示
+section_overrides:
+  # Chorus（Pad常時ON想定）
+  chorus:
+    density_scale: 1.0      # フル密度維持（Padは3rd省略で対応）
+    fifth_usage: "beat2"    # Walking推奨
+    approach: true          # アプローチノート積極的
+  
+  # Bridge（転調・テンション解放区間）
+  bridge:
+    density_scale: 1.1      # 最大密度
+    chromatic_approach: 0.8 # 半音アプローチ確率80%
+    range_extend_low: 36    # 必要時C2まで拡張
+  
+  # Intro/Outro（最小限）
+  intro:
+    density_scale: 0.7
+    sustain_ql: 1.5         # ロングトーン
+    fifth_usage: "downbeat" # 1拍目のみ
+  
+  outro:
+    density_scale: 0.6
+    sustain_ql: 2.0         # 最長
+    fifth_usage: "none"     # Root sustain推奨

@@ -1,0 +1,267 @@
+version: "0.1"
+description: >
+  楽曲のセクション種別の公式セット定義。
+  HarmonyAI, RhythmAI, BassPhraseGenerator, EmotionAI が共通で使用する語彙。
+  既存の sections.parquet に出現する 27 種類のセクションを整理し、
+  標準的な楽曲構造に対応するカテゴリにマッピング。
+
+# ==========================================
+# 標準セクションタイプ（公式セット）
+# ==========================================
+standard_sections:
+  - id: INTRO
+    label_ja: "イントロ"
+    label_en: "Intro"
+    aliases: ["intro", "introduction", "opening"]
+    description_ja: "楽曲の導入部。雰囲気を作る。"
+    description_en: "Opening section of the song. Sets the atmosphere."
+    typical_duration_bars: [4, 8, 16]
+    typical_emotion_tags: ["BRIGHT_CALM", "MYSTERIOUS_FLOATING", "NEUTRAL_COOL"]
+    typical_bass_role: "FOUNDATION_CALM"
+    energy_level: "low_to_mid"
+
+  - id: VERSE
+    label_ja: "Aメロ（ヴァース）"
+    label_en: "Verse"
+    aliases: ["verse", "verse1", "verse2", "verse3", "a_section"]
+    description_ja: "物語を語る主要セクション。通常は控えめ。"
+    description_en: "Main storytelling section. Usually restrained."
+    typical_duration_bars: [8, 16, 32]
+    typical_emotion_tags: ["BRIGHT_CALM", "MELANCHOLIC", "NEUTRAL_COOL", "TENDER_INTIMATE"]
+    typical_bass_role: "ROOT_FOUNDATION"
+    energy_level: "low_to_mid"
+
+  - id: PRE_CHORUS
+    label_ja: "Bメロ（プリコーラス）"
+    label_en: "Pre-Chorus"
+    aliases: ["prechorus", "pre_chorus", "b_section", "buildup"]
+    description_ja: "サビへの橋渡し。徐々に盛り上がる。"
+    description_en: "Bridge to chorus. Gradually builds up."
+    typical_duration_bars: [4, 8, 16]
+    typical_emotion_tags: ["DARK_DRAMATIC", "NEUTRAL_COOL", "BRIGHT_ENERGETIC"]
+    typical_bass_role: "DRIVE_FORWARD"
+    energy_level: "mid_to_high"
+
+  - id: CHORUS
+    label_ja: "サビ（コーラス）"
+    label_en: "Chorus"
+    aliases: ["chorus", "hook", "refrain", "c_section"]
+    description_ja: "楽曲の最も印象的な部分。クライマックス。"
+    description_en: "Most memorable part of the song. Climax."
+    typical_duration_bars: [8, 16, 32]
+    typical_emotion_tags: ["BRIGHT_ENERGETIC", "EPIC_HEROIC", "AGGRESSIVE_ANGRY"]
+    typical_bass_role: "DRIVE_FORWARD"
+    energy_level: "high"
+
+  - id: BRIDGE
+    label_ja: "ブリッジ（間奏・展開部）"
+    label_en: "Bridge"
+    aliases: ["bridge", "c_section", "middle_8", "interlude"]
+    description_ja: "楽曲に変化をもたらすセクション。展開部。"
+    description_en: "Section bringing variation to the song. Development."
+    typical_duration_bars: [8, 16, 32]
+    typical_emotion_tags: ["DARK_DRAMATIC", "MYSTERIOUS_FLOATING", "MELANCHOLIC", "EPIC_HEROIC"]
+    typical_bass_role: "MELODIC_SUPPORT"
+    energy_level: "mid_to_high"
+
+  - id: SOLO
+    label_ja: "ソロ（楽器ソロ）"
+    label_en: "Solo"
+    aliases: ["solo", "guitar_solo", "sax_solo", "instrumental"]
+    description_ja: "楽器が主役のセクション。ギターソロなど。"
+    description_en: "Instrumental feature section. Guitar solo, etc."
+    typical_duration_bars: [8, 16, 32]
+    typical_emotion_tags: ["EPIC_HEROIC", "AGGRESSIVE_ANGRY", "BRIGHT_ENERGETIC"]
+    typical_bass_role: "ROOT_FOUNDATION"
+    energy_level: "high"
+
+  - id: INTERLUDE
+    label_ja: "間奏（インタールード）"
+    label_en: "Interlude"
+    aliases: ["interlude", "instrumental_break", "break"]
+    description_ja: "セクション間の短い間奏。雰囲気転換。"
+    description_en: "Short instrumental passage between sections. Atmosphere change."
+    typical_duration_bars: [4, 8, 16]
+    typical_emotion_tags: ["MYSTERIOUS_FLOATING", "NEUTRAL_COOL", "DARK_DRAMATIC"]
+    typical_bass_role: "FOUNDATION_CALM"
+    energy_level: "low_to_mid"
+
+  - id: BREAKDOWN
+    label_ja: "ブレイクダウン"
+    label_en: "Breakdown"
+    aliases: ["breakdown", "drop", "break"]
+    description_ja: "リズムが一時的に止まる/変化する部分。EDM・メタル向き。"
+    description_en: "Section where rhythm temporarily stops/changes. EDM/metal oriented."
+    typical_duration_bars: [4, 8, 16]
+    typical_emotion_tags: ["AGGRESSIVE_ANGRY", "DARK_DRAMATIC", "MYSTERIOUS_FLOATING"]
+    typical_bass_role: "PEDAL_POINT"
+    energy_level: "high"
+
+  - id: OUTRO
+    label_ja: "アウトロ（エンディング）"
+    label_en: "Outro"
+    aliases: ["outro", "ending", "coda", "fade_out"]
+    description_ja: "楽曲の終結部。徐々に静まる。"
+    description_en: "Closing section. Gradually calms down."
+    typical_duration_bars: [4, 8, 16]
+    typical_emotion_tags: ["SAD_RESIGNED", "BRIGHT_CALM", "MYSTERIOUS_FLOATING"]
+    typical_bass_role: "FOUNDATION_CALM"
+    energy_level: "low"
+
+  - id: CLIMAX
+    label_ja: "クライマックス"
+    label_en: "Climax"
+    aliases: ["climax", "peak", "final_chorus"]
+    description_ja: "楽曲の最高潮。最も盛り上がる部分。"
+    description_en: "Song's peak. Most intense section."
+    typical_duration_bars: [8, 16, 32]
+    typical_emotion_tags: ["EPIC_HEROIC", "BRIGHT_ENERGETIC", "AGGRESSIVE_ANGRY"]
+    typical_bass_role: "DRIVE_FORWARD"
+    energy_level: "very_high"
+
+  - id: AMBIENT_PART
+    label_ja: "アンビエントパート"
+    label_en: "Ambient Part"
+    aliases: ["ambient", "soundscape", "atmosphere"]
+    description_ja: "具体的なメロディがない、雰囲気重視のセクション。"
+    description_en: "Atmosphere-focused section without concrete melody."
+    typical_duration_bars: [4, 8, 16]
+    typical_emotion_tags: ["MYSTERIOUS_FLOATING", "TENDER_INTIMATE"]
+    typical_bass_role: "FLOAT_AMBIENT"
+    energy_level: "very_low"
+
+  - id: UNKNOWN
+    label_ja: "不明"
+    label_en: "Unknown"
+    aliases: ["unknown", "other", "misc"]
+    description_ja: "分類不能なセクション。デフォルトのフォールバック。"
+    description_en: "Unclassifiable section. Default fallback."
+    typical_duration_bars: [4, 8, 16]
+    typical_emotion_tags: ["NEUTRAL_COOL"]
+    typical_bass_role: "ROOT_FOUNDATION"
+    energy_level: "mid"
+
+# ==========================================
+# セクション分類ルール
+# ==========================================
+classification_rules:
+  # 既存の sections.parquet の section_name を標準セクションにマッピング
+  mapping:
+    intro: INTRO
+    introduction: INTRO
+    opening: INTRO
+    
+    verse: VERSE
+    verse1: VERSE
+    verse2: VERSE
+    verse3: VERSE
+    a_section: VERSE
+    
+    prechorus: PRE_CHORUS
+    pre_chorus: PRE_CHORUS
+    b_section: PRE_CHORUS
+    buildup: PRE_CHORUS
+    
+    chorus: CHORUS
+    hook: CHORUS
+    refrain: CHORUS
+    c_section: CHORUS
+    
+    bridge: BRIDGE
+    middle_8: BRIDGE
+    interlude: BRIDGE  # 文脈により INTERLUDE と区別
+    
+    solo: SOLO
+    guitar_solo: SOLO
+    sax_solo: SOLO
+    instrumental: SOLO
+    
+    breakdown: BREAKDOWN
+    drop: BREAKDOWN
+    break: BREAKDOWN
+    
+    outro: OUTRO
+    ending: OUTRO
+    coda: OUTRO
+    fade_out: OUTRO
+    
+    climax: CLIMAX
+    peak: CLIMAX
+    final_chorus: CLIMAX
+    
+    ambient: AMBIENT_PART
+    soundscape: AMBIENT_PART
+    atmosphere: AMBIENT_PART
+    
+    unknown: UNKNOWN
+    other: UNKNOWN
+
+  # 分類の優先順位（曖昧な場合）
+  priority:
+    - INTRO
+    - VERSE
+    - PRE_CHORUS
+    - CHORUS
+    - BRIDGE
+    - SOLO
+    - BREAKDOWN
+    - CLIMAX
+    - OUTRO
+    - INTERLUDE
+    - AMBIENT_PART
+    - UNKNOWN
+
+# ==========================================
+# セクション遷移パターン（典型例）
+# ==========================================
+typical_transitions:
+  pop_song:
+    - INTRO
+    - VERSE
+    - PRE_CHORUS
+    - CHORUS
+    - VERSE
+    - PRE_CHORUS
+    - CHORUS
+    - BRIDGE
+    - CHORUS
+    - OUTRO
+
+  rock_song:
+    - INTRO
+    - VERSE
+    - CHORUS
+    - VERSE
+    - CHORUS
+    - SOLO
+    - BRIDGE
+    - CHORUS
+    - OUTRO
+
+  ballad:
+    - INTRO
+    - VERSE
+    - VERSE
+    - CHORUS
+    - VERSE
+    - CHORUS
+    - BRIDGE
+    - CHORUS
+    - OUTRO
+
+  edm_track:
+    - INTRO
+    - BUILDUP
+    - DROP
+    - VERSE
+    - BUILDUP
+    - DROP
+    - BREAKDOWN
+    - DROP
+    - OUTRO
+
+notes:
+  - "aliases は sections.parquet の section_name を正規化する際に使用。"
+  - "typical_emotion_tags / typical_bass_role はあくまでヒントであり、実際の楽曲では override 可能。"
+  - "energy_level は very_low/low/low_to_mid/mid/mid_to_high/high/very_high の7段階。"
+  - "classification_rules.mapping で既存データを標準セクションにマッピングする。"

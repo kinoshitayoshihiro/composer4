@@ -1,0 +1,510 @@
+version: "1.1"
+policy_id: "STR_DYN_V1_1"
+instrument: "STRINGS"
+
+inputs:
+  sections_json: "plans/sections.json"
+  emotion_profile_json: "plans/emotion_profile.json"
+  bars_parquet: "plans/bars.parquet"
+
+outputs:
+  per_bar_dynamics_json: "plans/strings_dynamics_plan.json"
+
+section_normalization:
+  mapping:
+    intro: INTRO
+    verse: VERSE
+    verse_a: VERSE
+    verse_b: VERSE
+    prechorus: PRE_CHORUS
+    pre_chorus: PRE_CHORUS
+    chorus: CHORUS
+    chorus_a: CHORUS
+    chorus_b: CHORUS
+    bridge: BRIDGE
+    solo: SOLO
+    interlude: INTERLUDE
+    breakdown: BREAKDOWN
+    climax: CLIMAX
+    outro: OUTRO
+    ambient: AMBIENT_PART
+    ambient_part: AMBIENT_PART
+    unknown: UNKNOWN
+  priority:
+    - CLIMAX
+    - CHORUS
+    - PRE_CHORUS
+    - SOLO
+    - BRIDGE
+    - VERSE
+    - BREAKDOWN
+    - INTERLUDE
+    - INTRO
+    - OUTRO
+    - AMBIENT_PART
+    - UNKNOWN
+
+emotion_buckets:
+  valence:
+    NEG: {min: -1.0, max: -0.3}
+    NEU: {min: -0.3, max: 0.3}
+    POS: {min: 0.3, max: 1.0}
+  arousal:
+    LOW: {min: 0.0, max: 0.35}
+    MID: {min: 0.35, max: 0.7}
+    HIGH: {min: 0.7, max: 1.0}
+  defaults:
+    valence: NEU
+    arousal: MID
+
+defaults:
+  role: PAD
+  pad_density: 0.55
+  ostinato_density: 0.10
+  countermelody_density: 0.05
+  swell_probability: 0.08
+  crescendo_bias: 0.10
+  register_bias: MID
+  articulation: LEGATO
+  playfulness_bias: 0.06
+
+section_profiles:
+  INTRO:
+    LOW:
+      role: PAD
+      pad_density: 0.60
+      ostinato_density: 0.03
+      countermelody_density: 0.02
+      swell_probability: 0.05
+      crescendo_bias: 0.08
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: PAD
+      pad_density: 0.55
+      ostinato_density: 0.06
+      countermelody_density: 0.04
+      swell_probability: 0.08
+      crescendo_bias: 0.12
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    HIGH:
+      role: SWELL
+      pad_density: 0.45
+      ostinato_density: 0.08
+      countermelody_density: 0.06
+      swell_probability: 0.18
+      crescendo_bias: 0.20
+      register_bias: MID
+      articulation: MARCATO
+      playfulness_bias: 0.08
+
+  VERSE:
+    LOW:
+      role: PAD
+      pad_density: 0.50
+      ostinato_density: 0.05
+      countermelody_density: 0.02
+      swell_probability: 0.04
+      crescendo_bias: 0.06
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: PAD
+      pad_density: 0.45
+      ostinato_density: 0.10
+      countermelody_density: 0.05
+      swell_probability: 0.06
+      crescendo_bias: 0.10
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.07
+    HIGH:
+      role: OSTINATO
+      pad_density: 0.35
+      ostinato_density: 0.22
+      countermelody_density: 0.08
+      swell_probability: 0.10
+      crescendo_bias: 0.16
+      register_bias: MID
+      articulation: STACCATO
+      playfulness_bias: 0.10
+
+  PRE_CHORUS:
+    LOW:
+      role: PAD
+      pad_density: 0.50
+      ostinato_density: 0.08
+      countermelody_density: 0.05
+      swell_probability: 0.08
+      crescendo_bias: 0.20
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    MID:
+      role: PAD
+      pad_density: 0.45
+      ostinato_density: 0.12
+      countermelody_density: 0.08
+      swell_probability: 0.12
+      crescendo_bias: 0.35
+      register_bias: MID
+      articulation: MARCATO
+      playfulness_bias: 0.08
+    HIGH:
+      role: SWELL
+      pad_density: 0.35
+      ostinato_density: 0.14
+      countermelody_density: 0.12
+      swell_probability: 0.20
+      crescendo_bias: 0.55
+      register_bias: HIGH
+      articulation: MARCATO
+      playfulness_bias: 0.10
+
+  CHORUS:
+    LOW:
+      role: PAD
+      pad_density: 0.55
+      ostinato_density: 0.08
+      countermelody_density: 0.08
+      swell_probability: 0.08
+      crescendo_bias: 0.14
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.07
+    MID:
+      role: PAD
+      pad_density: 0.50
+      ostinato_density: 0.12
+      countermelody_density: 0.14
+      swell_probability: 0.12
+      crescendo_bias: 0.20
+      register_bias: MID
+      articulation: MARCATO
+      playfulness_bias: 0.09
+    HIGH:
+      role: COUNTER
+      pad_density: 0.40
+      ostinato_density: 0.14
+      countermelody_density: 0.25
+      swell_probability: 0.15
+      crescendo_bias: 0.28
+      register_bias: HIGH
+      articulation: MARCATO
+      playfulness_bias: 0.12
+
+  BRIDGE:
+    LOW:
+      role: PAD
+      pad_density: 0.45
+      ostinato_density: 0.06
+      countermelody_density: 0.04
+      swell_probability: 0.06
+      crescendo_bias: 0.10
+      register_bias: LOW
+      articulation: TREMOLO
+      playfulness_bias: 0.05
+    MID:
+      role: PAD
+      pad_density: 0.40
+      ostinato_density: 0.12
+      countermelody_density: 0.08
+      swell_probability: 0.10
+      crescendo_bias: 0.16
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.08
+    HIGH:
+      role: COUNTER
+      pad_density: 0.30
+      ostinato_density: 0.16
+      countermelody_density: 0.22
+      swell_probability: 0.14
+      crescendo_bias: 0.25
+      register_bias: MID
+      articulation: MARCATO
+      playfulness_bias: 0.11
+
+  SOLO:
+    LOW:
+      role: PAD
+      pad_density: 0.55
+      ostinato_density: 0.05
+      countermelody_density: 0.03
+      swell_probability: 0.06
+      crescendo_bias: 0.08
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: PAD
+      pad_density: 0.50
+      ostinato_density: 0.10
+      countermelody_density: 0.06
+      swell_probability: 0.10
+      crescendo_bias: 0.14
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.07
+    HIGH:
+      role: OSTINATO
+      pad_density: 0.40
+      ostinato_density: 0.20
+      countermelody_density: 0.10
+      swell_probability: 0.14
+      crescendo_bias: 0.22
+      register_bias: MID
+      articulation: STACCATO
+      playfulness_bias: 0.10
+
+  INTERLUDE:
+    LOW:
+      role: PAD
+      pad_density: 0.60
+      ostinato_density: 0.04
+      countermelody_density: 0.02
+      swell_probability: 0.05
+      crescendo_bias: 0.06
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: PAD
+      pad_density: 0.55
+      ostinato_density: 0.08
+      countermelody_density: 0.05
+      swell_probability: 0.08
+      crescendo_bias: 0.10
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    HIGH:
+      role: OSTINATO
+      pad_density: 0.45
+      ostinato_density: 0.16
+      countermelody_density: 0.08
+      swell_probability: 0.12
+      crescendo_bias: 0.16
+      register_bias: MID
+      articulation: STACCATO
+      playfulness_bias: 0.08
+
+  BREAKDOWN:
+    LOW:
+      role: PAD
+      pad_density: 0.50
+      ostinato_density: 0.03
+      countermelody_density: 0.02
+      swell_probability: 0.04
+      crescendo_bias: 0.08
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: PAD
+      pad_density: 0.45
+      ostinato_density: 0.06
+      countermelody_density: 0.04
+      swell_probability: 0.06
+      crescendo_bias: 0.12
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    HIGH:
+      role: OSTINATO
+      pad_density: 0.35
+      ostinato_density: 0.14
+      countermelody_density: 0.06
+      swell_probability: 0.10
+      crescendo_bias: 0.18
+      register_bias: MID
+      articulation: STACCATO
+      playfulness_bias: 0.08
+
+  CLIMAX:
+    LOW:
+      role: PAD
+      pad_density: 0.60
+      ostinato_density: 0.10
+      countermelody_density: 0.10
+      swell_probability: 0.12
+      crescendo_bias: 0.20
+      register_bias: MID
+      articulation: MARCATO
+      playfulness_bias: 0.08
+    MID:
+      role: PAD
+      pad_density: 0.55
+      ostinato_density: 0.14
+      countermelody_density: 0.18
+      swell_probability: 0.16
+      crescendo_bias: 0.30
+      register_bias: HIGH
+      articulation: MARCATO
+      playfulness_bias: 0.10
+    HIGH:
+      role: SWELL
+      pad_density: 0.45
+      ostinato_density: 0.16
+      countermelody_density: 0.26
+      swell_probability: 0.25
+      crescendo_bias: 0.45
+      register_bias: HIGH
+      articulation: MARCATO
+      playfulness_bias: 0.14
+
+  OUTRO:
+    LOW:
+      role: PAD
+      pad_density: 0.55
+      ostinato_density: 0.03
+      countermelody_density: 0.02
+      swell_probability: 0.04
+      crescendo_bias: 0.06
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.04
+    MID:
+      role: PAD
+      pad_density: 0.50
+      ostinato_density: 0.05
+      countermelody_density: 0.03
+      swell_probability: 0.06
+      crescendo_bias: 0.08
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    HIGH:
+      role: PAD
+      pad_density: 0.45
+      ostinato_density: 0.08
+      countermelody_density: 0.05
+      swell_probability: 0.08
+      crescendo_bias: 0.12
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+
+  AMBIENT_PART:
+    LOW:
+      role: PAD
+      pad_density: 0.65
+      ostinato_density: 0.02
+      countermelody_density: 0.01
+      swell_probability: 0.03
+      crescendo_bias: 0.04
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.02
+    MID:
+      role: PAD
+      pad_density: 0.60
+      ostinato_density: 0.04
+      countermelody_density: 0.02
+      swell_probability: 0.05
+      crescendo_bias: 0.06
+      register_bias: LOW
+      articulation: LEGATO
+      playfulness_bias: 0.03
+    HIGH:
+      role: PAD
+      pad_density: 0.55
+      ostinato_density: 0.06
+      countermelody_density: 0.03
+      swell_probability: 0.06
+      crescendo_bias: 0.08
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.04
+
+  UNKNOWN:
+    LOW:
+      role: PAD
+      pad_density: 0.50
+      ostinato_density: 0.05
+      countermelody_density: 0.03
+      swell_probability: 0.05
+      crescendo_bias: 0.08
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.05
+    MID:
+      role: PAD
+      pad_density: 0.48
+      ostinato_density: 0.08
+      countermelody_density: 0.05
+      swell_probability: 0.07
+      crescendo_bias: 0.10
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.06
+    HIGH:
+      role: PAD
+      pad_density: 0.45
+      ostinato_density: 0.10
+      countermelody_density: 0.08
+      swell_probability: 0.09
+      crescendo_bias: 0.12
+      register_bias: MID
+      articulation: LEGATO
+      playfulness_bias: 0.07
+
+axis_modifiers:
+  valence_NEG:
+    playfulness_add: -0.02
+    articulation_preference: [TREMOLO, LEGATO]
+    register_bias: LOW
+  valence_POS:
+    playfulness_add: 0.03
+    articulation_preference: [MARCATO, LEGATO]
+    register_bias: HIGH
+  arousal_HIGH:
+    countermelody_add: 0.05
+    swell_probability_add: 0.06
+
+low_tension_guard:
+  enable: true
+  condition:
+    energy_max: 0.35
+  enforce:
+    countermelody_density: 0.02
+    ostinato_density: 0.04
+    swell_probability: 0.03
+    playfulness_bias_max: 0.06
+
+section_edge_rules:
+  enable: true
+  edge_window_bars: 1
+  boost:
+    crescendo_bias_add_by_arousal:
+      LOW: 0.10
+      MID: 0.20
+      HIGH: 0.30
+    swell_probability_add_by_arousal:
+      LOW: 0.05
+      MID: 0.08
+      HIGH: 0.12
+
+clamp:
+  pad_density:
+    min: 0.10
+    max: 0.85
+  ostinato_density:
+    min: 0.00
+    max: 0.40
+  countermelody_density:
+    min: 0.00
+    max: 0.40
+  swell_probability:
+    min: 0.00
+    max: 0.40
+  crescendo_bias:
+    min: 0.00
+    max: 0.60
+  playfulness_bias:
+    min: 0.00
+    max: 0.18

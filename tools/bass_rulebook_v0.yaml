@@ -1,0 +1,536 @@
+# Bass Rulebook v0 (たたき台)
+# 3-1〜3-5 を統合した Bass フレーズ生成ルール
+# 
+# 構造:
+#   - styles: スタイル辞書 (3-1)
+#   - chord_functions: 和声機能ごとのBassふるまい (3-2)
+#   - groove_interactions: Drum Groove と Bass Lock の関係 (3-3)
+#   - vocal_interactions: Vocal と Bass のインタラクション (3-4)
+#   - rules: 実運用用ルールテーブル (3-5)
+
+metadata:
+  version: "0.1.0"
+  description: "Bass Phrase Rulebook たたき台 - Harmony/Rhythm/Vocal統合"
+  created: "2025-12-04"
+  author: "AI-assisted Bass Rulebook Architect"
+
+# ======================================
+# 3-1: スタイル辞書
+# ======================================
+styles:
+  ROCK_8BEAT_ROOT:
+    tempo_range_bpm: [120, 190]
+    meter: "4/4"
+    typical_section: ["chorus", "intro"]
+    drum_kick_pattern: "1拍目と3拍目に重心がある、スタンダードな8ビート(ドン・パン・ドン・パン)"
+    bass_core_rhythm: "8分音符の連続(ダウンピッキングのイメージ)。ベロシティを一定に保ち、機関車のような推進力を出す。"
+    note_choice: "Root主体。小節の変わり目で5thや経過音を入れる程度。"
+    emotion: "疾走感、力強さ、安定"
+
+  POPS_BALLAD_ROOT:
+    tempo_range_bpm: [60, 90]
+    meter: "4/4"
+    typical_section: ["verse", "chorus"]
+    drum_kick_pattern: "1拍目と3拍目にどっしりとしたキック。音数は少ない。"
+    bass_core_rhythm: "白玉(全音符)や2分音符主体。サステインを十分に伸ばし、コードの最低音を支える。"
+    note_choice: "Root最優先。転回形(オンコード)指定がある場合はそれに従う(3rdや5thなど)。"
+    emotion: "壮大、温かみ、包容力"
+
+  DISCO_OCTAVE:
+    tempo_range_bpm: [110, 135]
+    meter: "4/4"
+    typical_section: ["chorus", "dance_break"]
+    drum_kick_pattern: "4つ打ち(Four on the floor)。全拍にキックが入る。"
+    bass_core_rhythm: "「表拍(低音)＋裏拍(1オクターブ上)」の繰り返し。裏拍はスタッカート気味に。"
+    note_choice: "Rootとそのオクターブ上。経過音として半音階(クロマチック)を多用。"
+    emotion: "高揚感、ダンサブル、煌びやか"
+
+  FUNK_16_SYNC:
+    tempo_range_bpm: [90, 110]
+    meter: "4/4"
+    typical_section: ["verse", "intro"]
+    drum_kick_pattern: "16分音符の裏を食うシンコペーションを含んだファンキーなビート。"
+    bass_core_rhythm: "キックと完全同期させつつ、隙間を16分のゴーストノート(ミュート音)で埋めてグルーヴを作る。"
+    note_choice: "Root, 7th, 5th, Octave。マイナーペンタトニック系のフレーズ。"
+    emotion: "粘り気、グルーヴィー、大人っぽい"
+
+  JPOP_MELODIC_FILL:
+    tempo_range_bpm: [80, 130]
+    meter: "4/4"
+    typical_section: ["pre-chorus", "chorus_end"]
+    drum_kick_pattern: "セクションのつなぎ目でフィルインが入る、またはリズムがブレイクする。"
+    bass_core_rhythm: "歌のメロディの合間を縫うような「うたう」ベースライン。ハイポジションへのグリスやスライドを多用。"
+    note_choice: "コードトーン(3rd, 7th, 9th等)をなぞるアルペジオ的アプローチや、テンションノート。"
+    emotion: "ドラマチック、切なさ、華やかさ"
+
+  SHUFFLE_BOUNCE:
+    tempo_range_bpm: [110, 150]
+    meter: "4/4"
+    typical_section: ["verse", "chorus"]
+    drum_kick_pattern: "3連符の中抜き(シャッフル)ビート。ハネたリズム。"
+    bass_core_rhythm: "「ッッタ・ッッタ」というハネた8分音符。休符の長さを意識してバウンス感を出す。"
+    note_choice: "Root, 5th, 6th, b7thを使ったブルース進行的なラインやウォーキング。"
+    emotion: "陽気、軽快、ノスタルジック"
+
+  MOTOWN_SOUL:
+    tempo_range_bpm: [100, 130]
+    meter: "4/4"
+    typical_section: ["chorus"]
+    drum_kick_pattern: "4つ打ち主体だがスネアが強調される、モータウン・ビート。"
+    bass_core_rhythm: "シンコペーションを多用し、小節をまたぐフレーズ。音価は長めで、流れるようなライン。"
+    note_choice: "Rootから3rd, 5th, 6thを経過するメロディアスなライン。半音アプローチが鍵。"
+    emotion: "ポップ、多幸感、レトロ"
+
+  SLAP_STANDARD:
+    tempo_range_bpm: [100, 130]
+    meter: "4/4"
+    typical_section: ["intro", "solo"]
+    drum_kick_pattern: "キックとスネアがはっきり分かれたファンクビート。"
+    bass_core_rhythm: "サムピング(親指・低音)とプル(人差し指・高音)のコンビネーション。16分音符のグリッド。"
+    note_choice: "Root(サム)とOctave(プル)。7thのアクセント。"
+    emotion: "派手、攻撃的、パーカッシブ"
+
+  PUNK_DRIVE:
+    tempo_range_bpm: [160, 200]
+    meter: "4/4"
+    typical_section: ["chorus"]
+    drum_kick_pattern: "2ビート(ド・タ・ド・タ)や、高速8ビート。"
+    bass_core_rhythm: "全ダウンピッキングでの高速8分音符。グリッドよりわずかに前突っ込み気味(ラッシュ)で勢いを出す。"
+    note_choice: "Rootのみ。極稀に経過音。"
+    emotion: "衝動的、焦燥感、エネルギッシュ"
+
+  SLOW_6_8_BALLAD:
+    tempo_range_bpm: [50, 70]
+    meter: "6/8"
+    typical_section: ["verse", "chorus"]
+    drum_kick_pattern: "1拍目と4拍目にアクセントがあるロッカバラード。"
+    bass_core_rhythm: "付点4分音符で「1・4」拍目を強調。または8分音符でアルペジオ。"
+    note_choice: "Root, 5th。小節の最後で次のコードへのLeading Tone。"
+    emotion: "哀愁、泥臭さ、深み"
+
+  SYNTH_BASS_POP:
+    tempo_range_bpm: [120, 140]
+    meter: "4/4"
+    typical_section: ["verse"]
+    drum_kick_pattern: "打ち込み特有の正確な4つ打ちやブレイクビーツ。"
+    bass_core_rhythm: "ゲートで切ったような、サステインの短いソリッドな8分または16分音符。"
+    note_choice: "Root主体だが、時折極端に低い音やピッチベンドを含める。"
+    emotion: "無機質、クール、近未来的"
+
+  JAZZ_WALKING:
+    tempo_range_bpm: [100, 180]
+    meter: "4/4"
+    typical_section: ["verse", "solo"]
+    drum_kick_pattern: "4分音符でフェザータッチのキック、レガートなシンバル(チン・チキ・チン・チキ)。"
+    bass_core_rhythm: "4分音符で絶え間なく動く(ランニングベース)。"
+    note_choice: "コードトーンをつなぐクロマチックアプローチやスケールノート。同じ音を連続させないのが基本。"
+    emotion: "おしゃれ、大人、スウィング感"
+
+  HEAVY_RIFF_ROCK:
+    tempo_range_bpm: [80, 120]
+    meter: "4/4"
+    typical_section: ["intro", "interlude"]
+    drum_kick_pattern: "ギターリフに完全同期した重たいキック。"
+    bass_core_rhythm: "ギターとのユニゾン(同フレーズ)。リズムのキメを強調する。"
+    note_choice: "ペンタトニック・スケールやブルーノート(b3, b5, b7)。"
+    emotion: "重厚、威圧感、ハード"
+
+  DANCE_ROCK_URA:
+    tempo_range_bpm: [130, 170]
+    meter: "4/4"
+    typical_section: ["verse"]
+    drum_kick_pattern: "4つ打ちキック＋裏拍のハイハット(ディスコビートの速い版)。"
+    bass_core_rhythm: "裏拍を強調するフレーズ、あるいはルート弾きでボトムを支えギターのカッティングを引き立てる。"
+    note_choice: "Root主体。オクターブ奏法を混ぜることもある。"
+    emotion: "縦ノリ、フェス感、騒々しい"
+
+  CITY_POP_AOR:
+    tempo_range_bpm: [90, 110]
+    meter: "4/4"
+    typical_section: ["chorus"]
+    drum_kick_pattern: "空間を生かしたタイトな16ビート。"
+    bass_core_rhythm: "付点音符や休符を巧みに使い、ゆったりとしつつも芯のあるライン。音価のコントロールが最重要。"
+    note_choice: "Root, 5thに加え、ナイスなテンション感(M7, 9th)を感じさせるライン。"
+    emotion: "都会的、洗練、リラックス"
+
+# ======================================
+# 3-2: 和声機能ごとのBassふるまい
+# ======================================
+chord_functions:
+  TONIC:
+    description: "I, Im, VIm など、楽曲の「安定・解決」を担うコード。"
+    typical_behavior: "「どっしりと構える」。ルート音を十分に鳴らし、調性(キー)の土台を確定させる。無理に動かず、低音域で支える意識を持つ。"
+    typical_rhythm: "1拍目(Downbeat)は必ずルートで踏む。小節の半ばまではリズムキープに徹する。"
+    common_fill_ideas: "次のコードへ向かうための、マイナー・ペンタトニックを使った短い下降フレーズ(例: Root -> b7 -> 5 -> 次のコード)。"
+    avoid: "1拍目に3rdや5thなどの構成音を置いてしまい、解決感を損なうこと(転回形の指定がない限りNG)。"
+
+  SUBDOMINANT:
+    description: "IV, IIm7 など、曲を展開させ、彩りを与えるコード。"
+    typical_behavior: "「少し遊ぶ・歌う」。トニックより音価を短くして跳ねたり、オクターブや5th、時にはM7thなどのテンションノートを使ってベースラインに表情をつける。"
+    typical_rhythm: "シンコペーション(食い)を多用してグルーヴを生み出す。16分音符の裏を意識したゴーストノートを入れる。"
+    common_fill_ideas: "ハイポジションへのスライドやグリッサンドでメロディアスに上昇し、華やかさを演出する。"
+    avoid: "ルートばかり弾きすぎて、トニックと同じような「重さ」を出してしまうこと(ここは軽快さが必要)。"
+
+  DOMINANT:
+    description: "V, V7, III7 など、トニックへの解決を強く求める緊張感のあるコード。"
+    typical_behavior: "「次に進む推進力」。ルートと5度を往復する、あるいはルートを連打するなどして、「早く解決したい」というエネルギーを溜める。"
+    typical_rhythm: "前のめりなドライブ感。小節の最後の拍で、次のトニックのルートへ向かうアプローチ(クロマチックなど)を入れる。"
+    common_fill_ideas: "半音下や半音上からのクロマチック・アプローチ(導音 -> 主音)。または、低音弦でのパワフルなグリッサンド・ダウン。"
+    avoid: "フィルインを入れすぎてリズムの推進力を殺してしまうこと。ドミナントは「キメ」以外は止まってはいけない。"
+
+  PASSING:
+    description: "I/III, V/VII, #IVm7-5 など、コードとコードを滑らかに繋ぐ役割。"
+    typical_behavior: "「階段を作る」。前後のコードのルート音を滑らかに繋ぐための「架け橋」になる。指定されたベース音(オンコードの右側)を忠実に守る。"
+    typical_rhythm: "和音の変わり目を明確にするため、あまり細かく刻まず、2分音符や4分音符で堂々と弾くことが多い。"
+    common_fill_ideas: "基本的にはフィルは入れない(ベースライン自体がメロディとして機能しているため)。入れるなら次の音への半音経過程度。"
+    avoid: "オンコード指定(例: G/B)があるのに、手癖で元のコードのルート(この場合はG)を弾いてしまうこと。"
+
+  ON_CHORD:
+    description: "経過音・オンコード (PASSING と同義、実装では分離)"
+    typical_behavior: "PASSINGと同じ"
+    typical_rhythm: "PASSINGと同じ"
+    common_fill_ideas: "PASSINGと同じ"
+    avoid: "PASSINGと同じ"
+
+  PEDAL_POINT:
+    description: "コードが変わってもベース音を維持し続ける手法(イントロやサビ前など)。"
+    typical_behavior: "「頑固に維持する」。上物のコードが展開しても、ベースはルート(多くはIかV)を弾き続け、浮遊感や、爆発寸前の緊張感を作る。"
+    typical_rhythm: "8ビートのルート連打(刻み)や、全音符でのサステイン維持。"
+    common_fill_ideas: "あえて「何も変えない」のが最大の効果。セクションの最後の最後でだけ、ドラムと一緒にフィルを入れる。"
+    avoid: "コードチェンジに合わせてベース音を変えてしまい、ペダル効果による緊張感を台無しにすること。"
+
+  BREAK:
+    description: "N.C.(ノンコード)や、バンド全体でのリズムアクセント。"
+    typical_behavior: "「他の楽器と完全に同化する」。ギターのリフやドラムのキックと、リズム・音程・長さを完全に一致させる。"
+    typical_rhythm: "休符(音を止める位置)のタイミングが命。音の切り際をDTMのグリッドで厳密に管理する。"
+    common_fill_ideas: "ユニゾンフレーズそのものがフィルインの役割を果たすため、個人的なアドリブは不要。"
+    avoid: "ブレイク(無音)部分で、余計なゴーストノートやサステインを残してしまい、空白の美学を汚すこと。"
+
+  UNISON:
+    description: "キメ・ユニゾン (BREAKと類似、実装では分離)"
+    typical_behavior: "BREAKと同じ"
+    typical_rhythm: "BREAKと同じ"
+    common_fill_ideas: "BREAKと同じ"
+    avoid: "BREAKと同じ"
+
+# ======================================
+# 3-3: Drum Groove と Bass Lock の関係
+# ======================================
+groove_interactions:
+  STANDARD_8BEAT_ROCK:
+    kick_description: "1拍目・3拍目に重心がある基本パターン。「ドン・パン・ドンドン・パン」など。"
+    bass_locking_rules:
+      - "【拍の頭は絶対同期】1拍目と、小節の変わり目は必ずキックと同時に鳴らす。"
+      - "【ゴーストキックの無視】キックが細かい16分音符の「ドロ」という装飾を入れても、ベースは無視して8分音符で「ド・ド」と弾き通した方が疾走感が出る場合が多い。"
+      - "【ルート連打の安定感】キックが動いていても、ベースが8分でステイすることでバンド全体のアンサンブルが安定する。"
+    syncopation_guidelines: "コードチェンジのタイミングで、8分音符1つ分前に食う(アンティシペーション)のは定石。それ以外はあまり食わせない。"
+    typical_mistakes: "キックの細かいゴーストノートをすべてベースでコピーしようとして、結果的に演奏がモタついたり、疾走感が損なわれたりする。"
+
+  FUNK_16BEAT_SYNC:
+    kick_description: "16分音符の裏拍を多用する、隙間の多いパターン。「ド・ッ・(ウン)ド・パ・ド」など。"
+    bass_locking_rules:
+      - "【完全同期】キックが鳴るタイミングには必ずベースを置く。ユニゾンが基本。"
+      - "【隙間の埋め合わせ】キックが鳴っていない「スネアのゴースト位置」や「裏拍の隙間」に、ベースのゴーストノート(ミュート音)を入れて16分グリッドを埋める。"
+      - "【長さの同期】キックがスタッカートならベースも短く切る。この「音の切り際(Release)」を揃えるのがプロの技。"
+    syncopation_guidelines: "4拍目の裏や、2拍目の裏など、積極的に16分音符単位でシンコペーションしてOK。ただしドラムとズレると致命的。"
+    typical_mistakes: "16分ハネ(スウィング)の設定がドラムとベースで微妙に異なり、グルーヴが気持ち悪くなる(クオンタイズ設定の不一致)。"
+
+  FOUR_ON_THE_FLOOR:
+    kick_description: "「ドン・ドン・ドン・ドン」と4分音符で踏み続ける均等なビート。"
+    bass_locking_rules:
+      - "【オクターブの住み分け】キックの鳴る「表拍」は低音(ルート)、スネアやハットの鳴る「裏拍」はオクターブ上、という役割分担。"
+      - "【長さのコントロール】表拍のベース音を少し短くすることで、キックのアタック感を邪魔せず、かつベースの存在感も出す。"
+      - "【うねりの同期】キックの直後にベースが「ウニョ」と入るような、サイドチェイン・コンプレッサー的なグルーヴを手動で作ることもある。"
+    syncopation_guidelines: "小節の最後の8分裏で食うのが定番。「ドン・ドン・ドン・(ウン)ダッ|(次の小節)」という勢い付け。"
+    typical_mistakes: "全拍でベタッと長くベースを伸ばしてしまい、キックのアタックをマスク(隠して)してしまい、リズムが平坦になる。"
+
+  SHUFFLE:
+    kick_description: "3連符の中抜きリズム。「ドッ・タッ・ドッ・タッ」というハネたビート。"
+    bass_locking_rules:
+      - "【ハネ率の統一】DTMのSwing値をドラムと完全に一致させる。数値が数％違うだけでグルーヴが崩壊する。"
+      - "【裏拍の同期】シャッフル特有の「ッ・タ(裏拍)」のタイミングで、キックとベースが噛み合うと非常に心地よい。"
+      - "【休符の同期】「音を出す場所」より「音を止める場所」をドラムと揃えることで、バウンス感が強調される。"
+    syncopation_guidelines: "3連符の3つ目(裏拍)でのシンコペーションが基本。かなり頻繁に使っても心地よい。"
+    typical_mistakes: "ドラムはハネているのに、ベースだけイーブン(ハネていない)の8分音符で打ち込んでしまう(初心者に最も多いミス)。"
+
+  SLOW_BALLAD_CORE:
+    kick_description: "音数が少なく、1拍目と3拍目を深く踏むパターン。"
+    bass_locking_rules:
+      - "【1拍目の重さ】1拍目のキックとベースの発音タイミングを0.01秒単位で揃える。ここがズレるとバラードは台無し。"
+      - "【サステインの補完】キックの減衰が早い場合、ベースがその後の余韻(サステイン)を全音符などで担当し、帯域を埋める。"
+      - "【フィルの回避】ドラムがフィルインしている時は、ベースは逆に動かずルートで支える方が、ドラムが引き立つ。"
+    syncopation_guidelines: "基本的には使用しない。ジャストのタイミングか、少し後ろにモタらせる(レイドバック)程度。"
+    typical_mistakes: "音の隙間が怖くて無駄に音数を増やしてしまい、バラードの壮大さを損なう。"
+
+  FAST_PUNK_DRIVE:
+    kick_description: "2ビート(ド・タ・ド・タ)や高速8ビート。ドコドコと連打が多い。"
+    bass_locking_rules:
+      - "【グリッド優先】個々のキックに合わせるというより、テンポのグリッド(拍)に対して正確に8分を刻み続ける「壁」になる。"
+      - "【裏キックの無視】キックが裏拍に入っても、ベースは表拍を強調し続けることで、リズムの軸がブレないようにする。"
+      - "【ダウンピッキング感】ベロシティを揃え(少し高め)、音長を少し短くすることで、ピックでガシガシ弾いているニュアンスを出し、キックのアタックと混ぜる。"
+    syncopation_guidelines: "セクションの変わり目での「食い」のみ。演奏中は基本オンビート。"
+    typical_mistakes: "ベースの音価(Note Length)が長すぎて、高速なキックと混ざって低音が飽和(ブーミーに)してしまう。"
+
+  MOTOWN_BEAT:
+    kick_description: "4つ打ち主体だがスネアが強調される、モータウン・ビート。"
+    bass_locking_rules:
+      - "【スネアとの対話】スネアの強拍(2, 4拍目)を避けて、シンコペーション気味にベースを配置することで、「間」を生む。"
+      - "【メロディアスライン】ドラムがシンプルなぶん、ベースが動いてメロディを担当する。"
+    syncopation_guidelines: "小節をまたぐフレーズが特徴。次の小節の1拍目前から食い始める。"
+    typical_mistakes: "ドラムと同じタイミングでベースを打ち込み、モータウン特有の「浮遊感」が消える。"
+
+  FEATHER_TOUCH:
+    kick_description: "4分音符でフェザータッチのキック、レガートなシンバル(チン・チキ・チン・チキ)。"
+    bass_locking_rules:
+      - "【ウォーキング】4分音符で絶え間なく動く。キックと同期しつつ、ランニングベース。"
+      - "【クロマチック多用】同じ音を2度続けない。半音階でコードをつなぐ。"
+    syncopation_guidelines: "基本的にオンビート。ジャズのスウィングは「後ろに乗せる」イメージ。"
+    typical_mistakes: "イーブンの4分音符で打ち込んでしまい、ジャズ特有のスウィング感が消える。"
+
+  HEAVY_SYNC:
+    kick_description: "ギターリフに完全同期した重たいキック。"
+    bass_locking_rules:
+      - "【完全ユニゾン】ギターとドラムとベースが三位一体。リズムのキメを強調する。"
+      - "【低音の厚み】ギターの1オクターブ下を弾き、ボトムを支える。"
+    syncopation_guidelines: "リフそのものがシンコペーションを含むため、それに従う。"
+    typical_mistakes: "ギターとベースのタイミングがズレて、ユニゾンの迫力が半減する。"
+
+  BREAK:
+    kick_description: "ブレイク(無音)やキメのパターン。"
+    bass_locking_rules:
+      - "【休符の同期】音を止める位置をドラムと完全に揃える。"
+      - "【空白の美学】余計な音を入れず、静寂を活かす。"
+    syncopation_guidelines: "ブレイク後の入りのタイミングが重要。ドラムと完全同期。"
+    typical_mistakes: "ブレイク部分で余計なサステインを残してしまう。"
+
+# ======================================
+# 3-4: Vocal と Bass のインタラクション
+# ======================================
+vocal_interactions:
+  BUSY_16TH:
+    description: "早口・メロディが細かい(ラップやAメロなど、歌詞が詰め込まれていてリズムが細かい場合)"
+    bass_strategy: "【引き算の美学・不動の精神】\nリズム: ボーカルが細かく動いている時こそ、ベースは4分音符や2分音符で「どっしり」構える。あるいはシンプルな8分ルート弾きで「壁」を作る。\n音域: Low-B〜A弦ローポジションの重低音域を死守。中域(D弦・G弦ハイポジション)に行くとボーカルの帯域と喧嘩する。"
+    fill_timing: "ボーカルのブレス(息継ぎ)の瞬間、またはフレーズの切れ目のみ。歌っている最中は装飾を一切入れない。"
+    caution: "ボーカルの細かいリズムをベースでなぞってしまう(ユニゾンする)こと。歌詞が聞き取りにくくなり、楽曲全体が窮屈で余裕のないサウンドになる。"
+
+  LONG_TONE:
+    description: "バラード・白玉メロディ(テンポがゆったりとしていて、ボーカルが全音符などで長く声を伸ばす場合)"
+    bass_strategy: "【カウンターメロディ・推進力の補完】\nリズム: 歌が止まっている(伸びている)間、ベースが動いてリズムの推進力を維持する。アルペジオや経過音を多用する。\n音域: ボーカルの隙間を縫って、1オクターブ上のハイポジション(テナー音域)まで上がって歌う(メロディアスなアプローチ)。"
+    fill_timing: "ロングトーンの後半(小節の3〜4拍目)。歌が静止している時間が、実質的なベースのソロタイムとなる。"
+    caution: "次の歌い出し(フレーズの頭)のタイミングまでベースが動き続けてしまい、新しいメロディの入り口と衝突すること。歌が入る直前には低音に戻って着地しておく必要がある。"
+
+  HIGH_DENSITY_CHORUS:
+    description: "サビ・音圧が高い(バンド全体が盛り上がり、ボーカルも高音域で張り上げているサビ)"
+    bass_strategy: "【ボトムの完全制圧・ルートへの帰結】\nリズム: 他の楽器も派手なため、ベースは複雑なことはせず、ドラムのキックと完全にロックしたルート弾き(8分連打や4つ打ち)でローエンドを支える。\n音域: 和音の根音(ルート)を明確に示すため、安定した低音域を中心に。無闇にハイフレットに行くと音が軽くなり、サビの迫力が削がれる。"
+    fill_timing: "4小節または8小節回しの最後(ターンアラウンド)。次の展開への起爆剤として、1拍〜2拍程度の短くインパクトのあるフィルを入れる。"
+    caution: "サビでテンションが上がってスラップや複雑なスケール練習のようなフレーズを詰め込むこと。主役(歌)の印象が薄れる最大の原因。"
+
+  SYNCOPATED_RHYTHM:
+    description: "ファンク・R&B系(リズムが跳ねており、ボーカルが休符を多用するグルーヴィーなスタイル)"
+    bass_strategy: "【コール＆レスポンス・会話】\nリズム: 歌のリズムと「噛み合う」ように配置する。歌が表拍なら裏拍、歌が休符ならベースが鳴る、といった会話のような関係を作る。\n音域: ゴーストノートやスタッカートを使い、パーカッシブな中域の音も混ぜてリズムの輪郭を出す。"
+    fill_timing: "ボーカルフレーズの直後の隙間。「歌って(Call)、ベースが受ける(Response)」形を作る。"
+    caution: "歌の語尾(リリース・余韻)とかぶる位置で派手な音を出して、歌詞の情緒を消してしまうこと。また、ボーカルと全く違うスウィング感(ハネ具合)で打ち込んでしまうこと。"
+
+# ======================================
+# 3-5: 実運用用ルールテーブル
+# ======================================
+rules:
+  - id: "BASS_RULE_001"
+    style_id: "ROCK_8BEAT_ROOT"
+    section: "chorus"
+    chord_function: "TONIC"
+    kick_pattern_tag: "STANDARD_8BEAT_ROCK"
+    vocal_density: "high_density"
+    core_rhythm: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
+    note_choice: ["Root"]
+    fill_pattern_hint: "フィルなし。徹底してルートの8分音符連打でボトムを固定する。"
+
+  - id: "BASS_RULE_002"
+    style_id: "ROCK_8BEAT_ROOT"
+    section: "chorus"
+    chord_function: "DOMINANT"
+    kick_pattern_tag: "STANDARD_8BEAT_ROCK"
+    vocal_density: "high_density"
+    core_rhythm: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
+    note_choice: ["Root", "5th"]
+    fill_pattern_hint: "4拍目の裏(3.5)からクロマチックで次のルートへアプローチ。"
+
+  - id: "BASS_RULE_003"
+    style_id: "POPS_BALLAD_ROOT"
+    section: "verse"
+    chord_function: "TONIC"
+    kick_pattern_tag: "SLOW_BALLAD_CORE"
+    vocal_density: "sparse"
+    core_rhythm: [0.0]
+    note_choice: ["Root"]
+    fill_pattern_hint: "全音符で伸ばしきる。音切れ厳禁。"
+
+  - id: "BASS_RULE_004"
+    style_id: "POPS_BALLAD_ROOT"
+    section: "chorus"
+    chord_function: "SUBDOMINANT"
+    kick_pattern_tag: "SLOW_BALLAD_CORE"
+    vocal_density: "long_tone"
+    core_rhythm: [0.0, 1.5, 3.0]
+    note_choice: ["Root", "5th", "M7th"]
+    fill_pattern_hint: "付点4分音符のゆったりした動きで、コード内をアルペジオ的に動く。"
+
+  - id: "BASS_RULE_005"
+    style_id: "DISCO_OCTAVE"
+    section: "chorus"
+    chord_function: "TONIC"
+    kick_pattern_tag: "FOUR_ON_THE_FLOOR"
+    vocal_density: "medium"
+    core_rhythm: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
+    note_choice: ["Root(Low)", "Root(Octave)"]
+    fill_pattern_hint: "4拍目(3.0)から16分音符で Root-b7-5-Root のランニング。"
+
+  - id: "BASS_RULE_006"
+    style_id: "DISCO_OCTAVE"
+    section: "chorus"
+    chord_function: "DOMINANT"
+    kick_pattern_tag: "FOUR_ON_THE_FLOOR"
+    vocal_density: "medium"
+    core_rhythm: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
+    note_choice: ["Root(Low)", "Root(Octave)"]
+    fill_pattern_hint: "3拍目(2.0)からグリッサンドダウンで勢いをつける。"
+
+  - id: "BASS_RULE_007"
+    style_id: "FUNK_16_SYNC"
+    section: "verse"
+    chord_function: "TONIC"
+    kick_pattern_tag: "FUNK_16BEAT_SYNC"
+    vocal_density: "syncopated_rhythm"
+    core_rhythm: [0.0, 1.75, 2.0, 2.25, 3.5]
+    note_choice: ["Root", "b7th", "Octave"]
+    fill_pattern_hint: "1拍目(0.0)は必ずRoot。2拍目裏〜3拍目はゴーストノートを混ぜた16分フレーズ。"
+
+  - id: "BASS_RULE_008"
+    style_id: "FUNK_16_SYNC"
+    section: "verse"
+    chord_function: "SUBDOMINANT"
+    kick_pattern_tag: "FUNK_16BEAT_SYNC"
+    vocal_density: "syncopated_rhythm"
+    core_rhythm: [0.0, 1.5, 2.5, 3.75]
+    note_choice: ["Root", "M3rd", "5th", "6th"]
+    fill_pattern_hint: "次の小節の頭に16分音符一つ分食って(3.75)入る。"
+
+  - id: "BASS_RULE_009"
+    style_id: "JPOP_MELODIC_FILL"
+    section: "chorus_end"
+    chord_function: "DOMINANT"
+    kick_pattern_tag: "STANDARD_8BEAT_ROCK"
+    vocal_density: "long_tone"
+    core_rhythm: [0.0, 1.0, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5]
+    note_choice: ["Root", "Scale_Step_Up"]
+    fill_pattern_hint: "後半2拍を使ってハイポジションへ駆け上がるメロディアスなフィル。"
+
+  - id: "BASS_RULE_010"
+    style_id: "SHUFFLE_BOUNCE"
+    section: "verse"
+    chord_function: "TONIC"
+    kick_pattern_tag: "SHUFFLE"
+    vocal_density: "medium"
+    core_rhythm: [0.0, 0.66, 1.0, 1.66, 2.0, 2.66, 3.0, 3.66]
+    note_choice: ["Root", "5th", "6th", "b7th"]
+    fill_pattern_hint: "3連符グリッドでのウォーキングベース(ブルース進行的アプローチ)。"
+
+  - id: "BASS_RULE_011"
+    style_id: "MOTOWN_SOUL"
+    section: "chorus"
+    chord_function: "PASSING"
+    kick_pattern_tag: "MOTOWN_BEAT"
+    vocal_density: "medium"
+    core_rhythm: [0.0, 1.0, 2.0, 2.5, 3.0, 3.5]
+    note_choice: ["Passing_Note", "Scale_Neighbor"]
+    fill_pattern_hint: "コードが変わるたびに階段状に音をつなぐ。ジャム・ジェマーソン風のシンコペーション。"
+
+  - id: "BASS_RULE_012"
+    style_id: "PUNK_DRIVE"
+    section: "chorus"
+    chord_function: "TONIC"
+    kick_pattern_tag: "FAST_PUNK_DRIVE"
+    vocal_density: "high_density"
+    core_rhythm: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
+    note_choice: ["Root"]
+    fill_pattern_hint: "フィル禁止。ひたすらルートのダウンピッキング。前のめり(Rush)気味に。"
+
+  - id: "BASS_RULE_013"
+    style_id: "CITY_POP_AOR"
+    section: "verse"
+    chord_function: "SUBDOMINANT"
+    kick_pattern_tag: "FUNK_16BEAT_SYNC"
+    vocal_density: "sparse"
+    core_rhythm: [0.0, 1.25, 2.5]
+    note_choice: ["Root", "9th", "M7th"]
+    fill_pattern_hint: "付点8分音符を主体にした、空間を生かすフレーズ。音のリリースを丁寧に切る。"
+
+  - id: "BASS_RULE_014"
+    style_id: "JAZZ_WALKING"
+    section: "intro"
+    chord_function: "TONIC"
+    kick_pattern_tag: "FEATHER_TOUCH"
+    vocal_density: "sparse"
+    core_rhythm: [0.0, 1.0, 2.0, 3.0]
+    note_choice: ["Root", "Scale_Note", "Chromatic_Approach"]
+    fill_pattern_hint: "4分音符でランニング。同じ音を2度続けない。"
+
+  - id: "BASS_RULE_015"
+    style_id: "SYNTH_BASS_POP"
+    section: "verse"
+    chord_function: "TONIC"
+    kick_pattern_tag: "FOUR_ON_THE_FLOOR"
+    vocal_density: "busy_16th"
+    core_rhythm: [0.5, 1.5, 2.5, 3.5]
+    note_choice: ["Root"]
+    fill_pattern_hint: "裏打ち(オフビート)のみ。ゲートで短く切る。フィルは入れない。"
+
+  - id: "BASS_RULE_016"
+    style_id: "ROCK_8BEAT_ROOT"
+    section: "intro"
+    chord_function: "PEDAL_POINT"
+    kick_pattern_tag: "STANDARD_8BEAT_ROCK"
+    vocal_density: "sparse"
+    core_rhythm: [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
+    note_choice: ["Pedal_Root"]
+    fill_pattern_hint: "コードが変わってもベース音は絶対に変えない。緊張感を維持。"
+
+  - id: "BASS_RULE_017"
+    style_id: "HEAVY_RIFF_ROCK"
+    section: "interlude"
+    chord_function: "UNISON"
+    kick_pattern_tag: "HEAVY_SYNC"
+    vocal_density: "none"
+    core_rhythm: "GUITAR_RIFF_SYNC"
+    note_choice: ["Unison_Octave_Below"]
+    fill_pattern_hint: "ギターリフと完全ユニゾン。個別の動きはしない。"
+
+  - id: "BASS_RULE_018"
+    style_id: "POPS_BALLAD_ROOT"
+    section: "verse"
+    chord_function: "ON_CHORD"
+    kick_pattern_tag: "SLOW_BALLAD_CORE"
+    vocal_density: "medium"
+    core_rhythm: [0.0, 2.0]
+    note_choice: ["Specified_Bass_Note"]
+    fill_pattern_hint: "オンコード指定音(例: G/BならB)を弾く。ルートには行かない。"
+
+  - id: "BASS_RULE_019"
+    style_id: "SLAP_STANDARD"
+    section: "solo"
+    chord_function: "TONIC"
+    kick_pattern_tag: "FUNK_16BEAT_SYNC"
+    vocal_density: "none"
+    core_rhythm: [0.0, 0.25, 0.5, 0.75, 1.0]
+    note_choice: ["Root", "Octave", "Mute"]
+    fill_pattern_hint: "サムピング(0.0)とプル(0.25)のオクターブコンビネーション。"
+
+  - id: "BASS_RULE_020"
+    style_id: "ROCK_8BEAT_ROOT"
+    section: "chorus"
+    chord_function: "BREAK"
+    kick_pattern_tag: "BREAK"
+    vocal_density: "high_density"
+    core_rhythm: [0.0]
+    note_choice: ["Root"]
+    fill_pattern_hint: "1拍目だけ弾いて(Staccato)、あとは全休符(ミュート)。"

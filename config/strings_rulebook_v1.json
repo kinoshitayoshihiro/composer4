@@ -1,0 +1,451 @@
+{
+  "strings_groove_styles": [
+    {
+      "style_id": "POP_STRING_PAD",
+      "tempo_range_bpm": [80, 140],
+      "meter": "4/4",
+      "typical_section": ["verse", "chorus", "bridge"],
+      "core_motion_description": "Sustained chords (Football notes) changing with the harmony.",
+      "bowing_or_articulation_tendency": "Legato or Detache (soft). Minimal bow change noise.",
+      "register_tendency": "Mid-High (V1/V2) to Mid-Low (Cello). Bass often omitted if Bass Guitar is active.",
+      "texture_density_hint": "Medium. Thick enough to glue, transparent enough for vocals.",
+      "emotion_tags": ["stable", "warm", "supportive"]
+    },
+    {
+      "style_id": "BALLAD_LEGATO_SWELL",
+      "tempo_range_bpm": [60, 90],
+      "meter": "4/4",
+      "typical_section": ["chorus", "intro", "outro"],
+      "core_motion_description": "Expressive melodic lines and counter-melodies with heavy dynamic swelling.",
+      "bowing_or_articulation_tendency": "Legato with Molto Vibrato. Portamento slides.",
+      "register_tendency": "Wide range. Violins often soar in high register (E5-C7).",
+      "texture_density_hint": "High. Rich, lush harmonies.",
+      "emotion_tags": ["emotional", "romantic", "yearning", "tender"]
+    },
+    {
+      "style_id": "OSTINATO_16TH",
+      "tempo_range_bpm": [110, 160],
+      "meter": "4/4",
+      "typical_section": ["intro", "bridge", "battle_scene"],
+      "core_motion_description": "Repetitive rhythmic patterns driving the momentum.",
+      "bowing_or_articulation_tendency": "Spiccato or Staccato. Crisp attacks.",
+      "register_tendency": "Mid-Low focus (Violas/Cellos) for the engine, High for accents.",
+      "texture_density_hint": "Medium. Rhythmic clarity is priority.",
+      "emotion_tags": ["tense", "urgent", "driving", "mechanical"]
+    },
+    {
+      "style_id": "PIZZICATO_GROOVE",
+      "tempo_range_bpm": [90, 130],
+      "meter": "4/4",
+      "typical_section": ["verse", "intro"],
+      "core_motion_description": "Plucked rhythmic interplay, often quirky or light.",
+      "bowing_or_articulation_tendency": "Pizzicato (tight). Occasional Bartok Pizz (snap).",
+      "register_tendency": "Mid range. Often no Basses.",
+      "texture_density_hint": "Low to Medium. Airy.",
+      "emotion_tags": ["playful", "cute", "sneaky", "light"]
+    },
+    {
+      "style_id": "SHUFFLE_SOUL_STRINGS",
+      "tempo_range_bpm": [100, 130],
+      "meter": "4/4",
+      "typical_section": ["chorus", "intro"],
+      "core_motion_description": "Fast disco runs, octave unisons, and stabs.",
+      "bowing_or_articulation_tendency": "Marcato accents mixed with fast Legato runs. Falls.",
+      "register_tendency": "High (Violins in octaves).",
+      "texture_density_hint": "High (at moments of impact), otherwise sparse.",
+      "emotion_tags": ["retro", "glamorous", "exciting", "uplifting"]
+    },
+    {
+      "style_id": "EPIC_TRAILER",
+      "tempo_range_bpm": [70, 100],
+      "meter": "4/4",
+      "typical_section": ["chorus", "climax"],
+      "core_motion_description": "Massive staccato hits and aggressive sustained lows.",
+      "bowing_or_articulation_tendency": "Marcato, Spiccato, Tremolo.",
+      "register_tendency": "Full Spectrum (Low C Basses to High E Violins).",
+      "texture_density_hint": "Max. Wall of sound.",
+      "emotion_tags": ["heroic", "dangerous", "massive", "apocalyptic"]
+    },
+    {
+      "style_id": "CINEMATIC_EMOTIVE",
+      "tempo_range_bpm": [50, 80],
+      "meter": "3/4",
+      "typical_section": ["intro", "theme"],
+      "core_motion_description": "Slow harmonic changes with a distinct, lonely melody.",
+      "bowing_or_articulation_tendency": "Sul Tasto (flute-like), Con Sordino (muted).",
+      "register_tendency": "Often focused on Solo Cello or Solo Violin range.",
+      "texture_density_hint": "Low to Medium. Transparent.",
+      "emotion_tags": ["sad", "nostalgic", "hopeful", "intimate"]
+    },
+    {
+      "style_id": "MYSTERIOUS_TREM",
+      "tempo_range_bpm": [60, 120],
+      "meter": "4/4",
+      "typical_section": ["bridge", "intro"],
+      "core_motion_description": "Static chords with nervous energy.",
+      "bowing_or_articulation_tendency": "Tremolo (measured or unmeasured). Sul Ponticello.",
+      "register_tendency": "Cluster voicings in Mid-High or Deep Low.",
+      "texture_density_hint": "Medium. Atmospheric.",
+      "emotion_tags": ["mysterious", "uneasy", "suspenseful", "cold"]
+    }
+  ],
+  "register_and_texture_rules": [
+    {
+      "rule_id": "STR_TEX_001",
+      "name": "Standard Octave Unison Melody",
+      "applicable_styles": ["BALLAD_LEGATO_SWELL", "SHUFFLE_SOUL_STRINGS"],
+      "context_section": "chorus",
+      "instrument_group_roles": {
+        "violins_1": "Main Melody High (8va)",
+        "violins_2": "Main Melody Low (unison)",
+        "violas": "Harmony/Counter-line",
+        "cellos": "Bass/Tenor support",
+        "basses": "Doubling Electric Bass"
+      },
+      "register_guideline": "V1 soars above C5. V2 supports an octave below for thickness.",
+      "density_level": "high",
+      "effect_on_arrangement": "Creates a singing, powerful lead line that cuts through the mix.",
+      "avoid": "Crossing voices (Viola going higher than V2) unless intentional."
+    },
+    {
+      "rule_id": "STR_TEX_002",
+      "name": "Wide Pad Support",
+      "applicable_styles": ["POP_STRING_PAD", "CINEMATIC_EMOTIVE"],
+      "context_section": "verse",
+      "instrument_group_roles": {
+        "violins_1": "High Pedal/Pad",
+        "violins_2": "Mid Pad",
+        "violas": "Mid-Low Pad",
+        "cellos": "Root notes (sustained)",
+        "basses": "Tacet (Silent)"
+      },
+      "register_guideline": "Open voicing. Keep the middle (C4) relatively open for vocals.",
+      "density_level": "medium",
+      "effect_on_arrangement": "Glues the band together without drawing attention.",
+      "avoid": "Close voicings in the low-mid register (mud)."
+    },
+    {
+      "rule_id": "STR_TEX_003",
+      "name": "Ostinato Engine",
+      "applicable_styles": ["OSTINATO_16TH", "EPIC_TRAILER"],
+      "context_section": "bridge_or_battle",
+      "instrument_group_roles": {
+        "violins_1": "Accents/Stabs",
+        "violins_2": "Rhythmic Pattern (High)",
+        "violas": "Rhythmic Pattern (Low)",
+        "cellos": "Rhythmic Pattern (Bass)",
+        "basses": "Impact hits"
+      },
+      "register_guideline": "Tight interlocking rhythms in the middle range.",
+      "density_level": "high",
+      "effect_on_arrangement": "Propulsive forward motion.",
+      "avoid": "Long legato lines over the ostinato."
+    },
+    {
+      "rule_id": "STR_TEX_004",
+      "name": "Chamber Intimacy",
+      "applicable_styles": ["PIZZICATO_GROOVE", "CINEMATIC_EMOTIVE"],
+      "context_section": "intro",
+      "instrument_group_roles": {
+        "violins_1": "Soloistic Melody",
+        "violins_2": "Counter-melody",
+        "violas": "Pizzicato accompaniment",
+        "cellos": "Pizzicato Bass",
+        "basses": "Tacet"
+      },
+      "register_guideline": "Conservative range. Focus on tone color.",
+      "density_level": "low",
+      "effect_on_arrangement": "Personal, small-room feel.",
+      "avoid": "Doubling parts. Each voice must be distinct."
+    }
+  ],
+  "micro_timing_and_dynamics": [
+    {
+      "rule_id": "STR_TIMING_001",
+      "name": "Legato Lag Compensation",
+      "applicable_styles": ["BALLAD_LEGATO_SWELL", "CINEMATIC_EMOTIVE"],
+      "context": "melodic_lines",
+      "timing_guideline_ms": "Notes start -30ms to -60ms before the grid depending on sample attack time.",
+      "velocity_or_expression_guideline": "Use CC11 for phrasing volume, CC1 for vibrato intensity.",
+      "cc_guideline": {
+        "CC1_mod": "Scale with melody height (Higher = More Vibrato)",
+        "CC11_expression": "Crescendo into the target note, Diminuendo on release",
+        "CC7_volume": "Static (Set and forget)"
+      },
+      "bow_change_or_attack_hint": "Soft attack, 'blooming' sound.",
+      "effect_on_feel": "Realistic, breathing quality.",
+      "avoid": "Quantizing 100% to grid (sounds synth-like)."
+    },
+    {
+      "rule_id": "STR_TIMING_002",
+      "name": "Spiccato Tightness",
+      "applicable_styles": ["OSTINATO_16TH", "EPIC_TRAILER"],
+      "context": "rhythmic_runs",
+      "timing_guideline_ms": "Strictly on grid or slightly rushed (+- 5ms).",
+      "velocity_or_expression_guideline": "Velocity controls attack sharpness. High Velocity (100-127).",
+      "cc_guideline": {
+        "CC1_mod": "High (Aggressive tone)",
+        "CC11_expression": "High/Max",
+        "CC7_volume": "Max"
+      },
+      "bow_change_or_attack_hint": "Biting attack. Separation between notes.",
+      "effect_on_feel": "Machine-gun precision and power.",
+      "avoid": "Loose timing (ruins the drive)."
+    },
+    {
+      "rule_id": "STR_TIMING_003",
+      "name": "Pop Pad Swell",
+      "applicable_styles": ["POP_STRING_PAD"],
+      "context": "chord_changes",
+      "timing_guideline_ms": "On grid.",
+      "velocity_or_expression_guideline": "Low velocity attacks.",
+      "cc_guideline": {
+        "CC1_mod": "Low to Medium (Smooth)",
+        "CC11_expression": "Follows the vocal energy curve (swell into chorus)",
+        "CC7_volume": "Medium"
+      },
+      "bow_change_or_attack_hint": "Imperceptible bow changes.",
+      "effect_on_feel": "Subliminal support.",
+      "avoid": "Sudden jumps in CC11."
+    }
+  ],
+  "interaction_patterns": [
+    {
+      "rule_id": "STR_INT_001",
+      "related_styles": ["BALLAD_LEGATO_SWELL"],
+      "bass_behavior_assumption": "Long sustained roots.",
+      "drum_behavior_assumption": "Slow ballad beat.",
+      "guitar_or_keys_behavior_assumption": "Arpeggios or Piano comping.",
+      "vocal_behavior_assumption": "Main focus, long notes.",
+      "strings_strategy": "Play in the 'Vocal Gaps' (Call and Response). When vocal holds a note, strings move. When vocal moves, strings hold.",
+      "effect_on_mix": "Prevents masking the vocal while maintaining emotional intensity."
+    },
+    {
+      "rule_id": "STR_INT_002",
+      "related_styles": ["SHUFFLE_SOUL_STRINGS"],
+      "bass_behavior_assumption": "Active disco bass.",
+      "drum_behavior_assumption": "Four on the floor with open hi-hats.",
+      "guitar_or_keys_behavior_assumption": "Cutting/Stabs.",
+      "vocal_behavior_assumption": "Rhythmic.",
+      "strings_strategy": "Reinforce the 'Backbeat' or 'and' of beats with staccato hits. Unison runs with Bass/Guitar for fills.",
+      "effect_on_mix": "Adds glitter and high-end rhythmic excitement."
+    },
+    {
+      "rule_id": "STR_INT_003",
+      "related_styles": ["OSTINATO_16TH"],
+      "bass_behavior_assumption": "Chugging 8ths.",
+      "drum_behavior_assumption": "Tom grooves or heavy kick.",
+      "guitar_or_keys_behavior_assumption": "Heavy riffs.",
+      "vocal_behavior_assumption": "Minimal or chanting.",
+      "strings_strategy": "Lock exactly with the Hi-Hat/Shaker subdivision. The ostinato acts as a percussion instrument.",
+      "effect_on_mix": "Increases perceived tempo and urgency."
+    },
+    {
+      "rule_id": "STR_INT_004",
+      "related_styles": ["POP_STRING_PAD"],
+      "bass_behavior_assumption": "Root notes.",
+      "drum_behavior_assumption": "Standard beat.",
+      "guitar_or_keys_behavior_assumption": "Strumming.",
+      "vocal_behavior_assumption": "Verse storytelling.",
+      "strings_strategy": "Avoid the frequency range 800Hz-2kHz (Vocal core). Use inversions that place notes above or below this range.",
+      "effect_on_mix": "Clear vocals with warm surrounding texture."
+    }
+  ],
+  "fill_and_transition_patterns": [
+    {
+      "fill_id": "STR_FILL_001",
+      "applicable_styles": ["SHUFFLE_SOUL_STRINGS", "POP_STRING_PAD"],
+      "trigger_condition": "Transition to Chorus.",
+      "techniques": ["Disco Fall (High to Low slide)", "Rapid Scale Run Up"],
+      "rhythm_grid": "16th notes",
+      "dynamic_curve_hint": "Sharp attack then fade (Fall) or Crescendo (Run).",
+      "orchestration_hint": "Violins in Octaves.",
+      "emotion_tags": ["exciting", "glamorous"]
+    },
+    {
+      "fill_id": "STR_FILL_002",
+      "applicable_styles": ["BALLAD_LEGATO_SWELL", "CINEMATIC_EMOTIVE"],
+      "trigger_condition": "End of Phrase.",
+      "techniques": ["Appoggiatura (Grace note)", "Vibrato Swell"],
+      "rhythm_grid": "Free time / Rubato",
+      "dynamic_curve_hint": "Swell into the dissonance, release on resolution.",
+      "orchestration_hint": "Solo Cello or Violin section.",
+      "emotion_tags": ["heartbreaking", "beautiful"]
+    },
+    {
+      "fill_id": "STR_FILL_003",
+      "applicable_styles": ["EPIC_TRAILER", "OSTINATO_16TH"],
+      "trigger_condition": "Impact Hit.",
+      "techniques": ["Downbow Retch (Crunchy attack)", "Tremolo crescendo"],
+      "rhythm_grid": "On Downbeat",
+      "dynamic_curve_hint": "Max velocity.",
+      "orchestration_hint": "Tutti (Everyone plays).",
+      "emotion_tags": ["shocking", "powerful"]
+    },
+    {
+      "fill_id": "STR_FILL_004",
+      "applicable_styles": ["MYSTERIOUS_TREM"],
+      "trigger_condition": "Scene change.",
+      "techniques": ["Sul Ponticello Glissando", "Trill"],
+      "rhythm_grid": "Unmeasured",
+      "dynamic_curve_hint": "Eerie stability.",
+      "orchestration_hint": "High Violins close voicing.",
+      "emotion_tags": ["creepy", "tense"]
+    }
+  ],
+  "atomic_strings_rules": [
+    {
+      "id": "STR_RULE_001",
+      "style_id": "POP_STRING_PAD",
+      "section": "verse",
+      "intensity_level": "low",
+      "strings_role": "PAD_WIDE",
+      "rhythm_grid": "whole_note",
+      "articulation_hint": "Sustained (Soft)",
+      "orchestration_hint": "Violas and Cellos only (Warmth)",
+      "register_hint": "Mid-Low",
+      "texture_density": "low",
+      "fill_usage": "none",
+      "recommended_texture_rule_ids": ["STR_TEX_002"],
+      "recommended_micro_timing_rule_ids": ["STR_TIMING_003"],
+      "recommended_interaction_rule_ids": ["STR_INT_004"],
+      "comment": "Subtle background warmth for verses."
+    },
+    {
+      "id": "STR_RULE_002",
+      "style_id": "BALLAD_LEGATO_SWELL",
+      "section": "chorus",
+      "intensity_level": "high",
+      "strings_role": "MELODY_DOUBLER",
+      "rhythm_grid": "melodic_rhythm",
+      "articulation_hint": "Legato Molto Vibrato",
+      "orchestration_hint": "Violins 8va + V2/Vla support",
+      "register_hint": "High",
+      "texture_density": "high",
+      "fill_usage": "counter_line_fills",
+      "recommended_texture_rule_ids": ["STR_TEX_001"],
+      "recommended_micro_timing_rule_ids": ["STR_TIMING_001"],
+      "recommended_interaction_rule_ids": ["STR_INT_001"],
+      "comment": "The J-POP 'Kameada' style soaring chorus strings."
+    },
+    {
+      "id": "STR_RULE_003",
+      "style_id": "OSTINATO_16TH",
+      "section": "bridge",
+      "intensity_level": "medium",
+      "strings_role": "OSTINATO_ENGINE",
+      "rhythm_grid": "16th",
+      "articulation_hint": "Spiccato",
+      "orchestration_hint": "Violas/Cellos alternating",
+      "register_hint": "Mid-Low",
+      "texture_density": "medium",
+      "fill_usage": "staccato_accents",
+      "recommended_texture_rule_ids": ["STR_TEX_003"],
+      "recommended_micro_timing_rule_ids": ["STR_TIMING_002"],
+      "recommended_interaction_rule_ids": ["STR_INT_003"],
+      "comment": "Driving tension builder."
+    },
+    {
+      "id": "STR_RULE_004",
+      "style_id": "SHUFFLE_SOUL_STRINGS",
+      "section": "chorus",
+      "intensity_level": "high",
+      "strings_role": "COUNTER_LINE",
+      "rhythm_grid": "syncopated_16th",
+      "articulation_hint": "Marcato + Falls",
+      "orchestration_hint": "Violins Unison",
+      "register_hint": "High",
+      "texture_density": "medium",
+      "fill_usage": "disco_runs",
+      "recommended_texture_rule_ids": ["STR_TEX_001"],
+      "recommended_micro_timing_rule_ids": ["STR_TIMING_002"],
+      "recommended_interaction_rule_ids": ["STR_INT_002"],
+      "comment": "Disco strings answering the vocal phrases."
+    },
+    {
+      "id": "STR_RULE_005",
+      "style_id": "PIZZICATO_GROOVE",
+      "section": "intro",
+      "intensity_level": "low",
+      "strings_role": "OSTINATO_ENGINE",
+      "rhythm_grid": "8th_swing",
+      "articulation_hint": "Pizzicato",
+      "orchestration_hint": "Violin/Cello interplay",
+      "register_hint": "Mid",
+      "texture_density": "low",
+      "fill_usage": "arco_accent",
+      "recommended_texture_rule_ids": ["STR_TEX_004"],
+      "recommended_micro_timing_rule_ids": ["STR_TIMING_002"],
+      "recommended_interaction_rule_ids": ["STR_INT_003"],
+      "comment": "Quirky, lighthearted intro texture."
+    },
+    {
+      "id": "STR_RULE_006",
+      "style_id": "EPIC_TRAILER",
+      "section": "climax",
+      "intensity_level": "max",
+      "strings_role": "HIT_ACCENT",
+      "rhythm_grid": "16th_triplet",
+      "articulation_hint": "Marcato/Spiccato",
+      "orchestration_hint": "Tutti Octaves",
+      "register_hint": "Full Range",
+      "texture_density": "max",
+      "fill_usage": "tremolo_rise",
+      "recommended_texture_rule_ids": ["STR_TEX_003"],
+      "recommended_micro_timing_rule_ids": ["STR_TIMING_002"],
+      "recommended_interaction_rule_ids": ["STR_INT_003"],
+      "comment": "Trailer music impact hits."
+    },
+    {
+      "id": "STR_RULE_007",
+      "style_id": "MYSTERIOUS_TREM",
+      "section": "bridge",
+      "intensity_level": "medium",
+      "strings_role": "SWELL_RISER",
+      "rhythm_grid": "unmeasured",
+      "articulation_hint": "Tremolo Sul Pont",
+      "orchestration_hint": "High Cluster",
+      "register_hint": "High",
+      "texture_density": "medium",
+      "fill_usage": "crescendo",
+      "recommended_texture_rule_ids": ["STR_TEX_004"],
+      "recommended_micro_timing_rule_ids": ["STR_TIMING_001"],
+      "recommended_interaction_rule_ids": ["STR_INT_004"],
+      "comment": "Creating uneven tension before the final chorus."
+    },
+    {
+      "id": "STR_RULE_008",
+      "style_id": "POP_STRING_PAD",
+      "section": "break",
+      "intensity_level": "none",
+      "strings_role": "BREAK_SILENCE",
+      "rhythm_grid": "none",
+      "articulation_hint": "Release",
+      "orchestration_hint": "none",
+      "register_hint": "none",
+      "texture_density": "none",
+      "fill_usage": "none",
+      "recommended_texture_rule_ids": [],
+      "recommended_micro_timing_rule_ids": [],
+      "recommended_interaction_rule_ids": [],
+      "comment": "Complete silence for impact."
+    },
+    {
+      "id": "STR_RULE_009",
+      "style_id": "ALL",
+      "section": "chorus",
+      "intensity_level": "high",
+      "strings_role": "SWELL_RISER",
+      "rhythm_grid": "half_note",
+      "articulation_hint": "Legato Crescendo",
+      "orchestration_hint": "Full Section",
+      "register_hint": "Mid-High",
+      "texture_density": "high",
+      "fill_usage": "crescendo",
+      "recommended_texture_rule_ids": ["STR_TEX_001"],
+      "recommended_micro_timing_rule_ids": ["STR_TIMING_001"],
+      "recommended_interaction_rule_ids": ["STR_INT_001"],
+      "comment": "Universal swell for emotional climax."
+    }
+  ]
+}

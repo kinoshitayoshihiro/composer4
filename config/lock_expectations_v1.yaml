@@ -1,0 +1,167 @@
+schema_version: 1
+description: Expected Drum/Bass lockness ranges by style_id, section, emotion_tag.
+  Used for QA gating and auto-tuning of Kick×Bass sync and accent cohesion.
+metrics_definition:
+  lock_score: 0..1 weighted composite of kick_bass_sync_rate and accent_alignment_rate
+  kick_bass_sync_rate: Share of kick hits that have a bass-onset within the tolerance
+    window
+  accent_alignment_rate: Share of downbeat/strong-beat accents aligned between kick
+    and bass
+  default_tolerance_ms: 25
+weights:
+  kick_bass_sync_rate: 0.65
+  accent_alignment_rate: 0.35
+defaults:
+  lock_score_range:
+  - 0.45
+  - 0.75
+  kick_bass_sync_rate_range:
+  - 0.5
+  - 0.8
+  accent_alignment_rate_range:
+  - 0.4
+  - 0.7
+style_section_emotion:
+- style_id: ROCK_8BEAT_STANDARD
+  section: chorus
+  emotion_tag: BRIGHT_ENERGETIC
+  lock_score_range:
+  - 0.75
+  - 0.95
+  kick_bass_sync_rate_range:
+  - 0.8
+  - 0.98
+  accent_alignment_rate_range:
+  - 0.65
+  - 0.9
+  tolerance_ms: 20
+- style_id: ROCK_8BEAT_STANDARD
+  section: verse
+  emotion_tag: BRIGHT_ENERGETIC
+  lock_score_range:
+  - 0.65
+  - 0.9
+  kick_bass_sync_rate_range:
+  - 0.75
+  - 0.95
+  accent_alignment_rate_range:
+  - 0.55
+  - 0.85
+  tolerance_ms: 22
+- style_id: ROCK_8BEAT_STANDARD
+  section: bridge
+  emotion_tag: DARK_DRAMATIC
+  lock_score_range:
+  - 0.55
+  - 0.8
+  kick_bass_sync_rate_range:
+  - 0.6
+  - 0.85
+  accent_alignment_rate_range:
+  - 0.45
+  - 0.75
+  tolerance_ms: 28
+- style_id: PUNK_FAST_2BEAT
+  section: chorus
+  emotion_tag: AGGRESSIVE_ANGRY
+  lock_score_range:
+  - 0.8
+  - 0.98
+  kick_bass_sync_rate_range:
+  - 0.85
+  - 0.99
+  accent_alignment_rate_range:
+  - 0.7
+  - 0.95
+  tolerance_ms: 18
+- style_id: FOUR_ON_THE_FLOOR_DISCO
+  section: chorus
+  emotion_tag: BRIGHT_ENERGETIC
+  lock_score_range:
+  - 0.7
+  - 0.92
+  kick_bass_sync_rate_range:
+  - 0.8
+  - 0.98
+  accent_alignment_rate_range:
+  - 0.55
+  - 0.8
+  tolerance_ms: 20
+- style_id: FUNK_16BEAT
+  section: verse
+  emotion_tag: NEUTRAL_COOL
+  lock_score_range:
+  - 0.6
+  - 0.85
+  kick_bass_sync_rate_range:
+  - 0.65
+  - 0.9
+  accent_alignment_rate_range:
+  - 0.5
+  - 0.8
+  tolerance_ms: 25
+- style_id: CITY_POP_16BEAT
+  section: verse
+  emotion_tag: NEUTRAL_COOL
+  lock_score_range:
+  - 0.55
+  - 0.8
+  kick_bass_sync_rate_range:
+  - 0.6
+  - 0.85
+  accent_alignment_rate_range:
+  - 0.45
+  - 0.75
+  tolerance_ms: 28
+- style_id: CITY_POP_16BEAT
+  section: chorus
+  emotion_tag: BRIGHT_CALM
+  lock_score_range:
+  - 0.55
+  - 0.78
+  kick_bass_sync_rate_range:
+  - 0.6
+  - 0.82
+  accent_alignment_rate_range:
+  - 0.45
+  - 0.72
+  tolerance_ms: 28
+- style_id: SLOW_BALLAD_8BEAT
+  section: verse
+  emotion_tag: TENDER_INTIMATE
+  lock_score_range:
+  - 0.4
+  - 0.65
+  kick_bass_sync_rate_range:
+  - 0.45
+  - 0.7
+  accent_alignment_rate_range:
+  - 0.35
+  - 0.6
+  tolerance_ms: 35
+- style_id: SLOW_BALLAD_6_8
+  section: chorus
+  emotion_tag: EPIC_HEROIC
+  lock_score_range:
+  - 0.45
+  - 0.7
+  kick_bass_sync_rate_range:
+  - 0.5
+  - 0.75
+  accent_alignment_rate_range:
+  - 0.4
+  - 0.65
+  tolerance_ms: 35
+- style_id: SHUFFLE_8BEAT
+  section: verse
+  emotion_tag: BRIGHT_CALM
+  lock_score_range:
+  - 0.55
+  - 0.8
+  kick_bass_sync_rate_range:
+  - 0.6
+  - 0.85
+  accent_alignment_rate_range:
+  - 0.55
+  - 0.85
+  tolerance_ms: 30

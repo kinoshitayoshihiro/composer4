@@ -1,0 +1,67 @@
+version: "0.1"
+description: >
+  EmotionAI などが出力する連続値 (valence, energy など) を
+  離散カテゴリ (NEG/NEU/POS, LOW/MID/HIGH) に量子化するための定義。
+  各AIモジュール（HarmonyAI, RhythmAI, BassPhraseGenerator）共通の語彙として使用。
+
+axes:
+  valence:
+    source_field: "valence"   # bars.parquet / sections.parquet の列名を想定
+    range:
+      min: -1.0
+      max: 1.0
+    buckets:
+      NEG:
+        min: -1.0
+        max: -0.3
+        label_ja: "ネガティブ"
+        description_ja: "悲しみ・不安・怒りなど、マイナス方向の感情が支配的な状態。"
+        description_en: "Sadness, anxiety, anger - emotionally negative state."
+      NEU:
+        min: -0.3
+        max: 0.3
+        label_ja: "ニュートラル"
+        description_ja: "ポジでもネガでもない、中立的・静観的な感情。"
+        description_en: "Neutral, observant emotional state - neither positive nor negative."
+      POS:
+        min: 0.3
+        max: 1.0
+        label_ja: "ポジティブ"
+        description_ja: "喜び・高揚・希望など、プラス方向の感情が支配的な状態。"
+        description_en: "Joy, excitement, hope - emotionally positive state."
+
+  arousal:
+    # energy か loudness_normalized 的な列をマッピング
+    source_field: "energy"
+    range:
+      min: 0.0
+      max: 1.0
+    buckets:
+      LOW:
+        min: 0.0
+        max: 0.35
+        label_ja: "ロー (静か)"
+        description_ja: "落ち着いていて動きが少ない。バラードや静かなシーン向き。"
+        description_en: "Calm and gentle. Suitable for ballads and quiet scenes."
+      MID:
+        min: 0.35
+        max: 0.7
+        label_ja: "ミドル"
+        description_ja: "標準的なポップスのテンション。適度な動きと推進力。"
+        description_en: "Standard pop tension with moderate movement and drive."
+      HIGH:
+        min: 0.7
+        max: 1.0
+        label_ja: "ハイ (激しい)"
+        description_ja: "テンションが高く、攻撃的・エネルギッシュな状態。"
+        description_en: "High tension, aggressive and energetic state."
+
+defaults:
+  # source_field が存在しない場合や欠損時に使うデフォルト
+  valence: "NEU"
+  arousal: "MID"
+
+notes:
+  - "range / buckets の境界値は、コーパスを見ながら後でチューニングする前提。"
+  - "必要に応じて energy 以外に loudness, spectral_flux などを別軸として追加してもよい。"
+  - "既存の bars.parquet / sections.parquet の分布を確認し、閾値を調整すること。"
